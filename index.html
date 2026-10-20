@@ -367,6 +367,11 @@ input:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3px #bcd3f7}
   .card{padding:10px}
   .prompt{margin-bottom:2px}
 }
+.linkrow{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:10px 0 4px}
+.linkbtn{background:none;border:0;color:var(--accent-d);text-decoration:underline;font-size:1rem;padding:10px 8px;min-height:44px;cursor:pointer}
+.figpair .cap{font-size:.9rem;color:var(--muted);text-align:center;margin-top:4px}
+.progress .lbl{margin-left:6px}
+.progress{display:flex;align-items:center;flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -755,13 +760,14 @@ TASKS.G01={area:'Grundlagen',name:'Gleiche Anteile erkennen',desc:'Finde die Bil
     return {type:'G01',level,target:{n:a,d:b,mode:level===1?tm:'num'},cards,avoid:[redKey(a,b)]};
   },
   prompt(t,h){
-    h.append(el('p',{class:'q'},t.level===1?'Welche Karten zeigen denselben Anteil wie das Bild?':['Welche Karten haben denselben Wert wie ',frac(t.target.n,t.target.d),'?'],' Wähle alle passenden Karten aus. ',el('b',null,'Es gibt '+t.cards.filter(c=>equivalent(c.n,c.d,t.target.n,t.target.d)).length+' passende Karten.')));
+    const n=t.cards.filter(c=>equivalent(c.n,c.d,t.target.n,t.target.d)).length;
+    h.append(el('p',{class:'q'},t.level===1?'Welche Karten zeigen denselben Anteil wie das Bild?':['Welche Karten sind gleich viel wert wie ',frac(t.target.n,t.target.d),'?'],' ',el('b',null,'(Es gibt '+n+' richtige.)')));
   },
   render(view,host){
     const t=view.task,d=view.draft;d.sel=d.sel||[];
     const tg=el('figure',{class:'fig',style:'max-width:200px'});
     if(t.target.mode==='num')tg.append(el('div',{class:'big eq'},frac(t.target.n,t.target.d)));
-    else tg.append(drawMode(t.target.mode,t.target.n,t.target.d,{label:'Vorgabe',maxW:150}),el('figcaption',null,'Dieser Anteil ist gefärbt.'));
+    else tg.append(drawMode(t.target.mode,t.target.n,t.target.d,{label:'Vorgabe',maxW:150}));
     const cards=el('div',{class:'cards',role:'group','aria-label':'Karten'});
     t.cards.forEach((c,i)=>{
       const b=el('button',{type:'button',class:'pick','aria-pressed':String(d.sel.includes(i)),'aria-label':c.mode==='num'?`Karte ${i+1}: ${c.n} durch ${c.d}`:`Karte ${i+1}: Bruchbild`},
@@ -884,7 +890,7 @@ TASKS.U01={area:'Umkehraufgaben',name:'Bruch-Lücken',desc:'Ergänze die fehlend
     if(level===1&&R.chance(0.5))terms.reverse();
     return {type:'U01',level,terms,avoid:[redKey(p,q)]};
   },
-  prompt(t,h){h.append(el('p',{class:'q'},'Welche Zahlen fehlen? Ergänze die Lücken, sodass alle Brüche gleichwertig sind.'));},
+  prompt(t,h){h.append(el('p',{class:'q'},'Welche Zahlen fehlen?'));},
   render(view,host){
     const t=view.task,parts=[];
     t.terms.forEach((x,i)=>{
@@ -945,8 +951,8 @@ TASKS.U02={area:'Umkehraufgaben',name:'Erweiterungs- oder Kürzungszahl finden',
     return {type:'U02',level,mode,from:mode==='expand'?small:big,to:mode==='expand'?big:small,mid,k:total,avoid:[redKey(p,q)]};
   },
   prompt(t,h){
-    if(t.mid)h.append(el('p',{class:'q'},'Der Bruch ',frac(t.from[0],t.from[1]),' wird in zwei Schritten erweitert: zuerst zu ',frac(t.mid[0],t.mid[1]),', dann zu ',frac(t.to[0],t.to[1]),'. Gib die Erweiterungszahl an, mit der man ',frac(t.from[0],t.from[1]),' in einem Schritt zu ',frac(t.to[0],t.to[1]),' erweitert.'));
-    else h.append(el('p',{class:'q'},'Der Bruch ',frac(t.from[0],t.from[1]),' wird zu ',frac(t.to[0],t.to[1]),t.mode==='expand'?' erweitert. Gib die Erweiterungszahl an.':' gekürzt. Gib die Kürzungszahl an.'));
+    if(t.mid)h.append(el('p',{class:'q'},'Erst ',frac(t.from[0],t.from[1]),' = ',frac(t.mid[0],t.mid[1]),', dann ',frac(t.to[0],t.to[1]),'. Mit welcher Zahl wurde ',strong('insgesamt'),' erweitert?'));
+    else h.append(el('p',{class:'q'},t.mode==='expand'?'Mit welcher Zahl wurde erweitert?':'Mit welcher Zahl wurde gekürzt?'));
   },
   render(view,host){
     const t=view.task;
@@ -1024,9 +1030,9 @@ TASKS.U03={area:'Umkehraufgaben',name:'Fehler finden und berichtigen',desc:'Find
     return {type:'U03',level,kind:'expand',errType:'onlyNum',fix:'op',a:4,b:6,k:2,shown:[8,6],pre:null,avoid:['2/3']};
   },
   prompt(t,h){
-    if(t.fix==='full')h.append(el('p',{class:'q'},'Jemand sagt: „',frac(t.a,t.b),' lässt sich so weit wie möglich kürzen zu ',frac(t.shown[0],t.shown[1]),'.“ Das ist falsch.'));
-    else if(t.pre)h.append(el('p',{class:'q'},'Der Bruch ',frac(t.pre[0],t.pre[1]),' wurde erst richtig zu ',frac(t.a,t.b),' erweitert. Danach sollte noch mit ',strong(t.k),' erweitert werden. Das Ergebnis ist falsch.'));
-    else h.append(el('p',{class:'q'},'Der Bruch ',frac(t.a,t.b),' sollte mit ',strong(t.k),t.kind==='expand'?' erweitert':' gekürzt',' werden. Das Ergebnis ist falsch.'));
+    if(t.fix==='full')h.append(el('p',{class:'q'},'So weit wie möglich kürzen: ',frac(t.a,t.b),' = ',frac(t.shown[0],t.shown[1]),'. Das ist falsch.'));
+    else if(t.pre)h.append(el('p',{class:'q'},frac(t.pre[0],t.pre[1]),' = ',frac(t.a,t.b),' ist richtig. Dann noch mit ',strong(t.k),' erweitern – aber das Ergebnis ist falsch.'));
+    else h.append(el('p',{class:'q'},frac(t.a,t.b),' mit ',strong(t.k),t.kind==='expand'?' erweitern':' kürzen',' – das Ergebnis ist falsch.'));
   },
   options(t){
     const order=['onlyNum','onlyDen','diff','add','notFull'];
@@ -1092,70 +1098,40 @@ TASKS.B01={area:'Grundlagen',name:'Bruchbilder verändern',desc:'Teile ein Bild 
     return {type:'B01',level,kind:'grid',a,b,rows0:dims[0],cols0:dims[1],minTotal,avoid:[redKey(a,b)]};
   },
   prompt(t,h){
-    if(t.level===1)h.append(el('p',{class:'q'},'Das Bild zeigt ',frac(t.a,t.b),'. Teile das Bild in ',strong(t.target),' gleich große Teile. Tippe auf Teile des unteren Bildes, um sie zu färben, und gib den neuen Bruch an.'));
-    else h.append(el('p',{class:'q'},'Das Rechteck zeigt ',frac(t.a,t.b),'. Teile ein Rechteck in Zeilen und Spalten, sodass es ',strong('mindestens '+t.minTotal),' gleich große Felder gibt. Färbe denselben Anteil und gib den neuen Bruch an.'));
+    if(t.level===1)h.append(el('p',{class:'q'},'Zeige ',frac(t.a,t.b),' mit ',strong(t.target),' Teilen. Färbe und trage den Bruch ein.'));
+    else h.append(el('p',{class:'q'},'Zeige ',frac(t.a,t.b),' mit mindestens ',strong(t.minTotal),' Feldern. Wähle Zeilen und Spalten, färbe und trage den Bruch ein.'));
   },
   render(view,host){
-    const t=view.task,d=view.draft;
-    const L1=t.level===1;
-    if(L1){if(d.parts==null)d.parts=t.b;}
-    else{if(d.rows==null){d.rows=t.rows0;d.cols=t.cols0;}}
+    const t=view.task,d=view.draft,L1=t.level===1;
+    if(L1){if(d.parts==null)d.parts=t.target;}
+    else if(d.rows==null){d.rows=t.rows0;d.cols=t.cols0;}
     d.col=d.col||[];
     const total=()=>L1?d.parts:d.rows*d.cols;
     const origFig=L1?drawMode(t.kind,t.a,t.b,{label:'Vorgabe',maxW:130}):drawFractionGrid(t.a,t.b,t.rows0,t.cols0,{label:'Vorgabe',maxW:130});
-    const orig=el('figure',{class:'fig'},origFig,el('figcaption',null,'Vorgabe: ',frac(t.a,t.b)));
-    const editBox=el('div'),info=el('div',{class:'q'});
-    const steppers=[];
-    const changed=()=>{d.col=d.col.filter(i=>i<total());view.save();redraw();};
+    const orig=el('figure',{class:'fig'},origFig,el('figcaption',null,frac(t.a,t.b)));
+    const editBox=el('div'),steppers=[];
     const redraw=()=>{
       editBox.replaceChildren();
       const n=total(),opts={onToggle:i=>{
         if(view.locked())return false;
         const j=d.col.indexOf(i);if(j>=0)d.col.splice(j,1);else d.col.push(i);
-        view.save();updInfo();return j<0;
-      },label:'Dein Bild',filled:new Set(d.col),maxW:300};
+        view.save();return j<0;
+      },label:'Dein Bild',filled:new Set(d.col),maxW:320};
       editBox.append(L1?drawMode(t.kind,0,n,opts):drawFractionGrid(0,n,d.rows,d.cols,opts));
-      updInfo();
-    };
-    const updInfo=()=>{
-      info.replaceChildren('Gefärbt: ',strong(d.col.length),' von ',strong(total()),' Teilen');
       steppers.forEach(s=>s.upd());
     };
     const controls=el('div',{class:'controls'});
-    if(L1){
-      steppers.push(stepper(view,'Teile',()=>d.parts,v=>{d.parts=v;d.col=[];changed();},1,12));
-      [2,3].forEach(f=>{
-        const b=el('button',{type:'button',class:'btn small'},f===2?'Teile ×2':'Teile ×3');
-        b.addEventListener('click',()=>{
-          if(view.locked()||d.parts*f>12)return;
-          const m=d.col.length;d.parts*=f;d.col=Array.from({length:m*f},(_,i)=>i);changed();
-        });
-        view.inputs['x'+f]=b;controls.append(b);
-      });
-    }else{
-      steppers.push(stepper(view,'Zeilen',()=>d.rows,v=>{d.rows=v;d.col=[];changed();},1,10));
-      steppers.push(stepper(view,'Spalten',()=>d.cols,v=>{d.cols=v;d.col=[];changed();},1,10));
+    if(!L1){
+      const chg=()=>{d.col=[];view.save();redraw();};
+      steppers.push(stepper(view,'Zeilen',()=>d.rows,v=>{d.rows=v;chg();},1,10));
+      steppers.push(stepper(view,'Spalten',()=>d.cols,v=>{d.cols=v;chg();},1,10));
+      steppers.forEach(s=>controls.append(s));
     }
-    steppers.push(stepper(view,'Gefärbt',()=>d.col.length,v=>{
-      if(v>d.col.length){for(let i=0;i<total()&&d.col.length<v;i++)if(!d.col.includes(i))d.col.push(i);}
-      else d.col.pop();
-      view.save();redraw();
-    },0,99));
-    /* Obergrenze für Gefärbt = Teilezahl */
-    const gs=steppers[steppers.length-1],plusG=gs.querySelectorAll('button')[1];
-    const origUpd=gs.upd;gs.upd=()=>{origUpd();plusG.disabled=plusG.disabled||d.col.length>=total();};
-    steppers.slice(0,-1).forEach(s=>controls.append(s));
-    const reset=el('button',{type:'button',class:'btn small'},'Zurücksetzen');
-    reset.addEventListener('click',()=>{
-      if(view.locked())return;
-      if(L1)d.parts=t.b;else{d.rows=t.rows0;d.cols=t.cols0;}
-      d.col=[];view.save();redraw();
-    });
+    const reset=el('button',{type:'button',class:'btn small'},'↺ Neu färben');
+    reset.addEventListener('click',()=>{if(view.locked())return;d.col=[];view.save();redraw();});
     view.inputs.reset=reset;
-    const extra=el('details',{class:'extra'},el('summary',null,'⚙️ Mehr Einstellungen'),el('div',{class:'controls'},gs,reset));
-    const left=el('div',null,el('div',{class:'figpair'},el('div',{class:'orig'},orig),el('div',{class:'edit'},editBox)),info);
-    const right=el('div',null,controls,el('div',{class:'q',style:'margin:.5em 0'},'Dein Bruch: ',fracInput(view,'r')),extra);
-    host.append(el('div',{class:'split has-visual'},left,right));
+    host.append(el('div',{class:'figpair'},orig,el('div',{class:'edit'},editBox,el('div',{class:'cap'},'👆 Tippe zum Färben'))),controls,
+      el('div',{class:'eq',style:'justify-content:space-between'},el('span',{class:'eq'},'Dein Bruch:',fracInput(view,'r')),reset));
     redraw();
   },
   validate(t,d){
@@ -1262,8 +1238,8 @@ TASKS.O02={area:'Offene Aufgaben',name:'Verschiedene Rechenwege',desc:'Kürze ei
     return {type:'O02',level,a:p*g,b:q*g,p,q,mode:level===1?'target':'full',avoid:[redKey(p,q)]};
   },
   prompt(t,h){
-    h.append(el('p',{class:'q'},t.mode==='target'?['Kürze ',frac(t.a,t.b),' auf zwei verschiedene Arten bis ',frac(t.p,t.q),'.']:['Kürze ',frac(t.a,t.b),' auf mindestens zwei verschiedenen Wegen so weit wie möglich.']));
-    h.append(el('details',null,el('summary',null,'ℹ️ Regeln'),el('p',null,'Jeder Schritt muss mit einer Zahl größer als 1 gekürzt sein. Du kannst Schritte hinzufügen oder entfernen. Zwei Wege zählen als verschieden, wenn die Kürzungszahlen verschieden sind.')));
+    h.append(el('p',{class:'q'},t.mode==='target'?['Kürze ',frac(t.a,t.b),' auf zwei Wegen bis ',frac(t.p,t.q),'.']:['Kürze ',frac(t.a,t.b),' auf zwei Wegen so weit wie möglich.']));
+    h.append(el('p',{class:'q'},'Jeder Weg soll andere Kürzungszahlen nutzen.'));
   },
   render(view,host){
     const t=view.task,d=view.draft;
@@ -1449,8 +1425,8 @@ TASKS.G05={area:'Grundlagen',name:'Erweitern und Kürzen gemischt',desc:'Mal erw
     return {type:'G05',level,mode:'denom',a,b,N,avoid:[redKey(p,q)]};
   },
   prompt(t,h){
-    h.append(t.mode==='denom'?el('p',{class:'q'},'Bringe den Bruch ',frac(t.a,t.b),' auf den Nenner ',strong(t.N),'. Ergänze den fehlenden Zähler.')
-      :el('p',{class:'q'},'Erweitere ',frac(t.a,t.b),' mit ',strong(t.k),'. Kürze das Ergebnis dann mit ',strong(t.m),'.'));
+    h.append(t.mode==='denom'?el('p',{class:'q'},'Bringe ',frac(t.a,t.b),' auf den Nenner ',strong(t.N),' bringen.')
+      :el('p',{class:'q'},frac(t.a,t.b),': erst mit ',strong(t.k),' erweitern, dann mit ',strong(t.m),' kürzen.'));
   },
   render(view,host){
     const t=view.task;
@@ -1733,7 +1709,7 @@ function renderPractice(id){
   root.append(shell);
   app.append(root);
 
-  const worktop=el('div',{class:'worktop'},el('h2',null,T.name),levelControl(id));
+  const worktop=el('div',{class:'worktop'},el('h2',null,T.name));
   main.append(worktop);
 
   const fillStats=()=>help.setStats(statsBlock(key,el('p',null,el('button',{type:'button',class:'btn small danger',onclick:()=>{S.rounds[key]={results:[],cur:null,size:T.size};persist();renderAll();}},'Runde neu beginnen'))));
@@ -1755,7 +1731,7 @@ function renderPractice(id){
       dots.push(el('span',{class:'dot'},sym));
     }
     progress.replaceChildren(el('div',{class:'dots','aria-hidden':'true'},dots),
-      el('span',{class:'lbl'},`Aufgabe ${Math.min(round.size,round.results.length+(st.status==='open'?1:0))} von ${round.size} · ⭐ = ohne Tipp richtig`));
+      el('span',{class:'lbl'},`${Math.min(round.size,round.results.length+(st.status==='open'?1:0))}/${round.size}`));
   };
   main.append(progress);
   const card=el('div',{class:'card'});
@@ -1766,10 +1742,12 @@ function renderPractice(id){
   const hintBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},'💡 '),'Tipp');
   const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},'📘 '),'Merkkasten');
   const primary=el('button',{type:'button',class:'btn primary'},'Prüfen');
-  const solBtn=el('button',{type:'button',class:'btn small'},'Lösung zeigen');
-  const skipBtn=el('button',{type:'button',class:'btn small'},'Überspringen');
+  const solBtn=el('button',{type:'button',class:'linkbtn'},'👀 Lösung ansehen');
+  const skipBtn=el('button',{type:'button',class:'linkbtn'},'⏭ Überspringen');
   const pad=makeKeypad(host,()=>onPrimary());
-  buildDock(main,{hintBtn,noteBtn,primary,more:[solBtn,skipBtn],pad});
+  const links=el('div',{class:'linkrow hidden'},solBtn,skipBtn);
+  main.insertBefore(links,null);
+  buildDock(main,{hintBtn,noteBtn,primary,more:[],pad});
 
   const P=prog(key);
   const roundBonus=()=>{if(round.results.length>=round.size&&!round.bonus){round.bonus=true;persist();setTimeout(()=>award(15,'Runde geschafft!'),500);}};
@@ -1787,7 +1765,7 @@ function renderPractice(id){
     const open=st.status==='open';
     const last=round.results.length>=round.size;
     primary.textContent=open?'Prüfen':(last?'Runde abschließen':'Nächste Aufgabe');
-    solBtn.disabled=!open;skipBtn.disabled=!open;
+    links.classList.toggle('hidden',!(open&&(st.attempts>0||st.hint>0)));
     const all=ctrl.hintCount();
     hintBtn.disabled=st.hint>=all;
     setHintLabel(hintBtn,st.hint>=all?'Alle Tipps':(st.hint?`Tipp ${st.hint+1}`:'Tipp'));
@@ -1884,7 +1862,7 @@ function renderMemory(id){
     el('tr',null,el('td',null,'Beendete Runden'),el('td',null,el('b',null,String(rec.won)))),
     el('tr',null,el('td',null,'Wenigste Versuche'),el('td',null,el('b',null,rec.best==null?'–':String(rec.best)))))));
   fillStats();
-  main.append(el('div',{class:'worktop'},el('h2',null,'Bruch-Memory'),levelControl(id)));
+  main.append(el('div',{class:'worktop'},el('h2',null,'Bruch-Memory')));
   const card=el('div',{class:'card'});
   const stats=el('div',{class:'memstats','aria-live':'polite'});
   const msg=el('div',{'aria-live':'polite'});
@@ -1959,7 +1937,7 @@ function renderVault(id){
     el('tr',null,el('td',null,'Gespielte Runden'),el('td',null,el('b',null,String(rec.played)))),
     el('tr',null,el('td',null,'Geknackte Tresore'),el('td',null,el('b',null,String(rec.won)))))));
   fillStats();
-  main.append(el('div',{class:'worktop'},el('h2',null,'Der Bruch-Tresor'),levelControl(id)));
+  main.append(el('div',{class:'worktop'},el('h2',null,'Der Bruch-Tresor')));
   const top=el('div',{class:'card'});
   const puzzle=el('div',{class:'card',style:'margin-top:14px'});
   const entryBox=el('div',{class:'card',style:'margin-top:14px'});
@@ -1970,11 +1948,13 @@ function renderVault(id){
   const hintBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},'💡 '),'Tipp');
   const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},'📘 '),'Merkkasten');
   const primary=el('button',{type:'button',class:'btn primary'},'Prüfen');
-  const solBtn=el('button',{type:'button',class:'btn small'},'Lösung zeigen');
+  const solBtn=el('button',{type:'button',class:'linkbtn'},'👀 Lösung ansehen');
+  const links=el('div',{class:'linkrow hidden'},solBtn);
+  main.append(links);
   let ctrl=null;
   const host=el('div');
   const pad=makeKeypad(host,()=>onPrimary());
-  buildDock(main,{hintBtn,noteBtn,primary,more:[solBtn],pad});
+  buildDock(main,{hintBtn,noteBtn,primary,more:[],pad});
 
   const drawTop=()=>{
     top.replaceChildren(el('p',null,v.opened?el('b',null,'Der Tresor ist geöffnet!'):`Löse die Rätsel an den Schlössern. Jedes geöffnete Schloss zeigt eine Ziffer des Codes. Geöffnet: ${v.locks.filter(solved).length} von ${v.locks.length}.`));
@@ -2016,11 +1996,11 @@ function renderVault(id){
   };
   const refresh=()=>{
     const l=v.locks[v.active];
-    if(v.opened){primary.disabled=true;hintBtn.disabled=true;solBtn.disabled=true;primary.textContent='Prüfen';pad.refresh();return;}
+    if(v.opened){primary.disabled=true;hintBtn.disabled=true;solBtn.disabled=true;primary.textContent='Prüfen';links.classList.add('hidden');pad.refresh();return;}
     const open=l.status==='open';
     primary.disabled=false;
     primary.textContent=open?'Prüfen':(l.status==='correct'?(allSolved()?'Zum Code':'Nächstes Schloss'):'Anderes Rätsel');
-    solBtn.disabled=!open;
+    links.classList.toggle('hidden',!(open&&(l.attempts>0||l.hint>0)));
     const all=ctrl?ctrl.hintCount():0;
     hintBtn.disabled=!open||l.hint>=all;
     setHintLabel(hintBtn,l.hint>=all&&open?'Alle Tipps':(l.hint?`Tipp ${l.hint+1}`:'Tipp'));
