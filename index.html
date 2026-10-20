@@ -351,6 +351,44 @@ svg.interactive{touch-action:none}
 .machsg.bad{color:var(--bad)}.machsg.ok{color:var(--ok)}
 .machdone{margin:4px 0;color:var(--ok);font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px}
 
+/* Bruchlabor */
+.lab .prompt::before{display:none}
+.lab .prompt .q{margin:.1em 0 .5em}
+.labseg{display:flex;width:100%;margin:0 0 10px}
+.labseg button{flex:1;justify-content:center}
+.labfig{position:relative;max-width:560px;margin:6px auto 4px}
+.labrow{display:grid;grid-template-columns:3.9rem 1fr;gap:8px;align-items:center;margin:0 0 8px}
+.labside{display:flex;flex-direction:column;align-items:center;gap:3px}
+.labside .frac{font-size:1.1rem}
+.labcap{font:700 .58rem/1 var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--chalk-dim)}
+.labcol .dimcap{margin-top:3px}
+.labcol .dimcap span{position:relative;z-index:1;padding:0 6px;background:var(--bp-2)}
+.labmid{position:absolute;top:0;bottom:0;left:calc(3.9rem + 8px + (100% - 3.9rem - 8px) * var(--pos));border-left:2.5px dashed var(--amber);pointer-events:none}
+.labfig.circle{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.labcell{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"cap cap" "fr svg" "dim dim";gap:4px 8px;align-items:center}
+.labcell .labcap{grid-area:cap}
+.labcell .labfr{grid-area:fr}
+.labcell svg{grid-area:svg;justify-self:center;width:100%}
+.labcell .dimcap{grid-area:dim}
+.labcut{stroke:var(--amber);stroke-width:3;stroke-dasharray:7 5;fill:none}
+.labsay{min-height:3.1em;margin:4px 0}
+.labtext{padding:4px 0 4px 10px;border-left:4px solid var(--amber);font-size:.95rem}
+.labctl{margin-bottom:8px}
+.labchips{display:grid;grid-template-columns:5.6rem repeat(4,1fr);gap:6px;align-items:center;margin:0 0 6px}
+.labchips .lbl{display:flex;align-items:center;gap:4px;font:700 .6rem/1.1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--kue)}
+.labchips[data-op="x"] .lbl{color:var(--erw)}
+.labchips .chip{width:100%;min-width:0}
+.chip.off{border-style:dashed;opacity:.4;box-shadow:none}
+.chip.off:active{transform:none;background:var(--bp)}
+.tile.tile-txt{min-height:60px;font:700 .95rem/1.2 var(--font-body)}
+.tile.tile-txt .tv{text-align:center}
+.labquiz .tiles{margin:2px 0}
+.labquiz .linkbtn{display:flex;margin:0 auto}
+.labnote{margin:12px 0}
+.bomrow .labstat{grid-column:3 / 5;display:inline-flex;align-items:center;gap:4px;font:700 .72rem var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--amber)}
+.bomrow .labstat.done{color:var(--ok)}
+.bomrow .labstat .ic{width:1rem;height:1rem}
+
 /* ---------- 9 Menüs ---------- */
 .home{max-width:720px;margin:0 auto;padding:14px 14px 96px}
 .home h1{margin:16px 0 10px;font:700 1rem var(--font-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--chalk)}
@@ -462,6 +500,8 @@ svg.interactive{touch-action:none}
   .emo{display:none}
 }
 @media (max-width:359px){
+  .labchips{grid-template-columns:1.6rem repeat(4,1fr)}
+  .labchips .lt{display:none}
   .titleblock{font-size:.6rem;letter-spacing:.06em}
   .titleblock>*{padding:7px 6px}
   .eq{font-size:1.2rem}
@@ -476,6 +516,15 @@ svg.interactive{touch-action:none}
 }
 @media (max-width:899px){
   .memgrid.n20{grid-template-columns:repeat(4,1fr)}
+}
+@media (max-height:700px){
+  .labseg button{min-height:40px}
+  .labseg{margin-bottom:6px}
+  .lab .prompt .q{font-size:1.05rem}
+  .labsay{min-height:2.4em}
+  .labchips .chip{min-height:44px}
+  .labchips{margin-bottom:4px}
+  .labcell svg{max-width:108px!important}
 }
 @media (orientation:landscape) and (max-height:520px){
   .tiles{grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0 4px}
@@ -541,6 +590,8 @@ svg.interactive{touch-action:none}
 <symbol id="i-tab" viewBox="0 0 24 24"><path d="M4 12h12M12 7l5 5-5 5M20 5v14"/></symbol>
 <symbol id="i-neu" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.4-5.7M20 4v5h-5"/></symbol>
 <symbol id="i-balken" viewBox="0 0 24 24"><path d="M4 18V9M10 18V5M16 18v-7M22 18H2"/></symbol>
+<symbol id="i-kolben" viewBox="0 0 24 24"><path d="M9.5 3h5M10.5 3v6.5L4.6 19a1.6 1.6 0 0 0 1.4 2.4h12a1.6 1.6 0 0 0 1.4-2.4L13.5 9.5V3M7.6 15.5h8.8"/></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H10"/></symbol>
 </svg>
 <div id="app"></div>
 <div id="scrim" class="scrim"></div>
@@ -731,7 +782,7 @@ const Store={
   },
   clear(){try{localStorage.removeItem(KEY);}catch(e){this.ok=false;}}
 };
-const defaultState=()=>({v:1,levelByType:{},rounds:{},progress:{},games:{},skills:{},view:{kind:'home'}});
+const defaultState=()=>({v:1,levelByType:{},rounds:{},progress:{},games:{},skills:{},lab:null,view:{kind:'home'}});
 let S=Object.assign(defaultState(),Store.load()||{});
 function persist(){Store.save(S);}
 
@@ -822,11 +873,13 @@ const NOTES={
 };
 /* noteFor(task): Merkkästen zur Aufgabe, ohne die Aufgabe zu lösen */
 function noteFor(typeId,task){
-  const avoid=(task&&task.avoid)||[],T=TASKS[typeId];
-  return (T.notesFor?T.notesFor(task):T.notes).map(id=>{
+  const avoid=(task&&task.avoid)||[],T=TASKS[typeId],ids=T.notesFor?T.notesFor(task):T.notes;
+  const out=ids.map(id=>{
     const n=NOTES[id];
     return el('section',{class:'note','aria-label':'Merkkasten '+id},el('h3',null,id+' · '+n.title),...n.build(avoid));
   });
+  if(ids.some(id=>id==='M1'||id==='M2'||id==='M3'))out.push(el('p',{class:'labnote'},labLink()));
+  return out;
 }
 
 /* ---------- Hilfetexte (erster Tipp nennt nie eine Lösung) ---------- */
@@ -2109,6 +2162,197 @@ TASKS.Q01=Object.assign({area:'Grundlagen',name:'Kurztest',desc:'5 Fragen, um ei
 wrapRange('Q00');wrapRange('Q01');
 
 /* =====================================================================
+   Bruchlabor: Erweitern und Kürzen ausprobieren (Streifen oder Kreis)
+   Auftrag 1: erweitern · Auftrag 2: kürzen · Auftrag 3: „Was bleibt gleich?“
+   ===================================================================== */
+const LAB_MAX=48;
+const LAB_FACTORS=[2,3,4,5];
+const LAB_START=[[2,3],[1,2],[3,4],[3,5],[5,6],[1,3],[2,5],[4,5],[3,8],[5,8],[1,4],[7,8],[6,9],[8,12],[10,15],[4,6],[9,12],[6,8]];
+const LAB_QUIZ=[
+  {id:'wert',txt:'Der gefärbte Anteil'},
+  {id:'zaehler',txt:'Der Zähler'},
+  {id:'nenner',txt:'Der Nenner'},
+  {id:'teile',txt:'Die Zahl der Teile'}
+];
+const LAB_WRONG={
+  zaehler:'Der Zähler ändert sich: Er wird mit multipliziert oder geteilt.',
+  nenner:'Auch der Nenner ändert sich. Zähler und Nenner rechnen immer mit.',
+  teile:'Die Zahl der Teile ist der Nenner – und der ändert sich.'
+};
+const LAB_PROMPT={
+  x:'Auftrag 1: Erweitere den Bruch. Tippe unten ein ×.',
+  d:'Auftrag 2: Jetzt kürzen! Tippe unten ein ÷.',
+  quiz:'Auftrag 3: Was bleibt beim Erweitern und Kürzen gleich?',
+  play:'Probiere aus. Bereit für Auftrag 3?',
+  free:'Auftrag geschafft. Probiere weiter aus – was fällt dir auf?'
+};
+
+/* ---------- Zustand (S.lab) und reine Rechenfunktionen ---------- */
+const labOkFrac=(f)=>Array.isArray(f)&&f.length===2&&f.every(x=>Number.isInteger(x)&&x>=1)&&f[1]>f[0]&&f[1]<=LAB_MAX;
+function labDefault(){return {mode:'strip',base:[2,3],cur:[2,3],hist:[],last:null,did:{x:false,d:false},skip:false,done:false};}
+function labState(){
+  const L=S.lab;
+  const ok=L&&labOkFrac(L.cur)&&labOkFrac(L.base)&&equivalent(L.base[0],L.base[1],L.cur[0],L.cur[1])&&L.did&&Array.isArray(L.hist)&&L.hist.every(h=>h&&labOkFrac(h.cur));
+  if(!ok)S.lab=labDefault();
+  if(S.lab.mode!=='circle')S.lab.mode='strip';
+  return S.lab;
+}
+/* Geht „×k“ (höchstens 48 Teile) bzw. „÷k“ (beide Zahlen teilbar)? */
+const labCan=(cur,op,k)=>op==='x'?cur[1]*k<=LAB_MAX:(cur[0]%k===0&&cur[1]%k===0);
+const labStep=(cur,op,k)=>op==='x'?[cur[0]*k,cur[1]*k]:[cur[0]/k,cur[1]/k];
+/* Welcher Auftrag ist dran? x = erweitern, d = kürzen, quiz = Frage, play = frei vor der Frage, free = alles erledigt */
+function labPhase(L){
+  if(L.done)return 'free';
+  if(!L.did.x)return 'x';
+  if(!L.did.d)return 'd';
+  return L.skip?'play':'quiz';
+}
+function labTell(from,to,op,k){
+  const sym=op==='x'?' · ':' : ';
+  let t=(op==='x'?'Zähler und Nenner mal ':'Zähler und Nenner durch ')+k+': '+from[0]+sym+k+' = '+to[0]+' und '+from[1]+sym+k+' = '+to[1]+'. Der gefärbte Anteil bleibt gleich.';
+  if(op==='d'&&isFullyReduced(to[0],to[1]))t+=' Weiter kürzen geht nicht mehr.';
+  return t;
+}
+function labWhy(cur,op,k){
+  if(op==='x')return 'Mit '+k+' entstünden '+cur[1]*k+' Teile. Mehr als '+LAB_MAX+' passen nicht ins Bild.';
+  return 'Mit '+k+' geht das nicht: '+cur[0]+' und '+cur[1]+' sind nicht beide durch '+k+' teilbar.'+(k===2?' Die 2 geht IMMER, wenn beide gerade sind.':'');
+}
+
+/* ---------- Zeichnung: Ausgang und Jetzt, Maßlinien, Mittellinie ---------- */
+function labFigure(L){
+  const [bn,bd]=L.base,[cn,cd]=L.cur;
+  const wrap=el('div',{class:'labfig '+L.mode,role:'img','aria-label':`Ausgang: ${bn} von ${bd} Teilen gefärbt. Jetzt: ${cn} von ${cd} Teilen gefärbt. Der gefärbte Anteil ist gleich groß.`});
+  const nowCls=L.last?(L.last.op==='x'?'erw':'kue'):'';
+  const dim=(n,d)=>dimCap(n+' von '+d+(L.mode==='circle'?'':' gefärbt'));
+  if(L.mode==='circle'){
+    const cell=(cap,n,d,cls)=>{
+      const svg=drawFractionCircle(n,d,{maxW:132,label:n+' von '+d});
+      const a=-Math.PI/2+2*Math.PI*n/d;
+      svg.append(S_('line',{x1:102,y1:102,x2:(102+98*Math.cos(a)).toFixed(2),y2:(102+98*Math.sin(a)).toFixed(2),class:'labcut'}));
+      return el('div',{class:'labcell fig '+cls},el('span',{class:'labcap'},cap),el('div',{class:'labfr'},frac(n,d)),svg,dim(n,d));
+    };
+    wrap.append(cell('Ausgang',bn,bd,''),cell('Jetzt',cn,cd,nowCls));
+  }else{
+    wrap.style.setProperty('--pos',((1+360*bn/bd)/362).toFixed(5));
+    const row=(cap,n,d,cls)=>el('div',{class:'labrow fig '+cls},
+      el('div',{class:'labside'},el('span',{class:'labcap'},cap),frac(n,d)),
+      el('div',{class:'labcol'},drawFractionStrip(n,d,{maxW:2000,label:n+' von '+d}),dim(n,d)));
+    wrap.append(row('Ausgang',bn,bd,''),row('Jetzt',cn,cd,nowCls),el('i',{class:'labmid','aria-hidden':'true'}));
+  }
+  return wrap;
+}
+
+/* Knopf „Im Labor ausprobieren“ für die Merkkästen */
+function labLink(){
+  return el('button',{type:'button',class:'btn labbtn',onclick:()=>go({kind:'lab'})},icon('kolben'),'Im Labor ausprobieren');
+}
+
+function renderLab(){
+  const L=labState();
+  const root=el('div',{class:'page'});root.append(topbar('Bruchlabor'));
+  const shell=el('div',{class:'shell'}),help=helpPanel(),main=el('main',{class:'work lab'});
+  shell.append(main,help.el);root.append(shell);app.append(root);
+  main.dataset.acc='mix';
+  help.setNotes(['M1','M2','M3'].map(n=>el('section',{class:'note','aria-label':'Merkkasten '+n},el('h3',null,n+' · '+NOTES[n].title),...NOTES[n].build([]))));
+  help.setStats(el('div',null,el('h3',null,'Dein Labor'),el('p',null,L.done?'Der Entdeckerauftrag ist geschafft.':'Der Entdeckerauftrag ist noch offen.')));
+
+  const segBtn=(mode,label)=>{
+    const b=el('button',{type:'button','aria-pressed':String(L.mode===mode)},label);
+    b.addEventListener('click',()=>{L.mode=mode;persist();draw();});
+    return b;
+  };
+  const bStrip=segBtn('strip','Streifen'),bCircle=segBtn('circle','Kreis');
+  const seg=el('div',{class:'seg labseg',role:'group','aria-label':'Darstellung wählen'},bStrip,bCircle);
+  const promptEl=el('div',{class:'prompt'});
+  const stage=el('div',{class:'labstage'});
+  const say=el('div',{class:'labsay','aria-live':'polite'});
+  const tbPhase=el('span',{class:'tb-c'}),tbMode=el('span',{class:'tb-c'});
+  const titleblock=el('div',{class:'titleblock'},el('span',{class:'tb-id'},icon('kolben'),el('span',{class:'tb-name'},'Bruchlabor')),tbPhase,tbMode);
+  main.append(el('div',{class:'card'},seg,promptEl,stage,say,titleblock));
+
+  const ctl=el('div',{class:'labctl'});
+  const undoBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('undo')),'Rückgängig');
+  const newBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('neu')),'Neuer Bruch');
+  const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkkasten');
+  main.append(el('div',{class:'actionbar'},ctl,el('div',{class:'primaryrow'},undoBtn,newBtn,noteBtn)));
+
+  const sayText=(text,kind)=>{
+    say.replaceChildren(text?(kind?el('div',{class:'msg '+kind},text):el('div',{class:'labtext'},text)):null);
+  };
+  let quizOrder=null;
+
+  const act=(op,k)=>{
+    if(labPhase(L)==='quiz')return;
+    if(!labCan(L.cur,op,k)){sayText(labWhy(L.cur,op,k),'bad');return;}
+    const from=L.cur.slice();
+    L.hist.push({cur:from,last:L.last});if(L.hist.length>40)L.hist.shift();
+    L.cur=labStep(L.cur,op,k);L.last={op,k};L.did[op]=true;persist();
+    sayText(labTell(from,L.cur,op,k));draw();
+  };
+  const answer=(o,b)=>{
+    if(o.id==='wert'){
+      L.done=true;L.skip=false;persist();
+      sayText('Genau! Der gefärbte Anteil bleibt gleich – nur die Einteilung wird feiner oder gröber.','ok');
+      draw();award(15,'Entdeckt!');
+      return;
+    }
+    b.disabled=true;b.classList.add('is-wrong');
+    b.append(el('span',{class:'mk','aria-hidden':'true'},icon('kreuz')));
+    b.setAttribute('aria-label',b.getAttribute('aria-label')+' – falsch');
+    sayText(LAB_WRONG[o.id],'bad');
+  };
+  const chipRows=()=>{
+    const box=el('div',{class:'labops'});
+    ['x','d'].forEach(op=>{
+      const name=op==='x'?'Erweitern':'Kürzen';
+      const row=el('div',{class:'labchips','data-op':op,role:'group','aria-label':name},el('span',{class:'lbl'},icon(op==='x'?'aus':'ein'),el('span',{class:'lt'},name)));
+      LAB_FACTORS.forEach(k=>{
+        const ok=labCan(L.cur,op,k);
+        const b=el('button',{type:'button',class:'chip'+(op==='x'?' erw':'')+(ok?'':' off'),'aria-disabled':String(!ok),'aria-label':name+' mit '+k+(ok?'':' – geht nicht')},(op==='x'?'× ':'÷ ')+k);
+        b.addEventListener('click',()=>act(op,k));
+        row.append(b);
+      });
+      box.append(row);
+    });
+    return box;
+  };
+  const quizBox=()=>{
+    if(!quizOrder)quizOrder=RNG.shuffle(LAB_QUIZ);
+    const grid=el('div',{class:'tiles',role:'group','aria-label':'Antworten'});
+    quizOrder.forEach((o,i)=>{
+      const b=el('button',{type:'button',class:'tile tile-txt','aria-label':'Antwort '+Q_LETTERS[i]+': '+o.txt},el('span',{class:'ltr','aria-hidden':'true'},Q_LETTERS[i]),el('span',{class:'tv'},o.txt));
+      b.addEventListener('click',()=>answer(o,b));
+      grid.append(b);
+    });
+    return el('div',{class:'labquiz'},grid,el('button',{type:'button',class:'linkbtn',onclick:()=>{L.skip=true;persist();sayText('');draw();}},'Noch einmal ausprobieren'));
+  };
+  const draw=()=>{
+    const ph=labPhase(L);
+    bStrip.setAttribute('aria-pressed',String(L.mode==='strip'));
+    bCircle.setAttribute('aria-pressed',String(L.mode==='circle'));
+    promptEl.replaceChildren(el('p',{class:'q'},LAB_PROMPT[ph]));
+    if(ph==='play')promptEl.append(el('button',{type:'button',class:'btn small',onclick:()=>{L.skip=false;persist();sayText('');draw();}},'Auftrag 3 starten'));
+    stage.replaceChildren(labFigure(L));
+    tbPhase.textContent=ph==='free'?'Frei':'Auftrag '+(ph==='x'?1:ph==='d'?2:3)+'/3';
+    tbMode.textContent=L.mode==='strip'?'Streifen':'Kreis';
+    undoBtn.disabled=!L.hist.length;
+    ctl.replaceChildren(ph==='quiz'?quizBox():chipRows());
+  };
+
+  undoBtn.addEventListener('click',()=>{
+    const h=L.hist.pop();if(!h)return;
+    L.cur=h.cur;L.last=h.last;persist();sayText('Schritt zurückgenommen.');draw();
+  });
+  newBtn.addEventListener('click',()=>{
+    const b=RNG.pick(LAB_START.filter(x=>x[0]!==L.base[0]||x[1]!==L.base[1]));
+    L.base=b.slice();L.cur=b.slice();L.hist=[];L.last=null;persist();
+    sayText('Neuer Bruch: '+b[0]+' von '+b[1]+' Teilen gefärbt.'+(isFullyReduced(b[0],b[1])?'':' Der lässt sich schon kürzen.'));draw();
+  });
+  noteBtn.addEventListener('click',()=>setHelp(!helpOpen));
+  draw();
+}
+
+/* =====================================================================
    7 Aufgaben-Oberfläche (mountTask), Runden, Fortschritt
    ===================================================================== */
 const AREAS=['Grundlagen','Umkehraufgaben','Offene Aufgaben','Darstellungen umwandeln','Spiele'];
@@ -2363,7 +2607,7 @@ const openEntry=(id)=>{if(!isGame(id))S.last=id;go({kind:isGame(id)?'game':'prac
 function setLevel(id,l){S.levelByType[id]=l;persist();renderAll();}
 
 const GROUPS={
-  'Entdecken':{pat:'dots',icon:'lupe',text:'Anteile, Teilbarkeit, Erweitern und Kürzen',ids:['Q00','G01','T01','G02','G03','G04','G05','B01']},
+  'Entdecken':{pat:'dots',icon:'lupe',text:'Labor, Schnellcheck, Teilbarkeit, Erweitern und Kürzen',ids:['LAB','Q00','G01','T01','G02','G03','G04','G05','B01']},
   'Knobeln':{pat:'dash',icon:'zirkel',text:'Lücken, Fehler und mehrere Lösungen',ids:['U01','U02','U03','O01','O02']},
   'Umwandeln':{pat:'hatch',icon:'wechsel',text:'Dezimalzahlen und gemischte Zahlen',ids:['D01','D02','D03']}
 };
@@ -2374,6 +2618,7 @@ function backTarget(){
   const v=S.view;
   if(v.kind==='practice'){const g=Object.keys(GROUPS).find(k=>GROUPS[k].ids.includes(v.id));return {kind:'home',tab:'ueben',group:g};}
   if(v.kind==='game')return {kind:'home',tab:'spiele'};
+  if(v.kind==='lab')return {kind:'home',tab:'ueben',group:'Entdecken'};
   if(v.kind==='home'&&v.group)return {kind:'home',tab:'ueben'};
   return null;
 }
@@ -2815,8 +3060,9 @@ function bigBtn(ic,onclick,title,text,extra,cls,acc,pat){
     el('span',{class:'tx'},el('b',null,title),text?el('small',null,text):null,extra?el('small',{class:'pg'},extra):null));
 }
 function listLevel(ids){
-  const l=levelOf(ids[0]);
-  const set=(n)=>{ids.forEach(i=>S.levelByType[i]=n);persist();renderAll();};
+  const tids=ids.filter(i=>TASKS[i]||GAMES[i]);
+  const l=levelOf(tids[0]);
+  const set=(n)=>{tids.forEach(i=>S.levelByType[i]=n);persist();renderAll();};
   const mk=(n)=>el('button',{type:'button','aria-pressed':String(l===n),onclick:()=>set(n)},LEVEL_LABEL[n]);
   return el('div',{class:'levelrow'},el('span',{class:'lblm'},'Schwierigkeit'),el('div',{class:'seg',role:'group','aria-label':'Schwierigkeit wählen'},mk(1),mk(2)));
 }
@@ -2831,6 +3077,13 @@ function rankCard(){
 function bomList(ids){
   const head=el('div',{class:'bomhead'},el('span',null,'Pos'),el('span',null,'Bezeichnung'),el('span',null,'Leicht'),el('span',null,'Knifflig'),el('span'));
   const rows=ids.map((id,i)=>{
+    if(id==='LAB'){
+      const done=!!(S.lab&&S.lab.done);
+      return el('button',{type:'button',class:'bomrow','data-acc':'mix',onclick:()=>go({kind:'lab'})},
+        el('span',{class:'pos'},String(i+1).padStart(2,'0')),
+        el('span',{class:'nm'},el('b',null,'Bruchlabor'),el('small',null,'Erweitern und Kürzen ausprobieren – mit Streifen oder Kreis.')),
+        el('span',{class:'labstat'+(done?' done':'')},done?icon('haken'):null,done?'Geschafft':'Neu'),icon('weiter'));
+    }
     const [s1,s2]=starCols(id);
     return el('button',{type:'button',class:'bomrow','data-acc':ACC[id]||null,onclick:()=>openEntry(id)},
       el('span',{class:'pos'},String(i+1).padStart(2,'0')),
@@ -2885,6 +3138,7 @@ function renderAll(){
   if(v.kind==='practice'&&TASKS[v.id])renderPractice(v.id);
   else if(v.kind==='game'&&v.id==='S01')renderMemory(v.id);
   else if(v.kind==='game'&&v.id==='S02')renderVault(v.id);
+  else if(v.kind==='lab')renderLab();
   else renderHome();
   if(!Store.ok)app.append(el('div',{class:'note-storage'},'Hinweis: Der Browser erlaubt kein lokales Speichern. Dein Fortschritt bleibt nur erhalten, solange diese Seite geöffnet ist.'));
 }
@@ -3010,6 +3264,32 @@ function runSelfTests(){
   for(let i=0;i<12;i++)recordSkill('teilbar',true);
   t('Fähigkeiten-Protokoll: höchstens 10 Einträge',S.skills.teilbar.h.length===10);
   S.skills=keepSk;persist();
+  /* Bruchlabor */
+  t('Labor: alle Startbrüche gültig (echt, höchstens '+LAB_MAX+' Teile)',LAB_START.every(labOkFrac));
+  t('Labor: Startbrüche nur mit 2, 3, 5 kürzbar',LAB_START.every(f=>{let g=gcd(f[0],f[1]);[2,3,5].forEach(q=>{while(g%q===0)g/=q;});return g===1;}));
+  let labBad=0,labSteps=0;
+  for(let i=0;i<400;i++){
+    let cur=RNG.pick(LAB_START).slice();const base=cur.slice();
+    for(let k0=0;k0<14;k0++){
+      const op=RNG.pick(['x','d']),k=RNG.pick(LAB_FACTORS),can=labCan(cur,op,k);
+      if(op==='d'&&can!==(cur[0]%k===0&&cur[1]%k===0))labBad++;
+      if(op==='x'&&can!==(cur[1]*k<=LAB_MAX))labBad++;
+      if(!can)continue;
+      cur=labStep(cur,op,k);labSteps++;
+      if(!labOkFrac(cur)||!equivalent(base[0],base[1],cur[0],cur[1]))labBad++;
+    }
+  }
+  t('Labor: Erweitern/Kürzen erhält den Wert, 2–'+LAB_MAX+' Teile ('+labSteps+' Schritte)',labBad===0&&labSteps>1000);
+  const lp=(x,d,sk,dn)=>labPhase({did:{x,d},skip:sk,done:dn});
+  t('Labor: Auftragsfolge',lp(false,false,false,false)==='x'&&lp(true,false,false,false)==='d'&&lp(false,true,false,false)==='x'&&lp(true,true,false,false)==='quiz'&&lp(true,true,true,false)==='play'&&lp(true,true,false,true)==='free');
+  const keepLab=S.lab;
+  S.lab={mode:'strip',base:[2,3],cur:[9,3],hist:[],last:null,did:{x:false,d:false},skip:false,done:false};
+  t('Labor: kaputter Zustand wird zurückgesetzt',labState().cur[0]===2&&labState().cur[1]===3);
+  S.lab={mode:'strip',base:[2,3],cur:[4,6],hist:[{cur:[2,3],last:null}],last:{op:'x',k:2},did:{x:true,d:false},skip:false,done:false};
+  t('Labor: gültiger Zustand bleibt erhalten',labState().cur[1]===6&&labState().hist.length===1);
+  S.lab=keepLab;persist();
+  t('Labor: Erklärungen nennen Rechnung und 2-Regel',labTell([2,3],[6,9],'x',3).includes('2 · 3 = 6 und 3 · 3 = 9')&&labTell([6,9],[2,3],'d',3).includes('nicht mehr')&&labWhy([6,9],'d',2).includes('IMMER'));
+  t('Labor: Frage hat genau eine richtige Antwort',LAB_QUIZ.filter(o=>o.id==='wert').length===1&&LAB_QUIZ.every(o=>o.id==='wert'||LAB_WRONG[o.id]));
   const bad=res.filter(r=>!r.ok);
   console.log(`Selbsttest: ${res.length-bad.length}/${res.length} bestanden`);
   bad.forEach(b=>console.error('FEHLER:',b.name));
