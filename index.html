@@ -688,6 +688,10 @@ const NOTES={
       el('p',null,strong('So weit wie möglich gekürzt: '),'Zähler und Nenner können nicht mehr beide durch dieselbe natürliche Zahl größer als 1 geteilt werden.'),
       el('div',{class:'rule'},strong('Schnelle Teilbarkeits-Tipps: '),RULE2,' ',el('br'),'Enden Zähler und Nenner beide auf 0 oder 5, geht auch die 5. Enden beide auf 0, geht auch die 10.')
     ];}},
+  M7:{title:'Teilbarkeitsregeln',build(avoid){
+    return [el('p',null,'So erkennst du schnell, ob du kürzen kannst:'),
+      ...[2,3,4,5,6,9,10].map(k=>el('p',{class:'rule'},DIV_RULE[k])),
+      el('p',null,strong('Beispiel: '),'374 → Quersumme 3 + 7 + 4 = 14, also nicht durch 3 teilbar; letzte Ziffer 4, also durch 2 teilbar.')];}},
   M4:{title:'Vom Dezimalbruch zur Dezimalzahl',build(avoid){
     const list=NOTE_EX.M4.filter(x=>!avoid.includes(x)).slice(0,4);
     const ex=list.map(k=>{const [n,d]=k.split('/').map(Number);return eq(frac(n,d),'=',el('span',null,decOf(n,Math.round(Math.log10(d)))));});
@@ -1469,7 +1473,7 @@ TASKS.D03={area:'Darstellungen umwandeln',name:'Gemischte Schreibweise → gemei
   gen(level,R){
     let w,n,d;
     if(level===1){do{d=R.int(2,8);n=R.int(1,d-1);}while(gcd(n,d)!==1);w=R.int(1,4);}
-    else{do{d=R.int(3,19);n=R.int(1,d-1);}while(gcd(n,d)!==1);w=R.int(5,25);}
+    else{do{d=R.int(3,19);n=R.int(1,d-1);w=R.int(5,25);}while(gcd(n,d)!==1||w*d+n>300);}
     return {type:'D03',level,w,n,d,avoid:[w+' '+n+'/'+d,redKey(n,d)]};
   },
   prompt(t,h){h.append(el('p',{class:'q'},'Schreibe ',mixed(t.w,t.n,t.d),' als gemeinen Bruch. Der Nenner ',strong(t.d),' bleibt gleich.'));},
@@ -1546,20 +1550,34 @@ TASKS.G04=Object.assign({},TASKS.G03,{name:'Kürzen so weit wie möglich',desc:'
 function digitSum(n){return String(n).split('').reduce((s,c)=>s+Number(c),0);}
 function divisible(n,k){return n%k===0;}
 const DIV_RULE={
-  2:'Durch 2 teilbar: letzte Ziffer 0, 2, 4, 6 oder 8. Gerade Zahlen gehen IMMER.',
-  3:'Durch 3 teilbar: Die Quersumme ist durch 3 teilbar.',
-  4:'Durch 4 teilbar: Die letzten zwei Ziffern sind durch 4 teilbar.',
-  5:'Durch 5 teilbar: letzte Ziffer 0 oder 5.',
-  6:'Durch 6 teilbar: durch 2 und durch 3 teilbar.',
+  2:'Durch 2 teilbar: Die letzte Ziffer ist 0, 2, 4, 6 oder 8 (gerade Zahlen gehen IMMER).',
+  3:'Durch 3 teilbar: Die Quersumme (alle Ziffern addieren) ist durch 3 teilbar.',
+  4:'Durch 4 teilbar: Die letzten zwei Ziffern bilden eine Zahl, die durch 4 teilbar ist.',
+  5:'Durch 5 teilbar: Die letzte Ziffer ist 0 oder 5.',
+  6:'Durch 6 teilbar: Die Zahl ist durch 2 und durch 3 teilbar.',
   9:'Durch 9 teilbar: Die Quersumme ist durch 9 teilbar.',
-  10:'Durch 10 teilbar: letzte Ziffer 0.'
+  10:'Durch 10 teilbar: Die letzte Ziffer ist 0.'
 };
-TASKS.T01={area:'Grundlagen',name:'Teilbarkeit',desc:'Blitzcheck: Geht das Kürzen mit 2, 3, 5, 9 oder 10?',notes:['M3'],size:8,
+/* Erklärung mit konkreter Rechnung (als Text-Zeilen) */
+function divExplain(n,k){
+  const last=n%10,ds=digitSum(n),sum=String(n).split('').join(' + ');
+  const yn=(ok)=>ok?'ja':'nein';
+  switch(k){
+    case 2:return ['Letzte Ziffer von '+n+': '+last+' → '+(last%2===0?'gerade':'ungerade')+'.'];
+    case 5:return ['Letzte Ziffer von '+n+': '+last+' → '+(last===0||last===5?'0 oder 5':'weder 0 noch 5')+'.'];
+    case 10:return ['Letzte Ziffer von '+n+': '+last+' → '+(last===0?'0':'nicht 0')+'.'];
+    case 3:case 9:return ['Quersumme: '+sum+' = '+ds+'.',ds+' ist '+(ds%k===0?'':'nicht ')+'durch '+k+' teilbar.'];
+    case 4:{const l2=n%100;return ['Letzte zwei Ziffern: '+l2+'.',l2+' : 4 '+(l2%4===0?'geht auf ('+(l2/4)+').':'geht nicht auf.')];}
+    case 6:return ['Durch 2? Letzte Ziffer '+last+' → '+yn(n%2===0)+'.','Durch 3? Quersumme '+sum+' = '+ds+' → '+yn(ds%3===0)+'.','Beides nötig: '+(n%6===0?'ja':'nein')+'.'];
+  }
+  return [];
+}
+TASKS.T01={area:'Grundlagen',name:'Teilbarkeit',desc:'Blitzcheck: Geht das Kürzen mit 2, 3, 4, 5, 6, 9 oder 10?',notes:['M7','M3'],size:8,
   gen(level,R){
-    const k=R.pick(level===1?[2,5,10]:[2,3,4,5,6,9,10]);
+    const k=R.pick([2,3,4,5,6,9,10]);
     const yes=R.chance(0.5);
     let n,tries=0;
-    do{n=level===1?R.int(12,999):R.int(120,9999);tries++;}while(divisible(n,k)!==yes&&tries<200);
+    do{n=level===1?R.int(12,60):R.int(60,300);tries++;}while(divisible(n,k)!==yes&&tries<200);
     return {type:'T01',level,n,k,avoid:[]};
   },
   prompt(t,h){h.append(el('p',{class:'q'},'Ist ',strong(t.n),' durch ',strong(t.k),' teilbar?'));},
@@ -1580,18 +1598,14 @@ TASKS.T01={area:'Grundlagen',name:'Teilbarkeit',desc:'Blitzcheck: Geht das Kürz
   },
   validate(t,d){
     if(!d.ans)return invalid('Tippe auf Ja oder Nein.');
-    const truth=divisible(t.n,t.k)?'ja':'nein';
-    if(d.ans===truth)return right(truth==='ja'?'Richtig! '+t.n+' ist durch '+t.k+' teilbar.':'Richtig! '+t.n+' ist nicht durch '+t.k+' teilbar.');
-    return wrong('div','Nicht ganz. '+DIV_RULE[t.k]);
+    const truth=divisible(t.n,t.k)?'ja':'nein',ex=divExplain(t.n,t.k).join(' ');
+    if(d.ans===truth)return right('Richtig! '+ex);
+    return wrong('div','Nicht ganz. '+DIV_RULE[t.k]+' '+ex);
   },
   solution(t){
-    const out=[line(DIV_RULE[t.k])];
-    if(t.k===3||t.k===9)out.push(line('Quersumme von '+t.n+': '+String(t.n).split('').join(' + ')+' = '+digitSum(t.n)));
-    if(t.k===4)out.push(line('Letzte zwei Ziffern: '+(t.n%100)));
-    out.push(line(strong(t.n+(divisible(t.n,t.k)?' ist teilbar durch ':' ist nicht teilbar durch ')+t.k)));
-    return out;
+    return [line(strong('Regel: '),DIV_RULE[t.k]),...divExplain(t.n,t.k).map(x=>line(x)),line(strong(t.n+(divisible(t.n,t.k)?' ist durch ':' ist nicht durch ')+t.k+' teilbar.'))];
   },
-  hints(t){return [['Schau dir die letzte Ziffer an.'],[DIV_RULE[t.k]]];}
+  hints(t){return [['Schau dir die Ziffern an.'],[DIV_RULE[t.k]]];}
 };
 
 /* ---------- G05 Erweitern und Kürzen gemischt ---------- */
@@ -1650,6 +1664,24 @@ TASKS.G05={area:'Grundlagen',name:'Erweitern und Kürzen gemischt',desc:'Mal erw
     return withRules(t.mode==='denom'?['Vergleiche den alten und den neuen Nenner: Wird er größer oder kleiner? Dann musst du erweitern oder kürzen.','Finde heraus, womit sich der Nenner verändert hat. Dieselbe Rechnung gilt für den Zähler.']:['Rechne die beiden Schritte nacheinander: zuerst erweitern, dann kürzen.','Beim Erweitern multiplizierst du Zähler und Nenner, beim Kürzen teilst du beide.']);
   }
 };
+
+
+/* Zahlenbereich der Brüche: Niveau 1 bis 60, Niveau 2 bis 300 */
+function numsOf(t){
+  const out=[],push=(x)=>{if(typeof x==='number')out.push(x);else if(Array.isArray(x))x.forEach(push);};
+  ['a','b','p','q','N','from','to','mid','shown','pre'].forEach(k=>push(t[k]));
+  if(t.terms)t.terms.forEach(x=>{push(x.n);push(x.d);});
+  if((t.type==='G02'||(t.type==='G05'&&t.mode==='twostep'))&&t.k){out.push(t.a*t.k,t.b*t.k);}
+  return out;
+}
+['G02','G03','G04','G05','U01','U02','U03','O02'].forEach(id=>{
+  const gen=TASKS[id].gen;
+  TASKS[id].gen=function(level,R){
+    const lim=level===1?60:300;let t;
+    for(let i=0;i<80;i++){t=gen.call(this,level,R);if(Math.max(...numsOf(t))<=lim)return t;}
+    return t;
+  };
+});
 
 /* ---- Schnittstelle gemäß Konzeption ---- */
 function generateTask(typeId,level,rng){return TASKS[typeId].gen(level,rng||RNG);}
