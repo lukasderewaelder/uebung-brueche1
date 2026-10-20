@@ -13,7 +13,7 @@
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;overflow-x:hidden}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.5 "Comic Sans MS","Comic Sans","Chalkboard SE","Comic Neue",cursive,sans-serif;overflow-x:hidden}
 button,input,select{font:inherit;color:inherit}
 :focus-visible{outline:3px solid #f5a623;outline-offset:2px}
 h1,h2,h3{line-height:1.25;margin:0 0 .5em}
@@ -44,7 +44,7 @@ input:disabled{opacity:.85}
 .topbar{display:flex;align-items:center;gap:12px;padding:10px 20px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30;padding-top:max(10px,env(safe-area-inset-top))}
 .brand{font-weight:700;font-size:1.15rem;color:var(--accent-d);cursor:pointer;background:none;border:0;padding:6px 0;min-height:44px}
 .topbar .title{font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.shell{display:grid;grid-template-columns:260px minmax(0,1fr) 360px;gap:20px;max-width:1560px;margin:0 auto;padding:20px}
+.shell{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;max-width:1560px;margin:0 auto;padding:20px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px}
 .btn{min-height:48px;padding:0 18px;border-radius:10px;border:1.5px solid var(--line);background:#fff;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-align:center}
 .btn:hover:not(:disabled){border-color:var(--accent)}
@@ -252,6 +252,21 @@ g.cell:focus-visible>*{stroke:#f5a623;stroke-width:4}
   .actionbar .btn{padding:0 8px;font-size:.92rem}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.tabs{display:flex;gap:8px;flex:1;justify-content:center}
+.tabbtn{min-height:52px;padding:0 26px;border-radius:14px;border:2px solid var(--accent);background:#fff;color:var(--accent);font-size:1.2rem;font-weight:700;cursor:pointer}
+.tabbtn[aria-current="true"]{background:var(--accent);color:#fff}
+.home h1{text-align:center;margin:10px 0 16px}
+.menu{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin:16px 0}
+.bigbtn{display:flex;align-items:center;gap:18px;min-height:120px;padding:18px 22px;border:3px solid var(--accent);border-radius:20px;background:#fff;cursor:pointer;text-align:left;box-shadow:0 4px 0 var(--accent)}
+.bigbtn:hover{background:var(--accent-bg)}
+.bigbtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--accent)}
+.bigbtn .ico{font-size:3rem;line-height:1}
+.bigbtn .tx{display:flex;flex-direction:column;gap:2px}
+.bigbtn b{font-size:1.4rem;color:var(--accent-d)}
+.bigbtn small{font-size:1rem;color:var(--muted)}
+.levelrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;margin:8px 0}
+.levelrow .seg button{min-height:52px;font-size:1.05rem}
+@media (max-width:599px){.tabbtn{padding:0 12px;font-size:1rem;flex:1}.tabs{gap:6px}.bigbtn{min-height:100px;padding:14px}.bigbtn .ico{font-size:2.4rem}.levelrow .seg{width:100%}.levelrow .seg button{flex:1;padding:0 6px}}
 </style>
 </head>
 <body>
@@ -1404,32 +1419,31 @@ function go(view){S.view=view;persist();renderAll();window.scrollTo(0,0);}
 const openEntry=(id)=>go({kind:isGame(id)?'game':'practice',id});
 function setLevel(id,l){S.levelByType[id]=l;persist();renderAll();}
 
-function topbar(title,back){
+const GROUPS={
+  'Grundlagen':{icon:'🧩',text:'Gleiche Anteile, Erweitern, Kürzen und Bilder',ids:['G01','G02','G03','B01']},
+  'Umkehraufgaben':{icon:'🔍',text:'Lücken füllen, Zahlen finden, Fehler suchen, mehrere Lösungen',ids:['U01','U02','U03','O01','O02']},
+  'Umrechnen':{icon:'🔄',text:'Dezimalzahlen, Brüche und gemischte Zahlen',ids:['D01','D02','D03']}
+};
+const ICON={G01:'👀',G02:'✖️',G03:'✂️',B01:'🎨',U01:'🕳️',U02:'❓',U03:'🕵️',O01:'👪',O02:'🛤️',D01:'🔢',D02:'➗',D03:'🍰',S01:'🃏',S02:'🔐'};
+function backTarget(){
+  const v=S.view;
+  if(v.kind==='practice'){const g=Object.keys(GROUPS).find(k=>GROUPS[k].ids.includes(v.id));return {kind:'home',tab:'aufgaben',group:g};}
+  if(v.kind==='game')return {kind:'home',tab:'spiele'};
+  if(v.kind==='home'&&v.group)return {kind:'home',tab:'aufgaben'};
+  return null;
+}
+function topbar(){
+  const v=S.view,tab=v.kind==='game'?'spiele':(v.kind==='home'?(v.tab||'aufgaben'):'aufgaben');
+  const bt=backTarget();
+  const tabBtn=(key,label)=>el('button',{type:'button',class:'tabbtn','aria-current':String(tab===key),onclick:()=>go({kind:'home',tab:key})},label);
   return el('header',{class:'topbar'},
-    back?el('button',{type:'button',class:'btn small',onclick:()=>go({kind:'home'})},'← Übersicht'):null,
-    el('button',{type:'button',class:'brand',onclick:()=>go({kind:'home'})},'Bruchwerkstatt'),
-    el('span',{class:'title'},title||''));
+    bt?el('button',{type:'button',class:'btn small',onclick:()=>go(bt)},'← Zurück'):null,
+    el('div',{class:'tabs',role:'tablist'},tabBtn('aufgaben','📝 Aufgaben'),tabBtn('spiele','🎮 Spiele')));
 }
 function levelControl(id){
   const l=levelOf(id);
   const mk=(n,long,short)=>el('button',{type:'button','aria-pressed':String(l===n),onclick:()=>setLevel(id,n)},el('span',{class:'long'},long),el('span',{class:'short'},short));
   return el('div',{class:'seg',role:'group','aria-label':'Niveau wählen'},mk(1,'Niveau 1 – Grundlagen','Niveau 1'),mk(2,'Niveau 2 – Knifflig','Niveau 2'));
-}
-function buildNav(current){
-  const nav=el('nav',{class:'sidenav card','aria-label':'Übungen'});
-  AREAS.forEach(a=>{
-    nav.append(el('h3',null,a));
-    ALL_IDS.filter(id=>infoOf(id).area===a).forEach(id=>{
-      nav.append(el('button',{type:'button',class:'navbtn','aria-current':String(id===current),onclick:()=>openEntry(id)},el('span',{class:'id'},id),infoOf(id).name));
-    });
-  });
-  return nav;
-}
-function phoneSwitch(current){
-  const sel=el('select',{class:'phoneswitch','aria-label':'Übung wechseln'});
-  ALL_IDS.forEach(id=>{const o=el('option',{value:id},id+' · '+infoOf(id).name);if(id===current)o.selected=true;sel.append(o);});
-  sel.addEventListener('change',()=>openEntry(sel.value));
-  return sel;
 }
 /* Hilfespalte: rechts auf dem Desktop, Schublade (Tablet), Bottom-Sheet (Smartphone) */
 function helpPanel(){
@@ -1454,12 +1468,12 @@ function renderPractice(id){
   const shell=el('div',{class:'shell'});
   const help=helpPanel();
   const main=el('main',{class:'work'});
-  shell.append(buildNav(id),main,help.el);
+  shell.append(main,help.el);
   root.append(shell);
   app.append(root);
 
-  const worktop=el('div',{class:'worktop'},el('h2',null,id+' · '+T.name),levelControl(id));
-  main.append(phoneSwitch(id),worktop);
+  const worktop=el('div',{class:'worktop'},el('h2',null,T.name),levelControl(id));
+  main.append(worktop);
 
   const fillStats=()=>help.setStats(statsBlock(key,el('p',null,el('button',{type:'button',class:'btn small danger',onclick:()=>{S.rounds[key]={results:[],cur:null,size:T.size};persist();renderAll();}},'Runde neu beginnen'))));
   if(round.results.length>=round.size&&!round.cur){
@@ -1595,14 +1609,14 @@ function renderMemory(id){
   let busy=false;
   const root=el('div');root.append(topbar(GAMES[id].name,true));
   const shell=el('div',{class:'shell'});const help=helpPanel();const main=el('main',{class:'work'});
-  shell.append(buildNav(id),main,help.el);root.append(shell);app.append(root);
+  shell.append(main,help.el);root.append(shell);app.append(root);
   help.setNotes(['M1','M2','M3'].map(n=>el('section',{class:'note'},el('h3',null,n+' · '+NOTES[n].title),...NOTES[n].build([]))));
   const fillStats=()=>help.setStats(el('div',null,el('h3',null,'Deine Runden'),el('table',{class:'stats'},
     el('tr',null,el('td',null,'Gespielte Runden'),el('td',null,el('b',null,String(rec.played)))),
     el('tr',null,el('td',null,'Beendete Runden'),el('td',null,el('b',null,String(rec.won)))),
     el('tr',null,el('td',null,'Wenigste Versuche'),el('td',null,el('b',null,rec.best==null?'–':String(rec.best)))))));
   fillStats();
-  main.append(phoneSwitch(id),el('div',{class:'worktop'},el('h2',null,'S01 · Bruch-Memory'),levelControl(id)));
+  main.append(el('div',{class:'worktop'},el('h2',null,'Bruch-Memory'),levelControl(id)));
   const card=el('div',{class:'card'});
   const stats=el('div',{class:'memstats','aria-live':'polite'});
   const msg=el('div',{'aria-live':'polite'});
@@ -1672,12 +1686,12 @@ function renderVault(id){
   const v=rec.state;
   const root=el('div');root.append(topbar(GAMES[id].name,true));
   const shell=el('div',{class:'shell'});const help=helpPanel();const main=el('main',{class:'work'});
-  shell.append(buildNav(id),main,help.el);root.append(shell);app.append(root);
+  shell.append(main,help.el);root.append(shell);app.append(root);
   const fillStats=()=>help.setStats(el('div',null,el('h3',null,'Deine Runden'),el('table',{class:'stats'},
     el('tr',null,el('td',null,'Gespielte Runden'),el('td',null,el('b',null,String(rec.played)))),
     el('tr',null,el('td',null,'Geknackte Tresore'),el('td',null,el('b',null,String(rec.won)))))));
   fillStats();
-  main.append(phoneSwitch(id),el('div',{class:'worktop'},el('h2',null,'S02 · Der Bruch-Tresor'),levelControl(id)));
+  main.append(el('div',{class:'worktop'},el('h2',null,'Der Bruch-Tresor'),levelControl(id)));
   const top=el('div',{class:'card'});
   const puzzle=el('div',{class:'card',style:'margin-top:14px'});
   const entryBox=el('div',{class:'card',style:'margin-top:14px'});
@@ -1786,34 +1800,34 @@ function renderVault(id){
 /* =====================================================================
    10 Startseite
    ===================================================================== */
-const AREA_TEXT={
-  'Grundlagen':'Gleichwertigkeit, Erweitern, Kürzen und Bruchbilder.',
-  'Umkehraufgaben':'Lücken füllen, Zahlen finden, Fehler entdecken.',
-  'Offene Aufgaben':'Mehrere Lösungen und verschiedene Rechenwege.',
-  'Darstellungen umwandeln':'Dezimalbruch, Dezimalzahl und gemischte Schreibweise.',
-  'Spiele':'Bruch-Memory und Bruch-Tresor.'
-};
+function bigBtn(id,onclick,title,text,extra){
+  return el('button',{type:'button',class:'bigbtn',onclick},el('span',{class:'ico','aria-hidden':'true'},id),el('span',{class:'tx'},el('b',null,title),el('small',null,text),extra?el('small',{class:'pg'},extra):null));
+}
+function listLevel(ids){
+  const l=levelOf(ids[0]);
+  const set=(n)=>{ids.forEach(i=>S.levelByType[i]=n);persist();renderAll();};
+  const mk=(n,t)=>el('button',{type:'button','aria-pressed':String(l===n),onclick:()=>set(n)},t);
+  return el('div',{class:'levelrow'},el('span',null,'Schwierigkeit:'),el('div',{class:'seg',role:'group','aria-label':'Niveau wählen'},mk(1,'⭐ Niveau 1 – Grundlagen'),mk(2,'⭐⭐ Niveau 2 – Knifflig')));
+}
 function renderHome(){
-  const root=el('div');root.append(topbar('',false));
+  const v=S.view,tab=v.tab||'aufgaben',root=el('div');
+  root.append(topbar());
   const home=el('div',{class:'home'});
-  home.append(el('h1',null,'Bruchwerkstatt'),
-    el('p',null,'Beim Erweitern und Kürzen ändert sich die Einteilung, aber nicht der Wert des Bruchs. Wähle eine Übung. Jede Übung gibt es auf zwei Niveaus. Merkkasten und Tipps helfen dir jederzeit.'),
-    el('div',{class:'rule'},strong('Gut zu wissen: '),RULE2,' Mit 5 und 10 geht es auch einfach: Enden beide Zahlen auf 0 oder 5, kannst du durch 5 kürzen. Enden beide auf 0, kannst du durch 10 kürzen.'));
-  AREAS.forEach(a=>{
-    home.append(el('h2',{class:'area'},a,' ',el('small',null,'– '+AREA_TEXT[a])));
-    const grid=el('div',{class:'homegrid'});
-    ALL_IDS.filter(id=>infoOf(id).area===a).forEach(id=>{
-      const info=infoOf(id),l=levelOf(id),P=S.progress[keyOf(id,l)];
-      grid.append(el('div',{class:'card tcard'},
-        el('span',{class:'tid'},id),el('h3',null,info.name),el('p',null,info.desc),levelControl(id),
-        el('div',{class:'row'},el('button',{type:'button',class:'btn primary',onclick:()=>openEntry(id)},isGame(id)?'Spielen':'Üben'),
-          el('span',{class:'pg'},isGame(id)?(S.games[keyOf(id,l)]?`Runden: ${S.games[keyOf(id,l)].played}`:'Noch nicht gespielt'):(P&&P.done?`${P.done} Aufgaben bearbeitet`:'Noch nicht begonnen')))));
-    });
-    home.append(grid);
-  });
-  home.append(el('p',null,el('button',{type:'button',class:'btn small danger',onclick:()=>{
-    if(confirm('Wirklich den gesamten Fortschritt auf diesem Gerät löschen?')){Store.clear();S=defaultState();SEEN.clear();renderAll();}
-  }},'Gesamten Fortschritt löschen')));
+  if(tab==='spiele'){
+    home.append(el('h1',null,'Spiele'),listLevel(['S01','S02']),el('div',{class:'menu'},
+      ...['S01','S02'].map(id=>{const r=S.games[keyOf(id,levelOf(id))];return bigBtn(ICON[id],()=>openEntry(id),GAMES[id].name,GAMES[id].desc,r?`Runden: ${r.played}`:'');})));
+  }else if(!v.group||!GROUPS[v.group]){
+    home.append(el('h1',null,'Was möchtest du üben?'),el('div',{class:'menu'},
+      ...Object.keys(GROUPS).map(g=>bigBtn(GROUPS[g].icon,()=>go({kind:'home',tab:'aufgaben',group:g}),g,GROUPS[g].text))),
+      el('div',{class:'rule'},strong('Gut zu wissen: '),RULE2,' Enden beide Zahlen auf 0 oder 5, geht auch die 5. Enden beide auf 0, geht auch die 10.'),
+      el('p',null,el('button',{type:'button',class:'btn small danger',onclick:()=>{
+        if(confirm('Wirklich den gesamten Fortschritt auf diesem Gerät löschen?')){Store.clear();S=defaultState();SEEN.clear();renderAll();}
+      }},'Fortschritt löschen')));
+  }else{
+    const g=GROUPS[v.group];
+    home.append(el('h1',null,g.icon+' '+v.group),listLevel(g.ids),el('div',{class:'menu'},
+      ...g.ids.map(id=>{const P=S.progress[keyOf(id,levelOf(id))];return bigBtn(ICON[id],()=>openEntry(id),TASKS[id].name,TASKS[id].desc,P&&P.done?`${P.done} Aufgaben bearbeitet`:'');})));
+  }
   root.append(home);app.append(root);
 }
 
