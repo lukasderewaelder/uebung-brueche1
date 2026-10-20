@@ -8,7 +8,7 @@ Interaktive Übungsumgebung als einzelne Datei: `index.html` im Browser öffnen 
 - **Schnellcheck**: 10 Blitzfragen zum Antippen (Ja/Nein, A–D), sofortige Rückmeldung, keine Zeitmessung; am Ende steht je Fähigkeit „sitzt“ oder „üben“ und die passende Übung als nächster Schritt
 - Teilbarkeit mit 2, 3, 4, 5, 6, 9 und 10 – jeweils mit Regel und Rechnung
 - Brüche werden immer mit Bruchstrich dargestellt; Zahlenbereich der Brüche: leicht bis 60, knifflig bis 300; Teilbarkeit: leicht bis 500, knifflig bis 1000
-- Merkkästen M1–M7, zweistufige Tipps (Kürzen-Tipps nennen immer: *Die 2 geht IMMER, wenn Zähler und Nenner gerade sind*; ebenso 5 und 10)
+- Merkkästen M1–M7, zweistufige und einklappbare Tipps (Kürzen-Tipps nennen immer: *Die 2 geht IMMER, wenn Zähler und Nenner gerade sind*; ebenso 5 und 10)
 - Fortschritt (Punkte, Ränge, Serien, Sterne) wird lokal im Browser gespeichert
 - Selbsttest in der Entwicklerkonsole: `runSelfTests()`
 
