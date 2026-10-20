@@ -87,7 +87,10 @@ input:disabled{opacity:.8}
   background:var(--bp-2);border-bottom:2px solid var(--chalk);box-shadow:0 4px 0 var(--bp),0 5px 0 var(--grid-2);
 }
 .brand{display:flex;align-items:center;gap:8px;font:700 .9rem var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--chalk)}
-.brand .ic{color:var(--amber)}
+.brand{min-width:0}
+.brand .bt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brand .ic{color:var(--amber);flex:none}
+.gchip{flex:none}
 .topbar .title{flex:1;min-width:0;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .backbtn{min-height:44px}
 
@@ -389,6 +392,59 @@ svg.interactive{touch-action:none}
 .bomrow .labstat.done{color:var(--ok)}
 .bomrow .labstat .ic{width:1rem;height:1rem}
 
+/* Lernpfad: Anlagenschema */
+.pfadhead{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;margin:6px 0 12px;padding:12px 14px;background:var(--bp-2);border:3px double var(--chalk)}
+.ph-prog{display:flex;flex-direction:column;gap:6px;min-width:0}
+.ph-prog b{font:700 1rem var(--font-mono);letter-spacing:.08em}
+.segn{display:flex;gap:3px}
+.segn i{flex:1;max-width:26px;height:14px;border:1.5px solid var(--chalk-dim)}
+.segn i.on{background:var(--ok);border-color:var(--ok)}
+.ph-day{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:92px;text-align:center}
+.ph-day small{font:700 .72rem var(--font-mono);letter-spacing:.06em;color:var(--chalk-dim)}
+.ph-day small.gstreak{color:var(--erw)}
+.lamp{display:grid;place-items:center;width:26px;height:26px;border:3px solid var(--amber);border-radius:50%;color:var(--on-amber);background:var(--bp)}
+.lamp.on{background:var(--ok);border-color:var(--ok)}
+.lamp .ic{width:15px;height:15px}
+.pfadbanner{display:flex;align-items:center;gap:12px;margin:12px 0;padding:10px 12px;border:2px dashed var(--chalk-dim);background:var(--bp-2)}
+.pfadbanner>.ic{width:30px;height:30px;color:var(--amber);flex:none}
+.pfadbanner{flex-wrap:wrap}
+.pfadbanner .btn{flex:1 1 100%}
+@media (min-width:521px){.pfadbanner .btn{flex:0 0 auto}}
+.pb-tx{flex:1;min-width:0;display:flex;flex-direction:column;font-size:.92rem;line-height:1.3}
+.pb-tx span{color:var(--chalk-dim)}
+.rail{list-style:none;margin:14px 0 0;padding:0}
+.rail>li{position:relative;padding:0 0 10px 48px}
+.rail>li::before{content:"";position:absolute;left:18px;top:0;bottom:0;border-left:3px dashed var(--grid-2)}
+.rail>li:first-child::before{top:22px}
+.rail>li:last-child::before{bottom:auto;height:34px}
+.rail>li.done::before{border-left:0;width:3px;background:linear-gradient(180deg,var(--ok) 0 9px,transparent 9px) 0 0/3px 14px repeat-y;animation:flow 1s linear infinite}
+.rail>li.pgrp{display:flex;align-items:center;gap:8px;padding-top:14px;padding-bottom:6px;font:700 .75rem var(--font-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--chalk-dim)}
+.rail .lamp{position:absolute;left:6px;top:20px}
+.mod[data-acc="erw"]{--acc:var(--erw)}
+.mod[data-acc="kue"]{--acc:var(--kue)}
+.mod[data-acc="mix"]{--acc:var(--erw)}
+.mod[data-acc="ok"]{--acc:var(--ok)}
+.modbtn{width:100%;display:grid;grid-template-columns:2rem 1fr auto;gap:10px;align-items:center;min-height:66px;padding:10px 12px 10px 20px;text-align:left;background:var(--bp-2);color:var(--chalk);border:2px solid var(--chalk);box-shadow:inset 8px 0 0 var(--acc,var(--amber)),0 3px 0 rgba(0,0,0,.35);cursor:pointer}
+.modbtn:active{transform:translateY(2px);box-shadow:inset 8px 0 0 var(--acc,var(--amber))}
+.mpos{font:700 .85rem var(--font-mono);color:var(--acc,var(--amber))}
+.mnm{display:flex;flex-direction:column;min-width:0}
+.mnm b{font-size:1rem}
+.mnm small{color:var(--chalk-dim);font-size:.8rem;line-height:1.25}
+.mside{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.mtag{font:700 .62rem var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--chalk-dim)}
+.mod.frei .modbtn{border-style:dotted}
+.mod.done .mtag{color:var(--ok)}
+.mod.done .lamp{background:var(--ok);border-color:var(--ok)}
+.mod.next .mtag{color:var(--amber)}
+.mod.next .modbtn{border-color:var(--amber);border-width:3px;padding:9px 11px 9px 19px}
+.mod.next .lamp{border-color:var(--amber);background:rgba(255,197,61,.25);animation:blink 1.2s steps(2,jump-none) infinite}
+.mod.locked .lamp{border-style:dashed;border-color:var(--chalk-dim);color:var(--chalk-dim)}
+.mod.locked .modbtn{border-style:dashed;border-color:var(--chalk-dim);color:var(--chalk-dim);box-shadow:inset 8px 0 0 var(--grid-2)}
+.mod.locked .mpos{color:var(--chalk-dim)}
+.modalbtns{display:grid;gap:8px;margin-top:12px}
+.modalcard p{margin:.4em 0}
+.modalcard .btn.alt{background:var(--paper);color:var(--ink);border-color:var(--ink)}
+
 /* ---------- 9 Menüs ---------- */
 .home{max-width:720px;margin:0 auto;padding:14px 14px 96px}
 .home h1{margin:16px 0 10px;font:700 1rem var(--font-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--chalk)}
@@ -405,6 +461,7 @@ svg.interactive{touch-action:none}
 .bigbtn[data-pat="dots"] .ico{background-image:radial-gradient(var(--grid-2) 1.6px,transparent 2.2px);background-size:9px 9px}
 .bigbtn[data-pat="dash"] .ico{background-image:repeating-linear-gradient(0deg,transparent 0 8px,var(--grid-2) 8px 9px)}
 .bigbtn[data-pat="hatch"] .ico{background-image:repeating-linear-gradient(45deg,var(--grid-2) 0 1.5px,transparent 1.5px 7px)}
+.home>.bigbtn{width:100%}
 .bigbtn.go{background:var(--amber);color:var(--on-amber);border-color:var(--amber);--acc:var(--on-amber)}
 .bigbtn.go .ico{border-color:var(--on-amber);color:var(--on-amber)}
 .bigbtn.go small{color:var(--on-amber)}
@@ -542,6 +599,7 @@ svg.interactive{touch-action:none}
 @keyframes stamp{from{transform:translateY(-50%) rotate(-7deg) scale(1.7);opacity:0}to{transform:translateY(-50%) rotate(-7deg) scale(1);opacity:1}}
 @keyframes stampin{from{transform:rotate(-6deg) scale(1.7);opacity:0}to{transform:rotate(-6deg) scale(1);opacity:1}}
 @keyframes blink{50%{opacity:.45}}
+@keyframes flow{to{background-position:0 14px}}
 .shake{animation:shake .3s}
 @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
@@ -782,7 +840,7 @@ const Store={
   },
   clear(){try{localStorage.removeItem(KEY);}catch(e){this.ok=false;}}
 };
-const defaultState=()=>({v:1,levelByType:{},rounds:{},progress:{},games:{},skills:{},lab:null,view:{kind:'home'}});
+const defaultState=()=>({v:1,levelByType:{},rounds:{},progress:{},games:{},skills:{},lab:null,passed:{},checked:{},days:{},view:{kind:'home'}});
 let S=Object.assign(defaultState(),Store.load()||{});
 function persist(){Store.save(S);}
 
@@ -2353,6 +2411,181 @@ function renderLab(){
 }
 
 /* =====================================================================
+   Lernpfad: Bauteile nacheinander freischalten, Einstufung, Kurztest, Tagesziel
+   Pflicht-Bauteile (must) schalten das jeweils nächste frei; freiwillige
+   Bauteile blockieren nichts. „Fertig“ = bestanden (mind. 80 % der Runde
+   richtig) oder per Check (Schnellcheck / Kurztest).
+   ===================================================================== */
+const PATH=[
+  {id:'LAB',grp:'Entdecken',title:'Bruchlabor',desc:'Erweitern und Kürzen ausprobieren.'},
+  {id:'G01',grp:'Entdecken',must:true},
+  {id:'B01',grp:'Entdecken'},
+  {id:'G02',grp:'Erweitern',must:true},
+  {id:'T01',grp:'Kürzen',must:true},
+  {id:'G03',grp:'Kürzen',must:true},
+  {id:'G04',grp:'Kürzen',must:true},
+  {id:'G05',grp:'Mischen',must:true},
+  {id:'U01',grp:'Knobeln'},{id:'U02',grp:'Knobeln'},{id:'U03',grp:'Knobeln'},{id:'O02',grp:'Knobeln'},
+  {id:'Q00',grp:'Abschluss',must:true,final:true,title:'Abschlusscheck',desc:'10 Fragen zeigen, was du kannst. Ab 8 richtig gibt es die Urkunde.'}
+];
+const PATH_GROUPS={Entdecken:'lupe',Erweitern:'aus','Kürzen':'ein',Mischen:'zahnrad',Knobeln:'zirkel',Abschluss:'plakette'};
+/* Welche Fähigkeiten prüft der Kurztest für ein Bauteil? */
+const PATH_SKILLS={G01:['gleich'],G02:['erweitern'],T01:['teilbar'],G03:['kuerzen'],G04:['vollstaendig','kuerzen'],G05:['erweitern','kuerzen']};
+const PATH_ACC={LAB:'mix',Q00:'ok'};
+const needOf=(size)=>Math.ceil(size*4/5); /* 80 % */
+const stationTitle=(id)=>{const m=PATH.find(x=>x.id===id);return (m&&m.title)||(TASKS[id]&&TASKS[id].name)||id;};
+
+/* ---------- Zustand ---------- */
+function stationDone(id){
+  if(id==='LAB')return !!(S.lab&&S.lab.done);
+  if(id==='Q00')return !!S.final;
+  return !!(S.passed[id+'-L1']||S.passed[id+'-L2']||S.checked[id]);
+}
+const stationVia=(id)=>!!S.checked[id]&&!(S.passed[id+'-L1']||S.passed[id+'-L2']);
+/* Reihenfolge, Freischaltung: ein Bauteil ist offen, wenn alle Pflicht-Bauteile davor fertig sind */
+function pathState(){
+  const rows=[];let blocker=null;
+  PATH.forEach(m=>{
+    const done=stationDone(m.id),open=!blocker;
+    rows.push({m,id:m.id,must:!!m.must,done,via:done&&stationVia(m.id),open,locked:!done&&!open,blocker:open?null:blocker,next:false});
+    if(m.must&&!done&&!blocker)blocker=m.id;
+  });
+  const nx=rows.find(r=>r.must&&!r.done);
+  if(nx)nx.next=true;
+  return rows;
+}
+
+/* ---------- Tagesziel: mindestens eine Runde pro Tag ---------- */
+const dayKey=(d)=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+function markDay(){
+  const k=dayKey(new Date());
+  S.days[k]=(S.days[k]||0)+1;
+  const keys=Object.keys(S.days).sort();
+  while(keys.length>60)delete S.days[keys.shift()];
+  return S.days[k]===1;
+}
+function dayStreak(){
+  const d=new Date();let n=0;
+  if(!S.days[dayKey(d)])d.setDate(d.getDate()-1);
+  while(S.days[dayKey(d)]){n++;d.setDate(d.getDate()-1);}
+  return n;
+}
+
+/* ---------- Auswertung am Ende einer Runde ---------- */
+function onRoundEnd(id,lvl,round){
+  const right=round.results.filter(r=>r==='f'||r==='l').length,need=needOf(round.size);
+  const info={right,need,passed:right>=need,firstPass:false,placed:[],final:false,daily:false,quiz:null};
+  if(id==='Q00'){
+    /* Einstufung: je Fähigkeit beide Fragen richtig ⇒ Bauteil per Check fertig */
+    const per={};
+    round.results.forEach((r,i)=>{const sk=(round.sk||[])[i];if(sk)(per[sk]=per[sk]||[]).push(r==='f'||r==='l');});
+    const sure=Object.keys(per).filter(sk=>per[sk].length>=2&&per[sk].every(Boolean));
+    S.placed=true;
+    sure.forEach(sk=>{const st=Q_STATION[sk];if(st&&!stationDone(st)){S.checked[st]=true;info.placed.push(st);}});
+    if(sure.length===Q_SKILLS.length&&!stationDone('G05')){S.checked.G05=true;info.placed.push('G05');}
+    /* Abschluss: alle Pflicht-Bauteile davor fertig und mindestens 8 von 10 */
+    const ready=pathState().filter(r=>r.must&&!r.m.final).every(r=>r.done);
+    if(ready&&info.passed&&!S.final){S.final=true;info.final=true;}
+  }else if(id==='Q01'){
+    const st=S.quizFor;
+    info.quiz={station:st,right,need,passed:info.passed};
+    if(st&&info.passed&&!stationDone(st))S.checked[st]=true;
+  }else if(info.passed&&PATH.some(m=>m.id===id)){
+    info.firstPass=!stationDone(id);
+    S.passed[keyOf(id,lvl)]=true;
+  }
+  info.daily=markDay();
+  return info;
+}
+/* Punkte und Einblendung am Rundenende (eine Einblendung, damit nichts übereinanderliegt) */
+function roundAward(info){
+  let xp=15,label='Runde geschafft!';
+  if(info.quiz&&info.quiz.passed){xp+=10;label='Kurztest geschafft!';}
+  if(info.firstPass){xp+=20;label='Bauteil fertig!';}
+  if(info.daily){xp+=10;if(label==='Runde geschafft!')label='Tagesziel!';}
+  if(info.final){xp+=50;label='Urkunde!';}
+  award(xp,label);
+  if(info.final)setTimeout(finalCard,700);
+}
+function finalCard(){
+  const m=modal([icon('plakette','big'),el('h2',null,'Urkunde'),el('p',{class:'rankname'},'Lernpfad geschafft'),el('div',{class:'stampbox'},'Geprüft'),
+    el('p',null,'Du kannst Erweitern und Kürzen. Stark!'),
+    el('button',{type:'button',class:'btn',onclick:()=>{m.remove();go({kind:'home',tab:'pfad'});}},'Zum Lernpfad')]);
+}
+/* Schema 4: Lernpfad-Felder; Bestandsnutzer behalten ihren Stand (mind. 4 Treffer beim 1. Versuch ⇒ bestanden) */
+function migrate4(st){
+  st.passed=st.passed||{};st.checked=st.checked||{};st.days=st.days||{};st.skills=st.skills||{};
+  Object.keys(st.progress||{}).forEach(k=>{
+    const p=st.progress[k];
+    if(p&&p.first>=4&&PATH.some(m=>k.startsWith(m.id+'-L')))st.passed[k]=true;
+  });
+}
+
+/* ---------- Wege zu den Bauteilen ---------- */
+function openStation(id){
+  if(id==='LAB')go({kind:'lab',from:'pfad'});
+  else{S.last=id;go({kind:'practice',id,from:'pfad'});}
+}
+function startKurztest(stationId){
+  S.quizSkills=PATH_SKILLS[stationId].slice();S.quizFor=stationId;
+  S.levelByType.Q01=1;S.rounds[keyOf('Q01',1)]={results:[],cur:null,size:TASKS.Q01.size};
+  go({kind:'practice',id:'Q01',from:'pfad'});
+}
+function lockSheet(row){
+  const b=row.blocker,name=stationTitle(b);
+  const m=modal([icon('schloss','big'),el('h2',null,'Noch gesperrt'),
+    el('p',null,'Erst dran: ',el('b',null,name),'.'),
+    el('div',{class:'modalbtns'},
+      el('button',{type:'button',class:'btn',onclick:()=>{m.remove();openStation(b);}},'Zu: '+name),
+      PATH_SKILLS[b]?el('button',{type:'button',class:'btn alt',onclick:()=>{m.remove();startKurztest(b);}},'Ich kann das schon (Kurztest)'):null,
+      el('button',{type:'button',class:'btn alt',onclick:()=>m.remove()},'Schließen'))]);
+}
+
+/* ---------- Ansicht: Anlagenschema ---------- */
+function modNode(r,pos){
+  const id=r.id,m=r.m,title=stationTitle(id),desc=m.desc||(TASKS[id]&&TASKS[id].desc)||'';
+  const state=r.done?'done':r.next?'next':r.locked?'locked':'open';
+  const tag=r.done?(r.via?'Per Check':'Fertig'):r.next?'Weiter':r.locked?'Gesperrt':'Freiwillig';
+  const stars=(id==='LAB'||id==='Q00')?null:starNodes((S.passed[id+'-L1']?1:0)+(S.passed[id+'-L2']?1:0),2);
+  const li=el('li',{class:'mod '+state+(r.must?'':' frei'),'data-acc':ACC[id]||PATH_ACC[id]||null});
+  li.append(el('span',{class:'lamp','aria-hidden':'true'},r.done?icon('haken'):r.locked?icon('schloss'):null),
+    el('button',{type:'button',class:'modbtn','aria-label':title+': '+tag.toLowerCase()+(r.must||tag==='Freiwillig'?'':', freiwillig'),onclick:()=>r.locked?lockSheet(r):openStation(id)},
+      el('span',{class:'mpos'},String(pos+1).padStart(2,'0')),
+      el('span',{class:'mnm'},el('b',null,title),el('small',null,desc)),
+      el('span',{class:'mside'},el('span',{class:'mtag'},tag),stars)));
+  return li;
+}
+function pfadMap(rows){
+  const ol=el('ol',{class:'rail'});let last=null;
+  rows.forEach((r,i)=>{
+    if(r.m.grp!==last){last=r.m.grp;ol.append(el('li',{class:'pgrp'},icon(PATH_GROUPS[last]),last));}
+    ol.append(modNode(r,i));
+  });
+  return ol;
+}
+function pfadHead(doneN,total){
+  const today=S.days[dayKey(new Date())]||0,streak=dayStreak();
+  const seg=el('span',{class:'segn',role:'img','aria-label':doneN+' von '+total+' Pflicht-Bauteilen fertig'});
+  for(let i=0;i<total;i++)seg.append(el('i',{class:i<doneN?'on':''}));
+  return el('div',{class:'pfadhead'},
+    el('div',{class:'ph-prog'},el('span',{class:'lblm'},'Pflicht-Bauteile'),seg,el('b',null,doneN+' von '+total)),
+    el('div',{class:'ph-day'},
+      el('span',{class:'lamp'+(today?' on':''),role:'img','aria-label':today?'Tagesziel erreicht':'Tagesziel noch offen'},today?icon('haken'):null),
+      el('span',{class:'lblm'},'Tagesziel'),el('small',null,today?'geschafft':'1 Runde'),
+      streak>1?el('small',{class:'gstreak'},'Serie '+streak+' Tage'):null));
+}
+function pfadTab(home){
+  const rows=pathState(),must=rows.filter(r=>r.must),doneN=must.filter(r=>r.done).length,next=rows.find(r=>r.next);
+  home.append(el('h1',null,'Lernpfad'),pfadHead(doneN,must.length));
+  if(next)home.append(bigBtn('play',()=>openStation(next.id),'Weiter geht’s',stationTitle(next.id),next.id==='Q00'||next.id==='LAB'?'':LEVEL_LABEL[levelOf(next.id)],'go'));
+  else home.append(el('div',{class:'msg ok'},'Alle Pflicht-Bauteile sind fertig – stark! Probiere die Knobel-Bauteile oder ein Spiel.'));
+  if(!S.placed&&next)home.append(el('div',{class:'pfadbanner'},icon('blitz'),
+    el('div',{class:'pb-tx'},el('b',null,'Schon fit?'),el('span',null,'10 Blitzfragen schalten Bauteile frei, die du schon kannst.')),
+    el('button',{type:'button',class:'btn small',onclick:()=>{S.last='Q00';go({kind:'practice',id:'Q00',from:'pfad'});}},'Schnellcheck starten')));
+  home.append(pfadMap(rows));
+}
+
+/* =====================================================================
    7 Aufgaben-Oberfläche (mountTask), Runden, Fortschritt
    ===================================================================== */
 const AREAS=['Grundlagen','Umkehraufgaben','Offene Aufgaben','Darstellungen umwandeln','Spiele'];
@@ -2616,6 +2849,7 @@ const ICON={Q00:'blitz',Q01:'blitz',G01:'lineal',T01:'teiler',G02:'aus',G03:'sch
 const ACC={G02:'erw',O01:'erw',G03:'kue',G04:'kue',T01:'kue',O02:'kue',G05:'mix'};
 function backTarget(){
   const v=S.view;
+  if(v.from==='pfad'&&(v.kind==='practice'||v.kind==='lab'))return {kind:'home',tab:'pfad'};
   if(v.kind==='practice'){const g=Object.keys(GROUPS).find(k=>GROUPS[k].ids.includes(v.id));return {kind:'home',tab:'ueben',group:g};}
   if(v.kind==='game')return {kind:'home',tab:'spiele'};
   if(v.kind==='lab')return {kind:'home',tab:'ueben',group:'Entdecken'};
@@ -2625,14 +2859,15 @@ function backTarget(){
 function topbar(title){
   const bt=backTarget();
   return el('header',{class:'topbar'},
-    bt?el('button',{type:'button',class:'btn small backbtn',onclick:()=>go(bt)},icon('zurueck'),'Zurück'):el('span',{class:'brand'},icon('zahnrad'),'Bruchwerkstatt'),
+    bt?el('button',{type:'button',class:'btn small backbtn',onclick:()=>go(bt)},icon('zurueck'),'Zurück'):el('span',{class:'brand'},icon('zahnrad'),el('span',{class:'bt'},'Bruchwerkstatt')),
     el('span',{class:'title'},title||''),
     chipNode());
 }
+const homeTab=()=>{const t=S.view.tab;return t==='ueben'||t==='spiele'||t==='rang'?t:'pfad';};
 function bottomNav(){
-  const tab=S.view.tab||'ueben';
+  const tab=homeTab();
   const b=(key,ic,label)=>el('button',{type:'button',class:'navb','aria-current':String(tab===key),onclick:()=>go({kind:'home',tab:key})},icon(ic),el('span',null,label));
-  return el('nav',{class:'bottomnav','aria-label':'Hauptmenü'},b('ueben','heft','Üben'),b('spiele','karten','Spiele'),b('rang','plakette','Rang'));
+  return el('nav',{class:'bottomnav','aria-label':'Hauptmenü'},b('pfad','pfad','Pfad'),b('ueben','heft','Üben'),b('spiele','karten','Spiele'),b('rang','plakette','Rang'));
 }
 const LEVEL_LABEL={1:'Leicht',2:'Knifflig'};
 function levelControl(id){
@@ -2712,7 +2947,12 @@ function renderPractice(id){
   buildDock(main,{hintBtn,noteBtn,primary,pad,msg});
 
   const P=prog(key);
-  const roundBonus=()=>{if(round.results.length>=round.size&&!round.bonus){round.bonus=true;persist();setTimeout(()=>award(15,'Runde geschafft!'),500);}};
+  const roundBonus=()=>{
+    if(round.results.length>=round.size&&!round.bonus){
+      round.bonus=true;round.info=onRoundEnd(id,lvl,round);persist();
+      const info=round.info;setTimeout(()=>roundAward(info),500);
+    }
+  };
   const cb={
     save:()=>persist(),
     msgHost:msg,
@@ -2749,7 +2989,7 @@ function renderPractice(id){
   solBtn.addEventListener('click',()=>{ctrl.solution();refresh();});
   skipBtn.addEventListener('click',()=>{
     if(st.status!=='open')return;
-    round.results.push('s');P.skipped++;P.done++;round.cur=null;persist();renderAll();roundBonus();
+    round.results.push('s');P.skipped++;P.done++;round.cur=null;roundBonus();persist();renderAll();
   });
   main.addEventListener('keydown',e=>{
     if(e.key==='Enter'&&e.target.tagName==='INPUT'&&e.target.type!=='radio'){e.preventDefault();onPrimary();}
@@ -2759,25 +2999,53 @@ function renderPractice(id){
 function renderSummary(main,id,lvl,key,round){
   const c=(ch)=>round.results.filter(x=>x===ch).length;
   const stars=c('f')/round.size>=0.8?3:c('f')/round.size>=0.5?2:c('f')>=1?1:0;
-  const card=el('div',{class:'card summary'},el('div',{class:'stampbox'},'Runde fertig'),el('p',null),bigStars(stars),
+  const info=round.info,inPath=!!info&&PATH.some(m=>m.id===id),passed=inPath&&info.passed;
+  const again=()=>{S.rounds[key]={results:[],cur:null,size:TASKS[id].size};persist();renderAll();};
+  const toPfad=()=>go({kind:'home',tab:'pfad'});
+  const btn=(label,fn,primary)=>el('button',{type:'button',class:'btn'+(primary?' primary':''),onclick:fn},label);
+  const lvlBtn=btn(lvl===1?'Knifflig probieren':'Zurück zu Leicht',()=>setLevel(id,lvl===1?2:1));
+  let msg=null,btns;
+  if(inPath){
+    const nx=pathState().find(r=>r.next);
+    if(passed){
+      msg=info.firstPass?'Bauteil fertig!'+(nx?' Als Nächstes: '+stationTitle(nx.id)+'.':''):'Wieder geschafft – stark!';
+      btns=[btn('Weiter im Lernpfad',toPfad,true),btn('Nochmal',again),lvlBtn];
+    }else{
+      msg='Du hast '+info.right+' von '+round.size+' richtig. Für das Bauteil brauchst du '+info.need+'. Noch einmal?';
+      btns=[btn('Nochmal',again,true),btn('Zum Lernpfad',toPfad),lvlBtn];
+    }
+  }else btns=[btn(`Neue Runde (${TASKS[id].size} Aufgaben)`,again,true),lvlBtn];
+  main.append(el('div',{class:'card summary'},el('div',{class:'stampbox'},passed?'Bauteil fertig':'Runde fertig'),el('p',null),bigStars(stars),
     el('p',null,`${round.size} Aufgaben bearbeitet · ${LEVEL_LABEL[lvl]}`),
     el('table',null,
       el('tr',null,el('td',null,'Beim 1. Versuch ohne Tipp richtig'),el('td',null,el('b',null,String(c('f'))))),
       el('tr',null,el('td',null,'Nach weiteren Versuchen oder mit Tipp richtig'),el('td',null,el('b',null,String(c('l'))))),
       el('tr',null,el('td',null,'Übersprungen'),el('td',null,el('b',null,String(c('s'))))),
       el('tr',null,el('td',null,'Lösung angezeigt'),el('td',null,el('b',null,String(c('x')))))),
-    el('div',{class:'rowbtns'},
-      el('button',{type:'button',class:'btn primary',onclick:()=>{S.rounds[key]={results:[],cur:null,size:TASKS[id].size};persist();renderAll();}},`Neue Runde (${TASKS[id].size} Aufgaben)`),
-      el('button',{type:'button',class:'btn',onclick:()=>setLevel(id,lvl===1?2:1)},lvl===1?'Knifflig probieren':'Zurück zu Leicht')));
-  main.append(card);
+    msg?el('p',null,msg):null,
+    el('div',{class:'rowbtns'},...btns)));
 }
 
-/* Ergebnis des Schnellchecks: je Fähigkeit „sitzt“ oder „üben“, dazu der nächste Schritt */
+/* Ergebnis des Schnellchecks (Q00) und des Kurztests (Q01) */
 function renderQuickSummary(main,id,lvl,key,round){
+  const info=round.info||{};
+  const right=round.results.filter(r=>r==='f'||r==='l').length,share=right/round.size;
+  const again=()=>{S.rounds[key]={results:[],cur:null,size:TASKS[id].size};persist();renderAll();};
+  const btn=(label,fn,primary)=>el('button',{type:'button',class:'btn'+(primary?' primary':''),onclick:fn},label);
+  const toPfad=()=>go({kind:'home',tab:'pfad'});
+  const stars=bigStars(share>=0.9?3:share>=0.7?2:share>=0.4?1:0);
+  if(id==='Q01'){
+    const q=info.quiz||{},st=q.station||S.quizFor,name=st?stationTitle(st):'das Bauteil',ok=!!q.passed;
+    main.append(el('div',{class:'card summary'},
+      el('div',{class:'stampbox'},ok?'Kurztest bestanden':'Noch nicht'),el('p',null),stars,
+      el('p',null,`${right} von ${round.size} richtig`),
+      el('p',null,ok?name+' ist geschafft (per Check). Es geht weiter.':'Du brauchst '+needOf(round.size)+' von '+round.size+' richtig. Übe zuerst das Bauteil – dann klappt es.'),
+      el('div',{class:'rowbtns'},...(ok?[btn('Weiter im Lernpfad',toPfad,true)]:[btn('Zum Bauteil',()=>openStation(st),true),btn('Nochmal',again),btn('Zum Lernpfad',toPfad)]))));
+    return;
+  }
   const per={};
   round.results.forEach((r,i)=>{const sk=(round.sk||[])[i];if(sk)(per[sk]=per[sk]||[]).push(r==='f'||r==='l');});
   const skills=Q_SKILLS.filter(sk=>per[sk]);
-  const right=round.results.filter(r=>r==='f'||r==='l').length,share=right/round.size;
   const weak=skills.map(sk=>({sk,ok:per[sk].filter(Boolean).length,n:per[sk].length})).filter(x=>x.ok<x.n).sort((a,b)=>a.ok/a.n-b.ok/b.n)[0];
   const rows=skills.map(sk=>{
     const all=per[sk].every(Boolean);
@@ -2786,16 +3054,16 @@ function renderQuickSummary(main,id,lvl,key,round){
       el('td',null,Q_SKILL_NAME[sk]),
       el('td',{class:all?'sits':'ueben'},el('b',null,all?'sitzt':'üben')));
   });
-  const again=()=>{S.rounds[key]={results:[],cur:null,size:TASKS[id].size};persist();renderAll();};
-  const btn=(label,fn,primary)=>el('button',{type:'button',class:'btn'+(primary?' primary':''),onclick:fn},label);
-  const next=weak?TASKS[Q_STATION[weak.sk]]:null;
-  const btns=weak?[btn('Weiter mit '+next.name,()=>openEntry(Q_STATION[weak.sk]),true),btn('Nochmal',again)]
-    :lvl===1?[btn('Knifflig probieren',()=>setLevel(id,2),true),btn('Nochmal',again)]:[btn('Nochmal',again,true)];
+  const placed=(info.placed||[]).map(stationTitle);
+  const line=info.final?'Urkunde! Du hast den Lernpfad geschafft.':placed.length?'Per Check fertig: '+placed.join(', ')+'.':weak?'Als Nächstes üben: '+TASKS[Q_STATION[weak.sk]].name+'.':'Alles sitzt – stark!';
+  const btns=[btn('Weiter im Lernpfad',toPfad,true)];
+  if(!weak&&lvl===1)btns.push(btn('Knifflig probieren',()=>setLevel(id,2)));
+  btns.push(btn('Nochmal',again));
   main.append(el('div',{class:'card summary'},
-    el('div',{class:'stampbox'},'Check fertig'),el('p',null),bigStars(share>=0.9?3:share>=0.7?2:share>=0.4?1:0),
+    el('div',{class:'stampbox'},'Check fertig'),el('p',null),stars,
     el('p',null,`${right} von ${round.size} richtig · ${LEVEL_LABEL[lvl]}`),
     el('table',{class:'qsum'},...rows),
-    el('p',null,weak?`Als Nächstes üben: ${next.name}.`:'Alles sitzt – stark!'),
+    el('p',null,line),
     el('div',{class:'rowbtns'},...btns)));
 }
 
@@ -3093,10 +3361,12 @@ function bomList(ids){
   return el('div',{class:'bom'},head,...rows);
 }
 function renderHome(){
-  const v=S.view,tab=v.tab==='spiele'||v.tab==='rang'?v.tab:'ueben',root=el('div');
+  const v=S.view,tab=homeTab(),root=el('div');
   root.append(topbar(''));
   const home=el('div',{class:'home'});
-  if(tab==='spiele'){
+  if(tab==='pfad'){
+    pfadTab(home);
+  }else if(tab==='spiele'){
     home.append(el('h1',null,'Spiele'),listLevel(['S01','S02']),el('div',{class:'menu'},
       ...['S01','S02'].map(id=>{const r=S.games[keyOf(id,levelOf(id))];return bigBtn(ICON[id],()=>openEntry(id),GAMES[id].name,GAMES[id].desc,r?`Runden: ${r.played}`:'','',null,id==='S01'?'dots':'hatch');})));
   }else if(tab==='rang'){
@@ -3290,6 +3560,59 @@ function runSelfTests(){
   S.lab=keepLab;persist();
   t('Labor: Erklärungen nennen Rechnung und 2-Regel',labTell([2,3],[6,9],'x',3).includes('2 · 3 = 6 und 3 · 3 = 9')&&labTell([6,9],[2,3],'d',3).includes('nicht mehr')&&labWhy([6,9],'d',2).includes('IMMER'));
   t('Labor: Frage hat genau eine richtige Antwort',LAB_QUIZ.filter(o=>o.id==='wert').length===1&&LAB_QUIZ.every(o=>o.id==='wert'||LAB_WRONG[o.id]));
+  /* Lernpfad */
+  const keepP={passed:S.passed,checked:S.checked,final:S.final,placed:S.placed,days:S.days,lab:S.lab,quizFor:S.quizFor,quizSkills:S.quizSkills};
+  const freshP=()=>{S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;};
+  const R_=(id)=>pathState().find(r=>r.id===id);
+  freshP();
+  t('Pfad: Start – nächstes Bauteil G01, Labor offen, G02/B01/Abschluss gesperrt',pathState().find(r=>r.next).id==='G01'&&R_('LAB').open&&R_('G02').locked&&R_('G02').blocker==='G01'&&R_('B01').locked&&R_('Q00').locked);
+  S.passed['G01-L1']=true;
+  t('Pfad: G01 fertig ⇒ G02 nächstes, freiwilliges B01 offen',R_('G02').next&&R_('B01').open&&!R_('B01').must);
+  S.checked.G03=true;
+  t('Pfad: per Check fertig, dahinter bleibt gesperrt bis alles davor fertig ist',R_('G03').done&&R_('G03').via&&!R_('G03').locked&&R_('G04').locked&&R_('G04').blocker==='G02');
+  S.passed['G02-L2']=true;S.passed['T01-L1']=true;
+  t('Pfad: knifflig bestanden zählt, nächstes ist G04',R_('G02').done&&R_('G04').next);
+  ['G04','G05'].forEach(x=>{S.passed[x+'-L1']=true;});
+  t('Pfad: nach G05 sind Knobel-Bauteile und Abschluss offen',['U01','U02','U03','O02','Q00'].every(x=>R_(x).open)&&R_('Q00').next);
+  S.final=true;
+  t('Pfad: alles fertig ⇒ kein nächstes Bauteil',!pathState().some(r=>r.next));
+  t('Pfad: 80 %-Regel (5→4, 8→7, 10→8)',needOf(5)===4&&needOf(8)===7&&needOf(10)===8);
+  const rnd=(res,sk)=>({results:res.slice(),size:res.length,sk});
+  freshP();
+  let inf=onRoundEnd('G03',1,rnd(['f','f','l','x','f']));
+  t('Rundenende: 4 von 5 ⇒ bestanden, erstes Mal, Tagesziel',inf.passed&&inf.firstPass&&S.passed['G03-L1']&&inf.daily);
+  inf=onRoundEnd('G03',1,rnd(['f','f','f','f','f']));
+  t('Rundenende: zweites Mal kein firstPass, Tagesziel nur einmal',inf.passed&&!inf.firstPass&&!inf.daily);
+  inf=onRoundEnd('G04',1,rnd(['f','x','x','l','s']));
+  t('Rundenende: 2 von 5 ⇒ nicht bestanden',!inf.passed&&!S.passed['G04-L1']);
+  const qplan=['gleich','gleich','teilbar','teilbar','erweitern','erweitern','kuerzen','kuerzen','vollstaendig','vollstaendig'];
+  freshP();
+  inf=onRoundEnd('Q00',1,rnd(['f','f','x','f','f','f','f','x','f','f'],qplan));
+  t('Einstufung: nur Fähigkeiten mit 2 von 2 sind per Check frei',S.checked.G01&&!S.checked.T01&&S.checked.G02&&!S.checked.G03&&S.checked.G04&&!S.checked.G05&&S.placed&&!inf.final);
+  freshP();
+  inf=onRoundEnd('Q00',1,rnd(qplan.map(()=>'f'),qplan));
+  t('Einstufung: 10 von 10 schaltet alles frei, Urkunde',['G01','G02','T01','G03','G04','G05'].every(x=>S.checked[x])&&inf.final&&S.final);
+  freshP();S.passed['G01-L1']=true;
+  inf=onRoundEnd('Q00',1,rnd(['f','f','f','f','f','f','x','x','f','f'],qplan));
+  t('Abschluss: ohne alle Pflicht-Bauteile keine Urkunde',inf.passed&&!inf.final&&!S.final);
+  freshP();S.quizFor='G02';
+  inf=onRoundEnd('Q01',1,rnd(['f','f','f','x','f']));
+  t('Kurztest: 4 von 5 ⇒ Bauteil per Check, kein Pfad-Eintrag Q01',inf.quiz.passed&&S.checked.G02&&!S.passed['Q01-L1']);
+  freshP();S.quizFor='G02';
+  inf=onRoundEnd('Q01',1,rnd(['f','x','f','x','f']));
+  t('Kurztest: 3 von 5 ⇒ nicht frei',!inf.quiz.passed&&!S.checked.G02);
+  freshP();
+  const dk=(off)=>{const d=new Date();d.setDate(d.getDate()+off);return dayKey(d);};
+  S.days[dk(0)]=1;S.days[dk(-1)]=2;S.days[dk(-2)]=1;
+  t('Tage-Serie: 3 Tage in Folge',dayStreak()===3);
+  delete S.days[dk(0)];
+  t('Tage-Serie: heute noch nichts ⇒ ab gestern gezählt',dayStreak()===2);
+  S.days={};S.days[dk(-3)]=1;
+  t('Tage-Serie: Lücke ⇒ 0',dayStreak()===0);
+  const old={progress:{'G03-L1':{first:5},'G02-L2':{first:3},'D01-L1':{first:9},'G01-L1':{first:4}}};
+  migrate4(old);
+  t('Migration: mind. 4 Treffer ⇒ bestanden; Rest und Nicht-Pfad-Übungen nicht',old.passed['G03-L1']&&old.passed['G01-L1']&&!old.passed['G02-L2']&&!old.passed['D01-L1']&&!!old.checked&&!!old.days);
+  Object.assign(S,keepP);persist();
   const bad=res.filter(r=>!r.ok);
   console.log(`Selbsttest: ${res.length-bad.length}/${res.length} bestanden`);
   bad.forEach(b=>console.error('FEHLER:',b.name));
@@ -3301,6 +3624,7 @@ window.runSelfTests=runSelfTests;
 (function boot(){
   try{localStorage.setItem(KEY+'_probe','1');localStorage.removeItem(KEY+'_probe');}catch(e){Store.ok=false;}
   if((S.schema||1)<3){S.rounds={};Object.keys(S.games||{}).forEach(k=>{S.games[k].state=null;});S.schema=3;persist();}
+  if((S.schema||1)<4){migrate4(S);S.view={kind:'home',tab:'pfad'};S.schema=4;persist();}
   if(!S.view||(S.view.kind==='home'&&S.view.tab==='aufgaben'))S.view={kind:'home',tab:'ueben',group:S.view&&S.view.group};
   try{history.replaceState({v:S.view},'');}catch(e){}
   renderAll();
