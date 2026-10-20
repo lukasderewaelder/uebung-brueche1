@@ -13,7 +13,7 @@
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.5 "Comic Sans MS","Comic Sans","Chalkboard SE","Comic Neue",cursive,sans-serif;overflow-x:hidden}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;overflow-x:hidden}
 button,input,select{font:inherit;color:inherit}
 :focus-visible{outline:3px solid #f5a623;outline-offset:2px}
 h1,h2,h3{line-height:1.25;margin:0 0 .5em}
@@ -267,6 +267,87 @@ g.cell:focus-visible>*{stroke:#f5a623;stroke-width:4}
 .levelrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;margin:8px 0}
 .levelrow .seg button{min-height:52px;font-size:1.05rem}
 @media (max-width:599px){.tabbtn{padding:0 12px;font-size:1rem;flex:1}.tabs{gap:6px}.bigbtn{min-height:100px;padding:14px}.bigbtn .ico{font-size:2.4rem}.levelrow .seg{width:100%}.levelrow .seg button{flex:1;padding:0 6px}}
+
+/* ===== Kompaktes Ein-Spalten-Layout, Tastatur, Fortschritt ===== */
+.shell{display:block;max-width:900px;padding:10px 14px 0}
+.help{position:fixed;z-index:60;background:#fff;box-shadow:0 8px 40px rgba(20,30,60,.35);overflow:auto;visibility:hidden;transition:transform .22s,visibility .22s;top:0;right:0;bottom:0;width:min(440px,92vw);border-radius:0;transform:translateX(105%);max-height:none;align-self:auto}
+.help.open{visibility:visible;transform:none}
+.helpclose{display:inline-flex!important}
+.only-compact{display:inline-flex!important}
+.scrim.show{display:block;position:fixed;inset:0;background:rgba(20,30,60,.4);z-index:50}
+.statsbox summary{cursor:pointer;font-weight:700;padding:8px 0}
+.topbar{padding:6px 12px;gap:8px;position:sticky;top:0}
+.tabs{justify-content:flex-start}
+.tabbtn{min-height:44px;padding:0 18px;font-size:1.05rem}
+.tabbtn .short{display:none}
+.gchip{margin-left:auto;display:flex;align-items:center;gap:8px;background:#fff8e1;border:2px solid #f5c542;border-radius:14px;padding:4px 10px;white-space:nowrap}
+.gicon{font-size:1.6rem;line-height:1}
+.gtext{display:flex;flex-direction:column;gap:3px;min-width:96px}
+.gname{font-size:.78rem;line-height:1}
+.gbar{display:block;height:7px;background:#ecdca4;border-radius:5px;overflow:hidden}
+.gbar i{display:block;height:100%;background:#f09a00}
+.gxp{font-weight:700;font-size:.9rem}
+.gstreak{font-weight:700;color:#c2410c}
+.worktop{margin-bottom:6px}
+.worktop h2{font-size:1.2rem}
+.seg button{min-height:38px;padding:0 10px;font-size:.92rem}
+.progress{margin:0 0 8px}
+.dots{display:flex;flex-wrap:wrap;gap:2px;font-size:1.15rem;line-height:1.3}
+.progress .lbl{font-size:.82rem;color:var(--muted)}
+.card{padding:14px 16px}
+.q{margin:.1em 0 .4em;font-size:1.1rem}
+.eq{font-size:1.45rem;margin:.25em 0}
+.hint{padding:6px 12px;margin:6px 0}
+.msg{padding:7px 12px;margin:6px 0}
+.actionbar{position:sticky;bottom:0;background:var(--bg);margin:10px -14px 0;padding:8px 14px calc(8px + env(safe-area-inset-bottom));border-top:1px solid var(--line);z-index:20}
+.actionbar .primaryrow{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px}
+.actionbar .primaryrow .btn{padding:0 8px;min-height:46px;font-size:.95rem}
+.actionbar .primaryrow .primary{grid-column:span 1}
+.actionbar .secondary{display:flex;gap:8px;margin-top:8px}
+.actionbar .secondary .btn{flex:1}
+.keypad{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:8px;max-width:520px;margin-left:auto;margin-right:auto}
+.key{min-height:44px;border-radius:10px;border:1.5px solid var(--line);background:#fff;font-size:1.25rem;font-weight:700;cursor:pointer;padding:0}
+.key:active{background:var(--accent-bg)}
+.key.fn{background:#eef1f6;font-size:1rem}
+.key.ok{grid-column:span 2;background:var(--ok);border-color:var(--ok);color:#fff;font-size:1.05rem}
+input:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3px #bcd3f7}
+.bigstars{font-size:2.2rem;margin:.1em 0}
+.dot{display:inline-block}
+#toasts{position:fixed;top:64px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;align-items:center;z-index:200;pointer-events:none}
+.toast{background:#1c2433;color:#fff;border-radius:20px;padding:8px 18px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.3);animation:pop .25s}
+.toast.rank{background:#f09a00;font-size:1.15rem}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+@media (max-width:599px){
+  .shell{padding:6px 8px 0}
+  .backbtn .long,.tabbtn .long{display:none}
+  .tabbtn .short{display:inline}
+  .tabbtn{padding:0 12px;flex:none}
+  .gname,.gbar{display:none}
+  .gtext{min-width:0}
+  .gchip{padding:3px 8px}
+  .card{padding:10px 12px}
+  .eq{font-size:1.3rem}
+  .actionbar{margin:8px -8px 0;padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+  .actionbar .primaryrow{display:grid;grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:1fr}
+  .key{min-height:40px}
+  .keypad{gap:4px;margin-bottom:6px}
+  .help{left:0;right:0;bottom:0;top:auto;width:auto;max-height:80vh;border-radius:16px 16px 0 0;transform:translateY(105%)}
+  .help.open{transform:none}
+  .worktop h2{font-size:1.05rem}
+}
+.pick{min-height:64px;padding:6px}
+.cards{gap:8px;margin-top:6px}
+.chain{padding:6px 12px}
+.chain h4{display:inline-block;margin:0 10px 0 0}
+.chain .eq{display:inline-flex}
+.stepper button{width:44px;height:44px}
+.stepper{margin:2px 8px 2px 0}
+.controls{margin:6px 0}
+@media (max-width:599px){.cards{grid-template-columns:repeat(3,1fr)}.pick{min-height:56px;font-size:1.15rem}.pick svg{max-width:90px}.eq{gap:.2em .15em}}
+.keypad{grid-template-columns:repeat(7,1fr)!important}
+.key{min-height:42px}
+.stepper .lab{min-width:0}
+@media (max-width:599px){.key{min-height:38px}.controls{gap:2px}.stepper button{width:40px;height:40px}}
 </style>
 </head>
 <body>
@@ -575,7 +656,7 @@ function digitsOnly(i){i.value=i.value.replace(/\D/g,'');}
 function fracInput(view,key){
   const mk=(part,label)=>{
     const k=key+'.'+part;
-    const i=el('input',{type:'text',inputmode:'numeric',pattern:'[0-9]*',autocomplete:'off',autocapitalize:'off',spellcheck:'false',maxlength:'6','aria-label':label});
+    const i=el('input',{type:'text',inputmode:'none',pattern:'[0-9]*',autocomplete:'off',autocapitalize:'off',spellcheck:'false',maxlength:'6','aria-label':label});
     i.value=view.draft[k]!=null?view.draft[k]:'';
     i.disabled=view.locked();
     i.addEventListener('input',()=>{digitsOnly(i);view.draft[k]=i.value;i.classList.remove('bad','good');view.save();});
@@ -586,7 +667,7 @@ function fracInput(view,key){
     el('span',{class:'num'},mk('n','Zähler')),el('span',{class:'den'},mk('d','Nenner')));
 }
 function intInput(view,key,label){
-  const i=el('input',{type:'text',class:'intin',inputmode:'numeric',pattern:'[0-9]*',autocomplete:'off',spellcheck:'false',maxlength:'6','aria-label':label||'Zahl'});
+  const i=el('input',{type:'text',class:'intin',inputmode:'none',pattern:'[0-9]*',autocomplete:'off',spellcheck:'false',maxlength:'6','aria-label':label||'Zahl'});
   i.value=view.draft[key]!=null?view.draft[key]:'';
   i.disabled=view.locked();
   i.addEventListener('input',()=>{digitsOnly(i);view.draft[key]=i.value;i.classList.remove('bad','good');view.save();});
@@ -594,7 +675,7 @@ function intInput(view,key,label){
   return i;
 }
 function decInput(view,key){
-  const i=el('input',{type:'text',class:'decin',inputmode:'decimal',autocomplete:'off',spellcheck:'false',maxlength:'12',placeholder:'0,0','aria-label':'Dezimalzahl'});
+  const i=el('input',{type:'text',class:'decin',inputmode:'none',autocomplete:'off',spellcheck:'false',maxlength:'12',placeholder:'0,0','aria-label':'Dezimalzahl'});
   i.value=view.draft[key]!=null?view.draft[key]:'';
   i.disabled=view.locked();
   i.addEventListener('input',()=>{
@@ -659,13 +740,13 @@ TASKS.G01={area:'Grundlagen',name:'Gleiche Anteile erkennen',desc:'Finde die Bil
   },
   render(view,host){
     const t=view.task,d=view.draft;d.sel=d.sel||[];
-    const tg=el('figure',{class:'fig',style:'max-width:320px'});
+    const tg=el('figure',{class:'fig',style:'max-width:200px'});
     if(t.target.mode==='num')tg.append(el('div',{class:'big eq'},frac(t.target.n,t.target.d)));
-    else tg.append(drawMode(t.target.mode,t.target.n,t.target.d,{label:'Vorgabe'}),el('figcaption',null,'Dieser Anteil ist gefärbt.'));
+    else tg.append(drawMode(t.target.mode,t.target.n,t.target.d,{label:'Vorgabe',maxW:150}),el('figcaption',null,'Dieser Anteil ist gefärbt.'));
     const cards=el('div',{class:'cards',role:'group','aria-label':'Karten'});
     t.cards.forEach((c,i)=>{
       const b=el('button',{type:'button',class:'pick','aria-pressed':String(d.sel.includes(i)),'aria-label':c.mode==='num'?`Karte ${i+1}: ${c.n} durch ${c.d}`:`Karte ${i+1}: Bruchbild`},
-        c.mode==='num'?frac(c.n,c.d):drawMode(c.mode,c.n,c.d,{maxW:150,label:'Bruchbild'}));
+        c.mode==='num'?frac(c.n,c.d):drawMode(c.mode,c.n,c.d,{maxW:110,label:'Bruchbild'}));
       b.disabled=view.locked();
       b.addEventListener('click',()=>{
         if(view.locked())return;
@@ -1002,7 +1083,7 @@ TASKS.B01={area:'Grundlagen',name:'Bruchbilder verändern',desc:'Teile ein Bild 
     else{if(d.rows==null){d.rows=t.rows0;d.cols=t.cols0;}}
     d.col=d.col||[];
     const total=()=>L1?d.parts:d.rows*d.cols;
-    const origFig=L1?drawMode(t.kind,t.a,t.b,{label:'Vorgabe'}):drawFractionGrid(t.a,t.b,t.rows0,t.cols0,{label:'Vorgabe'});
+    const origFig=L1?drawMode(t.kind,t.a,t.b,{label:'Vorgabe',maxW:130}):drawFractionGrid(t.a,t.b,t.rows0,t.cols0,{label:'Vorgabe',maxW:130});
     const orig=el('figure',{class:'fig'},origFig,el('figcaption',null,'Vorgabe: ',frac(t.a,t.b)));
     const editBox=el('div'),info=el('div',{class:'q'});
     const steppers=[];
@@ -1013,7 +1094,7 @@ TASKS.B01={area:'Grundlagen',name:'Bruchbilder verändern',desc:'Teile ein Bild 
         if(view.locked())return false;
         const j=d.col.indexOf(i);if(j>=0)d.col.splice(j,1);else d.col.push(i);
         view.save();updInfo();return j<0;
-      },label:'Dein Bild',filled:new Set(d.col)};
+      },label:'Dein Bild',filled:new Set(d.col),maxW:300};
       editBox.append(L1?drawMode(t.kind,0,n,opts):drawFractionGrid(0,n,d.rows,d.cols,opts));
       updInfo();
     };
@@ -1052,7 +1133,7 @@ TASKS.B01={area:'Grundlagen',name:'Bruchbilder verändern',desc:'Teile ein Bild 
       d.col=[];view.save();redraw();
     });
     view.inputs.reset=reset;controls.append(reset);
-    const left=el('div',null,orig,el('p',null,'Tippe auf die Teile, um sie zu färben oder die Farbe wieder zu entfernen.'),editBox,info);
+    const left=el('div',null,el('div',{style:'display:flex;gap:12px;align-items:center'},el('div',{style:'flex:0 0 120px'},orig),el('div',{style:'flex:1;min-width:0'},editBox)),el('p',{class:'q',style:'margin:.3em 0'},'Tippe auf die Teile des unteren Bildes, um sie zu färben.'),info);
     const right=el('div',null,controls,el('p',null,'Der Bruch, den dein Bild zeigt:'),eq(fracInput(view,'r')));
     host.append(el('div',{class:'split has-visual'},left,right));
     redraw();
@@ -1162,13 +1243,13 @@ TASKS.O02={area:'Offene Aufgaben',name:'Verschiedene Rechenwege',desc:'Kürze ei
   },
   prompt(t,h){
     h.append(el('p',{class:'q'},t.mode==='target'?['Kürze ',frac(t.a,t.b),' auf zwei verschiedene Arten bis ',frac(t.p,t.q),'.']:['Kürze ',frac(t.a,t.b),' auf mindestens zwei verschiedenen Wegen so weit wie möglich.']));
-    h.append(el('p',null,'Jeder Schritt muss mit einer Zahl größer als 1 gekürzt sein. Du kannst Schritte hinzufügen oder entfernen. Zwei Wege zählen als verschieden, wenn die Kürzungszahlen verschieden sind.'));
+    h.append(el('details',null,el('summary',null,'ℹ️ Regeln'),el('p',null,'Jeder Schritt muss mit einer Zahl größer als 1 gekürzt sein. Du kannst Schritte hinzufügen oder entfernen. Zwei Wege zählen als verschieden, wenn die Kürzungszahlen verschieden sind.')));
   },
   render(view,host){
     const t=view.task,d=view.draft;
     for(let j=0;j<2;j++){
       if(d['c'+j+'.len']==null)d['c'+j+'.len']=2;
-      const box=el('div',{class:'chain'},el('h4',null,'Weg '+(j+1)));
+      const box=el('div',{class:'chain'},el('h4',null,'Weg '+(j+1)));box.style.margin='6px 0';
       const row=el('div'),btns=el('div',{class:'rowbtns'});
       const draw=()=>{
         const parts=[frac(t.a,t.b)];
@@ -1318,6 +1399,74 @@ TASKS.D03={area:'Darstellungen umwandeln',name:'Gemischte Schreibweise → gemei
   hints(t){return HINT.mixed.map(x=>[x]);}
 };
 
+
+/* ---------- G04 Vollständig kürzen ---------- */
+TASKS.G04=Object.assign({},TASKS.G03,{name:'Kürzen so weit wie möglich',desc:'Kürze Brüche so weit wie möglich – auch mit großen Zahlen.',size:10,
+  gen(level,R){
+    let p,q;
+    do{q=level===1?R.int(2,9):R.int(3,19);p=R.int(1,q-1);}while(gcd(p,q)!==1);
+    const g=level===1?R.pick([2,3,4,5,6,8,10]):R.int(6,24);
+    return {type:'G04',level,mode:'full',a:p*g,b:q*g,p,q,avoid:[redKey(p,q)]};
+  }
+});
+
+/* ---------- G05 Erweitern und Kürzen gemischt ---------- */
+TASKS.G05={area:'Grundlagen',name:'Erweitern und Kürzen gemischt',desc:'Mal erweitern, mal kürzen – entscheide selbst.',notes:['M2','M3'],size:10,
+  gen(level,R){
+    const two=R.chance(level===1?0.3:0.5);
+    if(two){
+      let p,q;do{q=R.int(2,level===1?6:11);p=R.int(1,q-1);}while(gcd(p,q)!==1);
+      const m=R.pick(level===1?[2,3]:[2,3,4,5,6]);
+      let k;do{k=R.int(2,level===1?4:9);}while(k%m===0);
+      return {type:'G05',level,mode:'twostep',a:p*m,b:q*m,k,m,avoid:[redKey(p,q)]};
+    }
+    let p,q;do{q=R.int(2,level===1?7:13);p=R.int(1,q-1);}while(gcd(p,q)!==1);
+    const g=level===1?R.pick([2,3,4]):R.pick([2,3,4,5,6,8,9]);
+    const a=p*g,b=q*g;
+    let N;
+    if(R.chance(0.5)){N=b*R.int(2,level===1?4:7);}
+    else{const hs=[2,3,4,5,6,8,9].filter(h=>g%h===0);N=b/R.pick(hs);}
+    return {type:'G05',level,mode:'denom',a,b,N,avoid:[redKey(p,q)]};
+  },
+  prompt(t,h){
+    h.append(t.mode==='denom'?el('p',{class:'q'},'Bringe den Bruch ',frac(t.a,t.b),' auf den Nenner ',strong(t.N),'. Ergänze den fehlenden Zähler.')
+      :el('p',{class:'q'},'Erweitere ',frac(t.a,t.b),' mit ',strong(t.k),'. Kürze das Ergebnis dann mit ',strong(t.m),'.'));
+  },
+  render(view,host){
+    const t=view.task;
+    if(t.mode==='denom')host.append(eq(frac(t.a,t.b),'=',el('span',{class:'frac inp'},el('span',{class:'num'},intInput(view,'r.n','fehlender Zähler')),el('span',{class:'den'},String(t.N)))));
+    else host.append(eq(frac(t.a,t.b),'=',fracInput(view,'r1'),'=',fracInput(view,'r2')));
+  },
+  validate(t,d){
+    if(t.mode==='denom'){
+      const n=getInt(d,'r.n');if(n===null)return invalid('Trage eine ganze Zahl ein.');
+      const en=t.a*t.N/t.b;
+      if(n===en)return right(t.N>t.b?`Richtig! Der Nenner wurde mit ${t.N/t.b} multipliziert, also auch der Zähler: es wurde erweitert.`:`Richtig! Der Nenner wurde durch ${t.b/t.N} geteilt, also auch der Zähler: es wurde gekürzt.`);
+      return wrong('denomNum','Das passt noch nicht. Der Wert des Bruchs muss gleich bleiben. Was passiert mit dem Nenner – und was muss dann mit dem Zähler passieren?',{'r.n':false});
+    }
+    const f1=getFrac(d,'r1'),f2=getFrac(d,'r2');
+    if(!f1||!f2)return invalid(MSG_FRAC_INVALID);
+    const e1=[t.a*t.k,t.b*t.k],e2=[e1[0]/t.m,e1[1]/t.m];
+    const ok1=f1.n===e1[0]&&f1.d===e1[1],ok2=f2.n===e2[0]&&f2.d===e2[1];
+    const marks={'r1.n':f1.n===e1[0],'r1.d':f1.d===e1[1],'r2.n':f2.n===e2[0],'r2.d':f2.d===e2[1]};
+    if(ok1&&ok2)return right('Richtig! Erst erweitert, dann gekürzt – der Wert hat sich nie verändert.');
+    if(!ok1){const g=diagOps(t.a,t.b,f1.n,f1.d,'expand');if(g){g.marks=marks;return g;}return wrong('step1','Der erste Schritt (Erweitern) stimmt noch nicht.',marks);}
+    return wrong('step2','Der erste Schritt stimmt. Beim zweiten Schritt (Kürzen) teilst du Zähler und Nenner durch dieselbe Zahl.',marks);
+  },
+  solution(t){
+    if(t.mode==='denom'){
+      const up=t.N>t.b,k=up?t.N/t.b:t.b/t.N,n=t.a*t.N/t.b;
+      return [line(up?`Der Nenner wird mit ${k} multipliziert (${t.b} · ${k} = ${t.N}), also erweitern wir mit ${k}:`:`Der Nenner wird durch ${k} geteilt (${t.b} : ${k} = ${t.N}), also kürzen wir mit ${k}:`),
+        eq(frac(t.a,t.b),'=',frac(t.a+(up?' · ':' : ')+k,t.b+(up?' · ':' : ')+k),'=',frac(n,t.N))];
+    }
+    const e1=[t.a*t.k,t.b*t.k];
+    return [line('Erst mit '+t.k+' erweitern, dann mit '+t.m+' kürzen:'),eq(frac(t.a,t.b),'=',frac(t.a+' · '+t.k,t.b+' · '+t.k),'=',frac(e1[0],e1[1]),'=',frac(e1[0]+' : '+t.m,e1[1]+' : '+t.m),'=',frac(e1[0]/t.m,e1[1]/t.m))];
+  },
+  hints(t){
+    return withRules(t.mode==='denom'?['Vergleiche den alten und den neuen Nenner: Wird er größer oder kleiner? Dann musst du erweitern oder kürzen.','Finde heraus, womit sich der Nenner verändert hat. Dieselbe Rechnung gilt für den Zähler.']:['Rechne die beiden Schritte nacheinander: zuerst erweitern, dann kürzen.','Beim Erweitern multiplizierst du Zähler und Nenner, beim Kürzen teilst du beide.']);
+  }
+};
+
 /* ---- Schnittstelle gemäß Konzeption ---- */
 function generateTask(typeId,level,rng){return TASKS[typeId].gen(level,rng||RNG);}
 function validateTask(task,answer){return TASKS[task.type].validate(task,answer);}
@@ -1328,7 +1477,7 @@ function hintFor(task,stage){const h=TASKS[task.type].hints(task);return h[Math.
    7 Aufgaben-Oberfläche (mountTask), Runden, Fortschritt
    ===================================================================== */
 const AREAS=['Grundlagen','Umkehraufgaben','Offene Aufgaben','Darstellungen umwandeln','Spiele'];
-const PRACTICE_ORDER=['G01','G02','G03','B01','U01','U02','U03','O01','O02','D01','D02','D03'];
+const PRACTICE_ORDER=['G01','G02','G03','G04','G05','B01','U01','U02','U03','O01','O02','D01','D02','D03'];
 const GAMES={
   S01:{area:'Spiele',name:'Bruch-Memory',desc:'Finde Kartenpaare, die denselben Anteil zeigen.',notes:['M1','M2','M3']},
   S02:{area:'Spiele',name:'Der Bruch-Tresor',desc:'Löse die Rätsel an den Schlössern und knacke den Code.',notes:['M2','M3','M4','M5','M6']}
@@ -1354,6 +1503,90 @@ const levelOf=(id)=>S.levelByType[id]||1;
 const keyOf=(id,l)=>id+'-L'+l;
 function prog(key){return S.progress[key]||(S.progress[key]={done:0,first:0,later:0,skipped:0,shown:0});}
 function newState(task){return {task,draft:{},hint:0,attempts:0,status:'open',fb:null};}
+
+
+/* =====================================================================
+   Spielerischer Fortschritt: Punkte (XP), Ränge, Serien
+   ===================================================================== */
+const RANKS=[[0,'Bruch-Anfänger','🌱'],[60,'Bruch-Lehrling','🔧'],[150,'Bruch-Geselle','🛠️'],[300,'Bruch-Profi','⭐'],[500,'Bruch-Meister','🏆'],[800,'Bruch-Legende','👑']];
+function rankInfo(xp){
+  let i=0;RANKS.forEach((r,j)=>{if(xp>=r[0])i=j;});
+  const cur=RANKS[i],nxt=RANKS[i+1];
+  return {i,cur,nxt,pct:nxt?(xp-cur[0])/(nxt[0]-cur[0]):1};
+}
+function chipNode(){
+  const xp=S.xp||0,r=rankInfo(xp);
+  return el('div',{class:'gchip',title:r.nxt?`Noch ${r.nxt[0]-xp} XP bis „${r.nxt[1]}“`:'Höchster Rang!'},
+    el('span',{class:'gicon','aria-hidden':'true'},r.cur[2]),
+    el('span',{class:'gtext'},el('b',{class:'gname'},r.cur[1]),el('span',{class:'gbar'},el('i',{style:'width:'+Math.round(r.pct*100)+'%'}))),
+    el('span',{class:'gxp'},xp+' XP'),
+    (S.streak||0)>1?el('span',{class:'gstreak',title:'Richtige Antworten in Folge'},'🔥'+S.streak):null);
+}
+function updateChip(){document.querySelectorAll('.gchip').forEach(c=>c.replaceWith(chipNode()));}
+function toast(text,cls){
+  let box=document.getElementById('toasts');
+  if(!box){box=el('div',{id:'toasts','aria-live':'polite'});document.body.append(box);}
+  const t=el('div',{class:'toast '+(cls||'')},text);box.append(t);
+  setTimeout(()=>t.remove(),2200);
+}
+function award(xp,label){
+  const before=rankInfo(S.xp||0).i;
+  S.xp=(S.xp||0)+xp;
+  const after=rankInfo(S.xp).i;
+  persist();updateChip();
+  toast('+'+xp+' XP'+(label?' · '+label:''));
+  if(after>before)setTimeout(()=>toast('🎉 Neuer Rang: '+RANKS[after][1]+'!','rank'),700);
+}
+function awardCorrect(first){
+  S.streak=(S.streak||0)+1;
+  S.bestStreak=Math.max(S.bestStreak||0,S.streak);
+  const bonus=first?Math.min(S.streak-1,5):0;
+  award((first?10:5)+bonus,S.streak>=3?'🔥 '+S.streak+' in Folge':(first?'Super!':'Richtig!'));
+}
+function breakStreak(){if(S.streak){S.streak=0;persist();updateChip();}}
+const starsFor=(n)=>n>=25?3:n>=10?2:n>=3?1:0;
+const starText=(n)=>'⭐'.repeat(n)+'☆'.repeat(3-n);
+
+/* =====================================================================
+   Eigene Zahlentastatur (kompakt, ohne Bildschirmtastatur des Geräts)
+   ===================================================================== */
+function makeKeypad(host,onSubmit){
+  let cur=null;
+  const list=()=>[...host.querySelectorAll('input[type=text]:not([disabled])')];
+  host.addEventListener('focusin',e=>{if(e.target.matches&&e.target.matches('input[type=text]'))cur=e.target;});
+  const ensure=()=>{
+    const l=list();if(!l.length)return null;
+    if(!cur||!l.includes(cur))cur=l[0];
+    cur.focus({preventScroll:true});return cur;
+  };
+  const fire=(i)=>i.dispatchEvent(new Event('input',{bubbles:true}));
+  const key=(label,cls,fn,aria)=>{
+    const b=el('button',{type:'button',class:'key '+(cls||''),'aria-label':aria||label},label);
+    b.addEventListener('pointerdown',e=>e.preventDefault());
+    b.addEventListener('click',()=>{const i=ensure();if(i)fn(i);});
+    return b;
+  };
+  const pad=el('div',{class:'keypad hidden',role:'group','aria-label':'Zahlentastatur'});
+  '1234567890'.split('').forEach(d=>pad.append(key(d,'',i=>{if(i.value.length<(i.maxLength>0?i.maxLength:99)){i.value+=d;fire(i);}})));
+  pad.append(key('⌫','fn',i=>{i.value=i.value.slice(0,-1);fire(i);},'Löschen'));
+  const comma=key(',','fn',i=>{if(i.classList.contains('decin')&&!i.value.includes(',')){i.value+=',';fire(i);}},'Komma');
+  pad.append(comma);
+  pad.append(key('⇥','fn',i=>{const l=list();cur=l[(l.indexOf(i)+1)%l.length];cur.focus({preventScroll:true});},'Nächstes Feld'));
+  return {el:pad,refresh(){
+    const l=list();
+    pad.classList.toggle('hidden',!l.length);
+    comma.style.visibility=host.querySelector('.decin')?'visible':'hidden';
+    if(l.length)ensure();
+  }};
+}
+function buildDock(main,{hintBtn,noteBtn,primary,more,pad}){
+  const sec=el('div',{class:'secondary hidden'},...more);
+  const moreBtn=more.length?el('button',{type:'button',class:'btn','aria-expanded':'false'},'⋯ Mehr'):null;
+  if(moreBtn)moreBtn.addEventListener('click',()=>{const h=sec.classList.toggle('hidden');moreBtn.setAttribute('aria-expanded',String(!h));});
+  const bar=el('div',{class:'actionbar'},pad?pad.el:null,el('div',{class:'primaryrow'},hintBtn,noteBtn,moreBtn,primary),sec);
+  main.append(bar);
+  return bar;
+}
 
 /* mountTask: baut Aufgabe, Rückmeldung, Tipps und (auf Wunsch) Lösung in host auf */
 function mountTask(host,st,cb){
@@ -1390,8 +1623,8 @@ function mountTask(host,st,cb){
       if(st.status!=='open')return null;
       const res=validateTask(st.task,st.draft);
       if(res.invalid){showFb('bad',res.feedback);return 'invalid';}
-      if(res.correct){st.status='correct';showFb('ok',res.feedback);cb.done('correct');return 'correct';}
-      st.attempts++;showFb('bad',res.feedback);applyMarks(res.marks||{});cb.save();return 'wrong';
+      if(res.correct){st.status='correct';showFb('ok',res.feedback);awardCorrect(st.attempts===0&&st.hint===0);cb.done('correct');return 'correct';}
+      st.attempts++;breakStreak();showFb('bad',res.feedback);applyMarks(res.marks||{});cb.save();return 'wrong';
     },
     hint(){
       if(st.hint<allHints().length){st.hint++;cb.save();renderHints();}
@@ -1420,11 +1653,11 @@ const openEntry=(id)=>go({kind:isGame(id)?'game':'practice',id});
 function setLevel(id,l){S.levelByType[id]=l;persist();renderAll();}
 
 const GROUPS={
-  'Grundlagen':{icon:'🧩',text:'Gleiche Anteile, Erweitern, Kürzen und Bilder',ids:['G01','G02','G03','B01']},
+  'Grundlagen':{icon:'🧩',text:'Gleiche Anteile, Erweitern, Kürzen und Bilder',ids:['G01','G02','G03','G04','G05','B01']},
   'Umkehraufgaben':{icon:'🔍',text:'Lücken füllen, Zahlen finden, Fehler suchen, mehrere Lösungen',ids:['U01','U02','U03','O01','O02']},
   'Umrechnen':{icon:'🔄',text:'Dezimalzahlen, Brüche und gemischte Zahlen',ids:['D01','D02','D03']}
 };
-const ICON={G01:'👀',G02:'✖️',G03:'✂️',B01:'🎨',U01:'🕳️',U02:'❓',U03:'🕵️',O01:'👪',O02:'🛤️',D01:'🔢',D02:'➗',D03:'🍰',S01:'🃏',S02:'🔐'};
+const ICON={G01:'👀',G02:'✖️',G03:'✂️',G04:'🔪',G05:'🔀',B01:'🎨',U01:'🕳️',U02:'❓',U03:'🕵️',O01:'👪',O02:'🛤️',D01:'🔢',D02:'➗',D03:'🍰',S01:'🃏',S02:'🔐'};
 function backTarget(){
   const v=S.view;
   if(v.kind==='practice'){const g=Object.keys(GROUPS).find(k=>GROUPS[k].ids.includes(v.id));return {kind:'home',tab:'aufgaben',group:g};}
@@ -1435,10 +1668,11 @@ function backTarget(){
 function topbar(){
   const v=S.view,tab=v.kind==='game'?'spiele':(v.kind==='home'?(v.tab||'aufgaben'):'aufgaben');
   const bt=backTarget();
-  const tabBtn=(key,label)=>el('button',{type:'button',class:'tabbtn','aria-current':String(tab===key),onclick:()=>go({kind:'home',tab:key})},label);
+  const tabBtn=(key,label,short)=>el('button',{type:'button',class:'tabbtn','aria-current':String(tab===key),onclick:()=>go({kind:'home',tab:key})},el('span',{class:'long'},label),el('span',{class:'short'},short));
   return el('header',{class:'topbar'},
-    bt?el('button',{type:'button',class:'btn small',onclick:()=>go(bt)},'← Zurück'):null,
-    el('div',{class:'tabs',role:'tablist'},tabBtn('aufgaben','📝 Aufgaben'),tabBtn('spiele','🎮 Spiele')));
+    bt?el('button',{type:'button',class:'btn small backbtn','aria-label':'Zurück',onclick:()=>go(bt)},'←',el('span',{class:'long'},' Zurück')):null,
+    el('div',{class:'tabs',role:'tablist'},tabBtn('aufgaben','📝 Aufgaben','📝'),tabBtn('spiele','🎮 Spiele','🎮')),
+    chipNode());
 }
 function levelControl(id){
   const l=levelOf(id);
@@ -1449,14 +1683,15 @@ function levelControl(id){
 function helpPanel(){
   const body=el('div'),stats=el('div');
   const aside=el('aside',{class:'help','aria-label':'Merkkasten und Fortschritt'});
-  aside.append(el('div',{class:'helphead'},el('h2',null,'Merkkasten'),el('button',{type:'button',class:'btn small helpclose',onclick:()=>setHelp(false)},'Schließen')),body,stats);
+  const det=el('details',{class:'statsbox'},el('summary',null,'📊 Dein Fortschritt'),stats);
+  aside.append(el('div',{class:'helphead'},el('h2',null,'Merkkasten'),el('button',{type:'button',class:'btn small helpclose',onclick:()=>setHelp(false)},'Schließen')),body,det);
   if(helpOpen)aside.classList.add('open');
   return {el:aside,setNotes(nodes){body.replaceChildren(...nodes);},setStats(n){stats.replaceChildren(n);}};
 }
 function statsBlock(key,extra){
   const P=prog(key);
   const rows=[['Bearbeitet',P.done],['Beim 1. Versuch ohne Tipp richtig',P.first],['Nach weiteren Versuchen richtig',P.later],['Übersprungen',P.skipped],['Lösung angezeigt',P.shown]];
-  return el('div',null,el('h3',null,'Dein Fortschritt'),el('table',{class:'stats'},rows.map(r=>el('tr',null,el('td',null,r[0]),el('td',null,el('b',null,String(r[1])))))),extra||null);
+  return el('div',null,el('table',{class:'stats'},rows.map(r=>el('tr',null,el('td',null,r[0]),el('td',null,el('b',null,String(r[1])))))),extra||null);
 }
 
 /* ---------- Übungsrunde ---------- */
@@ -1464,7 +1699,7 @@ function renderPractice(id){
   const T=TASKS[id],lvl=levelOf(id),key=keyOf(id,lvl);
   const round=S.rounds[key]||(S.rounds[key]={results:[],cur:null,size:T.size});
   const root=el('div');
-  root.append(topbar(T.name,true));
+  root.append(topbar());
   const shell=el('div',{class:'shell'});
   const help=helpPanel();
   const main=el('main',{class:'work'});
@@ -1487,8 +1722,14 @@ function renderPractice(id){
 
   const progress=el('div',{class:'progress'});
   const updProgress=()=>{
-    const x=Math.min(round.size,round.results.length+(st.status==='open'?1:0));
-    progress.replaceChildren(el('div',{class:'lbl'},`Aufgabe ${x} von ${round.size} · ${round.results.length} erledigt`),el('div',{class:'bar'},el('i',{style:'width:'+(100*round.results.length/round.size)+'%'})));
+    const dots=[];
+    for(let i=0;i<round.size;i++){
+      const r=round.results[i];
+      const sym=r==='f'?'⭐':r==='l'?'✅':r?'➖':(i===round.results.length&&st.status==='open'?'▶️':'⚪');
+      dots.push(el('span',{class:'dot'},sym));
+    }
+    progress.replaceChildren(el('div',{class:'dots','aria-hidden':'true'},dots),
+      el('span',{class:'lbl'},`Aufgabe ${Math.min(round.size,round.results.length+(st.status==='open'?1:0))} von ${round.size} · ⭐ = ohne Tipp richtig`));
   };
   main.append(progress);
   const card=el('div',{class:'card'});
@@ -1497,21 +1738,22 @@ function renderPractice(id){
   main.append(card);
 
   const hintBtn=el('button',{type:'button',class:'btn'},'💡 Tipp');
-  const noteBtn=el('button',{type:'button',class:'btn only-compact'},'📘 Merkkasten');
+  const noteBtn=el('button',{type:'button',class:'btn'},'📘 Merkkasten');
   const primary=el('button',{type:'button',class:'btn primary'},'Prüfen');
   const solBtn=el('button',{type:'button',class:'btn small'},'Lösung zeigen');
   const skipBtn=el('button',{type:'button',class:'btn small'},'Überspringen');
-  const bar=el('div',{class:'actionbar'},el('div',{class:'primaryrow'},hintBtn,noteBtn,primary),el('div',{class:'secondary'},solBtn,skipBtn));
-  main.append(bar);
+  const pad=makeKeypad(host,()=>onPrimary());
+  buildDock(main,{hintBtn,noteBtn,primary,more:[solBtn,skipBtn],pad});
 
   const P=prog(key);
+  const roundBonus=()=>{if(round.results.length>=round.size&&!round.bonus){round.bonus=true;persist();setTimeout(()=>award(15,'Runde geschafft!'),500);}};
   const cb={
     save:()=>persist(),
     done(kind){
       if(kind==='correct'){const first=st.attempts===0&&st.hint===0;round.results.push(first?'f':'l');P[first?'first':'later']++;}
       else{round.results.push('x');P.shown++;}
       P.done++;persist();
-      ctrl=mountTask(host,st,cb);refresh();updProgress();fillStats();
+      ctrl=mountTask(host,st,cb);refresh();updProgress();fillStats();roundBonus();
     }
   };
   let ctrl=mountTask(host,st,cb);
@@ -1523,6 +1765,7 @@ function renderPractice(id){
     const all=ctrl.hintCount();
     hintBtn.disabled=st.hint>=all;
     hintBtn.textContent=st.hint>=all?'💡 Alle Tipps':(st.hint?`💡 Tipp ${st.hint+1}`:'💡 Tipp');
+    pad.refresh();
   };
   const next=()=>{round.cur=null;persist();renderAll();};
   const onPrimary=()=>{if(st.status==='open'){ctrl.check();refresh();}else next();};
@@ -1532,17 +1775,16 @@ function renderPractice(id){
   solBtn.addEventListener('click',()=>{ctrl.solution();refresh();});
   skipBtn.addEventListener('click',()=>{
     if(st.status!=='open')return;
-    round.results.push('s');P.skipped++;P.done++;round.cur=null;persist();renderAll();
+    round.results.push('s');P.skipped++;P.done++;round.cur=null;persist();renderAll();roundBonus();
   });
   main.addEventListener('keydown',e=>{
     if(e.key==='Enter'&&e.target.tagName==='INPUT'&&e.target.type!=='radio'){e.preventDefault();onPrimary();}
   });
   updProgress();refresh();
-  if(window.matchMedia('(pointer:fine)').matches&&st.status==='open'){const f=host.querySelector('input:not([disabled]):not([type=radio])');if(f)f.focus({preventScroll:true});}
 }
 function renderSummary(main,id,lvl,key,round){
   const c=(ch)=>round.results.filter(x=>x===ch).length;
-  const card=el('div',{class:'card summary'},el('h3',null,'Runde beendet'),
+  const card=el('div',{class:'card summary'},el('h3',null,'🎉 Runde beendet'),el('p',{class:'bigstars'},starText(c('f')>=8?3:c('f')>=5?2:c('f')>=2?1:0)),
     el('p',null,`Du hast ${round.size} Aufgaben bearbeitet (Niveau ${lvl}).`),
     el('table',null,
       el('tr',null,el('td',null,'Beim 1. Versuch ohne Tipp richtig'),el('td',null,el('b',null,String(c('f'))))),
@@ -1607,7 +1849,7 @@ function renderMemory(id){
   const m=rec.state;
   m.cards.forEach(c=>{if(c.state==='up')c.state='down';});m.first=null;
   let busy=false;
-  const root=el('div');root.append(topbar(GAMES[id].name,true));
+  const root=el('div');root.append(topbar());
   const shell=el('div',{class:'shell'});const help=helpPanel();const main=el('main',{class:'work'});
   shell.append(main,help.el);root.append(shell);app.append(root);
   help.setNotes(['M1','M2','M3'].map(n=>el('section',{class:'note'},el('h3',null,n+' · '+NOTES[n].title),...NOTES[n].build([]))));
@@ -1625,7 +1867,7 @@ function renderMemory(id){
   card.append(el('p',null,'Decke zwei Karten auf. Ein Paar zeigt denselben Anteil – auch wenn die Karten verschieden aussehen. Bruchbilder und Brüche mit Bruchstrich gehören zusammen.'),stats,msg,grid,hints);
   main.append(card);
   const hintBtn=el('button',{type:'button',class:'btn'},'💡 Tipp');
-  const noteBtn=el('button',{type:'button',class:'btn only-compact'},'📘 Merkkasten');
+  const noteBtn=el('button',{type:'button',class:'btn'},'📘 Merkkasten');
   const again=el('button',{type:'button',class:'btn primary'},'Neu mischen');
   main.append(el('div',{class:'actionbar'},el('div',{class:'primaryrow'},hintBtn,noteBtn,again)));
   const renderHints=()=>{hints.replaceChildren();HINT.memory.slice(0,m.hintStage).forEach((h,i)=>hints.append(el('div',{class:'hint'},el('b',{class:'lab'},'Tipp '+(i+1)),el('p',null,h))));hintBtn.disabled=m.hintStage>=HINT.memory.length;};
@@ -1654,7 +1896,7 @@ function renderMemory(id){
       f.state=c.state='matched';m.first=null;
       if(m.cards.every(x=>x.state==='matched')){
         m.done=true;rec.won++;rec.best=rec.best==null?m.attempts:Math.min(rec.best,m.attempts);
-        msg.replaceChildren(el('div',{class:'msg ok'},`Geschafft! Du hast alle ${m.cards.length/2} Paare in ${m.attempts} Versuchen gefunden.`));fillStats();
+        award(30,'Memory geschafft!');msg.replaceChildren(el('div',{class:'msg ok'},`Geschafft! Du hast alle ${m.cards.length/2} Paare in ${m.attempts} Versuchen gefunden.`));fillStats();
       }
       draw();persist();
     }else{
@@ -1673,8 +1915,8 @@ function renderMemory(id){
    9 Spiel S02 – Der Bruch-Tresor
    ===================================================================== */
 const VAULT_GROUPS={
-  1:[['G02','G03'],['U01','U02'],['B01'],['D01','D02','D03']],
-  2:[['G02','G03'],['U01','U02'],['U03','B01'],['O01','O02'],['D01','D02'],['D03']]
+  1:[['G02','G03','G04','G05'],['U01','U02'],['B01'],['D01','D02','D03']],
+  2:[['G02','G03','G04','G05'],['U01','U02'],['U03','B01'],['O01','O02'],['D01','D02'],['D03']]
 };
 function newVault(level){
   const types=RNG.shuffle(VAULT_GROUPS[level].map(g=>RNG.pick(g)));
@@ -1684,7 +1926,7 @@ function renderVault(id){
   const lvl=levelOf(id),key=keyOf(id,lvl),rec=gameRec(key);
   if(!rec.state||rec.state.level!==lvl||!rec.state.locks){rec.state=newVault(lvl);rec.played++;persist();}
   const v=rec.state;
-  const root=el('div');root.append(topbar(GAMES[id].name,true));
+  const root=el('div');root.append(topbar());
   const shell=el('div',{class:'shell'});const help=helpPanel();const main=el('main',{class:'work'});
   shell.append(main,help.el);root.append(shell);app.append(root);
   const fillStats=()=>help.setStats(el('div',null,el('h3',null,'Deine Runden'),el('table',{class:'stats'},
@@ -1695,18 +1937,18 @@ function renderVault(id){
   const top=el('div',{class:'card'});
   const puzzle=el('div',{class:'card',style:'margin-top:14px'});
   const entryBox=el('div',{class:'card',style:'margin-top:14px'});
-  const bar=el('div',{class:'actionbar'});
-  main.append(top,puzzle,entryBox,bar);
+  main.append(top,puzzle,entryBox);
 
   const solved=(l)=>l.status==='correct';
   const allSolved=()=>v.locks.every(solved);
   const hintBtn=el('button',{type:'button',class:'btn'},'💡 Tipp');
-  const noteBtn=el('button',{type:'button',class:'btn only-compact'},'📘 Merkkasten');
+  const noteBtn=el('button',{type:'button',class:'btn'},'📘 Merkkasten');
   const primary=el('button',{type:'button',class:'btn primary'},'Prüfen');
   const solBtn=el('button',{type:'button',class:'btn small'},'Lösung zeigen');
-  bar.append(el('div',{class:'primaryrow'},hintBtn,noteBtn,primary),el('div',{class:'secondary'},solBtn));
   let ctrl=null;
   const host=el('div');
+  const pad=makeKeypad(host,()=>onPrimary());
+  buildDock(main,{hintBtn,noteBtn,primary,more:[solBtn],pad});
 
   const drawTop=()=>{
     top.replaceChildren(el('p',null,v.opened?el('b',null,'Der Tresor ist geöffnet!'):`Löse die Rätsel an den Schlössern. Jedes geöffnete Schloss zeigt eine Ziffer des Codes. Geöffnet: ${v.locks.filter(solved).length} von ${v.locks.length}.`));
@@ -1741,14 +1983,14 @@ function renderVault(id){
     const tryCode=()=>{
       const guess=inputs.map(x=>x.value).join('');
       if(guess.length<v.code.length){res.replaceChildren(el('div',{class:'msg bad'},'Trage in jedes Feld eine Ziffer ein.'));return;}
-      if(guess===v.code.join('')){v.opened=true;rec.won++;persist();fillStats();drawTop();drawEntry();drawPuzzle();}
+      if(guess===v.code.join('')){v.opened=true;rec.won++;award(40,'Tresor geknackt!');persist();fillStats();drawTop();drawEntry();drawPuzzle();}
       else res.replaceChildren(el('div',{class:'msg bad'},'Der Code stimmt nicht. Schau dir die Ziffern an den Schlössern noch einmal an. Du kannst es erneut versuchen.'));
     };
     entryBox.append(row,res,el('button',{type:'button',class:'btn primary',onclick:tryCode},'Tresor öffnen'));
   };
   const refresh=()=>{
     const l=v.locks[v.active];
-    if(v.opened){primary.disabled=true;hintBtn.disabled=true;solBtn.disabled=true;primary.textContent='Prüfen';return;}
+    if(v.opened){primary.disabled=true;hintBtn.disabled=true;solBtn.disabled=true;primary.textContent='Prüfen';pad.refresh();return;}
     const open=l.status==='open';
     primary.disabled=false;
     primary.textContent=open?'Prüfen':(l.status==='correct'?(allSolved()?'Zum Code':'Nächstes Schloss'):'Anderes Rätsel');
@@ -1756,6 +1998,7 @@ function renderVault(id){
     const all=ctrl?ctrl.hintCount():0;
     hintBtn.disabled=!open||l.hint>=all;
     hintBtn.textContent=l.hint>=all&&open?'💡 Alle Tipps':(l.hint?`💡 Tipp ${l.hint+1}`:'💡 Tipp');
+    pad.refresh();
   };
   const drawPuzzle=()=>{
     const l=v.locks[v.active];
@@ -1826,7 +2069,7 @@ function renderHome(){
   }else{
     const g=GROUPS[v.group];
     home.append(el('h1',null,g.icon+' '+v.group),listLevel(g.ids),el('div',{class:'menu'},
-      ...g.ids.map(id=>{const P=S.progress[keyOf(id,levelOf(id))];return bigBtn(ICON[id],()=>openEntry(id),TASKS[id].name,TASKS[id].desc,P&&P.done?`${P.done} Aufgaben bearbeitet`:'');})));
+      ...g.ids.map(id=>{const P=S.progress[keyOf(id,levelOf(id))];const st=l=>starText(starsFor((S.progress[keyOf(id,l)]||{}).first||0));return bigBtn(ICON[id],()=>openEntry(id),TASKS[id].name,TASKS[id].desc,`Niveau 1 ${st(1)} · Niveau 2 ${st(2)}`);})));
   }
   root.append(home);app.append(root);
 }
@@ -1879,6 +2122,12 @@ function runSelfTests(){
   const o02={type:'O02',level:1,a:12,b:18,p:2,q:3,mode:'target'};
   t('O02: 6 | 2,3',validateTask(o02,{'c0.len':1,'c0s0.n':'2','c0s0.d':'3','c1.len':2,'c1s0.n':'6','c1s0.d':'9','c1s1.n':'2','c1s1.d':'3'}).correct);
   t('O02: gleiche Wege abgelehnt',!validateTask(o02,{'c0.len':2,'c0s0.n':'6','c0s0.d':'9','c0s1.n':'2','c0s1.d':'3','c1.len':2,'c1s0.n':'6','c1s0.d':'9','c1s1.n':'2','c1s1.d':'3'}).correct);
+  const g05=g=>({type:'G05',level:1,mode:'denom',a:6,b:9,N:3});
+  t('G05: 6/9 = □/3 → 2',validateTask(g05(),{'r.n':'2'}).correct&&!validateTask(g05(),{'r.n':'3'}).correct);
+  const g05t={type:'G05',level:1,mode:'twostep',a:4,b:6,k:3,m:2};
+  t('G05: Erweitere 4/6 mit 3 (12/18), kürze mit 2 (6/9)',validateTask(g05t,{'r1.n':'12','r1.d':'18','r2.n':'6','r2.d':'9'}).correct);
+  t('G04: immer kürzbar',Array.from({length:300},()=>generateTask('G04',RNG.int(1,2))).every(x=>!isFullyReduced(x.a,x.b)));
+  t('Rang-Berechnung',rankInfo(0).i===0&&rankInfo(60).i===1&&rankInfo(900).i===5);
   /* Generatoren: viele Läufe, jede Variante muss lösbar und erzeugbar sein */
   let gen=0;
   for(const id of PRACTICE_ORDER)for(const lvl of [1,2])for(let i=0;i<150;i++){
