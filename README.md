@@ -7,3 +7,7 @@ Interaktive Übungsumgebung als einzelne Datei: `index.html` im Browser öffnen 
 - Merkkästen M1–M6, zweistufige Tipps (Kürzen-Tipps nennen immer: *Die 2 geht IMMER, wenn Zähler und Nenner gerade sind*; ebenso 5 und 10)
 - Fortschritt wird lokal im Browser gespeichert
 - Selbsttest in der Entwicklerkonsole: `runSelfTests()`
+
+## Design
+
+Blaupausen-Look: Aufgaben sind Zeichenblätter mit Schriftfeld, Erweitern (orange, ×) und Kürzen (petrol, ÷) haben feste Farben, Hilfen liegen auf hellem Pauspapier. Eigene Linien-Symbole statt Emoji, nur System-Schriften.
