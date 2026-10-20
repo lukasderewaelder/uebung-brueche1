@@ -1,11 +1,13 @@
 # Bruchwerkstatt – Erweitern und Kürzen
 
-Interaktive Übungsumgebung als einzelne Datei: `index.html` im Browser öffnen (kein Server, keine Bibliotheken, kein Internet nötig).
+Interaktive Übungsumgebung als einzelne Datei: `index.html` im Browser öffnen (kein Server, keine Bibliotheken, kein Internet nötig). Gedacht für Schülerinnen und Schüler ab Klasse 6, vor allem am Handy.
 
-- 12 Übungen (G01–G03, B01, U01–U03, O01–O02, D01–D03) und 2 Spiele (Bruch-Memory, Bruch-Tresor), je Niveau 1 und 2
-- Brüche werden immer mit Bruchstrich dargestellt; Niveau 2 nutzt größere Zahlen
-- Merkkästen M1–M6, zweistufige Tipps (Kürzen-Tipps nennen immer: *Die 2 geht IMMER, wenn Zähler und Nenner gerade sind*; ebenso 5 und 10)
-- Fortschritt wird lokal im Browser gespeichert
+- 16 Übungen und 2 Spiele (Bruch-Memory, Bruch-Tresor), je Niveau „Leicht“ und „Knifflig“
+- **Schnellcheck**: 10 Blitzfragen zum Antippen (Ja/Nein, A–D), sofortige Rückmeldung, keine Zeitmessung; am Ende steht je Fähigkeit „sitzt“ oder „üben“ und die passende Übung als nächster Schritt
+- Teilbarkeit mit 2, 3, 4, 5, 6, 9 und 10 – jeweils mit Regel und Rechnung
+- Brüche werden immer mit Bruchstrich dargestellt; Zahlenbereich der Brüche: leicht bis 60, knifflig bis 300; Teilbarkeit: leicht bis 500, knifflig bis 1000
+- Merkkästen M1–M7, zweistufige Tipps (Kürzen-Tipps nennen immer: *Die 2 geht IMMER, wenn Zähler und Nenner gerade sind*; ebenso 5 und 10)
+- Fortschritt (Punkte, Ränge, Serien, Sterne) wird lokal im Browser gespeichert
 - Selbsttest in der Entwicklerkonsole: `runSelfTests()`
 
 ## Design
