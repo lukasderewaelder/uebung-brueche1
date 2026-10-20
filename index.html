@@ -456,6 +456,10 @@ g.cell:focus-visible>*{stroke:#f5a623;stroke-width:4}
 .machsg{min-height:1.5em;margin:6px 0;font-weight:600}
 .machsg.bad{color:var(--bad)}.machsg.ok{color:var(--ok)}
 .machdone{margin:4px 0;color:var(--ok);font-weight:600}
+.yesno{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.btn.yn{min-height:84px;font-size:1.5rem;border-width:3px}
+.btn.yn[aria-pressed="true"]{background:var(--accent-bg);border-color:var(--accent)}
+.btn.none[aria-pressed="true"]{background:var(--accent-bg);border-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -905,7 +909,7 @@ TASKS.G02={area:'Grundlagen',name:'Erweitern',desc:'Erweitere Brüche mit einer 
   gen(level,R){
     let a,b,k,mode='factor';
     if(level===1){b=R.int(2,9);a=R.int(1,b-1);k=R.pick([2,3,4,5]);}
-    else{b=R.int(5,25);a=R.int(2,b-1);k=R.pick([6,7,8,9,11,12]);if(R.chance(0.3))mode='target';}
+    else{b=R.int(5,25);a=R.chance(0.2)?R.int(b+1,2*b):R.int(2,b-1);k=R.pick([6,7,8,9,11,12]);if(R.chance(0.3))mode='target';}
     return {type:'G02',level,mode,a,b,k,avoid:[redKey(a,b),redKey(a*k,b*k)]};
   },
   prompt(t,h){
@@ -1496,15 +1500,99 @@ TASKS.D03={area:'Darstellungen umwandeln',name:'Gemischte Schreibweise → gemei
 };
 
 
-/* ---------- G04 Vollständig kürzen ---------- */
-TASKS.G04=Object.assign({},TASKS.G03,{name:'Kürzen so weit wie möglich',desc:'Kürze Brüche so weit wie möglich – auch mit großen Zahlen.',size:5,
+/* ---------- G04 Kürzen so weit wie möglich (auch „nicht kürzbar“) ---------- */
+TASKS.G04=Object.assign({},TASKS.G03,{name:'Kürzen so weit wie möglich',desc:'Kürze so weit wie möglich – manchmal geht es nicht mehr!',size:5,
   gen(level,R){
     let p,q;
-    do{q=level===1?R.int(2,9):R.int(3,19);p=R.int(1,q-1);}while(gcd(p,q)!==1);
+    const improper=level===2&&R.chance(0.2);
+    do{q=level===1?R.int(2,9):R.int(3,19);p=improper?R.int(q+1,2*q):R.int(1,q-1);}while(gcd(p,q)!==1);
+    if(R.chance(0.2))return {type:'G04',level,mode:'full',a:p,b:q,p,q,irreducible:true,avoid:[redKey(p,q)]};
     const g=level===1?R.pick([2,3,4,5,6,8,10]):R.int(6,24);
     return {type:'G04',level,mode:'full',a:p*g,b:q*g,p,q,avoid:[redKey(p,q)]};
+  },
+  prompt(t,h){h.append(el('p',{class:'q'},'Kürze ',frac(t.a,t.b),' so weit wie möglich. ',el('small',null,'(Manchmal geht es nicht mehr.)')));},
+  render(view,host){
+    const t=view.task,d=view.draft;
+    const none=el('button',{type:'button',class:'btn none','aria-pressed':String(!!d.none)},'✋ Nicht kürzbar');
+    none.disabled=view.locked();
+    none.addEventListener('click',()=>{
+      if(view.locked())return;
+      d.none=!d.none;none.setAttribute('aria-pressed',String(!!d.none));view.save();
+    });
+    view.inputs.none=none;
+    host.append(eq(frac(t.a,t.b),'=',fracInput(view,'r')),el('div',{class:'rowbtns'},none));
+  },
+  validate(t,d){
+    if(d.none){
+      if(t.irreducible)return right('Richtig! Zähler und Nenner haben keine gemeinsame Zahl außer 1. Der Bruch ist schon so weit wie möglich gekürzt.');
+      return wrong('stillReducible','Doch, hier geht noch etwas: Suche eine Zahl, durch die Zähler und Nenner teilbar sind.');
+    }
+    const f=getFrac(d,'r');if(!f)return invalid('Trage zwei Zahlen ein – oder tippe „Nicht kürzbar“.');
+    if(t.irreducible&&f.n===t.a&&f.d===t.b)return right('Richtig! Dieser Bruch lässt sich nicht weiter kürzen.');
+    return TASKS.G03.validate(t,d);
+  },
+  solution(t){
+    if(t.irreducible)return [line('Zähler und Nenner haben keinen gemeinsamen Teiler außer 1:'),eq(frac(t.a,t.b),'  →  nicht kürzbar')];
+    return TASKS.G03.solution(t);
+  },
+  hints(t){
+    const h=withRules(HINT.reduce);
+    h[1]=h[1].concat(['Achtung: Manchmal geht es nicht mehr. Dann tippe „Nicht kürzbar“.']);
+    return h;
   }
 });
+
+/* ---------- T01 Teilbarkeit ---------- */
+function digitSum(n){return String(n).split('').reduce((s,c)=>s+Number(c),0);}
+function divisible(n,k){return n%k===0;}
+const DIV_RULE={
+  2:'Durch 2 teilbar: letzte Ziffer 0, 2, 4, 6 oder 8. Gerade Zahlen gehen IMMER.',
+  3:'Durch 3 teilbar: Die Quersumme ist durch 3 teilbar.',
+  4:'Durch 4 teilbar: Die letzten zwei Ziffern sind durch 4 teilbar.',
+  5:'Durch 5 teilbar: letzte Ziffer 0 oder 5.',
+  6:'Durch 6 teilbar: durch 2 und durch 3 teilbar.',
+  9:'Durch 9 teilbar: Die Quersumme ist durch 9 teilbar.',
+  10:'Durch 10 teilbar: letzte Ziffer 0.'
+};
+TASKS.T01={area:'Grundlagen',name:'Teilbarkeit',desc:'Blitzcheck: Geht das Kürzen mit 2, 3, 5, 9 oder 10?',notes:['M3'],size:8,
+  gen(level,R){
+    const k=R.pick(level===1?[2,5,10]:[2,3,4,5,6,9,10]);
+    const yes=R.chance(0.5);
+    let n,tries=0;
+    do{n=level===1?R.int(12,999):R.int(120,9999);tries++;}while(divisible(n,k)!==yes&&tries<200);
+    return {type:'T01',level,n,k,avoid:[]};
+  },
+  prompt(t,h){h.append(el('p',{class:'q'},'Ist ',strong(t.n),' durch ',strong(t.k),' teilbar?'));},
+  render(view,host){
+    const d=view.draft,row=el('div',{class:'yesno'});
+    [['ja','✅ Ja'],['nein','❌ Nein']].forEach(([v,label])=>{
+      const b=el('button',{type:'button',class:'btn yn','aria-pressed':String(d.ans===v)},label);
+      b.disabled=view.locked();
+      b.addEventListener('click',()=>{
+        if(view.locked())return;
+        d.ans=v;view.save();
+        row.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+        if(view.submit)view.submit();
+      });
+      view.inputs['yn'+v]=b;row.append(b);
+    });
+    host.append(row);
+  },
+  validate(t,d){
+    if(!d.ans)return invalid('Tippe auf Ja oder Nein.');
+    const truth=divisible(t.n,t.k)?'ja':'nein';
+    if(d.ans===truth)return right(truth==='ja'?'Richtig! '+t.n+' ist durch '+t.k+' teilbar.':'Richtig! '+t.n+' ist nicht durch '+t.k+' teilbar.');
+    return wrong('div','Nicht ganz. '+DIV_RULE[t.k]);
+  },
+  solution(t){
+    const out=[line(DIV_RULE[t.k])];
+    if(t.k===3||t.k===9)out.push(line('Quersumme von '+t.n+': '+String(t.n).split('').join(' + ')+' = '+digitSum(t.n)));
+    if(t.k===4)out.push(line('Letzte zwei Ziffern: '+(t.n%100)));
+    out.push(line(strong(t.n+(divisible(t.n,t.k)?' ist teilbar durch ':' ist nicht teilbar durch ')+t.k)));
+    return out;
+  },
+  hints(t){return [['Schau dir die letzte Ziffer an.'],[DIV_RULE[t.k]]];}
+};
 
 /* ---------- G05 Erweitern und Kürzen gemischt ---------- */
 TASKS.G05={area:'Grundlagen',name:'Erweitern und Kürzen gemischt',desc:'Mal erweitern, mal kürzen – entscheide selbst.',notes:['M2','M3'],size:5,
@@ -1573,7 +1661,7 @@ function hintFor(task,stage){const h=TASKS[task.type].hints(task);return h[Math.
    7 Aufgaben-Oberfläche (mountTask), Runden, Fortschritt
    ===================================================================== */
 const AREAS=['Grundlagen','Umkehraufgaben','Offene Aufgaben','Darstellungen umwandeln','Spiele'];
-const PRACTICE_ORDER=['G01','G02','G03','G04','G05','B01','U01','U02','U03','O01','O02','D01','D02','D03'];
+const PRACTICE_ORDER=['G01','T01','G02','G03','G04','G05','B01','U01','U02','U03','O01','O02','D01','D02','D03'];
 const GAMES={
   S01:{area:'Spiele',name:'Bruch-Memory',desc:'Finde Kartenpaare, die denselben Anteil zeigen.',notes:['M1','M2','M3']},
   S02:{area:'Spiele',name:'Der Bruch-Tresor',desc:'Löse die Rätsel an den Schlössern und knacke den Code.',notes:['M2','M3','M4','M5','M6']}
@@ -1724,10 +1812,13 @@ function mountTask(host,st,cb){
   if(st.fb)showFb(st.fb.kind,st.fb.text);
   renderHints();
   if(st.status==='shown')showSolution();
-  return {
+  const api={
     view,
     hintCount:()=>allHints().length,
     check(){
+      const r=this.doCheck();if(cb.afterCheck)cb.afterCheck();return r;
+    },
+    doCheck(){
       if(st.status!=='open')return null;
       const res=validateTask(st.task,st.draft);
       if(res.invalid){showFb('bad',res.feedback);return 'invalid';}
@@ -1745,6 +1836,8 @@ function mountTask(host,st,cb){
       st.status='shown';st.fb=null;fb.replaceChildren(el('div',{class:'msg info'},'Schau dir die Lösung genau an. Dann geht es weiter.'));showSolution();cb.done('shown');
     }
   };
+  view.submit=()=>api.check();
+  return api;
 }
 
 /* ---------- Gerüst: Kopfzeile, Navigation, Niveau, Hilfe ---------- */
@@ -1768,11 +1861,11 @@ const openEntry=(id)=>{if(!isGame(id))S.last=id;go({kind:isGame(id)?'game':'prac
 function setLevel(id,l){S.levelByType[id]=l;persist();renderAll();}
 
 const GROUPS={
-  'Entdecken':{icon:'🧩',text:'Anteile, Erweitern und Kürzen',ids:['G01','G02','G03','G04','G05','B01']},
+  'Entdecken':{icon:'🧩',text:'Anteile, Erweitern und Kürzen',ids:['G01','T01','G02','G03','G04','G05','B01']},
   'Knobeln':{icon:'🔍',text:'Lücken, Fehler und mehrere Lösungen',ids:['U01','U02','U03','O01','O02']},
   'Umwandeln':{icon:'🔄',text:'Dezimalzahlen und gemischte Zahlen',ids:['D01','D02','D03']}
 };
-const ICON={G01:'👀',G02:'✖️',G03:'✂️',G04:'🔪',G05:'🔀',B01:'🎨',U01:'🕳️',U02:'❓',U03:'🕵️',O01:'👪',O02:'🛤️',D01:'🔢',D02:'➗',D03:'🍰',S01:'🃏',S02:'🔐'};
+const ICON={G01:'👀',G02:'✖️',T01:'✅',G03:'✂️',G04:'🔪',G05:'🔀',B01:'🎨',U01:'🕳️',U02:'❓',U03:'🕵️',O01:'👪',O02:'🛤️',D01:'🔢',D02:'➗',D03:'🍰',S01:'🃏',S02:'🔐'};
 function backTarget(){
   const v=S.view;
   if(v.kind==='practice'){const g=Object.keys(GROUPS).find(k=>GROUPS[k].ids.includes(v.id));return {kind:'home',tab:'ueben',group:g};}
@@ -1870,6 +1963,7 @@ function renderPractice(id){
   const cb={
     save:()=>persist(),
     msgHost:msg,
+    afterCheck:()=>refresh(),
     done(kind){
       if(kind==='correct'){const first=st.attempts===0&&st.hint===0;round.results.push(first?'f':'l');P[first?'first':'later']++;}
       else{round.results.push('x');P.shown++;}
@@ -2140,6 +2234,7 @@ function renderVault(id){
       save:()=>persist(),
       prefixHints:[[HINT.vault[0]]],
       msgHost:msg,
+      afterCheck:()=>refresh(),
       done(kind){
         persist();
         if(kind==='correct'){drawTop();drawEntry();}
@@ -2283,6 +2378,15 @@ function runSelfTests(){
   t('O02: Wege ÷6 und ÷2,÷3',validateTask(o02,{paths:[[6],[2,3]]}).correct);
   t('O02: gleiche Wege abgelehnt',!validateTask(o02,{paths:[[2,3],[2,3]]}).correct);
   t('O02: Fraktion nach Weg',pathFraction(12,18,[2,3])[0]===2&&pathFraction(12,18,[2,3])[1]===3);
+  const t01={type:'T01',level:1,n:124,k:2};
+  t('T01: 124 durch 2',validateTask(t01,{ans:'ja'}).correct&&!validateTask(t01,{ans:'nein'}).correct);
+  const g04n={type:'G04',level:1,mode:'full',a:5,b:7,p:5,q:7,irreducible:true};
+  t('G04: nicht kürzbar',validateTask(g04n,{none:true}).correct&&validateTask(g04n,{'r.n':'5','r.d':'7'}).correct&&!validateTask({type:'G04',level:1,mode:'full',a:10,b:14,p:5,q:7},{none:true}).correct);
+  const g05={type:'G05',level:1,mode:'denom',a:6,b:9,N:3};
+  t('G05: 6/9 = □/3 → 2',validateTask(g05,{'r.n':'2'}).correct&&!validateTask(g05,{'r.n':'3'}).correct);
+  const g05t={type:'G05',level:1,mode:'twostep',a:4,b:6,k:3,m:2};
+  t('G05: 4/6 mit 3 erweitern, mit 2 kürzen',validateTask(g05t,{'r1.n':'12','r1.d':'18','r2.n':'6','r2.d':'9'}).correct);
+  t('Rang-Berechnung',rankInfo(0).i===0&&rankInfo(60).i===1&&rankInfo(900).i===5);
   /* Generatoren: viele Läufe, jede Variante muss lösbar und erzeugbar sein */
   let gen=0;
   for(const id of PRACTICE_ORDER)for(const lvl of [1,2])for(let i=0;i<150;i++){
