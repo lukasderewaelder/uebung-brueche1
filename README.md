@@ -13,7 +13,8 @@ Interaktive Übungsumgebung als einzelne Datei: `index.html` im Browser öffnen 
 - 12 Ränge (Praktikant … Legende); die Legende gibt es nur, wenn wirklich alles perfekt ist (perfekte Runden und 3 Sterne überall, Lernpfad, Labor, Spiele, Serien). Ein Tipp auf die Rang-Anzeige oben rechts öffnet die Optionen – dort ist auch das Bruchlabor jederzeit erreichbar
 - Passt sich dem Display an: Schrift und Elemente wachsen stufenlos mit der Bildschirmbreite (kleines Handy bis Großbildschirm, hoch und quer); in den Optionen gibt es die Textgröße in vier Stufen (Klein, Normal, Groß, Sehr groß); das Bedienpult bricht bei wenig Platz in zwei Reihen um, damit nichts abgeschnitten wird
 - Fortschritt (Punkte, Ränge, Serien, Sterne) wird lokal im Browser gespeichert
-- Selbsttest in der Entwicklerkonsole: `runSelfTests()`
+- **Hilfe bei Problemen**: technische Anleitung in einfacher Sprache für 11–12-Jährige (kurze Sätze, Knöpfe so benannt wie auf dem Bildschirm, immer nur ein Eintrag offen). Erreichbar über die Rang-Anzeige oben rechts → Optionen → „Hilfe bei Problemen“, über den Knopf auf der Rang-Seite, über die „Ups“-Meldung und über den Speicher-Hinweis. Themen: Seite hängt, Zahlen eintippen (eigene Zahlentastatur), Textgröße, Fortschritt weg (mit Anzeige, ob Speichern klappt), Seite versehentlich geschlossen, Aufgabe unklar; zuletzt Technik-Angaben (Bildschirmgröße, Textgröße, Speichern, Rang) für die Lehrkraft
+- Selbsttest in der Entwicklerkonsole: `runSelfTests()` (prüft u. a., dass kein Satz der Hilfe länger als 14 Wörter ist)
 
 ## Design
 

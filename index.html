@@ -581,6 +581,39 @@ svg.interactive{touch-action:none}
 .optsec:empty{display:none}
 .optfoot{display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:space-between;margin-top:0.75rem}
 .modalcard .btn.danger{color:#a32626;border-color:#a32626}
+.modalcard .rowbtns{justify-content:center}
+
+/* Hilfe bei Problemen: große Schrift, kurze Schritte, immer nur ein Eintrag offen.
+   Die Karte steht oben (nicht zentriert), damit sie beim Aufklappen nicht springt. */
+.techmodal .modalcard{margin:0 auto;max-width:30rem}
+.techlead{margin:0.25rem 0 0.75rem;font-size:1.05rem}
+.techlist{display:grid;gap:0.5rem;margin:0.5rem 0}
+.tech{background:var(--paper);border:2px solid var(--ink);box-shadow:0 3px 0 rgba(0,0,0,.25)}
+.tech>summary{min-height:max(56px,3.5rem);padding:0.5rem 0.75rem;cursor:pointer;list-style:none;font-weight:700;font-size:1.05rem;line-height:1.3}
+.tech>summary::-webkit-details-marker{display:none}
+.tech .srow{display:flex;align-items:center;gap:0.75rem;min-height:max(40px,2.5rem)}
+.tech .tq{flex:1;min-width:0}
+.tech .srow .ic{transition:transform .15s}
+.tech[open]>summary{background:var(--mark);border-bottom:2px solid var(--ink)}
+.tech[open] .srow .ic{transform:rotate(180deg)}
+.tech-last{border-left:10px solid var(--amber)}
+.tbody{padding:0.5rem 0.875rem 0.875rem}
+.tbody p{margin:0.4em 0}
+.tbody strong{background:linear-gradient(transparent 55%,var(--mark) 55%)}
+.tech ol{list-style:none;counter-reset:pos;margin:0.5rem 0;padding:0}
+.tech li{counter-increment:pos;position:relative;margin:0.55rem 0;padding-left:2.4rem;min-height:1.75rem}
+.tech li::before{content:counter(pos);position:absolute;left:0;top:0.05rem;display:grid;place-items:center;width:1.75rem;height:1.75rem;border:2px solid var(--ink);background:#fff;font:700 .9rem var(--font-mono)}
+.techact{display:flex;gap:0.5rem;flex-wrap:wrap;margin:0.75rem 0 0.25rem}
+.ttip{display:flex;gap:0.5rem;align-items:flex-start;margin:0.75rem 0 0;padding:0.5rem 0.75rem;background:#fff;border:2px dashed var(--ink)}
+.ttip .ic{margin-top:0.15rem}
+.techstate{display:flex;align-items:flex-start;gap:0.5rem;margin:0.6rem 0;padding:0.5rem 0.75rem;border:2px solid;font-weight:700}
+.techstate.ok{color:#1f7a45;border-color:#1f7a45;background:#f0faf3}
+.techstate.bad{color:#a32626;border-color:#a32626;background:#fdf1f1}
+.techinfo{margin:0.6rem 0;border:2px solid var(--ink);background:#fff;font:600 .9rem/1.4 var(--font-mono)}
+.techinfo .tih{padding:0.25rem 0.625rem;background:var(--ink);color:var(--paper);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase}
+.techinfo .tir{display:flex;justify-content:space-between;gap:0.75rem;padding:0.3rem 0.625rem}
+.techinfo .tir+.tir{border-top:1.5px solid rgba(11,42,74,.25)}
+.techfoot{display:flex;justify-content:flex-end;margin-top:0.75rem}
 
 /* Rang */
 .rankcard{display:flex;align-items:center;gap:0.875rem;margin:0.375rem 0 0.75rem;padding:0.75rem 0.875rem;background:var(--bp-2);border:3px double var(--chalk)}
@@ -670,6 +703,13 @@ svg.interactive{touch-action:none}
   .titleblock>*{padding:0.4375rem 0.375rem}
   .eq{font-size:1.2rem}
   .frac.inp input{width:3.8em}
+}
+/* Hilfe bei Problemen auf schmalen Handys: weniger Rand, mehr Platz für den Text (auch bei „Sehr groß“) */
+@media (max-width:419px){
+  .techmodal{padding:0.625rem}
+  .techmodal .modalcard{padding:1rem 0.875rem}
+  .tbody{padding:0.5rem 0.625rem 0.75rem}
+  .ttip{padding:0.5rem 0.625rem}
 }
 @media (min-width:600px){
   .split.has-visual{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
@@ -2857,7 +2897,8 @@ function openOptions(){
       optRow('plakette','Alle Ränge',pf.all?'Alles perfekt!':'Legende: '+pf.done+' von '+pf.items.length+' Bedingungen',()=>{closeOptions();go({kind:'home',tab:'rang'});}),
       inLab?null:optRow('kolben','Bruchlabor','Erweitern und Kürzen ausprobieren',()=>{
         closeOptions();const prev=JSON.parse(JSON.stringify(S.view));go({kind:'lab',from:'opt',back:prev});}),
-      optRow('pfad','Lernpfad','Weiter geht’s',()=>{closeOptions();go({kind:'home',tab:'pfad'});})),
+      optRow('pfad','Lernpfad','Weiter geht’s',()=>{closeOptions();go({kind:'home',tab:'pfad'});}),
+      optRow('schluessel','Hilfe bei Problemen','Wenn etwas nicht klappt',()=>{closeOptions();openProblemHelp();})),
     optionsExtra(),
     el('div',{class:'optfoot'},
       el('button',{type:'button',class:'btn alt small danger',onclick:resetProgress},'Fortschritt löschen'),
@@ -2880,6 +2921,105 @@ function optionsExtra(){
     seg.append(b);
   });
   return el('div',{class:'optsec'},el('span',{class:'lblm'},'Textgröße'),seg);
+}
+
+/* =====================================================================
+   Hilfe bei Problemen – technische Anleitung für Kinder von 11 bis 12 Jahren
+   Kurze Sätze (runSelfTests prüft: höchstens 14 Wörter), „du“, Knöpfe genau so
+   benannt wie auf dem Bildschirm; **fett** ist der Name eines Knopfes. Aufruf:
+   Optionen, Rang-Seite, „Ups“-Meldung und Speicher-Hinweis. Immer nur ein Eintrag offen.
+   ===================================================================== */
+const PROBLEMS=[
+  {id:'haengt',q:'Die Seite hängt oder zeigt „Ups“',
+    steps:['Warte kurz. Manchmal braucht das Gerät einen Moment.','Tippe auf **Seite neu laden**. Das hilft meistens.','Klappt es nicht? Dann tippe auf **Neu starten**.'],
+    acts:['reload','restart'],
+    tip:'Deine Punkte, Ränge und Sterne bleiben erhalten. Nur angefangene Runden und Spiele beginnen von vorn.'},
+  {id:'tastatur',q:'Ich kann keine Zahl eintippen',
+    steps:['Die Tastatur vom Handy kommt hier nicht hoch. Das ist richtig so.','Tippe auf ein Feld. Es leuchtet dann gelb.','Tippe die Zahlen unten im Bild. Der Knopf mit dem X löscht die letzte Ziffer.','Der Pfeil-Knopf springt ins nächste Feld. Bei Dezimalzahlen setzt er das Komma.'],
+    tip:'Am Computer tippst du mit der normalen Tastatur. Nach **Lösung ansehen** sind die Felder gesperrt. Tippe dann auf **Weiter**.'},
+  {id:'groesse',q:'Alles ist zu klein, zu groß oder abgeschnitten',
+    steps:['Tippe auf **Textgröße ändern**.','Wähle Klein, Normal, Groß oder Sehr groß.','Drehe das Handy. Manchmal passt es dann besser.'],
+    acts:['size'],
+    tip:'Später findest du sie oben rechts. Tippe auf deine Punkte, zum Beispiel „120 XP“. Am Computer geht auch: Strg gedrückt halten und + oder − drücken.'},
+  {id:'speichern',q:'Mein Fortschritt ist weg',
+    intro:'Dein Fortschritt wird im Browser auf deinem Gerät gespeichert. Der Browser ist das Programm, mit dem du Seiten öffnest. Zum Beispiel Chrome oder Safari.',
+    steps:['Nutzt du dasselbe Gerät und denselben Browser wie sonst? Auf einem anderen Gerät fängst du neu an.','Ist dein Fenster privat (Inkognito)? Dort wird nichts gespeichert. Öffne die Seite dann normal.','Hast du **Fortschritt löschen** getippt oder Browser-Daten gelöscht? Dann ist alles weg. Das lässt sich nicht zurückholen.'],
+    extra:storageState,
+    tip:'Das ist ärgerlich. Aber du kannst sofort wieder Punkte sammeln.'},
+  {id:'geschlossen',q:'Ich habe die Seite aus Versehen geschlossen',
+    steps:['Öffne die Seite einfach wieder.','Du machst dort weiter, wo du aufgehört hast. Deine Punkte und deine Runde sind gespeichert.'],
+    tip:'Die Zurück-Taste vom Handy geht in der Bruchwerkstatt Schritt für Schritt zurück. Ganz am Anfang verlässt du die Seite.'},
+  {id:'aufgabe',q:'Ich komme bei einer Aufgabe nicht weiter',
+    steps:['Tippe auf **Tipp**. Tippst du nochmal, kommt der nächste Tipp.','Tippe auf **Merkkasten**. Dort stehen die Regeln mit Beispielen.','Hast du es versucht oder einen Tipp gelesen? Dann erscheint **Lösung ansehen**. Dort siehst du den Rechenweg.'],
+    tip:'Mit **Überspringen** kommt die nächste Aufgabe.'},
+  {id:'hilfe',q:'Nichts davon hilft',last:true,
+    steps:['Frag deine Lehrerin, deinen Lehrer oder jemanden zu Hause.','Erzähle genau, was du getippt hast. Sag auch, was dann passiert ist.','Zeige diese Angaben. Du kannst auch ein Foto vom Bildschirm machen.'],
+    extra:techInfo}
+];
+/* „Neu starten“: angefangene Runden und Spiele verwerfen; Punkte, Ränge und Sterne bleiben */
+function restartKeepPoints(){
+  S.rounds={};Object.values(S.games).forEach(g=>{g.state=null;});S.view={kind:'home'};persist();location.reload();
+}
+/* Knöpfe in den Einträgen: [Beschriftung, Aktion] */
+const HELP_ACTS={
+  reload:['Seite neu laden',()=>location.reload()],
+  restart:['Neu starten',restartKeepPoints],
+  size:['Textgröße ändern',()=>{closeProblemHelp();openOptions();}]
+};
+/* Text mit **fett** → Textstücke und <strong> (nur eigene Texte, kein HTML) */
+const rich=(s)=>s.split('**').map((t,i)=>i%2?strong(t):t);
+/* Live-Zeile: meldet das Gerät, dass Speichern klappt? (Store.ok wird beim Start geprüft) */
+function storageState(){
+  return Store.ok
+    ?el('p',{class:'techstate ok'},icon('haken'),el('span',null,'Dein Gerät meldet: Speichern klappt.'))
+    :el('p',{class:'techstate bad'},icon('kreuz'),el('span',null,'Dein Gerät meldet: Speichern klappt gerade nicht. Dein Fortschritt bleibt nur, solange diese Seite offen ist.'));
+}
+/* Angaben, die eine Lehrkraft braucht, wenn ein Kind ein Problem meldet */
+function techInfo(){
+  const cur=(S.ui&&S.ui.size)||'m',size=TEXT_SIZES.filter(x=>x[0]===cur)[0],st=rankState();
+  const rows=[['Bildschirm',innerWidth+' × '+innerHeight],['Textgröße',size?size[1]:'Normal'],['Speichern',Store.ok?'klappt':'klappt nicht'],['Rang',st.cur[1]+' · '+st.xp+' XP']];
+  return el('div',{class:'techinfo'},el('div',{class:'tih'},'Technik-Angaben'),
+    ...rows.map(r=>el('div',{class:'tir'},el('span',null,r[0]),el('b',null,r[1]))));
+}
+
+let techModal=null,techFrom=null;
+function closeProblemHelp(){
+  if(!techModal)return;
+  techModal.remove();techModal=null;
+  if(techFrom&&techFrom.isConnected)techFrom.focus();
+  techFrom=null;
+}
+window.addEventListener('keydown',e=>{if(e.key==='Escape'&&techModal)closeProblemHelp();});
+function problemItem(p,openId){
+  const d=el('details',{class:'tech'+(p.last?' tech-last':''),'data-id':p.id,open:p.id===openId},
+    el('summary',null,el('span',{class:'srow'},el('span',{class:'tq'},p.q),icon('ab'))),
+    el('div',{class:'tbody'},
+      p.intro?el('p',null,rich(p.intro)):null,
+      el('ol',null,p.steps.map(s=>el('li',null,rich(s)))),
+      p.extra?p.extra():null,
+      p.acts?el('div',{class:'techact'},p.acts.map(k=>el('button',{type:'button',class:'btn',onclick:HELP_ACTS[k][1]},HELP_ACTS[k][0]))):null,
+      p.tip?el('p',{class:'ttip'},icon('hinweis'),el('span',null,rich(p.tip))):null));
+  /* Ein Eintrag öffnet sich, die anderen klappen zu */
+  d.addEventListener('toggle',()=>{
+    if(d.open&&d.parentNode)d.parentNode.querySelectorAll('details.tech[open]').forEach(o=>{if(o!==d)o.open=false;});
+  });
+  return d;
+}
+/* openId: Eintrag, der gleich offen sein soll (z. B. 'speichern') */
+function openProblemHelp(openId){
+  closeProblemHelp();
+  techFrom=document.activeElement;
+  const m=modal([
+    el('div',{class:'helphead'},el('h2',{id:'techtitle'},'Hilfe bei Problemen'),
+      el('button',{type:'button',class:'btn small',onclick:closeProblemHelp},'Schließen')),
+    el('p',{class:'techlead'},'Tippe auf dein Problem. Dann siehst du, was du tun kannst.'),
+    el('div',{class:'techlist'},PROBLEMS.map(p=>problemItem(p,openId))),
+    el('div',{class:'techfoot'},el('button',{type:'button',class:'btn',onclick:closeProblemHelp},'Schließen'))]);
+  m.classList.add('optmodal','techmodal');m.setAttribute('aria-labelledby','techtitle');
+  techModal=m;
+  m.addEventListener('click',e=>{if(e.target===m)closeProblemHelp();});
+  const first=m.querySelector('details[open] summary')||m.querySelector('summary');
+  if(first){first.focus();first.scrollIntoView({block:'nearest'});}
 }
 
 /* =====================================================================
@@ -3717,7 +3857,9 @@ function renderHome(){
       el('h2',{class:'area'},'Alle Ränge'),rankLadder(),
       el('h2',{class:'area'},'Legende: alles perfekt'),perfectionList(),
       el('h2',{class:'area'},'Deine Sterne'),bomList(PRACTICE_ORDER),
-      el('p',null,el('button',{type:'button',class:'btn small',onclick:openOptions},icon('zahnrad'),' Optionen')));
+      el('div',{class:'rowbtns'},
+        el('button',{type:'button',class:'btn small',onclick:openOptions},icon('zahnrad'),' Optionen'),
+        el('button',{type:'button',class:'btn small',onclick:()=>openProblemHelp()},icon('schluessel'),' Hilfe bei Problemen')));
   }else if(!v.group||!GROUPS[v.group]){
     const last=S.last&&TASKS[S.last]?S.last:null;
     home.append(rankCard());
@@ -3734,7 +3876,9 @@ function renderHome(){
 function showCrash(){
   if(document.getElementById('crash'))return;
   const m=modal([el('h2',null,'Ups, da ist etwas schiefgelaufen'),el('p',null,'Deine Punkte bleiben erhalten.'),
-    el('button',{type:'button',class:'btn primary',onclick:()=>{S.rounds={};Object.values(S.games).forEach(g=>{g.state=null;});S.view={kind:'home'};persist();location.reload();}},'Neu starten')]);
+    el('div',{class:'rowbtns'},
+      el('button',{type:'button',class:'btn primary',onclick:restartKeepPoints},'Neu starten'),
+      el('button',{type:'button',class:'btn',onclick:()=>openProblemHelp()},'Hilfe bei Problemen'))]);
   m.id='crash';
 }
 window.addEventListener('error',showCrash);
@@ -3749,7 +3893,9 @@ function renderAll(){
   else if(v.kind==='game'&&v.id==='S02')renderVault(v.id);
   else if(v.kind==='lab')renderLab();
   else renderHome();
-  if(!Store.ok)app.append(el('div',{class:'note-storage'},'Hinweis: Der Browser erlaubt kein lokales Speichern. Dein Fortschritt bleibt nur erhalten, solange diese Seite geöffnet ist.'));
+  if(!Store.ok)app.append(el('div',{class:'note-storage'},
+    el('p',null,'Hinweis: Der Browser erlaubt kein lokales Speichern. Dein Fortschritt bleibt nur erhalten, solange diese Seite geöffnet ist.'),
+    el('button',{type:'button',class:'btn small',onclick:()=>openProblemHelp('speichern')},'Was kann ich tun?')));
 }
 
 /* =====================================================================
@@ -3995,6 +4141,22 @@ function runSelfTests(){
     const half=validateTask({type:'V01',level:2,mode:'full',a:48,b:72,p:2,q:3},{'r.n':'24','r.d':'36'});
     t('Tresor: Tür 48/72 → 24/36 ist „fast“ (noch kürzbar)',!half.correct&&half.soft&&half.errorCode==='notFull');
     t('Tresor: alte Tresor-Zustände ohne ver:2 werden verworfen',!vaultOk({level:1,code:[1,2,3],locks:[{},{},{}],active:0,opened:false},1)&&vaultOk(newVault(1),1)&&!vaultOk(newVault(1),2));
+  }
+  /* Hilfe bei Problemen: vollständig, kurze Sätze für Kinder von 11–12 Jahren, öffnet sich mit Thema */
+  {
+    const words=(s)=>s.split(/\s+/).filter(Boolean).length;
+    const texts=[];
+    PROBLEMS.forEach(p=>{texts.push(p.q);if(p.intro)texts.push(p.intro);p.steps.forEach(s=>texts.push(s));if(p.tip)texts.push(p.tip);});
+    const longest=Math.max(...[].concat(...texts.map(x=>x.replace(/\*\*/g,'').split(/[.!?]\s+/))).map(words));
+    t('Hilfe: jedes Thema hat Frage, 1–4 Schritte und eine eindeutige Kennung',PROBLEMS.length>=6&&PROBLEMS.every(p=>p.id&&p.q&&p.steps.length>=1&&p.steps.length<=4)&&new Set(PROBLEMS.map(p=>p.id)).size===PROBLEMS.length);
+    t('Hilfe: kurze Sätze, höchstens 14 Wörter (längster: '+longest+')',longest<=14);
+    t('Hilfe: alle Knöpfe und Zusatzzeilen der Themen gibt es',PROBLEMS.every(p=>(p.acts||[]).every(k=>!!HELP_ACTS[k])&&(!p.extra||typeof p.extra==='function')));
+    openProblemHelp('speichern');
+    const hm=document.querySelector('.techmodal');
+    const open1=hm?hm.querySelectorAll('details.tech[open]'):[];
+    t('Hilfe: öffnet sich mit dem gewünschten Thema, genau ein Eintrag offen',!!hm&&hm.querySelectorAll('details.tech').length===PROBLEMS.length&&open1.length===1&&open1[0].dataset.id==='speichern');
+    closeProblemHelp();
+    t('Hilfe: Schließen entfernt die Anleitung',!document.querySelector('.techmodal')&&techModal===null);
   }
   Object.assign(S,keepP);persist();
   const bad=res.filter(r=>!r.ok);
