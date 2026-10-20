@@ -95,7 +95,9 @@ input:disabled{opacity:.8}
 .backbtn{min-height:44px}
 
 /* Messanzeige (Rang + XP) */
-.gchip{display:flex;align-items:center;gap:8px;margin-left:auto;padding:3px 9px;background:var(--bp);border:2px solid var(--chalk);white-space:nowrap}
+.gchip{display:flex;align-items:center;gap:8px;margin-left:auto;padding:3px 9px;background:var(--bp);border:2px solid var(--chalk);white-space:nowrap;font:inherit;color:var(--chalk);text-align:left;cursor:pointer;min-height:44px;box-shadow:0 3px 0 rgba(0,0,0,.3)}
+.gchip:active{transform:translateY(2px);box-shadow:none}
+.gchev .ic{width:.95rem;height:.95rem;color:var(--chalk-dim)}
 .gicon .ic{width:26px;height:26px;color:var(--amber)}
 .gtext{display:flex;flex-direction:column;gap:3px;min-width:84px}
 .gname{font:700 .64rem/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase}
@@ -501,6 +503,54 @@ svg.interactive{touch-action:none}
 .stars .ic.fill{opacity:1}
 .bomrow>.ic{width:1rem;height:1rem;color:var(--chalk-dim)}
 
+/* Rangleiter und „alles perfekt“ */
+.ladder{border:2px solid var(--chalk);background:var(--bp-2)}
+.rung{display:grid;grid-template-columns:2rem 2.2rem 1fr 2.4rem;align-items:center;gap:8px;min-height:56px;padding:6px 10px;border-bottom:1.5px solid var(--grid-2);color:var(--chalk-dim)}
+.rung:last-child{border-bottom:0}
+.rung .rn{font:700 .8rem var(--font-mono)}
+.rung .ri .ic{width:1.6rem;height:1.6rem}
+.rung .rt{display:flex;flex-direction:column}
+.rung .rt b{font-size:1rem}
+.rung .rt small{font-size:.78rem}
+.rung.done{color:var(--chalk)}
+.rung.done .ri{color:var(--amber)}
+.rung.cur{background:rgba(255,197,61,.12);box-shadow:inset 6px 0 0 var(--amber)}
+.rung .rs{display:flex;justify-content:flex-end}
+.rung.done .rs{color:var(--ok)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.perf{border:2px solid var(--chalk);background:var(--bp-2);padding:10px 12px}
+.perfhead{margin:0 0 6px;font-weight:700}
+.prow{display:grid;grid-template-columns:1.8rem 1fr auto;gap:8px;align-items:center;padding:7px 0;border-top:1.5px solid var(--grid-2)}
+.pm{color:var(--chalk-dim)}
+.prow.done .pm{color:var(--ok)}
+.pt{display:flex;flex-direction:column;gap:5px;font-size:.92rem}
+.pbar{display:block;height:8px;background:rgba(184,212,238,.22)}
+.pbar i{display:block;height:100%;background:var(--amber)}
+.prow.done .pbar i{background:var(--ok)}
+.pn{min-width:3.6rem;text-align:right;font:700 .85rem var(--font-mono);color:var(--chalk-dim)}
+
+/* Optionen (Blatt hinter dem Rang-Chip) */
+.optmodal{align-items:flex-start;overflow-y:auto}
+.optmodal .modalcard{max-width:440px;margin:auto;text-align:left}
+.optmodal h2{text-align:left}
+.optrank{display:flex;align-items:center;gap:14px;margin:6px 0 10px;padding:10px 12px;border:2px solid var(--ink);background:#fff}
+.optrank .ic.big{width:2.6rem;height:2.6rem;flex:none;color:var(--ink)}
+.optrank .orx{display:flex;flex-direction:column;gap:4px;min-width:0}
+.optrank b{font:700 1.05rem var(--font-mono);letter-spacing:.1em;text-transform:uppercase}
+.optrank small{color:var(--ink-dim)}
+.optrank .gseg i{background:rgba(11,42,74,.18)}
+.optrank .gseg i.on{background:var(--ink)}
+.optlist{display:grid;gap:8px;margin:8px 0}
+.optbtn{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:8px 12px;background:var(--paper);color:var(--ink);border:2px solid var(--ink);box-shadow:0 3px 0 rgba(0,0,0,.25);text-align:left;cursor:pointer}
+.optbtn:active{transform:translateY(2px);box-shadow:none}
+.optbtn .ot{flex:1;display:flex;flex-direction:column;min-width:0}
+.optbtn small{color:var(--ink-dim)}
+.optbtn>.ic:first-child{width:1.6rem;height:1.6rem}
+.optsec{margin:12px 0 4px}
+.optsec:empty{display:none}
+.optfoot{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;margin-top:12px}
+.modalcard .btn.danger{color:#a32626;border-color:#a32626}
+
 /* Rang */
 .rankcard{display:flex;align-items:center;gap:14px;margin:6px 0 12px;padding:12px 14px;background:var(--bp-2);border:3px double var(--chalk)}
 .rankcard .ico{display:grid;place-items:center;flex:none;width:58px;height:58px;border:2px solid var(--amber);color:var(--amber)}
@@ -549,7 +599,7 @@ svg.interactive{touch-action:none}
   .card{padding:12px 12px 0}
   .titleblock{margin:12px -12px 0}
   .eq{font-size:1.4rem}
-  .gname,.gseg{display:none}
+  .gchip .gname,.gchip .gseg{display:none}
   .gtext{min-width:0}
   .help{left:0;right:0;bottom:0;top:auto;width:auto;max-height:82vh;transform:translateY(105%);border-left:0;border-top:3px double var(--ink)}
   .help.open{transform:none}
@@ -657,6 +707,12 @@ svg.interactive{touch-action:none}
 <symbol id="i-tab" viewBox="0 0 24 24"><path d="M4 12h12M12 7l5 5-5 5M20 5v14"/></symbol>
 <symbol id="i-neu" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.4-5.7M20 4v5h-5"/></symbol>
 <symbol id="i-balken" viewBox="0 0 24 24"><path d="M4 18V9M10 18V5M16 18v-7M22 18H2"/></symbol>
+<symbol id="i-winkel" viewBox="0 0 24 24"><path d="M4 4v16h16z"/><path d="M4 8.5h3M4 12.5h2M4 16.5h3M8.5 20v-3M12.5 20v-2M16.5 20v-3"/></symbol>
+<symbol id="i-schluessel" viewBox="0 0 24 24"><path d="M14.5 3.5a5 5 0 0 0-4.6 6.9L3.8 16.5a1.8 1.8 0 0 0 0 2.5l1.2 1.2a1.8 1.8 0 0 0 2.5 0l6.1-6.1A5 5 0 0 0 20.5 9.5L17 13l-3-.5-.5-3L17 6a5 5 0 0 0-2.5-2.5z"/></symbol>
+<symbol id="i-helm" viewBox="0 0 24 24"><path d="M4 16a8 8 0 0 1 16 0"/><path d="M2.5 16h19v2.5h-19z"/><path d="M12 8v8M9 9.2l-.6 6.8M15 9.2l.6 6.8"/></symbol>
+<symbol id="i-gluehbirne" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/><path d="M9.5 18.5h5M10.5 21h3"/></symbol>
+<symbol id="i-krone" viewBox="0 0 24 24"><path d="M3 18.5h18M4 18.5 3 8l5 4 4-7 4 7 5-4-1 10.5z"/></symbol>
+<symbol id="i-pokal" viewBox="0 0 24 24"><path d="M8 4h8v6a4 4 0 0 1-8 0z"/><path d="M8 6H4.5v1A4 4 0 0 0 8 11M16 6h3.5v1a4 4 0 0 1-3.5 4"/><path d="M12 14v4M8.5 20.5h7M9.5 18h5"/></symbol>
 <symbol id="i-auf" viewBox="0 0 24 24"><path d="M5 15l7-7 7 7"/></symbol>
 <symbol id="i-ab" viewBox="0 0 24 24"><path d="M5 9l7 7 7-7"/></symbol>
 <symbol id="i-kolben" viewBox="0 0 24 24"><path d="M9.5 3h5M10.5 3v6.5L4.6 19a1.6 1.6 0 0 0 1.4 2.4h12a1.6 1.6 0 0 0 1.4-2.4L13.5 9.5V3M7.6 15.5h8.8"/></symbol>
@@ -855,7 +911,7 @@ const Store={
   },
   clear(){try{localStorage.removeItem(KEY);}catch(e){this.ok=false;}}
 };
-const defaultState=()=>({v:1,levelByType:{},rounds:{},progress:{},games:{},skills:{},lab:null,passed:{},checked:{},days:{},view:{kind:'home'}});
+const defaultState=()=>({v:1,levelByType:{},rounds:{},progress:{},games:{},skills:{},lab:null,passed:{},checked:{},days:{},perfect:{},view:{kind:'home'}});
 let S=Object.assign(defaultState(),Store.load()||{});
 function persist(){Store.save(S);}
 
@@ -2489,6 +2545,7 @@ function markDay(){
   S.days[k]=(S.days[k]||0)+1;
   const keys=Object.keys(S.days).sort();
   while(keys.length>60)delete S.days[keys.shift()];
+  S.bestDays=Math.max(S.bestDays||0,dayStreak());
   return S.days[k]===1;
 }
 function dayStreak(){
@@ -2521,6 +2578,8 @@ function onRoundEnd(id,lvl,round){
     info.firstPass=!stationDone(id);
     S.passed[keyOf(id,lvl)]=true;
   }
+  /* perfekte Runde: jede Aufgabe beim 1. Versuch ohne Tipp richtig (zählt für „alles perfekt“) */
+  if(id!=='Q01'&&round.results.length&&round.results.every(r=>r==='f')){(S.perfect=S.perfect||{})[keyOf(id,lvl)]=true;info.perfect=true;}
   info.daily=markDay();
   return info;
 }
@@ -2541,7 +2600,7 @@ function finalCard(){
 }
 /* Schema 4: Lernpfad-Felder; Bestandsnutzer behalten ihren Stand (mind. 4 Treffer beim 1. Versuch ⇒ bestanden) */
 function migrate4(st){
-  st.passed=st.passed||{};st.checked=st.checked||{};st.days=st.days||{};st.skills=st.skills||{};
+  st.passed=st.passed||{};st.checked=st.checked||{};st.days=st.days||{};st.skills=st.skills||{};st.perfect=st.perfect||{};
   Object.keys(st.progress||{}).forEach(k=>{
     const p=st.progress[k];
     if(p&&p.first>=4&&PATH.some(m=>k.startsWith(m.id+'-L')))st.passed[k]=true;
@@ -2613,6 +2672,139 @@ function pfadTab(home){
 }
 
 /* =====================================================================
+   Ränge, „alles perfekt“ und Optionen (Blatt hinter dem Rang-Chip)
+   Rang 1–11 hängen an den Punkten (XP); der höchste Rang (Legende) braucht
+   zusätzlich, dass wirklich alles perfekt geschafft ist.
+   ===================================================================== */
+const RANKS=[
+  [0,'Praktikant','bleistift'],[40,'Azubi','lineal'],[100,'Zeichner','winkel'],[190,'Konstrukteur','zirkel'],
+  [320,'Techniker','zahnrad'],[500,'Werkmeister','schluessel'],[750,'Ingenieur','helm'],[1100,'Baumeister','plakette'],
+  [1600,'Erfinder','gluehbirne'],[2300,'Chefkonstrukteur','pokal'],[3200,'Meister','stern'],[4500,'Legende','krone']
+];
+const RANK_TOP=RANKS.length-1;
+
+/* Bedingungen für „alles perfekt“ (höchster Rang) */
+function perfection(){
+  const keys=[];
+  PRACTICE_ORDER.forEach(id=>[1,2].forEach(l=>keys.push(keyOf(id,l))));
+  const perf=keys.filter(k=>S.perfect&&S.perfect[k]).length;
+  const stars=keys.filter(k=>starsFor((S.progress[k]||{}).first||0)===3).length;
+  const path=PATH.filter(m=>stationDone(m.id)).length;
+  const games=['S01','S02'].reduce((n,id)=>n+[1,2].filter(l=>((S.games[keyOf(id,l)]||{}).won||0)>0).length,0);
+  const items=[
+    {id:'perfect',label:'Perfekte Runde in jeder Übung, leicht und knifflig',have:perf,need:keys.length},
+    {id:'stars',label:'3 Sterne in jeder Übung, leicht und knifflig',have:stars,need:keys.length},
+    {id:'path',label:'Lernpfad komplett, mit Urkunde',have:path,need:PATH.length},
+    {id:'lab',label:'Bruchlabor: Entdeckerauftrag',have:(S.lab&&S.lab.done)?1:0,need:1},
+    {id:'games',label:'Memory und Tresor, leicht und knifflig',have:games,need:4},
+    {id:'streak',label:'30 richtige Antworten in Folge',have:Math.min(30,S.bestStreak||0),need:30},
+    {id:'days',label:'7 Tage in Folge geübt',have:Math.min(7,S.bestDays||0),need:7}
+  ];
+  return {items,all:items.every(i=>i.have>=i.need),done:items.filter(i=>i.have>=i.need).length};
+}
+/* Rang aus Punkten; die Legende nur, wenn alles perfekt ist (perfect = true/false erzwingt, sonst wird geprüft) */
+function rankState(xp,perfect){
+  xp=xp==null?(S.xp||0):xp;
+  let i=0;RANKS.forEach((r,j)=>{if(xp>=r[0])i=j;});
+  const topLocked=i===RANK_TOP&&!(perfect==null?perfection().all:perfect);
+  if(topLocked)i=RANK_TOP-1;
+  const cur=RANKS[i],nxt=RANKS[i+1];
+  const pct=nxt?Math.max(0,Math.min(1,(xp-cur[0])/(nxt[0]-cur[0]))):1;
+  return {i,cur,nxt,pct,xp,topLocked};
+}
+const rankInfo=(xp)=>rankState(xp);
+function rankHint(st){
+  if(!st.nxt)return 'Höchster Rang erreicht';
+  if(st.topLocked)return 'Legende: erst, wenn alles perfekt ist';
+  return 'Noch '+(st.nxt[0]-st.xp)+' XP bis „'+st.nxt[1]+'“'+(st.i===RANK_TOP-1?' und alles perfekt':'');
+}
+/* Neuen Rang einmalig melden (auch wenn er durch „alles perfekt“ erreicht wird) */
+function checkRankUp(){
+  const i=rankState().i;
+  if(S.rankSeen==null){S.rankSeen=i;persist();return;}
+  if(i>S.rankSeen){S.rankSeen=i;persist();setTimeout(()=>rankUpCard(i),900);}
+}
+
+/* ---------- Rang-Chip oben rechts: öffnet die Optionen ---------- */
+function chipNode(){
+  const st=rankState(),xp=st.xp;
+  return el('button',{type:'button',class:'gchip','aria-haspopup':'dialog','aria-label':'Rang '+st.cur[1]+', '+xp+' XP. Optionen öffnen',title:rankHint(st),onclick:openOptions},
+    el('span',{class:'gicon','aria-hidden':'true'},icon(st.cur[2])),
+    el('span',{class:'gtext'},el('b',{class:'gname'},st.cur[1]),segBar(st.pct)),
+    el('span',{class:'gxp'},xp+' XP'),
+    (S.streak||0)>1?el('span',{class:'gstreak','aria-hidden':'true'},'SERIE '+S.streak):null,
+    el('span',{class:'gchev','aria-hidden':'true'},icon('ab')));
+}
+function updateChip(){document.querySelectorAll('.gchip').forEach(c=>c.replaceWith(chipNode()));}
+
+/* ---------- Rang-Seite ---------- */
+function rankCard(){
+  const st=rankState();
+  return el('div',{class:'rankcard'},el('span',{class:'ico','aria-hidden':'true'},icon(st.cur[2])),
+    el('div',{class:'rk'},el('b',null,st.cur[1]),segBar(st.pct,'big'),
+      el('small',null,st.xp+' XP · '+rankHint(st)),el('small',null,'Rang '+(st.i+1)+' von '+RANKS.length)),
+    (S.streak||0)>1?el('span',{class:'gstreak'},'SERIE '+S.streak):null);
+}
+function rankLadder(){
+  const st=rankState();
+  return el('div',{class:'ladder'},...RANKS.map((r,i)=>{
+    const done=i<=st.i,cur=i===st.i,top=i===RANK_TOP;
+    return el('div',{class:'rung'+(done?' done':'')+(cur?' cur':'')+(top?' top':''),'aria-current':cur?'true':null},
+      el('span',{class:'rn'},String(i+1).padStart(2,'0')),
+      el('span',{class:'ri','aria-hidden':'true'},icon(r[2])),
+      el('span',{class:'rt'},el('b',null,r[1]),el('small',null,top?r[0]+' XP und alles perfekt':r[0]+' XP')),
+      el('span',{class:'rs'},icon(done?'haken':'schloss'),el('span',{class:'sr'},done?'erreicht':'noch nicht')));
+  }));
+}
+function perfectionList(){
+  const pf=perfection();
+  return el('div',{class:'perf'},
+    el('p',{class:'perfhead'},pf.all?'Alles perfekt – die Legende ist frei!':'Für die Legende fehlt noch: '+(pf.items.length-pf.done)+' von '+pf.items.length+' Bedingungen.'),
+    ...pf.items.map(it=>{
+      const done=it.have>=it.need;
+      return el('div',{class:'prow'+(done?' done':'')},
+        el('span',{class:'pm','aria-hidden':'true'},icon(done?'haken':'schloss')),
+        el('span',{class:'pt'},it.label,el('span',{class:'pbar','aria-hidden':'true'},el('i',{style:'width:'+Math.round(100*Math.min(1,it.have/it.need))+'%'}))),
+        el('b',{class:'pn'},it.have+'/'+it.need));
+    }));
+}
+
+/* ---------- Optionen ---------- */
+let optModal=null;
+function closeOptions(){if(optModal){optModal.remove();optModal=null;}}
+window.addEventListener('keydown',e=>{if(e.key==='Escape'&&optModal)closeOptions();});
+function resetProgress(){
+  if(confirm('Wirklich allen Fortschritt löschen?')&&confirm('Sicher? Das kann man nicht rückgängig machen.')){
+    closeOptions();Store.clear();S=defaultState();SEEN.clear();go({kind:'home'},true);
+  }
+}
+function optRow(ic,title,sub,fn){
+  return el('button',{type:'button',class:'optbtn',onclick:fn},icon(ic),el('span',{class:'ot'},el('b',null,title),sub?el('small',null,sub):null),icon('weiter'));
+}
+function openOptions(){
+  closeOptions();
+  const st=rankState(),pf=perfection(),inLab=S.view.kind==='lab';
+  const m=modal([
+    el('h2',null,'Optionen'),
+    el('div',{class:'optrank'},icon(st.cur[2],'big'),
+      el('div',{class:'orx'},el('b',null,st.cur[1]),segBar(st.pct,'big'),el('small',null,st.xp+' XP · '+rankHint(st)))),
+    el('div',{class:'optlist'},
+      optRow('plakette','Alle Ränge',pf.all?'Alles perfekt!':'Legende: '+pf.done+' von '+pf.items.length+' Bedingungen',()=>{closeOptions();go({kind:'home',tab:'rang'});}),
+      inLab?null:optRow('kolben','Bruchlabor','Erweitern und Kürzen ausprobieren',()=>{
+        closeOptions();const prev=JSON.parse(JSON.stringify(S.view));go({kind:'lab',from:'opt',back:prev});}),
+      optRow('pfad','Lernpfad','Weiter geht’s',()=>{closeOptions();go({kind:'home',tab:'pfad'});})),
+    optionsExtra(),
+    el('div',{class:'optfoot'},
+      el('button',{type:'button',class:'btn alt small danger',onclick:resetProgress},'Fortschritt löschen'),
+      el('button',{type:'button',class:'btn',onclick:closeOptions},'Schließen'))]);
+  m.classList.add('optmodal');optModal=m;
+  m.addEventListener('click',e=>{if(e.target===m)closeOptions();});
+  const first=m.querySelector('.optbtn');if(first)first.focus();
+}
+/* Platz für weitere Einstellungen (Textgröße) */
+function optionsExtra(){return el('div',{class:'optsec'});}
+
+/* =====================================================================
    7 Aufgaben-Oberfläche (mountTask), Runden, Fortschritt
    ===================================================================== */
 const AREAS=['Grundlagen','Umkehraufgaben','Offene Aufgaben','Darstellungen umwandeln','Spiele'];
@@ -2648,12 +2840,6 @@ function newState(task){return {task,draft:{},hint:0,attempts:0,status:'open',fb
 /* =====================================================================
    Spielerischer Fortschritt: Punkte (XP), Ränge, Serien
    ===================================================================== */
-const RANKS=[[0,'Azubi','bleistift'],[60,'Zeichner','lineal'],[150,'Konstrukteur','zirkel'],[300,'Techniker','zahnrad'],[500,'Meister','plakette'],[800,'Legende','stern']];
-function rankInfo(xp){
-  let i=0;RANKS.forEach((r,j)=>{if(xp>=r[0])i=j;});
-  const cur=RANKS[i],nxt=RANKS[i+1];
-  return {i,cur,nxt,pct:nxt?(xp-cur[0])/(nxt[0]-cur[0]):1};
-}
 /* Segmentierte Messanzeige (10 Segmente) */
 function segBar(pct,cls){
   const w=el('span',{class:'gseg'+(cls?' '+cls:''),'aria-hidden':'true'});
@@ -2661,15 +2847,6 @@ function segBar(pct,cls){
   for(let i=0;i<10;i++)w.append(el('i',{class:i<lit?'on':''}));
   return w;
 }
-function chipNode(){
-  const xp=S.xp||0,r=rankInfo(xp);
-  return el('div',{class:'gchip',title:r.nxt?`Noch ${r.nxt[0]-xp} XP bis „${r.nxt[1]}“`:'Höchster Rang'},
-    el('span',{class:'gicon','aria-hidden':'true'},icon(r.cur[2])),
-    el('span',{class:'gtext'},el('b',{class:'gname'},r.cur[1]),segBar(r.pct)),
-    el('span',{class:'gxp'},xp+' XP'),
-    (S.streak||0)>1?el('span',{class:'gstreak',title:'Richtige Antworten in Folge'},'SERIE '+S.streak):null);
-}
-function updateChip(){document.querySelectorAll('.gchip').forEach(c=>c.replaceWith(chipNode()));}
 let toastTimer=null;
 function toast(text,cls){
   let t=document.getElementById('toast');
@@ -2687,15 +2864,13 @@ function modal(content){
 }
 function rankUpCard(i){
   const r=RANKS[i],m=modal([icon(r[2],'big'),el('h2',null,'Neuer Rang'),el('p',{class:'rankname'},r[1]),el('div',{class:'stampbox'},'Geprüft'),
-    el('p',null),el('button',{type:'button',class:'btn primary',onclick:()=>m.remove()},'Weiter')]);
+    el('p',null,'Rang '+(i+1)+' von '+RANKS.length+(i===RANK_TOP?' – alles perfekt!':'')),el('button',{type:'button',class:'btn primary',onclick:()=>m.remove()},'Weiter')]);
 }
 function award(xp,label){
-  const before=rankInfo(S.xp||0).i;
   S.xp=(S.xp||0)+xp;
-  const after=rankInfo(S.xp).i;
   persist();updateChip();
   toast('+'+xp+' XP'+(label?' · '+label:''));
-  if(after>before)setTimeout(()=>rankUpCard(after),900);
+  checkRankUp();
 }
 /* Abwechslungsreiches Lob (nie zweimal dasselbe hintereinander) */
 const PRAISE=['Maßgenau.','Sitzt.','Sauber gerechnet.','Stimmt auf den Millimeter.','Passt.','Volltreffer.','Genau so.','Bauteil in Ordnung.'];
@@ -2883,6 +3058,7 @@ const ICON={Q00:'blitz',Q01:'blitz',G01:'lineal',T01:'teiler',G02:'aus',G03:'sch
 const ACC={G02:'erw',O01:'erw',G03:'kue',G04:'kue',T01:'kue',O02:'kue',G05:'mix'};
 function backTarget(){
   const v=S.view;
+  if(v.from==='opt'&&v.back)return v.back;
   if(v.from==='pfad'&&(v.kind==='practice'||v.kind==='lab'))return {kind:'home',tab:'pfad'};
   if(v.kind==='practice'){const g=Object.keys(GROUPS).find(k=>GROUPS[k].ids.includes(v.id));return {kind:'home',tab:'ueben',group:g};}
   if(v.kind==='game')return {kind:'home',tab:'spiele'};
@@ -3374,13 +3550,6 @@ function listLevel(ids){
   const mk=(n)=>el('button',{type:'button','aria-pressed':String(l===n),onclick:()=>set(n)},LEVEL_LABEL[n]);
   return el('div',{class:'levelrow'},el('span',{class:'lblm'},'Schwierigkeit'),el('div',{class:'seg',role:'group','aria-label':'Schwierigkeit wählen'},mk(1),mk(2)));
 }
-function rankCard(){
-  const xp=S.xp||0,r=rankInfo(xp);
-  return el('div',{class:'rankcard'},el('span',{class:'ico','aria-hidden':'true'},icon(r.cur[2])),
-    el('div',{class:'rk'},el('b',null,r.cur[1]),segBar(r.pct,'big'),
-      el('small',null,r.nxt?`${xp} XP · noch ${r.nxt[0]-xp} bis „${r.nxt[1]}“`:`${xp} XP · höchster Rang`)),
-    (S.streak||0)>1?el('span',{class:'gstreak'},'SERIE '+S.streak):null);
-}
 /* Stückliste: Pos · Bezeichnung · Sterne leicht/knifflig */
 function bomList(ids){
   const head=el('div',{class:'bomhead'},el('span',null,'Pos'),el('span',null,'Bezeichnung'),el('span',null,'Leicht'),el('span',null,'Knifflig'),el('span'));
@@ -3413,12 +3582,10 @@ function renderHome(){
     const total=Object.values(S.progress).reduce((a,p)=>a+p.done,0);
     home.append(el('h1',null,'Dein Rang'),rankCard(),
       el('p',{class:'stats'},`Aufgaben bearbeitet: ${total} · Längste Serie: ${S.bestStreak||0}`),
+      el('h2',{class:'area'},'Alle Ränge'),rankLadder(),
+      el('h2',{class:'area'},'Legende: alles perfekt'),perfectionList(),
       el('h2',{class:'area'},'Deine Sterne'),bomList(PRACTICE_ORDER),
-      el('details',{class:'settings'},el('summary',null,icon('zahnrad'),' Einstellungen'),
-        el('p',null,'Alles wird nur auf diesem Gerät gespeichert.'),
-        el('button',{type:'button',class:'btn small danger',onclick:()=>{
-          if(confirm('Wirklich allen Fortschritt löschen?')&&confirm('Sicher? Das kann man nicht rückgängig machen.')){Store.clear();S=defaultState();SEEN.clear();go({kind:'home'},true);}
-        }},'Fortschritt löschen')));
+      el('p',null,el('button',{type:'button',class:'btn small',onclick:openOptions},icon('zahnrad'),' Optionen')));
   }else if(!v.group||!GROUPS[v.group]){
     const last=S.last&&TASKS[S.last]?S.last:null;
     home.append(rankCard());
@@ -3499,7 +3666,9 @@ function runSelfTests(){
   t('G05: 6/9 = □/3 → 2',validateTask(g05,{'r.n':'2'}).correct&&!validateTask(g05,{'r.n':'3'}).correct);
   const g05t={type:'G05',level:1,mode:'twostep',a:4,b:6,k:3,m:2};
   t('G05: 4/6 mit 3 erweitern, mit 2 kürzen',validateTask(g05t,{'r1.n':'12','r1.d':'18','r2.n':'6','r2.d':'9'}).correct);
-  t('Rang-Berechnung',rankInfo(0).i===0&&rankInfo(60).i===1&&rankInfo(900).i===5);
+  t('Ränge: 12 Stufen, Schwellen steigen',RANKS.length===12&&RANKS.every((r,i)=>!i||r[0]>RANKS[i-1][0]));
+  t('Rang-Berechnung nach Punkten',rankState(0,false).i===0&&rankState(40,false).i===1&&rankState(3200,false).i===10);
+  t('Höchster Rang nur bei „alles perfekt“',rankState(99999,false).i===RANK_TOP-1&&rankState(99999,false).topLocked&&rankState(99999,true).i===RANK_TOP&&rankState(4499,true).i===RANK_TOP-1);
   /* Generatoren: viele Läufe, jede Variante muss lösbar und erzeugbar sein */
   let gen=0;
   for(const id of PRACTICE_ORDER)for(const lvl of [1,2])for(let i=0;i<150;i++){
@@ -3682,6 +3851,8 @@ window.runSelfTests=runSelfTests;
   try{localStorage.setItem(KEY+'_probe','1');localStorage.removeItem(KEY+'_probe');}catch(e){Store.ok=false;}
   if((S.schema||1)<3){S.rounds={};Object.keys(S.games||{}).forEach(k=>{S.games[k].state=null;});S.schema=3;persist();}
   if((S.schema||1)<4){migrate4(S);S.view={kind:'home',tab:'pfad'};S.schema=4;persist();}
+  if(!S.perfect)S.perfect={};
+  if(S.rankSeen==null){S.rankSeen=rankState().i;persist();}
   if(!S.view||(S.view.kind==='home'&&S.view.tab==='aufgaben'))S.view={kind:'home',tab:'ueben',group:S.view&&S.view.group};
   try{history.replaceState({v:S.view},'');}catch(e){}
   renderAll();
