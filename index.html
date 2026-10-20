@@ -348,6 +348,25 @@ input:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3px #bcd3f7}
 .key{min-height:42px}
 .stepper .lab{min-width:0}
 @media (max-width:599px){.key{min-height:38px}.controls{gap:2px}.stepper button{width:40px;height:40px}}
+.figpair{display:flex;gap:12px;align-items:center}
+.figpair .orig{flex:0 0 110px}
+.figpair .edit{flex:1;min-width:0}
+.extra summary{cursor:pointer;padding:8px 0;color:var(--muted)}
+.keypad{grid-template-columns:repeat(6,1fr)!important}
+@media (max-width:599px){
+  .emo{display:none}
+  .actionbar .primaryrow{grid-template-columns:1fr 1.25fr 1fr 1.3fr!important}
+  .actionbar .primaryrow .btn{font-size:.88rem;padding:0 4px;white-space:nowrap}
+  .key{min-height:44px;font-size:1.3rem}
+  .keypad{gap:5px}
+  .q{font-size:1rem}
+  .controls .btn.small{flex:1}
+  .split{gap:6px}
+  .stepper{margin:2px 6px 2px 0}
+  .stepper output{min-width:1.6em}
+  .card{padding:10px}
+  .prompt{margin-bottom:2px}
+}
 </style>
 </head>
 <body>
@@ -1073,7 +1092,7 @@ TASKS.B01={area:'Grundlagen',name:'Bruchbilder verändern',desc:'Teile ein Bild 
     return {type:'B01',level,kind:'grid',a,b,rows0:dims[0],cols0:dims[1],minTotal,avoid:[redKey(a,b)]};
   },
   prompt(t,h){
-    if(t.level===1)h.append(el('p',{class:'q'},'Das Bild zeigt ',frac(t.a,t.b),'. Teile das Bild in ',strong(t.target),' gleich große Teile. Färbe denselben Anteil und gib den neuen Bruch an.'));
+    if(t.level===1)h.append(el('p',{class:'q'},'Das Bild zeigt ',frac(t.a,t.b),'. Teile das Bild in ',strong(t.target),' gleich große Teile. Tippe auf Teile des unteren Bildes, um sie zu färben, und gib den neuen Bruch an.'));
     else h.append(el('p',{class:'q'},'Das Rechteck zeigt ',frac(t.a,t.b),'. Teile ein Rechteck in Zeilen und Spalten, sodass es ',strong('mindestens '+t.minTotal),' gleich große Felder gibt. Färbe denselben Anteil und gib den neuen Bruch an.'));
   },
   render(view,host){
@@ -1099,14 +1118,14 @@ TASKS.B01={area:'Grundlagen',name:'Bruchbilder verändern',desc:'Teile ein Bild 
       updInfo();
     };
     const updInfo=()=>{
-      info.replaceChildren('Dein Bild: ',strong(d.col.length),' von ',strong(total()),' Teilen gefärbt = ',frac(d.col.length,total()));
+      info.replaceChildren('Gefärbt: ',strong(d.col.length),' von ',strong(total()),' Teilen');
       steppers.forEach(s=>s.upd());
     };
     const controls=el('div',{class:'controls'});
     if(L1){
       steppers.push(stepper(view,'Teile',()=>d.parts,v=>{d.parts=v;d.col=[];changed();},1,12));
       [2,3].forEach(f=>{
-        const b=el('button',{type:'button',class:'btn small'},f===2?'Einteilung verdoppeln':'Einteilung verdreifachen');
+        const b=el('button',{type:'button',class:'btn small'},f===2?'Teile ×2':'Teile ×3');
         b.addEventListener('click',()=>{
           if(view.locked()||d.parts*f>12)return;
           const m=d.col.length;d.parts*=f;d.col=Array.from({length:m*f},(_,i)=>i);changed();
@@ -1125,16 +1144,17 @@ TASKS.B01={area:'Grundlagen',name:'Bruchbilder verändern',desc:'Teile ein Bild 
     /* Obergrenze für Gefärbt = Teilezahl */
     const gs=steppers[steppers.length-1],plusG=gs.querySelectorAll('button')[1];
     const origUpd=gs.upd;gs.upd=()=>{origUpd();plusG.disabled=plusG.disabled||d.col.length>=total();};
-    steppers.forEach(s=>controls.append(s));
+    steppers.slice(0,-1).forEach(s=>controls.append(s));
     const reset=el('button',{type:'button',class:'btn small'},'Zurücksetzen');
     reset.addEventListener('click',()=>{
       if(view.locked())return;
       if(L1)d.parts=t.b;else{d.rows=t.rows0;d.cols=t.cols0;}
       d.col=[];view.save();redraw();
     });
-    view.inputs.reset=reset;controls.append(reset);
-    const left=el('div',null,el('div',{style:'display:flex;gap:12px;align-items:center'},el('div',{style:'flex:0 0 120px'},orig),el('div',{style:'flex:1;min-width:0'},editBox)),el('p',{class:'q',style:'margin:.3em 0'},'Tippe auf die Teile des unteren Bildes, um sie zu färben.'),info);
-    const right=el('div',null,controls,el('p',null,'Der Bruch, den dein Bild zeigt:'),eq(fracInput(view,'r')));
+    view.inputs.reset=reset;
+    const extra=el('details',{class:'extra'},el('summary',null,'⚙️ Mehr Einstellungen'),el('div',{class:'controls'},gs,reset));
+    const left=el('div',null,el('div',{class:'figpair'},el('div',{class:'orig'},orig),el('div',{class:'edit'},editBox)),info);
+    const right=el('div',null,controls,el('div',{class:'q',style:'margin:.5em 0'},'Dein Bruch: ',fracInput(view,'r')),extra);
     host.append(el('div',{class:'split has-visual'},left,right));
     redraw();
   },
@@ -1569,19 +1589,25 @@ function makeKeypad(host,onSubmit){
   const pad=el('div',{class:'keypad hidden',role:'group','aria-label':'Zahlentastatur'});
   '1234567890'.split('').forEach(d=>pad.append(key(d,'',i=>{if(i.value.length<(i.maxLength>0?i.maxLength:99)){i.value+=d;fire(i);}})));
   pad.append(key('⌫','fn',i=>{i.value=i.value.slice(0,-1);fire(i);},'Löschen'));
-  const comma=key(',','fn',i=>{if(i.classList.contains('decin')&&!i.value.includes(',')){i.value+=',';fire(i);}},'Komma');
-  pad.append(comma);
-  pad.append(key('⇥','fn',i=>{const l=list();cur=l[(l.indexOf(i)+1)%l.length];cur.focus({preventScroll:true});},'Nächstes Feld'));
+  const alt=el('button',{type:'button',class:'key fn'},'⇥');
+  alt.addEventListener('pointerdown',e=>e.preventDefault());
+  alt.addEventListener('click',()=>{
+    const i=ensure();if(!i)return;
+    if(i.classList.contains('decin')){if(!i.value.includes(',')){i.value+=',';fire(i);}return;}
+    const l=list();cur=l[(l.indexOf(i)+1)%l.length];cur.focus({preventScroll:true});
+  });
+  pad.append(alt);
   return {el:pad,refresh(){
     const l=list();
     pad.classList.toggle('hidden',!l.length);
-    comma.style.visibility=host.querySelector('.decin')?'visible':'hidden';
+    const dec=!!host.querySelector('.decin');alt.textContent=dec?',':'⇥';alt.setAttribute('aria-label',dec?'Komma':'Nächstes Feld');alt.style.visibility=(dec||l.length>1)?'visible':'hidden';
     if(l.length)ensure();
   }};
 }
+function setHintLabel(btn,text){btn.replaceChildren(el('span',{class:'emo'},'💡 '),text);}
 function buildDock(main,{hintBtn,noteBtn,primary,more,pad}){
   const sec=el('div',{class:'secondary hidden'},...more);
-  const moreBtn=more.length?el('button',{type:'button',class:'btn','aria-expanded':'false'},'⋯ Mehr'):null;
+  const moreBtn=more.length?el('button',{type:'button',class:'btn','aria-expanded':'false'},'Mehr ▾'):null;
   if(moreBtn)moreBtn.addEventListener('click',()=>{const h=sec.classList.toggle('hidden');moreBtn.setAttribute('aria-expanded',String(!h));});
   const bar=el('div',{class:'actionbar'},pad?pad.el:null,el('div',{class:'primaryrow'},hintBtn,noteBtn,moreBtn,primary),sec);
   main.append(bar);
@@ -1737,8 +1763,8 @@ function renderPractice(id){
   card.append(host);
   main.append(card);
 
-  const hintBtn=el('button',{type:'button',class:'btn'},'💡 Tipp');
-  const noteBtn=el('button',{type:'button',class:'btn'},'📘 Merkkasten');
+  const hintBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},'💡 '),'Tipp');
+  const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},'📘 '),'Merkkasten');
   const primary=el('button',{type:'button',class:'btn primary'},'Prüfen');
   const solBtn=el('button',{type:'button',class:'btn small'},'Lösung zeigen');
   const skipBtn=el('button',{type:'button',class:'btn small'},'Überspringen');
@@ -1764,7 +1790,7 @@ function renderPractice(id){
     solBtn.disabled=!open;skipBtn.disabled=!open;
     const all=ctrl.hintCount();
     hintBtn.disabled=st.hint>=all;
-    hintBtn.textContent=st.hint>=all?'💡 Alle Tipps':(st.hint?`💡 Tipp ${st.hint+1}`:'💡 Tipp');
+    setHintLabel(hintBtn,st.hint>=all?'Alle Tipps':(st.hint?`Tipp ${st.hint+1}`:'Tipp'));
     pad.refresh();
   };
   const next=()=>{round.cur=null;persist();renderAll();};
@@ -1866,8 +1892,8 @@ function renderMemory(id){
   const hints=el('div',{class:'hints'});
   card.append(el('p',null,'Decke zwei Karten auf. Ein Paar zeigt denselben Anteil – auch wenn die Karten verschieden aussehen. Bruchbilder und Brüche mit Bruchstrich gehören zusammen.'),stats,msg,grid,hints);
   main.append(card);
-  const hintBtn=el('button',{type:'button',class:'btn'},'💡 Tipp');
-  const noteBtn=el('button',{type:'button',class:'btn'},'📘 Merkkasten');
+  const hintBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},'💡 '),'Tipp');
+  const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},'📘 '),'Merkkasten');
   const again=el('button',{type:'button',class:'btn primary'},'Neu mischen');
   main.append(el('div',{class:'actionbar'},el('div',{class:'primaryrow'},hintBtn,noteBtn,again)));
   const renderHints=()=>{hints.replaceChildren();HINT.memory.slice(0,m.hintStage).forEach((h,i)=>hints.append(el('div',{class:'hint'},el('b',{class:'lab'},'Tipp '+(i+1)),el('p',null,h))));hintBtn.disabled=m.hintStage>=HINT.memory.length;};
@@ -1941,8 +1967,8 @@ function renderVault(id){
 
   const solved=(l)=>l.status==='correct';
   const allSolved=()=>v.locks.every(solved);
-  const hintBtn=el('button',{type:'button',class:'btn'},'💡 Tipp');
-  const noteBtn=el('button',{type:'button',class:'btn'},'📘 Merkkasten');
+  const hintBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},'💡 '),'Tipp');
+  const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},'📘 '),'Merkkasten');
   const primary=el('button',{type:'button',class:'btn primary'},'Prüfen');
   const solBtn=el('button',{type:'button',class:'btn small'},'Lösung zeigen');
   let ctrl=null;
@@ -1997,7 +2023,7 @@ function renderVault(id){
     solBtn.disabled=!open;
     const all=ctrl?ctrl.hintCount():0;
     hintBtn.disabled=!open||l.hint>=all;
-    hintBtn.textContent=l.hint>=all&&open?'💡 Alle Tipps':(l.hint?`💡 Tipp ${l.hint+1}`:'💡 Tipp');
+    setHintLabel(hintBtn,l.hint>=all&&open?'Alle Tipps':(l.hint?`Tipp ${l.hint+1}`:'Tipp'));
     pad.refresh();
   };
   const drawPuzzle=()=>{
