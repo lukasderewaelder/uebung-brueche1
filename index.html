@@ -1,0 +1,1896 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bruchwerkstatt – Erweitern und Kürzen</title>
+<style>
+:root{
+  --bg:#f5f7fa;--card:#fff;--ink:#1c2433;--muted:#566176;--line:#d3d9e3;
+  --accent:#1d5fc4;--accent-d:#164a9c;--accent-bg:#e8f0fc;--fill:#4a90e2;
+  --ok:#17703f;--okbg:#e5f4ea;--bad:#a8261d;--badbg:#fdeceb;
+  --warn:#6b4f00;--warnbg:#fff6dc;--warnline:#e6c35c;--r:12px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;overflow-x:hidden}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid #f5a623;outline-offset:2px}
+h1,h2,h3{line-height:1.25;margin:0 0 .5em}
+p{margin:.4em 0 .7em}
+.hidden{display:none!important}
+
+/* ---------- Bruchdarstellung ---------- */
+.frac{display:inline-flex;flex-direction:column;align-items:stretch;text-align:center;vertical-align:middle;line-height:1.15;margin:0 .12em;font-variant-numeric:tabular-nums}
+.frac>.num{border-bottom:.09em solid currentColor;padding:0 .3em .06em}
+.frac>.den{padding:.06em .3em 0}
+.mixed{display:inline-flex;align-items:center;gap:.1em;vertical-align:middle}
+.mixed .whole{font-size:1.25em;font-weight:600;margin-right:.1em}
+.eq{display:flex;flex-wrap:wrap;align-items:center;gap:.4em .3em;font-size:1.55rem;margin:.4em 0}
+.eq.small{font-size:1.2rem}
+.op{padding:0 .2em;font-weight:600}
+.frac.inp>.num{padding-bottom:6px}
+.frac.inp>.den{padding-top:6px}
+.frac.inp input,input.intin,input.decin{width:5em;height:48px;text-align:center;border:2px solid var(--line);border-radius:8px;font-size:1.1rem;background:#fff;padding:0 6px}
+input.intin{width:5.5em}
+input.decin{width:8em}
+input.bad{border-color:var(--bad);background:var(--badbg)}
+input.good{border-color:var(--ok);background:var(--okbg)}
+input:disabled{opacity:.85}
+.q{font-size:1.2rem;margin:.2em 0 .6em}
+.q .frac{font-size:1.35em}
+
+/* ---------- Gerüst ---------- */
+.topbar{display:flex;align-items:center;gap:12px;padding:10px 20px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30;padding-top:max(10px,env(safe-area-inset-top))}
+.brand{font-weight:700;font-size:1.15rem;color:var(--accent-d);cursor:pointer;background:none;border:0;padding:6px 0;min-height:44px}
+.topbar .title{font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shell{display:grid;grid-template-columns:260px minmax(0,1fr) 360px;gap:20px;max-width:1560px;margin:0 auto;padding:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.btn{min-height:48px;padding:0 18px;border-radius:10px;border:1.5px solid var(--line);background:#fff;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-align:center}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover:not(:disabled){background:var(--accent-d)}
+.btn.small{min-height:40px;padding:0 12px;font-size:.95rem}
+.btn.danger{color:var(--bad)}
+
+/* Niveauwahl */
+.seg{display:inline-flex;border:1.5px solid var(--accent);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:#fff;color:var(--accent);min-height:44px;padding:0 14px;cursor:pointer;font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.seg .short{display:none}
+
+/* Navigation */
+.sidenav{align-self:start;position:sticky;top:76px;max-height:calc(100vh - 96px);overflow:auto}
+.sidenav h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:14px 0 4px}
+.sidenav h3:first-child{margin-top:0}
+.navbtn{display:block;width:100%;text-align:left;border:0;background:none;padding:9px 10px;border-radius:8px;cursor:pointer;min-height:44px;font-size:.98rem}
+.navbtn:hover{background:var(--accent-bg)}
+.navbtn[aria-current="true"]{background:var(--accent-bg);color:var(--accent-d);font-weight:700}
+.navbtn .id{display:inline-block;min-width:2.6em;color:var(--muted);font-size:.8rem}
+.phoneswitch{display:none;width:100%;min-height:48px;border:1.5px solid var(--line);border-radius:10px;padding:0 10px;background:#fff;margin-bottom:10px}
+
+/* Arbeitsbereich */
+.worktop{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.worktop h2{margin:0;font-size:1.35rem}
+.progress{margin:0 0 14px}
+.progress .bar{height:8px;background:#e1e6ee;border-radius:6px;overflow:hidden}
+.progress .bar i{display:block;height:100%;background:var(--accent);transition:width .25s}
+.progress .lbl{font-size:.92rem;color:var(--muted);margin-bottom:4px}
+.prompt{margin-bottom:6px}
+.split{display:grid;gap:18px;align-items:start}
+.stage{margin:8px 0 4px}
+.feedback{margin:12px 0 0;min-height:1px}
+.msg{padding:10px 14px;border-radius:10px;border:1px solid;margin:8px 0}
+.msg.ok{background:var(--okbg);border-color:#9bd1b0;color:#0f4d2b}
+.msg.bad{background:var(--badbg);border-color:#efb1ac;color:#7a1a13}
+.msg.info{background:var(--accent-bg);border-color:#b9cff3}
+.hints{margin-top:10px}
+.hint{background:var(--warnbg);border:1px solid var(--warnline);border-radius:10px;padding:10px 14px;margin:8px 0;color:var(--warn)}
+.hint b.lab{display:block;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em}
+.hint p{margin:.2em 0}
+.solution{margin-top:12px}
+.solbox{border:2px dashed var(--accent);border-radius:10px;padding:12px 16px;background:#fbfdff}
+.solbox h4{margin:0 0 6px}
+.sol-line{margin:6px 0}
+
+.actionbar{margin-top:18px}
+.actionbar .primaryrow{display:flex;gap:10px;flex-wrap:wrap}
+.actionbar .secondary{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+
+/* Fortschritt rechts */
+.help{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
+.helphead{display:flex;align-items:center;justify-content:space-between}
+.helphead h2{font-size:1.1rem;margin:0}
+.helpclose{display:none}
+.note{border:1.5px solid var(--accent);border-radius:12px;padding:12px 16px;margin:10px 0;background:#f7faff}
+.note h3{font-size:1.05rem;color:var(--accent-d);margin:0 0 6px}
+.note .ex{margin:8px 0}
+.note .figrow{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.note .fig{display:flex;align-items:center;gap:10px}
+.note .fig svg{flex:1;min-width:0}
+.note table{border-collapse:collapse;width:100%;font-size:.95rem;margin:6px 0}
+.note th,.note td{border:1px solid var(--line);padding:4px 8px;text-align:center}
+.rule{background:var(--warnbg);border:1px solid var(--warnline);border-radius:8px;padding:8px 12px;margin:10px 0;font-size:.97rem}
+.stats{font-size:.95rem;color:var(--muted)}
+.stats td{padding:2px 8px 2px 0}
+.scrim{display:none}
+
+/* SVG-Bruchbilder */
+svg.fracsvg{display:block;width:100%;height:auto}
+.cell>*{fill:#fff;stroke:#1c2433;stroke-width:1.6;transition:fill .12s}
+.cell.on>*{fill:var(--fill)}
+g.cell[role="button"]{cursor:pointer}
+g.cell[role="button"]:hover>*{fill:#dbe9fb}
+g.cell.on[role="button"]:hover>*{fill:#3b7fd0}
+g.cell:focus-visible{outline:none}
+g.cell:focus-visible>*{stroke:#f5a623;stroke-width:4}
+.fig{margin:0}
+.fig figcaption{font-size:.92rem;color:var(--muted);margin-top:4px}
+.stepper{display:inline-flex;align-items:center;gap:6px;margin:4px 12px 4px 0}
+.stepper .lab{min-width:5.5em}
+.stepper button{width:48px;height:48px;border-radius:10px;border:1.5px solid var(--accent);background:#fff;color:var(--accent);font-size:1.4rem;cursor:pointer;font-weight:700}
+.stepper button:disabled{opacity:.4;cursor:default}
+.stepper output{min-width:2.2em;text-align:center;font-weight:700;font-size:1.2rem}
+.controls{display:flex;flex-wrap:wrap;gap:6px 4px;margin:10px 0}
+
+/* Karten (G01) */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-top:10px}
+.pick{min-height:96px;border:2px solid var(--line);border-radius:12px;background:#fff;cursor:pointer;padding:10px;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+.pick[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-bg);box-shadow:0 0 0 2px var(--accent) inset}
+.pick svg{max-width:160px}
+
+/* Fehlerdetektiv, Rechenwege, Familien */
+.opts{display:grid;gap:8px;margin:8px 0 14px}
+.opt{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff;cursor:pointer;min-height:48px}
+.opt input{width:22px;height:22px;margin-top:2px;flex:none}
+.opt:has(input:checked){border-color:var(--accent);background:var(--accent-bg)}
+.wrongclaim{background:var(--badbg);border:1px solid #efb1ac;border-radius:10px;padding:8px 14px;display:inline-block}
+.chain{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:10px 0;background:#fcfdff}
+.chain h4{margin:0 0 4px}
+.rowbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.famrow{display:flex;align-items:center;gap:10px;margin:8px 0}
+.famrow .tag{font-size:.9rem;font-weight:600}
+.tag.ok{color:var(--ok)}.tag.bad{color:var(--bad)}
+.cond{margin:8px 0;padding-left:1.2em}
+
+/* Home */
+.home{max-width:1180px;margin:0 auto;padding:20px}
+.home h1{font-size:1.9rem}
+.homegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.area{margin:26px 0 8px;font-size:1.2rem}
+.area small{color:var(--muted);font-weight:400}
+.tcard{display:flex;flex-direction:column;gap:8px}
+.tcard h3{margin:0;font-size:1.1rem}
+.tcard .tid{font-size:.8rem;color:var(--muted);font-weight:600}
+.tcard p{margin:0;color:var(--muted);flex:1}
+.tcard .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.tcard .pg{font-size:.85rem;color:var(--muted)}
+
+/* Memory */
+.memgrid{display:grid;gap:10px;margin:12px 0}
+.memgrid.n12{grid-template-columns:repeat(4,1fr)}
+.memgrid.n20{grid-template-columns:repeat(5,1fr)}
+@media (max-width:899px){.memgrid.n20{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:599px){.memgrid.n12,.memgrid.n20{grid-template-columns:repeat(3,1fr)}}
+.mcard{height:118px;border:2px solid var(--line);border-radius:12px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:6px;font-size:1.35rem;overflow:hidden}
+.mcard.down{background:repeating-linear-gradient(45deg,#e8f0fc,#e8f0fc 10px,#d8e6fa 10px,#d8e6fa 20px);color:var(--accent-d);font-size:2rem;font-weight:700}
+.mcard.matched{border-color:var(--ok);background:var(--okbg)}
+.mcard.up{border-color:var(--accent)}
+.mcard svg{max-height:96px;max-width:100%}
+.memstats{display:flex;gap:18px;flex-wrap:wrap;font-weight:600}
+
+/* Tresor */
+.vault{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));margin:10px 0}
+.lock{border:2px solid var(--line);border-radius:12px;background:#fff;min-height:84px;cursor:pointer;padding:8px;text-align:center}
+.lock .st{display:block;font-size:.85rem;color:var(--muted)}
+.lock .dg{display:block;font-size:1.8rem;font-weight:700;font-variant-numeric:tabular-nums}
+.lock[aria-current="true"]{border-color:var(--accent);background:var(--accent-bg)}
+.lock.open{border-color:var(--ok);background:var(--okbg)}
+.codeline{display:flex;gap:8px;align-items:center;margin:6px 0;flex-wrap:wrap}
+.codeline input{width:56px;height:56px;font-size:1.6rem;text-align:center;border:2px solid var(--line);border-radius:10px}
+
+.note-storage{font-size:.85rem;color:var(--muted);text-align:center;padding:6px}
+.summary table{border-collapse:collapse;margin:10px 0}
+.summary td{padding:4px 14px 4px 0}
+
+/* ---------- Desktop ≥ 1100 ---------- */
+@media (min-width:1100px){
+  .help{position:sticky;top:76px;align-self:start;max-height:calc(100vh - 96px);overflow:auto}
+  .only-compact{display:none!important}
+  .split.has-visual{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+}
+/* ---------- Tablet 600–1099 ---------- */
+@media (max-width:1099px){
+  .shell{display:block;padding:14px 16px}
+  .sidenav{position:static;max-height:none;margin-bottom:12px;padding:6px 8px;overflow-x:auto;overflow-y:hidden;white-space:nowrap}
+  .sidenav h3{display:none}
+  .sidenav .navbtn{display:inline-block;width:auto;border:1.5px solid var(--line);margin:3px 4px 3px 0;white-space:nowrap}
+  .sidenav .navbtn .id{min-width:0;margin-right:.4em}
+  .help{position:fixed;z-index:60;background:#fff;box-shadow:0 8px 40px rgba(20,30,60,.35);overflow:auto;visibility:hidden;transition:transform .22s,visibility .22s}
+  .help.open{visibility:visible;transform:none}
+  .helpclose{display:inline-flex}
+  .scrim.show{display:block;position:fixed;inset:0;background:rgba(20,30,60,.4);z-index:50}
+}
+@media (min-width:600px) and (max-width:1099px){
+  .help{top:0;right:0;bottom:0;width:min(440px,92vw);border-radius:0;transform:translateX(105%)}
+  .split.has-visual{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+}
+@media (min-width:600px) and (max-width:899px) and (orientation:portrait){
+  .split.has-visual{grid-template-columns:1fr}
+}
+/* ---------- Smartphone < 600 ---------- */
+@media (max-width:599px){
+  body{font-size:16px}
+  .topbar{padding:8px 12px;gap:8px}
+  .brand{font-size:1rem}
+  .shell{padding:10px 10px 0}
+  .sidenav{display:none}
+  .phoneswitch{display:block}
+  .card{padding:14px}
+  .eq{font-size:1.4rem}
+  .seg .long{display:none}.seg .short{display:inline}
+  .seg button{padding:0 10px}
+  .worktop h2{font-size:1.1rem}
+  .help{left:0;right:0;bottom:0;max-height:80vh;border-radius:16px 16px 0 0;transform:translateY(105%)}
+  .actionbar{position:sticky;bottom:0;background:var(--bg);margin:14px -10px 0;padding:10px 10px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);z-index:20}
+  .actionbar .primaryrow{display:grid;grid-template-columns:1fr 1fr 1.3fr}
+  .actionbar .primaryrow.two{grid-template-columns:1fr 1.3fr}
+  .actionbar .secondary .btn{flex:1}
+  .cards{grid-template-columns:repeat(2,1fr)}
+  .frac.inp input{width:4.4em;height:52px}
+  .memgrid{gap:8px}
+  .mcard{height:104px}
+  .home{padding:12px}
+  .home h1{font-size:1.5rem}
+  .homegrid{grid-template-columns:1fr}
+  .stepper{margin-right:6px}
+}
+@media (max-width:359px){
+  .eq{font-size:1.2rem}
+  .frac.inp input{width:3.8em}
+  .actionbar .btn{padding:0 8px;font-size:.92rem}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="scrim" class="scrim"></div>
+<script>
+'use strict';
+/* =====================================================================
+   Bruchwerkstatt – Erweitern und Kürzen
+   1 Zufall · 2 Mathematik · 3 DOM/SVG · 4 Speicher
+   ===================================================================== */
+
+/* ---------- 1 Zufall ---------- */
+function makeRng(rnd){
+  return {
+    int:(a,b)=>a+Math.floor(rnd()*(b-a+1)),
+    pick:(arr)=>arr[Math.floor(rnd()*arr.length)],
+    chance:(p)=>rnd()<p,
+    shuffle(arr){const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+  };
+}
+function mulberry32(seed){let s=seed>>>0;return function(){s=(s+0x6D2B79F5)|0;let t=Math.imul(s^(s>>>15),1|s);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};}
+const RNG=makeRng(Math.random);
+
+/* ---------- 2 Mathematik (ausschließlich ganzzahlig) ---------- */
+const gcd=(a,b)=>{a=Math.abs(a);b=Math.abs(b);while(b){const t=a%b;a=b;b=t;}return a;};
+const equivalent=(a,b,c,d)=>b>0&&d>0&&a*d===c*b;
+const simplify=(a,b)=>{const g=gcd(a,b)||1;return [a/g,b/g];};
+const canReduce=(a,b,k)=>k>1&&a%k===0&&b%k===0;
+const isFullyReduced=(a,b)=>gcd(a,b)===1;
+const expand=(a,b,k)=>[a*k,b*k];
+const mixedToFraction=(w,a,b)=>[w*b+a,b];
+const redKey=(a,b)=>{const [p,q]=simplify(a,b);return p+'/'+q;};
+const smallestPrimeFactor=(n)=>{for(let p=2;p*p<=n;p++)if(n%p===0)return p;return n;};
+
+/* Ganze Zahl aus Zeichenkette (nur Ziffern, höchstens 6 Stellen) */
+function parseIntStrict(s){
+  if(s==null)return null;
+  s=String(s).trim();
+  return /^\d{1,6}$/.test(s)?Number(s):null;
+}
+/* Dezimalzahl als Zeichenkette -> exakt (Zähler, 10^Stellen); Punkt oder Komma */
+function parseGermanDecimal(raw){
+  const s=String(raw==null?'':raw).trim().replace(/\s/g,'').replace(',','.');
+  const m=/^(\d{0,9})(?:\.(\d{1,6}))?$/.exec(s);
+  if(!m||(m[1]===''&&m[2]===undefined))return null;
+  if(m[1]===''&&!m[2])return null;
+  const fracDigits=m[2]||'';
+  const places=fracDigits.length;
+  const num=Number((m[1]||'0')+fracDigits);
+  if(!Number.isSafeInteger(num))return null;
+  return {whole:Number(m[1]||'0'),fracDigits,places,num,den:Math.pow(10,places)};
+}
+/* a / 10^k -> "q,rest" mit führenden Nullen (stellengetreu) */
+function fractionToDecimalString(a,den){
+  const places=Math.round(Math.log10(den));
+  if(Math.pow(10,places)!==den)return null;
+  const q=Math.floor(a/den),r=a%den;
+  return places===0?String(q):q+','+String(r).padStart(places,'0');
+}
+const decOf=(n,places)=>fractionToDecimalString(n,Math.pow(10,places));
+
+/* ---------- 3 DOM und SVG ---------- */
+function el(tag,attrs,...kids){
+  const e=document.createElement(tag);
+  if(attrs)for(const k in attrs){
+    const v=attrs[k];
+    if(v==null||v===false)continue;
+    if(k==='class')e.className=v;
+    else if(k.startsWith('on')&&typeof v==='function')e.addEventListener(k.slice(2),v);
+    else e.setAttribute(k,v===true?'':String(v));
+  }
+  for(const kid of kids.flat(Infinity)){if(kid==null||kid===false)continue;e.append(kid);}
+  return e;
+}
+const SVGNS='http://www.w3.org/2000/svg';
+function S_(tag,attrs,...kids){
+  const e=document.createElementNS(SVGNS,tag);
+  if(attrs)for(const k in attrs)e.setAttribute(k,String(attrs[k]));
+  for(const kid of kids.flat())if(kid!=null)e.append(kid);
+  return e;
+}
+/* renderFraction(n, d): Bruch immer mit waagerechtem Bruchstrich */
+function frac(n,d,cls){
+  return el('span',{class:'frac'+(cls?' '+cls:''),role:'math','aria-label':n+' durch '+d},
+    el('span',{class:'num'},String(n)),el('span',{class:'den'},String(d)));
+}
+/* renderMixed(w, n, d) */
+function mixed(w,n,d){
+  return el('span',{class:'mixed',role:'math','aria-label':w+' und '+n+' durch '+d},
+    el('span',{class:'whole'},String(w)),frac(n,d));
+}
+const op=(t)=>el('span',{class:'op'},t);
+function eq(...parts){
+  const d=el('div',{class:'eq'});
+  parts.forEach(x=>d.append(typeof x==='string'?op(x):x));
+  return d;
+}
+const line=(...parts)=>el('div',{class:'sol-line'},...parts);
+const strong=(t)=>el('strong',null,String(t));
+
+/* ---- Bruchbilder: Streifen, Kreis, Gitter ---- */
+function gridDims(d){
+  for(let r=Math.floor(Math.sqrt(d));r>=2;r--)if(d%r===0)return [r,d/r];
+  return null;
+}
+function cellShape(kind,i,d,dims){
+  if(kind==='strip'){const w=360/d;return S_('rect',{x:1+i*w,y:1,width:w,height:56});}
+  if(kind==='circle'){
+    if(d===1)return S_('circle',{cx:102,cy:102,r:98});
+    const a0=-Math.PI/2+i*2*Math.PI/d,a1=-Math.PI/2+(i+1)*2*Math.PI/d,r=98,c=102;
+    const x0=c+r*Math.cos(a0),y0=c+r*Math.sin(a0),x1=c+r*Math.cos(a1),y1=c+r*Math.sin(a1);
+    return S_('path',{d:`M${c} ${c} L${x0.toFixed(2)} ${y0.toFixed(2)} A${r} ${r} 0 ${(a1-a0)>Math.PI?1:0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)} Z`});
+  }
+  const [rows,cols]=dims,cs=Math.min(48,360/cols),r=Math.floor(i/cols),c=i%cols;
+  return S_('rect',{x:1+c*cs,y:1+r*cs,width:cs,height:cs});
+}
+/* Gemeinsame Zeichenfunktion. filled: Set mit Indizes. opts.onToggle(i)->neuer Zustand */
+function drawCells(kind,d,dims,filled,opts={}){
+  let vb,maxW;
+  if(kind==='strip'){vb='0 0 362 58';maxW=opts.maxW||460;}
+  else if(kind==='circle'){vb='0 0 204 204';maxW=opts.maxW||210;}
+  else{const [rows,cols]=dims,cs=Math.min(48,360/cols);vb=`0 0 ${cols*cs+2} ${rows*cs+2}`;maxW=opts.maxW||(cols*cs*1.3+2);}
+  const svg=S_('svg',{viewBox:vb,class:'fracsvg',role:'img','aria-label':opts.label||'Bruchbild'});
+  svg.style.maxWidth=Math.round(maxW)+'px';
+  for(let i=0;i<d;i++){
+    const on=filled.has(i);
+    const g=S_('g',{class:'cell'+(on?' on':'')},cellShape(kind,i,d,dims));
+    if(opts.onToggle){
+      g.setAttribute('role','button');g.setAttribute('tabindex','0');
+      g.setAttribute('aria-pressed',String(on));g.setAttribute('aria-label','Teil '+(i+1));
+      const fire=()=>{const s=opts.onToggle(i);if(typeof s==='boolean'){g.classList.toggle('on',s);g.setAttribute('aria-pressed',String(s));}};
+      g.addEventListener('click',fire);
+      g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fire();}});
+    }
+    svg.append(g);
+  }
+  if(opts.onToggle)svg.removeAttribute('role');
+  return svg;
+}
+const firstN=(n)=>new Set(Array.from({length:n},(_,i)=>i));
+function drawFractionStrip(n,d,opts){return drawCells('strip',d,null,opts&&opts.filled||firstN(n),opts);}
+function drawFractionCircle(n,d,opts){return drawCells('circle',d,null,opts&&opts.filled||firstN(n),opts);}
+function drawFractionGrid(n,d,rows,cols,opts){return drawCells('grid',d,[rows,cols],opts&&opts.filled||firstN(n),opts);}
+/* Darstellung nach Modus (strip | circle | grid) */
+function drawMode(mode,n,d,opts){
+  if(mode==='circle')return drawFractionCircle(n,d,opts);
+  if(mode==='grid'){const dm=gridDims(d)||[1,d];return drawFractionGrid(n,d,dm[0],dm[1],opts);}
+  return drawFractionStrip(n,d,opts);
+}
+function pickMode(d,R){
+  const m=[];
+  if(d<=24)m.push('strip');
+  if(d<=12)m.push('circle');
+  if(d<=36&&gridDims(d))m.push('grid');
+  return m.length?R.pick(m):null;
+}
+
+/* ---------- 4 Speicher ---------- */
+const KEY='bruchwerkstatt_v1';
+const Store={
+  ok:true,
+  load(){
+    try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw);if(o&&o.v===1)return o;}}
+    catch(e){this.ok=false;}
+    return null;
+  },
+  save(o){
+    try{localStorage.setItem(KEY,JSON.stringify(o));}
+    catch(e){this.ok=false;}
+  },
+  clear(){try{localStorage.removeItem(KEY);}catch(e){this.ok=false;}}
+};
+const defaultState=()=>({v:1,levelByType:{},rounds:{},progress:{},games:{},view:{kind:'home'}});
+let S=Object.assign(defaultState(),Store.load()||{});
+function persist(){Store.save(S);}
+
+/* =====================================================================
+   5 Merkkästen M1–M6 und Hilfetexte
+   ===================================================================== */
+const RULE2='Die 2 geht IMMER: Sind Zähler und Nenner beide gerade, kannst du durch 2 kürzen.';
+const RULE510='Enden Zähler und Nenner beide auf 0 oder 5, kannst du durch 5 kürzen. Enden beide auf 0, geht auch die 10. Und denk daran: Die 2 geht IMMER, wenn beide Zahlen gerade sind.';
+
+function figStrip(n,d){return el('div',{class:'fig'},frac(n,d),drawFractionStrip(n,d,{maxW:300}));}
+
+const NOTE_EX={
+  M1:[{p:2,q:3,ks:[1,2,4]},{p:1,q:2,ks:[1,2,4]},{p:3,q:4,ks:[1,2,3]},{p:3,q:5,ks:[1,2,3]},{p:1,q:3,ks:[1,2,3]}],
+  M2:[{a:3,b:5,k:2},{a:1,b:4,k:3},{a:5,b:6,k:2},{a:4,b:9,k:2},{a:2,b:7,k:3}],
+  M3:[{a:12,b:18,k:3},{a:15,b:20,k:5},{a:16,b:24,k:8},{a:18,b:30,k:6},{a:14,b:21,k:7}],
+  M4:['7/10','35/100','7/1000','125/100','3/10','9/100','43/1000','205/100'],
+  M5:['0,6','0,04','1,25','0,9','0,07','2,5','0,125','3,05'],
+  M6:[[2,3,4],[3,1,2],[1,2,5],[4,3,7]]
+};
+const pickEx=(list,keyFn,avoid)=>list.find(x=>!avoid.includes(keyFn(x)))||list[list.length-1];
+
+const NOTES={
+  M1:{title:'Brüche mit gleichem Wert',build(avoid){
+    const e=pickEx(NOTE_EX.M1,x=>x.p+'/'+x.q,avoid);
+    const terms=e.ks.map(k=>[e.p*k,e.q*k]);
+    const chain=[];terms.forEach((t,i)=>{if(i)chain.push('=');chain.push(frac(t[0],t[1]));});
+    return [
+      el('p',null,'Drei Bilder können denselben Anteil einer Fläche zeigen, auch wenn sie unterschiedlich eingeteilt sind. Dieser Anteil kann durch verschiedene Brüche angegeben werden. Diese Brüche haben ',strong('denselben Wert'),'.'),
+      el('div',{class:'ex'},strong('Beispiel: '),eq(...chain)),
+      el('div',{class:'figrow'},terms.map(t=>figStrip(t[0],t[1]))),
+      el('p',null,strong('Merke: '),'Der Wert eines Bruchs hängt vom Anteil ab, nicht davon, in wie viele Teile die Fläche eingeteilt wurde.')
+    ];}},
+  M2:{title:'Erweitern eines Bruchs',build(avoid){
+    const e=pickEx(NOTE_EX.M2,x=>redKey(x.a,x.b),avoid);
+    return [
+      el('p',null,'Ein Bruch wird ',strong('erweitert'),', wenn man seinen ',strong('Zähler und seinen Nenner mit derselben natürlichen Zahl (Erweiterungszahl) multipliziert'),'.'),
+      el('p',null,strong('Der Wert des Bruchs ändert sich dabei nicht.')),
+      el('div',{class:'ex'},strong('Beispiel: '),eq(frac(e.a,e.b),'=',frac(e.a+' · '+e.k,e.b+' · '+e.k),'=',frac(e.a*e.k,e.b*e.k))),
+      el('div',{class:'figrow'},figStrip(e.a,e.b),figStrip(e.a*e.k,e.b*e.k))
+    ];}},
+  M3:{title:'Kürzen eines Bruchs',build(avoid){
+    const e=pickEx(NOTE_EX.M3,x=>redKey(x.a,x.b),avoid);
+    return [
+      el('p',null,'Ein Bruch wird ',strong('gekürzt'),', wenn man seinen ',strong('Zähler und seinen Nenner durch dieselbe natürliche Zahl (Kürzungszahl) dividiert'),'.'),
+      el('p',null,strong('Der Wert des Bruchs ändert sich dabei nicht.')),
+      el('div',{class:'ex'},strong('Beispiel: '),eq(frac(e.a,e.b),'=',frac(e.a+' : '+e.k,e.b+' : '+e.k),'=',frac(e.a/e.k,e.b/e.k))),
+      el('p',null,strong('So weit wie möglich gekürzt: '),'Zähler und Nenner können nicht mehr beide durch dieselbe natürliche Zahl größer als 1 geteilt werden.'),
+      el('div',{class:'rule'},strong('Schnelle Teilbarkeits-Tipps: '),RULE2,' ',el('br'),'Enden Zähler und Nenner beide auf 0 oder 5, geht auch die 5. Enden beide auf 0, geht auch die 10.')
+    ];}},
+  M4:{title:'Vom Dezimalbruch zur Dezimalzahl',build(avoid){
+    const list=NOTE_EX.M4.filter(x=>!avoid.includes(x)).slice(0,4);
+    const ex=list.map(k=>{const [n,d]=k.split('/').map(Number);return eq(frac(n,d),'=',el('span',null,decOf(n,Math.round(Math.log10(d)))));});
+    return [
+      el('p',null,'Ein Bruch mit dem Nenner ',strong('10, 100, 1000, …'),' heißt ',strong('Dezimalbruch'),'.'),
+      el('p',null,'Beim Schreiben als Dezimalzahl zeigt der Nenner, wie viele Stellen nach dem Komma gebraucht werden: 10 – eine Stelle, 100 – zwei Stellen, 1000 – drei Stellen.'),
+      el('div',{class:'ex'},strong('Beispiele:'),ex.map(x=>x)),
+      el('table',null,el('tr',null,el('th',null,'Nenner'),el('th',null,'Stellen nach dem Komma'),el('th',null,'Name')),
+        el('tr',null,el('td',null,'10'),el('td',null,'1'),el('td',null,'Zehntel')),
+        el('tr',null,el('td',null,'100'),el('td',null,'2'),el('td',null,'Hundertstel')),
+        el('tr',null,el('td',null,'1000'),el('td',null,'3'),el('td',null,'Tausendstel')))
+    ];}},
+  M5:{title:'Von der Dezimalzahl zum Dezimalbruch',build(avoid){
+    const list=NOTE_EX.M5.filter(x=>!avoid.includes(x)).slice(0,3);
+    const ex=list.map(s=>{const p=parseGermanDecimal(s);return eq(el('span',null,s),'=',frac(p.num,p.den));});
+    return [
+      el('p',null,'Jede Stelle nach dem Komma ist wichtig. Bei einer Stelle nach dem Komma steht ',strong('10'),' im Nenner, bei zwei Stellen ',strong('100'),', bei drei Stellen ',strong('1000'),'.'),
+      el('p',null,'Der Zähler enthält die Zahl ohne Komma. Führende Nullen nach dem Komma bestimmen trotzdem den Nenner.'),
+      el('div',{class:'ex'},strong('Beispiele:'),ex),
+      el('p',null,'Bei ',el('b',null,'0,050'),' sind es drei Nachkommastellen: ',frac(50,1000),' (nicht unbemerkt auf zwei Stellen verkürzen). ',el('b',null,'0,05'),' und ',el('b',null,'0,050'),' haben denselben Wert, werden aber mit unterschiedlich vielen Stellen geschrieben.')
+    ];}},
+  M6:{title:'Gemischte Schreibweise als gemeiner Bruch',build(avoid){
+    const e=pickEx(NOTE_EX.M6,x=>x[0]+' '+x[1]+'/'+x[2],avoid);
+    const [w,n,d]=e;
+    const figs=[];
+    for(let i=0;i<w;i++)figs.push(drawFractionStrip(d,d,{maxW:150,label:'Ganzes'}));
+    figs.push(drawFractionStrip(n,d,{maxW:150,label:'Bruchteil'}));
+    return [
+      el('p',null,'Eine gemischte Schreibweise besteht aus einer ',strong('ganzen Zahl und einem Bruch'),'.'),
+      el('p',null,'Um sie als gemeinen Bruch zu schreiben, rechnet man: ',strong('Ganze · Nenner + Zähler'),'. Das Ergebnis wird zum neuen Zähler. ',strong('Der Nenner bleibt gleich.')),
+      el('div',{class:'ex'},strong('Beispiel: '),eq(mixed(w,n,d),'=',frac(`${w} · ${d} + ${n}`,d),'=',frac(w*d+n,d))),
+      el('div',{class:'ex'},el('span',null,w+' + '),frac(n,d)),
+      el('div',{class:'figrow'},figs)
+    ];}}
+};
+/* noteFor(task): Merkkästen zur Aufgabe, ohne die Aufgabe zu lösen */
+function noteFor(typeId,task){
+  const avoid=(task&&task.avoid)||[];
+  return TASKS[typeId].notes.map(id=>{
+    const n=NOTES[id];
+    return el('section',{class:'note','aria-label':'Merkkasten '+id},el('h3',null,id+' · '+n.title),...n.build(avoid));
+  });
+}
+
+/* ---------- Hilfetexte (erster Tipp nennt nie eine Lösung) ---------- */
+const HINT={
+  equal:['Vergleiche die gefärbten Anteile, nicht nur die Zahl der Teile.','Prüfe, ob Zähler und Nenner jeweils mit derselben Zahl verändert wurden.'],
+  expand:['Beim Erweitern musst du Zähler und Nenner verändern.','Rechne die Multiplikation für Zähler und Nenner getrennt.'],
+  reduce:['Suche eine Zahl, durch die sich Zähler und Nenner teilen lassen.','Prüfe nach dem Kürzen, ob du noch einmal kürzen kannst.'],
+  reduceGiven:['Beim Kürzen musst du Zähler und Nenner durch dieselbe Zahl teilen.','Rechne die Division für Zähler und Nenner getrennt.'],
+  gaps:['Überlege zuerst, wie sich der bekannte Zähler oder Nenner verändert hat.','Derselbe Rechenschritt gilt für Zähler und Nenner.'],
+  factor:['Vergleiche Zähler mit Zähler und Nenner mit Nenner.','Die Veränderung muss oben und unten mit derselben Zahl möglich sein.'],
+  error:['Prüfe, ob in beiden Zeilen dieselbe Rechnung durchgeführt wurde.','Kontrolliere den Wert vor und nach dem Rechenschritt.'],
+  picture:['Der gefärbte Anteil muss gleich groß bleiben.','Überlege, wie viele neue Teile aus einem alten Teil entstehen.'],
+  family:['Du kannst neue Brüche erzeugen, indem du Zähler und Nenner gleich veränderst.','Suche unterschiedliche Erweiterungszahlen und beachte die Bedingungen.'],
+  ways:['Suche verschiedene Zahlen, durch die beide Zahlen teilbar sind.','Beginne die Rechenketten nicht beide mit derselben Kürzungszahl.'],
+  d1:['Achte darauf, ob der Nenner 10, 100 oder 1000 ist.','Zähle, wie viele Stellen nach dem Komma benötigt werden.'],
+  d2:['Zähle zuerst die Stellen nach dem Komma.','Der Nenner hängt von der Zahl der Nachkommastellen ab.'],
+  mixed:['Die ganzen Anteile müssen in Bruchteile umgerechnet werden.','Denke an Ganze · Nenner + Zähler; der Nenner bleibt gleich.'],
+  memory:['Vielleicht sehen zwei Karten anders aus, zeigen aber den gleichen Anteil.','Vergleiche den Wert der Brüche, nicht nur ihre Zahlen.'],
+  vault:['Lies zuerst genau, ob du erweitern, kürzen oder umwandeln sollst.']
+};
+/* Kürzen-Hinweise nennen immer die 2-Regel */
+function withRules(h){return [[h[0],RULE2],[h[1],RULE510]];}
+
+/* =====================================================================
+   6 Aufgabentypen: Generator, Darstellung, Prüfung, Musterlösung, Tipps
+   Antworten liegen als einfaches Objekt (draft) vor und sind serialisierbar.
+   ===================================================================== */
+const MSG_FRAC_INVALID='Trage in beide Felder eine ganze Zahl ein (Nenner größer als 0).';
+
+function getInt(draft,key){return parseIntStrict(draft[key]);}
+function getFrac(draft,key){
+  const n=parseIntStrict(draft[key+'.n']),d=parseIntStrict(draft[key+'.d']);
+  return (n===null||d===null||d===0)?null:{n,d};
+}
+const invalid=(msg)=>({correct:false,invalid:true,errorCode:'invalid',feedback:msg});
+const wrong=(code,msg,marks)=>({correct:false,errorCode:code,feedback:msg,marks});
+const right=(msg,norm)=>({correct:true,errorCode:null,feedback:msg,normalizedAnswer:norm});
+
+/* ---- Eingabe-Bausteine ---- */
+function digitsOnly(i){i.value=i.value.replace(/\D/g,'');}
+function fracInput(view,key){
+  const mk=(part,label)=>{
+    const k=key+'.'+part;
+    const i=el('input',{type:'text',inputmode:'numeric',pattern:'[0-9]*',autocomplete:'off',autocapitalize:'off',spellcheck:'false',maxlength:'6','aria-label':label});
+    i.value=view.draft[k]!=null?view.draft[k]:'';
+    i.disabled=view.locked();
+    i.addEventListener('input',()=>{digitsOnly(i);view.draft[k]=i.value;i.classList.remove('bad','good');view.save();});
+    view.inputs[k]=i;
+    return i;
+  };
+  return el('span',{class:'frac inp',role:'group','aria-label':'Bruch eingeben'},
+    el('span',{class:'num'},mk('n','Zähler')),el('span',{class:'den'},mk('d','Nenner')));
+}
+function intInput(view,key,label){
+  const i=el('input',{type:'text',class:'intin',inputmode:'numeric',pattern:'[0-9]*',autocomplete:'off',spellcheck:'false',maxlength:'6','aria-label':label||'Zahl'});
+  i.value=view.draft[key]!=null?view.draft[key]:'';
+  i.disabled=view.locked();
+  i.addEventListener('input',()=>{digitsOnly(i);view.draft[key]=i.value;i.classList.remove('bad','good');view.save();});
+  view.inputs[key]=i;
+  return i;
+}
+function decInput(view,key){
+  const i=el('input',{type:'text',class:'decin',inputmode:'decimal',autocomplete:'off',spellcheck:'false',maxlength:'12',placeholder:'0,0','aria-label':'Dezimalzahl'});
+  i.value=view.draft[key]!=null?view.draft[key]:'';
+  i.disabled=view.locked();
+  i.addEventListener('input',()=>{
+    let v=i.value.replace(/\./g,',').replace(/[^\d,]/g,'');
+    const p=v.indexOf(',');if(p>=0)v=v.slice(0,p+1)+v.slice(p+1).replace(/,/g,'');
+    i.value=v;view.draft[key]=v;i.classList.remove('bad','good');view.save();
+  });
+  view.inputs[key]=i;
+  return i;
+}
+function stepper(view,label,get,set,min,max){
+  const out=el('output',{'aria-live':'polite'});
+  const minus=el('button',{type:'button','aria-label':label+' verringern'},'−');
+  const plus=el('button',{type:'button','aria-label':label+' erhöhen'},'+');
+  const upd=()=>{out.textContent=get();minus.disabled=view.locked()||get()<=min;plus.disabled=view.locked()||get()>=max;};
+  minus.addEventListener('click',()=>{if(!view.locked()&&get()>min){set(get()-1);}});
+  plus.addEventListener('click',()=>{if(!view.locked()&&get()<max){set(get()+1);}});
+  const box=el('span',{class:'stepper'},el('span',{class:'lab'},label),minus,out,plus);
+  box.upd=upd;upd();
+  return box;
+}
+
+/* Allgemeine Diagnose für Erweitern/Kürzen: liefert nur zutreffende Hinweise */
+function diagOps(a,b,n,d,mode){
+  const verb=mode==='expand'?'Erweitern':'Kürzen';
+  if(n===a&&d!==b)return wrong('onlyDen',`Beim ${verb} müssen Zähler und Nenner verändert werden. Du hast nur den Nenner verändert.`);
+  if(d===b&&n!==a)return wrong('onlyNum',`Beim ${verb} müssen Zähler und Nenner verändert werden. Du hast nur den Zähler verändert.`);
+  if(n===a&&d===b)return wrong('same',`Der Bruch ist unverändert. Beim ${verb} müssen sich Zähler und Nenner ändern.`);
+  if(!equivalent(a,b,n,d))return wrong('diffFactors','Prüfe, ob du oben und unten dieselbe Zahl verwendet hast. Der Wert des Bruchs hat sich verändert.');
+  return null;
+}
+
+/* ====================== Aufgabentypen ====================== */
+const TASKS={};
+
+/* ---------- G01 Gleiche Anteile erkennen ---------- */
+TASKS.G01={area:'Grundlagen',name:'Gleiche Anteile erkennen',desc:'Finde die Bilder und Brüche, die denselben Anteil zeigen.',notes:['M1'],size:10,
+  gen(level,R){
+    let p,q,k0;
+    do{q=level===1?R.pick([2,3,4,5,6]):R.int(3,9);p=R.int(1,q-1);}while(gcd(p,q)!==1);
+    k0=level===1?1:R.int(2,4);
+    const a=p*k0,b=q*k0,maxK=level===1?4:7,dmax=level===1?24:63;
+    const ks=R.shuffle(Array.from({length:maxK},(_,i)=>i+1).filter(k=>k!==k0&&q*k<=dmax));
+    const correct=ks.slice(0,2).map(k=>[p*k,q*k]);
+    const cand=[[a+1,b],[a-1,b],[b-a,b],[a,b*2],[a,b+1],[p,q+1],[p+1,q+1],[p+1,q],[a+k0,b+1],[b-a+1,b+1]];
+    const dist=[];
+    for(const c of R.shuffle(cand)){
+      if(dist.length>=3)break;
+      if(c[0]>=1&&c[1]>c[0]&&c[1]<=dmax&&!equivalent(a,b,c[0],c[1])&&!dist.some(x=>x[0]===c[0]&&x[1]===c[1])&&!correct.some(x=>x[0]===c[0]&&x[1]===c[1]))dist.push(c);
+    }
+    const mk=([n,d])=>{
+      const m=pickMode(d,R);
+      const pic=m&&R.chance(level===1?0.5:0.3);
+      return {n,d,mode:pic?m:'num'};
+    };
+    const cards=R.shuffle(correct.concat(dist)).map(mk);
+    const tm=level===1?(pickMode(b,R)||'strip'):'num';
+    return {type:'G01',level,target:{n:a,d:b,mode:level===1?tm:'num'},cards,avoid:[redKey(a,b)]};
+  },
+  prompt(t,h){
+    h.append(el('p',{class:'q'},t.level===1?'Welche Karten zeigen denselben Anteil wie das Bild?':['Welche Karten haben denselben Wert wie ',frac(t.target.n,t.target.d),'?'],' Wähle alle passenden Karten aus. ',el('b',null,'Es gibt '+t.cards.filter(c=>equivalent(c.n,c.d,t.target.n,t.target.d)).length+' passende Karten.')));
+  },
+  render(view,host){
+    const t=view.task,d=view.draft;d.sel=d.sel||[];
+    const tg=el('figure',{class:'fig',style:'max-width:320px'});
+    if(t.target.mode==='num')tg.append(el('div',{class:'big eq'},frac(t.target.n,t.target.d)));
+    else tg.append(drawMode(t.target.mode,t.target.n,t.target.d,{label:'Vorgabe'}),el('figcaption',null,'Dieser Anteil ist gefärbt.'));
+    const cards=el('div',{class:'cards',role:'group','aria-label':'Karten'});
+    t.cards.forEach((c,i)=>{
+      const b=el('button',{type:'button',class:'pick','aria-pressed':String(d.sel.includes(i)),'aria-label':c.mode==='num'?`Karte ${i+1}: ${c.n} durch ${c.d}`:`Karte ${i+1}: Bruchbild`},
+        c.mode==='num'?frac(c.n,c.d):drawMode(c.mode,c.n,c.d,{maxW:150,label:'Bruchbild'}));
+      b.disabled=view.locked();
+      b.addEventListener('click',()=>{
+        if(view.locked())return;
+        const j=d.sel.indexOf(i);if(j>=0)d.sel.splice(j,1);else d.sel.push(i);
+        b.setAttribute('aria-pressed',String(d.sel.includes(i)));view.save();
+      });
+      view.inputs['c'+i]=b;cards.append(b);
+    });
+    host.append(tg,cards);
+  },
+  validate(t,d){
+    const sel=d.sel||[];
+    if(!sel.length)return invalid('Wähle mindestens eine Karte aus.');
+    const ok=i=>equivalent(t.cards[i].n,t.cards[i].d,t.target.n,t.target.d);
+    const wr=sel.filter(i=>!ok(i)),miss=t.cards.map((_,i)=>i).filter(i=>ok(i)&&!sel.includes(i));
+    if(!wr.length&&!miss.length)return right('Richtig! Alle diese Karten zeigen denselben Anteil – nur die Einteilung ist verschieden.');
+    if(wr.length){
+      const sameParts=wr.some(i=>t.cards[i].d===t.target.d);
+      return wrong('wrongCard',sameParts?'Eine gewählte Karte hat gleich viele Teile, zeigt aber einen anderen Anteil. Die Anzahl der Teile allein genügt nicht: Der Anteil der gefärbten Fläche entscheidet.':'Mindestens eine gewählte Karte zeigt einen anderen Anteil. Vergleiche die gefärbten Anteile.');
+    }
+    return wrong('missing','Das stimmt bisher – aber es gibt noch mehr passende Karten.');
+  },
+  solution(t){
+    const box=[];
+    t.cards.forEach((c,i)=>{
+      if(equivalent(c.n,c.d,t.target.n,t.target.d))box.push(line(`Karte ${i+1}: `,frac(c.n,c.d),' – ',relationText(t.target.n,t.target.d,c.n,c.d)));
+    });
+    box.push(line('Alle anderen Karten zeigen einen anderen Anteil, auch wenn der Nenner oder der Zähler gleich sein kann.'));
+    return box;
+  },
+  hints(t){return HINT.equal.map(x=>[x]);}
+};
+function relationText(a,b,c,d){
+  if(c%a===0&&d%b===0&&c/a===d/b&&c/a>1)return `erweitert mit ${c/a}`;
+  if(a%c===0&&b%d===0&&a/c===b/d&&a/c>1)return `gekürzt mit ${a/c}`;
+  return `Kreuzprobe: ${a} · ${d} = ${a*d} und ${c} · ${b} = ${c*b}`;
+}
+
+/* ---------- G02 Erweitern ---------- */
+TASKS.G02={area:'Grundlagen',name:'Erweitern',desc:'Erweitere Brüche mit einer vorgegebenen Zahl.',notes:['M2'],size:10,
+  gen(level,R){
+    let a,b,k,mode='factor';
+    if(level===1){b=R.int(2,9);a=R.int(1,b-1);k=R.pick([2,3,4,5]);}
+    else{b=R.int(5,25);a=R.int(2,b-1);k=R.pick([6,7,8,9,11,12]);if(R.chance(0.3))mode='target';}
+    return {type:'G02',level,mode,a,b,k,avoid:[redKey(a,b),redKey(a*k,b*k)]};
+  },
+  prompt(t,h){
+    h.append(t.mode==='factor'?el('p',{class:'q'},'Erweitere den Bruch ',frac(t.a,t.b),' mit ',strong(t.k),'.')
+      :el('p',{class:'q'},'Erweitere den Bruch ',frac(t.a,t.b),' so, dass der Nenner ',strong(t.b*t.k),' entsteht.'));
+  },
+  render(view,host){const t=view.task;host.append(eq(frac(t.a,t.b),'=',fracInput(view,'r')));},
+  validate(t,d){
+    const f=getFrac(d,'r');if(!f)return invalid(MSG_FRAC_INVALID);
+    const n=t.a*t.k,dd=t.b*t.k,m={'r.n':f.n===n,'r.d':f.d===dd};
+    if(f.n===n&&f.d===dd)return right(`Richtig! Du hast Zähler und Nenner mit derselben Zahl multipliziert. Der Wert hat sich nicht verändert.`,[n,dd]);
+    const g=diagOps(t.a,t.b,f.n,f.d,'expand');if(g){g.marks=m;return g;}
+    if(equivalent(t.a,t.b,f.n,f.d))return wrong('wrongFactor',t.mode==='factor'?`Der Wert stimmt, aber du solltest mit ${t.k} erweitern.`:`Der Wert stimmt, aber der neue Nenner soll ${dd} sein.`,m);
+    return wrong('other','Das ist noch nicht richtig. Rechne Zähler und Nenner noch einmal einzeln.',m);
+  },
+  solution(t){
+    return [line('Zähler und Nenner werden mit '+t.k+' multipliziert:'),eq(frac(t.a,t.b),'=',frac(t.a+' · '+t.k,t.b+' · '+t.k),'=',frac(t.a*t.k,t.b*t.k)),line('Der Wert des Bruchs ändert sich nicht.')];
+  },
+  hints(t){return HINT.expand.map(x=>[x]);}
+};
+
+/* ---------- G03 Kürzen ---------- */
+TASKS.G03={area:'Grundlagen',name:'Kürzen',desc:'Kürze Brüche mit einer Zahl oder so weit wie möglich.',notes:['M3'],size:10,
+  gen(level,R){
+    const coprime=(qmin,qmax)=>{let p,q;do{q=R.int(qmin,qmax);p=R.int(1,q-1);}while(gcd(p,q)!==1);return [p,q];};
+    if(R.chance(level===1?0.5:0.35)){
+      const k=level===1?R.pick([2,3,4,5]):R.pick([6,8,9,12]);
+      const q=level===1?R.int(2,6):R.int(3,12),p=R.int(1,q-1);
+      const a=p*k,b=q*k;
+      return {type:'G03',level,mode:'factor',a,b,k,avoid:[redKey(a,b)]};
+    }
+    const [p,q]=level===1?coprime(2,7):coprime(3,17);
+    const g=level===1?R.pick([2,3,4,5]):R.int(6,15);
+    return {type:'G03',level,mode:'full',a:p*g,b:q*g,p,q,avoid:[redKey(p,q)]};
+  },
+  prompt(t,h){
+    h.append(t.mode==='factor'?el('p',{class:'q'},'Kürze den Bruch ',frac(t.a,t.b),' mit ',strong(t.k),'.')
+      :el('p',{class:'q'},'Kürze den Bruch ',frac(t.a,t.b),' so weit wie möglich.'));
+  },
+  render(view,host){const t=view.task;host.append(eq(frac(t.a,t.b),'=',fracInput(view,'r')));},
+  validate(t,d){
+    const f=getFrac(d,'r');if(!f)return invalid(MSG_FRAC_INVALID);
+    const [en,ed]=t.mode==='factor'?[t.a/t.k,t.b/t.k]:[t.p,t.q];
+    const m={'r.n':f.n===en,'r.d':f.d===ed};
+    if(f.n===en&&f.d===ed)return right(t.mode==='factor'?'Richtig! Du hast Zähler und Nenner durch dieselbe Zahl geteilt. Der Wert hat sich nicht verändert.':'Richtig! Der Bruch ist so weit wie möglich gekürzt.',[en,ed]);
+    const g=diagOps(t.a,t.b,f.n,f.d,'reduce');if(g){g.marks=m;return g;}
+    if(equivalent(t.a,t.b,f.n,f.d)){
+      if(t.mode==='full'&&f.d<t.b&&!isFullyReduced(f.n,f.d))return wrong('notFull','Der Bruch hat den richtigen Wert. Du kannst aber noch weiter kürzen.',m);
+      if(f.d>t.b)return wrong('expanded','Das ist erweitert, nicht gekürzt. Beim Kürzen werden die Zahlen kleiner.',m);
+      if(t.mode==='factor')return wrong('wrongFactor',`Der Wert stimmt, aber du solltest mit ${t.k} kürzen.`,m);
+    }
+    return wrong('other','Das ist noch nicht richtig. Teile Zähler und Nenner noch einmal einzeln.',m);
+  },
+  solution(t){
+    if(t.mode==='factor')return [line('Zähler und Nenner werden durch '+t.k+' geteilt:'),eq(frac(t.a,t.b),'=',frac(t.a+' : '+t.k,t.b+' : '+t.k),'=',frac(t.a/t.k,t.b/t.k))];
+    const g=gcd(t.a,t.b),out=[line('Zähler und Nenner lassen sich beide durch '+g+' teilen:'),eq(frac(t.a,t.b),'=',frac(t.a+' : '+g,t.b+' : '+g),'=',frac(t.p,t.q))];
+    out.push(line('Der Bruch ',frac(t.p,t.q),' lässt sich nicht weiter kürzen. (Man kann auch in mehreren kleinen Schritten kürzen.)'));
+    return out;
+  },
+  hints(t){return withRules(t.mode==='factor'?HINT.reduceGiven:HINT.reduce);}
+};
+
+/* ---------- U01 Bruch-Lücken ---------- */
+TASKS.U01={area:'Umkehraufgaben',name:'Bruch-Lücken',desc:'Ergänze die fehlende Zahl in gleichwertigen Brüchen.',notes:['M1','M2'],size:10,
+  gen(level,R){
+    let p,q;
+    if(level===1){do{q=R.int(2,6);p=R.int(1,q-1);}while(gcd(p,q)!==1);}
+    else{do{q=R.int(3,12);p=R.int(1,q-1);}while(gcd(p,q)!==1);}
+    const ms=level===1?(R.chance(0.5)?[1,R.int(2,5)]:[R.int(2,5),1]):R.shuffle([1,2,3,4,5,6,7,8,9]).slice(0,3);
+    const full=R.int(0,ms.length-1);
+    const terms=ms.map((m,i)=>({n:p*m,d:q*m,blank:i===full?null:R.pick(['n','d'])}));
+    if(level===1&&R.chance(0.5))terms.reverse();
+    return {type:'U01',level,terms,avoid:[redKey(p,q)]};
+  },
+  prompt(t,h){h.append(el('p',{class:'q'},'Welche Zahlen fehlen? Ergänze die Lücken, sodass alle Brüche gleichwertig sind.'));},
+  render(view,host){
+    const t=view.task,parts=[];
+    t.terms.forEach((x,i)=>{
+      if(i)parts.push('=');
+      if(!x.blank)parts.push(frac(x.n,x.d));
+      else{
+        const mk=(part)=>{
+          const k='g'+i,inp=intInput(view,k,part==='n'?'fehlender Zähler':'fehlender Nenner');
+          return inp;
+        };
+        parts.push(el('span',{class:'frac inp'},
+          el('span',{class:'num'},x.blank==='n'?mk('n'):String(x.n)),
+          el('span',{class:'den'},x.blank==='d'?mk('d'):String(x.d))));
+      }
+    });
+    host.append(eq(...parts));
+  },
+  validate(t,d){
+    const marks={};let all=true,empty=false;
+    t.terms.forEach((x,i)=>{
+      if(!x.blank)return;
+      const v=getInt(d,'g'+i);
+      if(v===null){empty=true;return;}
+      const exp=x.blank==='n'?x.n:x.d,ok=v===exp;
+      marks['g'+i]=ok;if(!ok)all=false;
+    });
+    if(empty)return invalid('Trage in jede Lücke eine ganze Zahl ein.');
+    if(all)return right('Richtig! Auf beiden Seiten wurde derselbe Rechenschritt ausgeführt.');
+    return wrong('gap','Mindestens eine Lücke stimmt noch nicht. Der Wert der Brüche muss gleich bleiben.',marks);
+  },
+  solution(t){
+    const ref=t.terms.find(x=>!x.blank),out=[];
+    out.push(line('Vergleiche den bekannten Bruch ',frac(ref.n,ref.d),' mit den anderen:'));
+    t.terms.forEach(x=>{
+      if(!x.blank)return;
+      out.push(line(frac(ref.n,ref.d),' → ',frac(x.n,x.d),': ',relationText(ref.n,ref.d,x.n,x.d),'. Gesuchte Zahl: ',strong(x.blank==='n'?x.n:x.d),'.'));
+    });
+    return out;
+  },
+  hints(t){
+    const red=t.terms.some(x=>!x.blank&&t.terms.some(y=>y.blank&&y.d<x.d));
+    return red?withRules(HINT.gaps):HINT.gaps.map(x=>[x]);
+  }
+};
+
+/* ---------- U02 Erweiterungs- oder Kürzungszahl finden ---------- */
+TASKS.U02={area:'Umkehraufgaben',name:'Erweiterungs- oder Kürzungszahl finden',desc:'Finde heraus, womit erweitert oder gekürzt wurde.',notes:['M2','M3'],size:10,
+  gen(level,R){
+    const mode=R.chance(0.5)?'expand':'reduce';
+    let p,q,k,mid=null,total;
+    if(level===1){do{q=R.int(2,8);p=R.int(1,q-1);}while(gcd(p,q)!==1);k=R.pick([2,3,4,5]);}
+    else{do{q=R.int(3,14);p=R.int(1,q-1);}while(gcd(p,q)!==1);k=R.int(6,15);}
+    total=k;
+    if(level===2&&mode==='expand'&&R.chance(0.35)){
+      const k1=R.int(2,5),k2=R.int(2,6);mid=[p*k1,q*k1];k=k1*k2;total=k;
+    }
+    const small=[p,q],big=[p*k,q*k];
+    return {type:'U02',level,mode,from:mode==='expand'?small:big,to:mode==='expand'?big:small,mid,k:total,avoid:[redKey(p,q)]};
+  },
+  prompt(t,h){
+    if(t.mid)h.append(el('p',{class:'q'},'Der Bruch ',frac(t.from[0],t.from[1]),' wird in zwei Schritten erweitert: zuerst zu ',frac(t.mid[0],t.mid[1]),', dann zu ',frac(t.to[0],t.to[1]),'. Gib die Erweiterungszahl an, mit der man ',frac(t.from[0],t.from[1]),' in einem Schritt zu ',frac(t.to[0],t.to[1]),' erweitert.'));
+    else h.append(el('p',{class:'q'},'Der Bruch ',frac(t.from[0],t.from[1]),' wird zu ',frac(t.to[0],t.to[1]),t.mode==='expand'?' erweitert. Gib die Erweiterungszahl an.':' gekürzt. Gib die Kürzungszahl an.'));
+  },
+  render(view,host){
+    const t=view.task;
+    host.append(eq(frac(t.from[0],t.from[1]),t.mode==='expand'?'→':'→',frac(t.to[0],t.to[1])),
+      el('p',null,t.mode==='expand'?'Erweiterungszahl: ':'Kürzungszahl: ',intInput(view,'k',t.mode==='expand'?'Erweiterungszahl':'Kürzungszahl')));
+  },
+  validate(t,d){
+    const k=getInt(d,'k');if(k===null)return invalid('Trage eine ganze Zahl ein.');
+    if(k===t.k)return right(`Richtig! Zähler und Nenner wurden mit derselben Zahl ${t.mode==='expand'?'multipliziert':'dividiert'}: ${t.k}.`);
+    if(k<=1)return wrong('small','Die Zahl muss größer als 1 sein.');
+    if(t.mode==='expand'){
+      return wrong('wrongK',`Probe: Mit ${k} erhältst du ${t.from[0]*k} und ${t.from[1]*k} – das passt nicht zum Zielbruch.`);
+    }
+    if(t.from[0]%k!==0||t.from[1]%k!==0)return wrong('noDiv',`Probe: Zähler und Nenner lassen sich nicht beide durch ${k} teilen.`);
+    return wrong('wrongK',`Probe: Mit ${k} erhältst du ${t.from[0]/k} und ${t.from[1]/k} – das ist nicht der Zielbruch.`);
+  },
+  solution(t){
+    const out=[];
+    if(t.mode==='expand'){
+      out.push(line('Vergleiche Zähler mit Zähler und Nenner mit Nenner:'));
+      out.push(line(`${t.from[0]} · ${t.k} = ${t.to[0]} und ${t.from[1]} · ${t.k} = ${t.to[1]}`));
+      out.push(line('Erweiterungszahl: ',strong(t.k)));
+    }else{
+      out.push(line('Vergleiche Zähler mit Zähler und Nenner mit Nenner:'));
+      out.push(line(`${t.from[0]} : ${t.k} = ${t.to[0]} und ${t.from[1]} : ${t.k} = ${t.to[1]}`));
+      out.push(line('Kürzungszahl: ',strong(t.k)));
+    }
+    return out;
+  },
+  hints(t){return t.mode==='reduce'?withRules(HINT.factor):HINT.factor.map(x=>[x]);}
+};
+
+/* ---------- U03 Fehler finden und berichtigen ---------- */
+const ERR_TEXT={
+  onlyNum:'Nur der Zähler wurde verändert.',
+  onlyDen:'Nur der Nenner wurde verändert.',
+  diff:'Zähler und Nenner wurden mit verschiedenen Zahlen multipliziert bzw. geteilt.',
+  add:'Zu Zähler und Nenner wurde etwas addiert, statt zu multiplizieren.',
+  notFull:'Der Bruch ist noch nicht so weit wie möglich gekürzt.'
+};
+TASKS.U03={area:'Umkehraufgaben',name:'Fehler finden und berichtigen',desc:'Finde den Fehler im Rechenweg und gib die richtige Lösung an.',notes:['M2','M3'],size:10,
+  gen(level,R){
+    for(let tries=0;tries<50;tries++){
+      let kind=R.pick(level===1?['expand','reduce']:['expand','reduce','notFull','twoStep']);
+      let errType,shown,a,b,k,fix='op',intro=null;
+      if(kind==='expand'){
+        b=R.int(2,level===1?9:15);a=R.int(1,b-1);k=R.int(2,level===1?5:9);
+        errType=R.pick(level===1?['onlyNum','onlyDen','diff']:['onlyNum','onlyDen','diff','add']);
+        if(errType==='onlyNum')shown=[a*k,b];
+        else if(errType==='onlyDen')shown=[a,b*k];
+        else if(errType==='diff'){const k2=R.int(2,9);if(k2===k)continue;shown=[a*k,b*k2];}
+        else{const m=R.int(1,5);shown=[a+m,b+m];}
+      }else if(kind==='reduce'){
+        k=R.int(2,level===1?5:9);const q=R.int(2,level===1?6:12),p=R.int(1,q-1);a=p*k;b=q*k;
+        errType=R.pick(level===1?['onlyNum','onlyDen']:['onlyNum','onlyDen','diff']);
+        if(errType==='onlyNum')shown=[p,b];
+        else if(errType==='onlyDen')shown=[a,q];
+        else{const k2=R.pick([2,3,4,5,6,7,8,9]);if(k2===k||b%k2!==0||a%k!==0)continue;shown=[a/k,b/k2];}
+      }else if(kind==='notFull'){
+        let p,q;do{q=R.int(3,12);p=R.int(1,q-1);}while(gcd(p,q)!==1);
+        const g=R.pick([6,8,9,10,12]),f=smallestPrimeFactor(g);
+        a=p*g;b=q*g;shown=[a/f,b/f];errType='notFull';fix='full';k=null;
+        intro='so weit wie möglich gekürzt';
+      }else{ /* twoStep: erster Schritt richtig, zweiter falsch */
+        const q=R.int(2,8),p=R.int(1,q-1),k1=R.int(2,4);
+        kind='expand';a=p*k1;b=q*k1;
+        const k2=R.int(2,4);k=k2;errType=R.pick(['onlyNum','onlyDen']);
+        const base=[p,q],mid=[p*k1,q*k1];
+        shown=errType==='onlyNum'?[mid[0]*k2,mid[1]]:[mid[0],mid[1]*k2];
+        return {type:'U03',level,kind,errType,fix:'op',a:mid[0],b:mid[1],k,shown,pre:base,avoid:[redKey(p,q)]};
+      }
+      if(equivalent(a,b,shown[0],shown[1]))continue;
+      return {type:'U03',level,kind,errType,fix,a,b,k,shown,pre:null,intro,avoid:[redKey(a,b)]};
+    }
+    return {type:'U03',level,kind:'expand',errType:'onlyNum',fix:'op',a:4,b:6,k:2,shown:[8,6],pre:null,avoid:['2/3']};
+  },
+  prompt(t,h){
+    if(t.fix==='full')h.append(el('p',{class:'q'},'Jemand sagt: „',frac(t.a,t.b),' lässt sich so weit wie möglich kürzen zu ',frac(t.shown[0],t.shown[1]),'.“ Das ist falsch.'));
+    else if(t.pre)h.append(el('p',{class:'q'},'Der Bruch ',frac(t.pre[0],t.pre[1]),' wurde erst richtig zu ',frac(t.a,t.b),' erweitert. Danach sollte noch mit ',strong(t.k),' erweitert werden. Das Ergebnis ist falsch.'));
+    else h.append(el('p',{class:'q'},'Der Bruch ',frac(t.a,t.b),' sollte mit ',strong(t.k),t.kind==='expand'?' erweitert':' gekürzt',' werden. Das Ergebnis ist falsch.'));
+  },
+  options(t){
+    const order=['onlyNum','onlyDen','diff','add','notFull'];
+    const pool=order.filter(o=>o!==t.errType&&(o!=='notFull'||t.errType==='notFull')&&(o!=='add'||t.kind==='expand'));
+    let pick=pool.slice();
+    /* feste Reihenfolge der Auswahl, damit sie beim Neuladen gleich bleibt */
+    pick=pick.slice(0,3);
+    return order.filter(o=>o===t.errType||pick.includes(o));
+  },
+  render(view,host){
+    const t=view.task,d=view.draft;
+    host.append(el('div',{class:'wrongclaim'},eq('',frac(t.a,t.b),'=',frac(t.shown[0],t.shown[1]))));
+    host.append(el('p',null,strong('1. Was ist falsch?')));
+    const opts=el('div',{class:'opts',role:'radiogroup'});
+    this.options(t).forEach(o=>{
+      const r=el('input',{type:'radio',name:'err',value:o});
+      r.checked=d.err===o;r.disabled=view.locked();
+      r.addEventListener('change',()=>{d.err=o;view.save();});
+      view.inputs['err'+o]=r;
+      opts.append(el('label',{class:'opt'},r,el('span',null,ERR_TEXT[o])));
+    });
+    host.append(opts);
+    host.append(el('p',null,strong('2. '),t.fix==='full'?'Kürze richtig so weit wie möglich:':(t.kind==='expand'?`Erweitere richtig mit ${t.k}:`:`Kürze richtig mit ${t.k}:`)));
+    host.append(eq(frac(t.a,t.b),'=',fracInput(view,'r')));
+  },
+  validate(t,d){
+    if(!d.err)return invalid('Wähle zuerst aus, welcher Fehler gemacht wurde.');
+    const f=getFrac(d,'r');if(!f)return invalid(MSG_FRAC_INVALID);
+    const [en,ed]=t.fix==='full'?simplify(t.a,t.b):(t.kind==='expand'?[t.a*t.k,t.b*t.k]:[t.a/t.k,t.b/t.k]);
+    const errOk=d.err===t.errType,fixOk=f.n===en&&f.d===ed;
+    const marks={'r.n':f.n===en,'r.d':f.d===ed};
+    if(errOk&&fixOk)return right('Richtig! Du hast den Fehler erkannt und berichtigt.');
+    if(!errOk&&fixOk)return wrong('errType','Die Verbesserung stimmt. Aber die Fehlerart ist noch nicht richtig. Vergleiche, was mit Zähler und Nenner passiert ist.',marks);
+    if(errOk&&!fixOk){
+      if(t.fix==='full'&&equivalent(t.a,t.b,f.n,f.d)&&!isFullyReduced(f.n,f.d))return wrong('notFull','Die Fehlerart stimmt. Dein Bruch hat den richtigen Wert, du kannst aber noch weiter kürzen.',marks);
+      return wrong('fix','Die Fehlerart stimmt. Die Verbesserung noch nicht: Rechne Zähler und Nenner einzeln.',marks);
+    }
+    return wrong('both','Das passt noch nicht. Prüfe die Fehlerart und rechne dann die richtige Lösung aus.',marks);
+  },
+  solution(t){
+    const out=[line(strong('Fehler: '),ERR_TEXT[t.errType]),line('Richtig ist:')];
+    if(t.fix==='full'){const [p,q]=simplify(t.a,t.b),g=gcd(t.a,t.b);out.push(eq(frac(t.a,t.b),'=',frac(t.a+' : '+g,t.b+' : '+g),'=',frac(p,q)));}
+    else if(t.kind==='expand')out.push(eq(frac(t.a,t.b),'=',frac(t.a+' · '+t.k,t.b+' · '+t.k),'=',frac(t.a*t.k,t.b*t.k)));
+    else out.push(eq(frac(t.a,t.b),'=',frac(t.a+' : '+t.k,t.b+' : '+t.k),'=',frac(t.a/t.k,t.b/t.k)));
+    out.push(line('Beim Erweitern und Kürzen muss mit Zähler und Nenner dieselbe Rechnung gemacht werden, dann bleibt der Wert gleich.'));
+    return out;
+  },
+  hints(t){return (t.kind==='reduce'||t.fix==='full')?withRules(HINT.error):HINT.error.map(x=>[x]);}
+};
+
+/* ---------- B01 Bruchbilder verändern ---------- */
+TASKS.B01={area:'Grundlagen',name:'Bruchbilder verändern',desc:'Teile ein Bild feiner ein und färbe denselben Anteil.',notes:['M1','M2','M3'],size:10,
+  gen(level,R){
+    if(level===1){
+      const kind=R.pick(['strip','circle']),b=R.pick([2,3,4,5,6]),a=R.int(1,b-1);
+      const k=R.pick([2,3].filter(x=>b*x<=12));
+      return {type:'B01',level,kind,a,b,k,target:b*k,avoid:[redKey(a,b)]};
+    }
+    const dims=R.pick([[2,3],[2,4],[3,3],[2,5],[3,4],[2,6]]),b=dims[0]*dims[1],a=R.int(1,b-1);
+    let minTotal=b*R.pick([2,3]);
+    const solvable=(m)=>{for(let r=1;r<=10;r++)for(let c=1;c<=10;c++)if(r*c>=m&&(r*c*a)%b===0)return true;return false;};
+    while(!solvable(minTotal)&&minTotal>b)minTotal--;
+    return {type:'B01',level,kind:'grid',a,b,rows0:dims[0],cols0:dims[1],minTotal,avoid:[redKey(a,b)]};
+  },
+  prompt(t,h){
+    if(t.level===1)h.append(el('p',{class:'q'},'Das Bild zeigt ',frac(t.a,t.b),'. Teile das Bild in ',strong(t.target),' gleich große Teile. Färbe denselben Anteil und gib den neuen Bruch an.'));
+    else h.append(el('p',{class:'q'},'Das Rechteck zeigt ',frac(t.a,t.b),'. Teile ein Rechteck in Zeilen und Spalten, sodass es ',strong('mindestens '+t.minTotal),' gleich große Felder gibt. Färbe denselben Anteil und gib den neuen Bruch an.'));
+  },
+  render(view,host){
+    const t=view.task,d=view.draft;
+    const L1=t.level===1;
+    if(L1){if(d.parts==null)d.parts=t.b;}
+    else{if(d.rows==null){d.rows=t.rows0;d.cols=t.cols0;}}
+    d.col=d.col||[];
+    const total=()=>L1?d.parts:d.rows*d.cols;
+    const origFig=L1?drawMode(t.kind,t.a,t.b,{label:'Vorgabe'}):drawFractionGrid(t.a,t.b,t.rows0,t.cols0,{label:'Vorgabe'});
+    const orig=el('figure',{class:'fig'},origFig,el('figcaption',null,'Vorgabe: ',frac(t.a,t.b)));
+    const editBox=el('div'),info=el('div',{class:'q'});
+    const steppers=[];
+    const changed=()=>{d.col=d.col.filter(i=>i<total());view.save();redraw();};
+    const redraw=()=>{
+      editBox.replaceChildren();
+      const n=total(),opts={onToggle:i=>{
+        if(view.locked())return false;
+        const j=d.col.indexOf(i);if(j>=0)d.col.splice(j,1);else d.col.push(i);
+        view.save();updInfo();return j<0;
+      },label:'Dein Bild',filled:new Set(d.col)};
+      editBox.append(L1?drawMode(t.kind,0,n,opts):drawFractionGrid(0,n,d.rows,d.cols,opts));
+      updInfo();
+    };
+    const updInfo=()=>{
+      info.replaceChildren('Dein Bild: ',strong(d.col.length),' von ',strong(total()),' Teilen gefärbt = ',frac(d.col.length,total()));
+      steppers.forEach(s=>s.upd());
+    };
+    const controls=el('div',{class:'controls'});
+    if(L1){
+      steppers.push(stepper(view,'Teile',()=>d.parts,v=>{d.parts=v;d.col=[];changed();},1,12));
+      [2,3].forEach(f=>{
+        const b=el('button',{type:'button',class:'btn small'},f===2?'Einteilung verdoppeln':'Einteilung verdreifachen');
+        b.addEventListener('click',()=>{
+          if(view.locked()||d.parts*f>12)return;
+          const m=d.col.length;d.parts*=f;d.col=Array.from({length:m*f},(_,i)=>i);changed();
+        });
+        view.inputs['x'+f]=b;controls.append(b);
+      });
+    }else{
+      steppers.push(stepper(view,'Zeilen',()=>d.rows,v=>{d.rows=v;d.col=[];changed();},1,10));
+      steppers.push(stepper(view,'Spalten',()=>d.cols,v=>{d.cols=v;d.col=[];changed();},1,10));
+    }
+    steppers.push(stepper(view,'Gefärbt',()=>d.col.length,v=>{
+      if(v>d.col.length){for(let i=0;i<total()&&d.col.length<v;i++)if(!d.col.includes(i))d.col.push(i);}
+      else d.col.pop();
+      view.save();redraw();
+    },0,99));
+    /* Obergrenze für Gefärbt = Teilezahl */
+    const gs=steppers[steppers.length-1],plusG=gs.querySelectorAll('button')[1];
+    const origUpd=gs.upd;gs.upd=()=>{origUpd();plusG.disabled=plusG.disabled||d.col.length>=total();};
+    steppers.forEach(s=>controls.append(s));
+    const reset=el('button',{type:'button',class:'btn small'},'Zurücksetzen');
+    reset.addEventListener('click',()=>{
+      if(view.locked())return;
+      if(L1)d.parts=t.b;else{d.rows=t.rows0;d.cols=t.cols0;}
+      d.col=[];view.save();redraw();
+    });
+    view.inputs.reset=reset;controls.append(reset);
+    const left=el('div',null,orig,el('p',null,'Tippe auf die Teile, um sie zu färben oder die Farbe wieder zu entfernen.'),editBox,info);
+    const right=el('div',null,controls,el('p',null,'Der Bruch, den dein Bild zeigt:'),eq(fracInput(view,'r')));
+    host.append(el('div',{class:'split has-visual'},left,right));
+    redraw();
+  },
+  validate(t,d){
+    const L1=t.level===1;
+    const parts=L1?(d.parts==null?t.b:d.parts):(d.rows==null?t.rows0*t.cols0:d.rows*d.cols);
+    const m=(d.col||[]).length;
+    if(L1&&parts!==t.target)return wrong('parts',`Teile das Bild in ${t.target} gleich große Teile (stelle die Teilezahl ein).`);
+    if(!L1&&parts<t.minTotal)return wrong('parts',`Es sollen mindestens ${t.minTotal} gleich große Felder sein. Ändere Zeilen oder Spalten.`);
+    if(m*t.b!==t.a*parts)return wrong('area','Der gefärbte Anteil ist nicht gleich groß geblieben. Überlege, wie viele neue Teile aus einem alten Teil entstehen.');
+    const f=getFrac(d,'r');if(!f)return invalid('Trage den Bruch ein, den dein Bild zeigt.');
+    if(f.n!==m||f.d!==parts)return wrong('fraction','Dein Bild und dein Bruch passen nicht zusammen. Trage den Bruch ein, den dein Bild zeigt.',{'r.n':f.n===m,'r.d':f.d===parts});
+    return right('Richtig! Die Einteilung ist feiner, aber der gefärbte Anteil ist gleich geblieben.');
+  },
+  solution(t){
+    let n,m,svg;
+    if(t.level===1){n=t.target;m=t.a*t.k;svg=drawMode(t.kind,m,n,{label:'Lösung'});}
+    else{
+      let best=null;
+      for(let r=1;r<=10;r++)for(let c=1;c<=10;c++)if(r*c>=t.minTotal&&(r*c*t.a)%t.b===0&&(!best||r*c<best[0]*best[1]))best=[r,c];
+      n=best[0]*best[1];m=n*t.a/t.b;svg=drawFractionGrid(m,n,best[0],best[1],{label:'Lösung'});
+    }
+    const k=n/t.b;
+    return [line('Aus jedem alten Teil entstehen '+k+' neue Teile. Auch die gefärbten Teile werden mit '+k+' vervielfacht:'),
+      eq(frac(t.a,t.b),'=',frac(t.a+' · '+k,t.b+' · '+k),'=',frac(m,n)),svg];
+  },
+  hints(t){return HINT.picture.map(x=>[x]);}
+};
+
+/* ---------- O01 Bruchfamilien ---------- */
+TASKS.O01={area:'Offene Aufgaben',name:'Bruchfamilien',desc:'Gib mehrere verschiedene Brüche mit demselben Wert an.',notes:['M1','M2'],size:5,
+  gen(level,R){
+    let p,q;
+    do{q=level===1?R.int(2,7):R.int(3,12);p=R.int(1,q-1);}while(gcd(p,q)!==1);
+    const t={type:'O01',level,p,q,need:4,avoid:[redKey(p,q)]};
+    if(level===2){
+      t.den=q*R.int(4,9);
+      t.numMin=p*R.int(6,12);
+    }
+    return t;
+  },
+  prompt(t,h){
+    h.append(el('p',{class:'q'},`Gib ${t.need} verschiedene Brüche an, die denselben Wert haben wie `,frac(t.p,t.q),'.'));
+    if(t.level===2)h.append(el('ul',{class:'cond'},el('li',null,'Mindestens ein Bruch hat den Nenner ',strong(t.den),'.'),el('li',null,'Mindestens ein Bruch hat einen Zähler größer als ',strong(t.numMin),'.')));
+  },
+  render(view,host){
+    const t=view.task,d=view.draft;
+    if(d.rows==null)d.rows=t.need;
+    const list=el('div'),btns=el('div',{class:'rowbtns'});
+    const draw=()=>{
+      list.replaceChildren();
+      for(let i=0;i<d.rows;i++){
+        const row=el('div',{class:'famrow'},el('span',{class:'tag'},(i+1)+'.'),fracInput(view,'x'+i));
+        list.append(row);
+      }
+    };
+    const add=el('button',{type:'button',class:'btn small'},'Bruch hinzufügen');
+    const rem=el('button',{type:'button',class:'btn small'},'Letzten Bruch entfernen');
+    add.addEventListener('click',()=>{if(view.locked()||d.rows>=10)return;d.rows++;view.save();draw();updB();});
+    rem.addEventListener('click',()=>{if(view.locked()||d.rows<=1)return;const i=d.rows-1;delete d['x'+i+'.n'];delete d['x'+i+'.d'];d.rows--;view.save();draw();updB();});
+    const updB=()=>{add.disabled=view.locked()||d.rows>=10;rem.disabled=view.locked()||d.rows<=1;};
+    view.inputs.add=add;view.inputs.rem=rem;
+    btns.append(add,rem);host.append(list,btns);draw();updB();
+  },
+  validate(t,d){
+    const rows=d.rows==null?t.need:d.rows,seen=new Set(),marks={},issues=[];
+    let good=0,anyFilled=false,hasDen=false,hasNum=false;
+    for(let i=0;i<rows;i++){
+      const n=d['x'+i+'.n'],dd=d['x'+i+'.d'];
+      if((n==null||n==='')&&(dd==null||dd==='')){continue;}
+      anyFilled=true;
+      const f=getFrac(d,'x'+i);
+      if(!f){issues.push(`Zeile ${i+1}: Trage zwei ganze Zahlen ein.`);marks['x'+i+'.n']=false;marks['x'+i+'.d']=false;continue;}
+      const key=f.n+'/'+f.d;
+      if(f.n===t.p&&f.d===t.q){issues.push(`Zeile ${i+1}: Das ist der gegebene Bruch.`);marks['x'+i+'.n']=false;marks['x'+i+'.d']=false;continue;}
+      if(!equivalent(t.p,t.q,f.n,f.d)){issues.push(`Zeile ${i+1}: Dieser Bruch hat einen anderen Wert.`);marks['x'+i+'.n']=false;marks['x'+i+'.d']=false;continue;}
+      if(seen.has(key)){issues.push(`Zeile ${i+1}: Diesen Bruch hast du schon angegeben.`);marks['x'+i+'.n']=false;marks['x'+i+'.d']=false;continue;}
+      seen.add(key);good++;marks['x'+i+'.n']=true;marks['x'+i+'.d']=true;
+      if(t.den&&f.d===t.den)hasDen=true;
+      if(t.numMin&&f.n>t.numMin)hasNum=true;
+    }
+    if(!anyFilled)return invalid('Trage mindestens einen Bruch ein.');
+    if(t.den&&!hasDen)issues.push(`Es fehlt ein Bruch mit dem Nenner ${t.den}.`);
+    if(t.numMin&&!hasNum)issues.push(`Es fehlt ein Bruch mit einem Zähler größer als ${t.numMin}.`);
+    if(good<t.need)issues.push(`${good} von ${t.need} verschiedenen Brüchen gefunden.`);
+    if(!issues.length)return right('Richtig! Jeder dieser Brüche entsteht durch Erweitern und hat denselben Wert.');
+    return wrong('family',issues.join(' '),marks);
+  },
+  solution(t){
+    const out=[line('Mögliche Lösungen (du kannst mit jeder Erweiterungszahl neue Brüche bilden):')];
+    [2,3,4,5].forEach(k=>out.push(eq(frac(t.p,t.q),'=',frac(t.p+' · '+k,t.q+' · '+k),'=',frac(t.p*k,t.q*k))));
+    if(t.den){const k=t.den/t.q;out.push(line('Mit Nenner '+t.den+': ',frac(t.p*k,t.den),' (Erweiterungszahl '+k+')'));}
+    if(t.numMin){const k=Math.floor(t.numMin/t.p)+1;out.push(line('Mit Zähler größer als '+t.numMin+': ',frac(t.p*k,t.q*k),' (Erweiterungszahl '+k+')'));}
+    return out;
+  },
+  hints(t){return HINT.family.map(x=>[x]);}
+};
+
+/* ---------- O02 Verschiedene Rechenwege ---------- */
+TASKS.O02={area:'Offene Aufgaben',name:'Verschiedene Rechenwege',desc:'Kürze einen Bruch auf zwei verschiedene Arten.',notes:['M3'],size:5,
+  gen(level,R){
+    let p,q;
+    do{q=level===1?R.int(2,7):R.int(5,13);p=R.int(1,q-1);}while(gcd(p,q)!==1);
+    const g=level===1?R.pick([6,10,12,15]):R.pick([12,18,24,30,36,42,60]);
+    return {type:'O02',level,a:p*g,b:q*g,p,q,mode:level===1?'target':'full',avoid:[redKey(p,q)]};
+  },
+  prompt(t,h){
+    h.append(el('p',{class:'q'},t.mode==='target'?['Kürze ',frac(t.a,t.b),' auf zwei verschiedene Arten bis ',frac(t.p,t.q),'.']:['Kürze ',frac(t.a,t.b),' auf mindestens zwei verschiedenen Wegen so weit wie möglich.']));
+    h.append(el('p',null,'Jeder Schritt muss mit einer Zahl größer als 1 gekürzt sein. Du kannst Schritte hinzufügen oder entfernen. Zwei Wege zählen als verschieden, wenn die Kürzungszahlen verschieden sind.'));
+  },
+  render(view,host){
+    const t=view.task,d=view.draft;
+    for(let j=0;j<2;j++){
+      if(d['c'+j+'.len']==null)d['c'+j+'.len']=2;
+      const box=el('div',{class:'chain'},el('h4',null,'Weg '+(j+1)));
+      const row=el('div'),btns=el('div',{class:'rowbtns'});
+      const draw=()=>{
+        const parts=[frac(t.a,t.b)];
+        for(let i=0;i<d['c'+j+'.len'];i++){parts.push('=');parts.push(fracInput(view,'c'+j+'s'+i));}
+        row.replaceChildren(eq(...parts));
+      };
+      const add=el('button',{type:'button',class:'btn small'},'Schritt hinzufügen');
+      const rem=el('button',{type:'button',class:'btn small'},'Letzten Schritt entfernen');
+      const updB=()=>{add.disabled=view.locked()||d['c'+j+'.len']>=5;rem.disabled=view.locked()||d['c'+j+'.len']<=1;};
+      add.addEventListener('click',()=>{if(view.locked()||d['c'+j+'.len']>=5)return;d['c'+j+'.len']++;view.save();draw();updB();});
+      rem.addEventListener('click',()=>{
+        if(view.locked()||d['c'+j+'.len']<=1)return;
+        const i=d['c'+j+'.len']-1;delete d['c'+j+'s'+i+'.n'];delete d['c'+j+'s'+i+'.d'];d['c'+j+'.len']--;view.save();draw();updB();
+      });
+      view.inputs['add'+j]=add;view.inputs['rem'+j]=rem;
+      btns.append(add,rem);box.append(row,btns);host.append(box);draw();updB();
+    }
+  },
+  validate(t,d){
+    const seqs=[],issues=[],marks={};
+    for(let j=0;j<2;j++){
+      const len=d['c'+j+'.len']==null?2:d['c'+j+'.len'];
+      let prev=[t.a,t.b];const ks=[];
+      for(let i=0;i<len;i++){
+        const key='c'+j+'s'+i,f=getFrac(d,key);
+        if(!f)return invalid(`Weg ${j+1}, Schritt ${i+1}: Trage zwei ganze Zahlen ein.`);
+        let ok=false;
+        if(prev[1]%f.d===0){const k=prev[1]/f.d;if(k>1&&f.n*k===prev[0]){ok=true;ks.push(k);}}
+        marks[key+'.n']=ok;marks[key+'.d']=ok;
+        if(!ok){
+          issues.push(`Weg ${j+1}, Schritt ${i+1}: `+(f.n===prev[0]&&f.d===prev[1]?'Der Bruch wurde nicht gekürzt.':'Zähler und Nenner wurden nicht durch dieselbe Zahl größer als 1 geteilt.'));
+          break;
+        }
+        prev=[f.n,f.d];
+      }
+      if(ks.length===(d['c'+j+'.len']==null?2:d['c'+j+'.len'])){
+        if(!isFullyReduced(prev[0],prev[1]))issues.push(`Weg ${j+1}: Der letzte Bruch hat den richtigen Wert. Du kannst aber noch weiter kürzen.`);
+      }
+      seqs.push(ks.join(','));
+    }
+    if(!issues.length&&seqs[0]===seqs[1])issues.push('Beide Wege verwenden dieselben Kürzungszahlen. Suche einen Weg mit anderen Kürzungszahlen.');
+    if(!issues.length)return right('Richtig! Beide Wege führen zum selben vollständig gekürzten Bruch – mit verschiedenen Kürzungszahlen.');
+    return wrong('ways',issues.join(' '),marks);
+  },
+  solution(t){
+    const g=gcd(t.a,t.b),f=smallestPrimeFactor(g);
+    const out=[line('Weg 1: in einem Schritt mit '+g+':'),eq(frac(t.a,t.b),'=',frac(t.a+' : '+g,t.b+' : '+g),'=',frac(t.p,t.q)),
+      line('Weg 2: in zwei Schritten, zuerst mit '+f+', dann mit '+(g/f)+':'),
+      eq(frac(t.a,t.b),'=',frac(t.a/f,t.b/f),'=',frac(t.p,t.q))];
+    out.push(line('Weitere Wege entstehen mit anderen Teilern von '+g+'. Die 2 geht immer, wenn Zähler und Nenner gerade sind.'));
+    return out;
+  },
+  hints(t){return withRules(HINT.ways);}
+};
+
+/* ---------- D01 Dezimalbruch -> Dezimalzahl ---------- */
+TASKS.D01={area:'Darstellungen umwandeln',name:'Dezimalbruch → Dezimalzahl',desc:'Schreibe Brüche mit Nenner 10, 100, 1000 als Dezimalzahl.',notes:['M4'],size:10,
+  gen(level,R){
+    const places=level===1?R.pick([1,1,2,2,2]):R.pick([2,3,3,3,4]);
+    const den=Math.pow(10,places);
+    let n;
+    if(level===1)n=R.chance(0.2)?R.int(den+1,2*den-1):R.int(1,den-1);
+    else n=R.chance(0.35)?R.int(den+1,3*den-1):R.int(1,den-1);
+    if(n%10===0)n+=R.int(1,9);
+    if(level===2&&places>=3&&R.chance(0.3))n=R.int(1,9)*Math.pow(10,places-1)+R.int(1,9);
+    return {type:'D01',level,n,den,avoid:[n+'/'+den,decOf(n,places)]};
+  },
+  prompt(t,h){h.append(el('p',{class:'q'},'Schreibe ',frac(t.n,t.den),' als Dezimalzahl.'));},
+  render(view,host){const t=view.task;host.append(eq(frac(t.n,t.den),'=',decInput(view,'dec')));},
+  validate(t,d){
+    const p=parseGermanDecimal(d.dec);
+    if(!p)return invalid('Gib eine Dezimalzahl mit Komma ein, zum Beispiel 0,25.');
+    const places=Math.round(Math.log10(t.den));
+    if(p.num*t.den===t.n*p.den){
+      return right(p.places===places?'Richtig! Der Nenner zeigt, wie viele Stellen nach dem Komma gebraucht werden.':'Richtig! (Die Null am Ende wäre nicht nötig.)');
+    }
+    const strip=s=>s.replace(/^0+/,'');
+    if(strip(String(p.num))===strip(String(t.n))&&p.places!==places)return wrong('commaPlaces','Prüfe noch einmal die Anzahl der Stellen nach dem Komma.');
+    return wrong('other','Das passt noch nicht. Achte auf den Nenner und die Stellen nach dem Komma.');
+  },
+  solution(t){
+    const places=Math.round(Math.log10(t.den));
+    return [line(`Der Nenner ${t.den} bedeutet: ${places} Stelle${places>1?'n':''} nach dem Komma.`),eq(frac(t.n,t.den),'=',el('span',null,decOf(t.n,places)))];
+  },
+  hints(t){return HINT.d1.map(x=>[x]);}
+};
+
+/* ---------- D02 Dezimalzahl -> Dezimalbruch ---------- */
+TASKS.D02={area:'Darstellungen umwandeln',name:'Dezimalzahl → Dezimalbruch',desc:'Schreibe Dezimalzahlen als Bruch mit vorgegebenem Nenner.',notes:['M5'],size:10,
+  gen(level,R){
+    const places=level===1?R.pick([1,2,2]):R.pick([3,3,4,2]);
+    const den=Math.pow(10,places);
+    let n=level===1?R.int(1,den-1):(R.chance(0.35)?R.int(den+1,3*den-1):R.int(1,den-1));
+    if(level===1&&n%10===0)n++;
+    if(level===2&&!R.chance(0.2)&&n%10===0)n++;
+    const s=decOf(n,places);
+    return {type:'D02',level,n,den,places,s,avoid:[s,n+'/'+den]};
+  },
+  prompt(t,h){h.append(el('p',{class:'q'},'Schreibe ',strong(t.s),' als Bruch mit dem Nenner ',strong(t.den),'.'));},
+  render(view,host){const t=view.task;host.append(eq(el('span',null,t.s),'=',fracInput(view,'r')));},
+  validate(t,d){
+    const f=getFrac(d,'r');if(!f)return invalid(MSG_FRAC_INVALID);
+    const marks={'r.n':f.n===t.n,'r.d':f.d===t.den};
+    if(f.n===t.n&&f.d===t.den)return right(`Richtig! ${t.places} Stelle${t.places>1?'n':''} nach dem Komma ergibt den Nenner ${t.den}.`,[t.n,t.den]);
+    if(equivalent(f.n,f.d,t.n,t.den))return wrong('wrongDen',`Der Wert stimmt, aber der Nenner soll ${t.den} sein.`,marks);
+    if(f.n===t.n)return wrong('commaPlaces','Prüfe noch einmal die Anzahl der Stellen nach dem Komma.',marks);
+    return wrong('other','Das passt noch nicht. Der Zähler enthält die Zahl ohne Komma.',marks);
+  },
+  solution(t){
+    return [line(`${t.places} Stelle${t.places>1?'n':''} nach dem Komma → Nenner ${t.den}. Der Zähler ist die Zahl ohne Komma.`),eq(el('span',null,t.s),'=',frac(t.n,t.den))];
+  },
+  hints(t){return HINT.d2.map(x=>[x]);}
+};
+
+/* ---------- D03 Gemischte Schreibweise -> gemeiner Bruch ---------- */
+TASKS.D03={area:'Darstellungen umwandeln',name:'Gemischte Schreibweise → gemeiner Bruch',desc:'Schreibe gemischte Zahlen als gemeinen Bruch.',notes:['M6'],size:10,
+  gen(level,R){
+    let w,n,d;
+    if(level===1){do{d=R.int(2,8);n=R.int(1,d-1);}while(gcd(n,d)!==1);w=R.int(1,4);}
+    else{do{d=R.int(3,19);n=R.int(1,d-1);}while(gcd(n,d)!==1);w=R.int(5,25);}
+    return {type:'D03',level,w,n,d,avoid:[w+' '+n+'/'+d,redKey(n,d)]};
+  },
+  prompt(t,h){h.append(el('p',{class:'q'},'Schreibe ',mixed(t.w,t.n,t.d),' als gemeinen Bruch. Der Nenner ',strong(t.d),' bleibt gleich.'));},
+  render(view,host){
+    const t=view.task,box=[eq(mixed(t.w,t.n,t.d),'=',fracInput(view,'r'))];
+    if(t.level===1){
+      const figs=[];
+      for(let i=0;i<t.w;i++)figs.push(drawFractionStrip(t.d,t.d,{maxW:140,label:'Ganzes'}));
+      figs.push(drawFractionStrip(t.n,t.d,{maxW:140,label:'Bruchteil'}));
+      box.push(el('div',{class:'figrow',style:'display:flex;flex-wrap:wrap;gap:8px;margin-top:10px'},figs.map(f=>el('div',{style:'width:140px'},f))));
+    }
+    host.append(...box);
+  },
+  validate(t,d){
+    const f=getFrac(d,'r');if(!f)return invalid(MSG_FRAC_INVALID);
+    const [en,ed]=mixedToFraction(t.w,t.n,t.d),marks={'r.n':f.n===en,'r.d':f.d===ed};
+    if(f.n===en&&f.d===ed)return right('Richtig! Ganze · Nenner + Zähler ergibt den neuen Zähler, der Nenner bleibt gleich.',[en,ed]);
+    if(f.d!==t.d&&equivalent(en,ed,f.n,f.d))return wrong('denChanged',`Der Wert stimmt. Der Nenner soll aber gleich bleiben (${t.d}).`,marks);
+    if(f.n===t.n)return wrong('noWhole','Denke auch an die ganzen Teile.',marks);
+    if(f.d===t.d)return wrong('numerator','Rechne Ganze · Nenner + Zähler: Die Ganzen müssen zuerst in Bruchteile umgerechnet werden.',marks);
+    return wrong('other','Das passt noch nicht. Der Nenner bleibt gleich, der Zähler wird neu berechnet.',marks);
+  },
+  solution(t){
+    return [line(`${t.w} Ganze sind ${t.w} · ${t.d} = ${t.w*t.d} Bruchteile (Teile mit Nenner ${t.d}).`),
+      eq(mixed(t.w,t.n,t.d),'=',frac(`${t.w} · ${t.d} + ${t.n}`,t.d),'=',frac(t.w*t.d+t.n,t.d))];
+  },
+  hints(t){return HINT.mixed.map(x=>[x]);}
+};
+
+/* ---- Schnittstelle gemäß Konzeption ---- */
+function generateTask(typeId,level,rng){return TASKS[typeId].gen(level,rng||RNG);}
+function validateTask(task,answer){return TASKS[task.type].validate(task,answer);}
+function buildWorkedSolution(task){return TASKS[task.type].solution(task);}
+function hintFor(task,stage){const h=TASKS[task.type].hints(task);return h[Math.min(stage,h.length-1)];}
+
+/* =====================================================================
+   7 Aufgaben-Oberfläche (mountTask), Runden, Fortschritt
+   ===================================================================== */
+const AREAS=['Grundlagen','Umkehraufgaben','Offene Aufgaben','Darstellungen umwandeln','Spiele'];
+const PRACTICE_ORDER=['G01','G02','G03','B01','U01','U02','U03','O01','O02','D01','D02','D03'];
+const GAMES={
+  S01:{area:'Spiele',name:'Bruch-Memory',desc:'Finde Kartenpaare, die denselben Anteil zeigen.',notes:['M1','M2','M3']},
+  S02:{area:'Spiele',name:'Der Bruch-Tresor',desc:'Löse die Rätsel an den Schlössern und knacke den Code.',notes:['M2','M3','M4','M5','M6']}
+};
+const ALL_IDS=PRACTICE_ORDER.concat(['S01','S02']);
+const infoOf=(id)=>TASKS[id]||GAMES[id];
+const isGame=(id)=>!!GAMES[id];
+
+const app=document.getElementById('app');
+const scrim=document.getElementById('scrim');
+const SEEN=new Set();
+const sigOf=t=>JSON.stringify(t,(k,v)=>(k==='avoid'||k==='cards'||k==='shown')?undefined:v);
+function generateUnique(typeId,level){
+  let t=null;
+  for(let i=0;i<30;i++){
+    t=generateTask(typeId,level);
+    const s=sigOf(t);
+    if(!SEEN.has(s)){SEEN.add(s);return t;}
+  }
+  return t;
+}
+const levelOf=(id)=>S.levelByType[id]||1;
+const keyOf=(id,l)=>id+'-L'+l;
+function prog(key){return S.progress[key]||(S.progress[key]={done:0,first:0,later:0,skipped:0,shown:0});}
+function newState(task){return {task,draft:{},hint:0,attempts:0,status:'open',fb:null};}
+
+/* mountTask: baut Aufgabe, Rückmeldung, Tipps und (auf Wunsch) Lösung in host auf */
+function mountTask(host,st,cb){
+  const T=TASKS[st.task.type];
+  const view={task:st.task,draft:st.draft,inputs:{},st,save:()=>cb.save(),locked:()=>st.status!=='open'};
+  const allHints=()=>(cb.prefixHints||[]).concat(T.hints(st.task));
+  host.replaceChildren();
+  const prompt=el('div',{class:'prompt'});T.prompt(st.task,prompt);
+  const stage=el('div',{class:'stage'});T.render(view,stage);
+  const fb=el('div',{class:'feedback','aria-live':'polite'});
+  const hints=el('div',{class:'hints'});
+  const sol=el('div',{class:'solution'});
+  host.append(prompt,stage,fb,hints,sol);
+  const showFb=(kind,text)=>{st.fb={kind,text};fb.replaceChildren(el('div',{class:'msg '+kind},text));};
+  const renderHints=()=>{
+    hints.replaceChildren();
+    const hs=allHints();
+    for(let i=0;i<st.hint&&i<hs.length;i++){
+      hints.append(el('div',{class:'hint'},el('b',{class:'lab'},'Tipp '+(i+1)),hs[i].map(x=>el('p',null,x))));
+    }
+  };
+  const showSolution=()=>{sol.replaceChildren(el('div',{class:'solbox'},el('h4',null,'Lösung'),...buildWorkedSolution(st.task)));};
+  const applyMarks=(marks)=>{
+    for(const k in view.inputs){const i=view.inputs[k];if(i&&i.classList)i.classList.remove('bad','good');}
+    for(const k in marks){const i=view.inputs[k];if(i&&i.classList)i.classList.add(marks[k]?'good':'bad');}
+  };
+  if(st.fb)showFb(st.fb.kind,st.fb.text);
+  renderHints();
+  if(st.status==='shown')showSolution();
+  return {
+    view,
+    hintCount:()=>allHints().length,
+    check(){
+      if(st.status!=='open')return null;
+      const res=validateTask(st.task,st.draft);
+      if(res.invalid){showFb('bad',res.feedback);return 'invalid';}
+      if(res.correct){st.status='correct';showFb('ok',res.feedback);cb.done('correct');return 'correct';}
+      st.attempts++;showFb('bad',res.feedback);applyMarks(res.marks||{});cb.save();return 'wrong';
+    },
+    hint(){
+      if(st.hint<allHints().length){st.hint++;cb.save();renderHints();}
+      return st.hint>=allHints().length;
+    },
+    solution(){
+      if(st.status!=='open')return;
+      st.status='shown';showSolution();cb.done('shown');
+    }
+  };
+}
+
+/* ---------- Gerüst: Kopfzeile, Navigation, Niveau, Hilfe ---------- */
+let helpOpen=false;
+function setHelp(open){
+  helpOpen=open;
+  const h=document.querySelector('.help');
+  if(h)h.classList.toggle('open',open);
+  scrim.classList.toggle('show',open);
+}
+scrim.addEventListener('click',()=>setHelp(false));
+window.addEventListener('keydown',e=>{if(e.key==='Escape'&&helpOpen)setHelp(false);});
+
+function go(view){S.view=view;persist();renderAll();window.scrollTo(0,0);}
+const openEntry=(id)=>go({kind:isGame(id)?'game':'practice',id});
+function setLevel(id,l){S.levelByType[id]=l;persist();renderAll();}
+
+function topbar(title,back){
+  return el('header',{class:'topbar'},
+    back?el('button',{type:'button',class:'btn small',onclick:()=>go({kind:'home'})},'← Übersicht'):null,
+    el('button',{type:'button',class:'brand',onclick:()=>go({kind:'home'})},'Bruchwerkstatt'),
+    el('span',{class:'title'},title||''));
+}
+function levelControl(id){
+  const l=levelOf(id);
+  const mk=(n,long,short)=>el('button',{type:'button','aria-pressed':String(l===n),onclick:()=>setLevel(id,n)},el('span',{class:'long'},long),el('span',{class:'short'},short));
+  return el('div',{class:'seg',role:'group','aria-label':'Niveau wählen'},mk(1,'Niveau 1 – Grundlagen','Niveau 1'),mk(2,'Niveau 2 – Knifflig','Niveau 2'));
+}
+function buildNav(current){
+  const nav=el('nav',{class:'sidenav card','aria-label':'Übungen'});
+  AREAS.forEach(a=>{
+    nav.append(el('h3',null,a));
+    ALL_IDS.filter(id=>infoOf(id).area===a).forEach(id=>{
+      nav.append(el('button',{type:'button',class:'navbtn','aria-current':String(id===current),onclick:()=>openEntry(id)},el('span',{class:'id'},id),infoOf(id).name));
+    });
+  });
+  return nav;
+}
+function phoneSwitch(current){
+  const sel=el('select',{class:'phoneswitch','aria-label':'Übung wechseln'});
+  ALL_IDS.forEach(id=>{const o=el('option',{value:id},id+' · '+infoOf(id).name);if(id===current)o.selected=true;sel.append(o);});
+  sel.addEventListener('change',()=>openEntry(sel.value));
+  return sel;
+}
+/* Hilfespalte: rechts auf dem Desktop, Schublade (Tablet), Bottom-Sheet (Smartphone) */
+function helpPanel(){
+  const body=el('div'),stats=el('div');
+  const aside=el('aside',{class:'help','aria-label':'Merkkasten und Fortschritt'});
+  aside.append(el('div',{class:'helphead'},el('h2',null,'Merkkasten'),el('button',{type:'button',class:'btn small helpclose',onclick:()=>setHelp(false)},'Schließen')),body,stats);
+  if(helpOpen)aside.classList.add('open');
+  return {el:aside,setNotes(nodes){body.replaceChildren(...nodes);},setStats(n){stats.replaceChildren(n);}};
+}
+function statsBlock(key,extra){
+  const P=prog(key);
+  const rows=[['Bearbeitet',P.done],['Beim 1. Versuch ohne Tipp richtig',P.first],['Nach weiteren Versuchen richtig',P.later],['Übersprungen',P.skipped],['Lösung angezeigt',P.shown]];
+  return el('div',null,el('h3',null,'Dein Fortschritt'),el('table',{class:'stats'},rows.map(r=>el('tr',null,el('td',null,r[0]),el('td',null,el('b',null,String(r[1])))))),extra||null);
+}
+
+/* ---------- Übungsrunde ---------- */
+function renderPractice(id){
+  const T=TASKS[id],lvl=levelOf(id),key=keyOf(id,lvl);
+  const round=S.rounds[key]||(S.rounds[key]={results:[],cur:null,size:T.size});
+  const root=el('div');
+  root.append(topbar(T.name,true));
+  const shell=el('div',{class:'shell'});
+  const help=helpPanel();
+  const main=el('main',{class:'work'});
+  shell.append(buildNav(id),main,help.el);
+  root.append(shell);
+  app.append(root);
+
+  const worktop=el('div',{class:'worktop'},el('h2',null,id+' · '+T.name),levelControl(id));
+  main.append(phoneSwitch(id),worktop);
+
+  const fillStats=()=>help.setStats(statsBlock(key,el('p',null,el('button',{type:'button',class:'btn small danger',onclick:()=>{S.rounds[key]={results:[],cur:null,size:T.size};persist();renderAll();}},'Runde neu beginnen'))));
+  if(round.results.length>=round.size&&!round.cur){
+    help.setNotes(noteFor(id,null));fillStats();
+    renderSummary(main,id,lvl,key,round);
+    return;
+  }
+  if(!round.cur)round.cur=newState(generateUnique(id,lvl));
+  const st=round.cur;
+  help.setNotes(noteFor(id,st.task));fillStats();
+
+  const progress=el('div',{class:'progress'});
+  const updProgress=()=>{
+    const x=Math.min(round.size,round.results.length+(st.status==='open'?1:0));
+    progress.replaceChildren(el('div',{class:'lbl'},`Aufgabe ${x} von ${round.size} · ${round.results.length} erledigt`),el('div',{class:'bar'},el('i',{style:'width:'+(100*round.results.length/round.size)+'%'})));
+  };
+  main.append(progress);
+  const card=el('div',{class:'card'});
+  const host=el('div');
+  card.append(host);
+  main.append(card);
+
+  const hintBtn=el('button',{type:'button',class:'btn'},'💡 Tipp');
+  const noteBtn=el('button',{type:'button',class:'btn only-compact'},'📘 Merkkasten');
+  const primary=el('button',{type:'button',class:'btn primary'},'Prüfen');
+  const solBtn=el('button',{type:'button',class:'btn small'},'Lösung zeigen');
+  const skipBtn=el('button',{type:'button',class:'btn small'},'Überspringen');
+  const bar=el('div',{class:'actionbar'},el('div',{class:'primaryrow'},hintBtn,noteBtn,primary),el('div',{class:'secondary'},solBtn,skipBtn));
+  main.append(bar);
+
+  const P=prog(key);
+  const cb={
+    save:()=>persist(),
+    done(kind){
+      if(kind==='correct'){const first=st.attempts===0&&st.hint===0;round.results.push(first?'f':'l');P[first?'first':'later']++;}
+      else{round.results.push('x');P.shown++;}
+      P.done++;persist();
+      ctrl=mountTask(host,st,cb);refresh();updProgress();fillStats();
+    }
+  };
+  let ctrl=mountTask(host,st,cb);
+  const refresh=()=>{
+    const open=st.status==='open';
+    const last=round.results.length>=round.size;
+    primary.textContent=open?'Prüfen':(last?'Runde abschließen':'Nächste Aufgabe');
+    solBtn.disabled=!open;skipBtn.disabled=!open;
+    const all=ctrl.hintCount();
+    hintBtn.disabled=st.hint>=all;
+    hintBtn.textContent=st.hint>=all?'💡 Alle Tipps':(st.hint?`💡 Tipp ${st.hint+1}`:'💡 Tipp');
+  };
+  const next=()=>{round.cur=null;persist();renderAll();};
+  const onPrimary=()=>{if(st.status==='open'){ctrl.check();refresh();}else next();};
+  primary.addEventListener('click',onPrimary);
+  hintBtn.addEventListener('click',()=>{ctrl.hint();refresh();});
+  noteBtn.addEventListener('click',()=>setHelp(!helpOpen));
+  solBtn.addEventListener('click',()=>{ctrl.solution();refresh();});
+  skipBtn.addEventListener('click',()=>{
+    if(st.status!=='open')return;
+    round.results.push('s');P.skipped++;P.done++;round.cur=null;persist();renderAll();
+  });
+  main.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&e.target.tagName==='INPUT'&&e.target.type!=='radio'){e.preventDefault();onPrimary();}
+  });
+  updProgress();refresh();
+  if(window.matchMedia('(pointer:fine)').matches&&st.status==='open'){const f=host.querySelector('input:not([disabled]):not([type=radio])');if(f)f.focus({preventScroll:true});}
+}
+function renderSummary(main,id,lvl,key,round){
+  const c=(ch)=>round.results.filter(x=>x===ch).length;
+  const card=el('div',{class:'card summary'},el('h3',null,'Runde beendet'),
+    el('p',null,`Du hast ${round.size} Aufgaben bearbeitet (Niveau ${lvl}).`),
+    el('table',null,
+      el('tr',null,el('td',null,'Beim 1. Versuch ohne Tipp richtig'),el('td',null,el('b',null,String(c('f'))))),
+      el('tr',null,el('td',null,'Nach weiteren Versuchen oder mit Tipp richtig'),el('td',null,el('b',null,String(c('l'))))),
+      el('tr',null,el('td',null,'Übersprungen'),el('td',null,el('b',null,String(c('s'))))),
+      el('tr',null,el('td',null,'Lösung angezeigt'),el('td',null,el('b',null,String(c('x')))))),
+    el('div',{class:'rowbtns'},
+      el('button',{type:'button',class:'btn primary',onclick:()=>{S.rounds[key]={results:[],cur:null,size:TASKS[id].size};persist();renderAll();}},`Neue Runde (${TASKS[id].size} neue Aufgaben)`),
+      el('button',{type:'button',class:'btn',onclick:()=>setLevel(id,lvl===1?2:1)},lvl===1?'Zu Niveau 2 wechseln':'Zu Niveau 1 wechseln')));
+  main.append(card);
+}
+
+/* =====================================================================
+   8 Spiel S01 – Bruch-Memory
+   ===================================================================== */
+function memoryFace(n,d,mode){return {n,d,mode};}
+function genMemoryPairs(level,count,R){
+  const used=new Set(),pairs=[],maxQ=level===1?8:12;
+  const sameFace=(a,b)=>a.mode===b.mode&&a.n===b.n&&a.d===b.d;
+  let guard=0;
+  while(pairs.length<count&&guard++<2000){
+    const q=R.int(2,maxQ),p=R.int(1,q-1);
+    if(gcd(p,q)!==1||used.has(p+'/'+q))continue;
+    let a,b;
+    if(level===1){
+      const kind=R.pick(['pic','pic','num']);
+      if(kind==='num'){const k=R.int(2,5);a=memoryFace(p,q,'num');b=memoryFace(p*k,q*k,'num');}
+      else{
+        const k1=R.int(1,2),k2=R.pick([1,2,3,4].filter(x=>x!==k1));
+        const m=pickMode(q*k1,R);if(!m)continue;
+        a=memoryFace(p*k1,q*k1,m);b=memoryFace(p*k2,q*k2,'num');
+      }
+    }else{
+      const kind=R.pick(['num','num','pic','picpic','red']);
+      const ks=R.shuffle([1,2,3,4,5,6,7,8,9]);
+      if(kind==='num'){a=memoryFace(p*ks[0],q*ks[0],'num');b=memoryFace(p*ks[1],q*ks[1],'num');}
+      else if(kind==='red'){const k=R.int(4,9);a=memoryFace(p*k,q*k,'num');b=memoryFace(p,q,'num');}
+      else if(kind==='pic'){
+        const m=pickMode(q*ks[0],R);if(!m)continue;
+        a=memoryFace(p*ks[0],q*ks[0],m);b=memoryFace(p*ks[1],q*ks[1],'num');
+      }else{
+        const m1=pickMode(q*ks[0],R),m2=pickMode(q*ks[1],R);if(!m1||!m2)continue;
+        a=memoryFace(p*ks[0],q*ks[0],m1);b=memoryFace(p*ks[1],q*ks[1],m2);
+      }
+    }
+    if(sameFace(a,b))continue;
+    used.add(p+'/'+q);pairs.push(R.chance(0.5)?[a,b]:[b,a]);
+  }
+  return pairs;
+}
+function newMemory(level){
+  const pairs=genMemoryPairs(level,level===1?6:10,RNG);
+  const cards=[];
+  pairs.forEach((pr,i)=>{cards.push({pair:i,face:pr[0],state:'down'});cards.push({pair:i,face:pr[1],state:'down'});});
+  return {level,cards:RNG.shuffle(cards),first:null,attempts:0,hints:0,hintStage:0,done:false};
+}
+function gameRec(key){return S.games[key]||(S.games[key]={state:null,played:0,won:0,best:null});}
+
+function renderMemory(id){
+  const lvl=levelOf(id),key=keyOf(id,lvl),rec=gameRec(key);
+  if(!rec.state||rec.state.level!==lvl){rec.state=newMemory(lvl);rec.played++;persist();}
+  const m=rec.state;
+  m.cards.forEach(c=>{if(c.state==='up')c.state='down';});m.first=null;
+  let busy=false;
+  const root=el('div');root.append(topbar(GAMES[id].name,true));
+  const shell=el('div',{class:'shell'});const help=helpPanel();const main=el('main',{class:'work'});
+  shell.append(buildNav(id),main,help.el);root.append(shell);app.append(root);
+  help.setNotes(['M1','M2','M3'].map(n=>el('section',{class:'note'},el('h3',null,n+' · '+NOTES[n].title),...NOTES[n].build([]))));
+  const fillStats=()=>help.setStats(el('div',null,el('h3',null,'Deine Runden'),el('table',{class:'stats'},
+    el('tr',null,el('td',null,'Gespielte Runden'),el('td',null,el('b',null,String(rec.played)))),
+    el('tr',null,el('td',null,'Beendete Runden'),el('td',null,el('b',null,String(rec.won)))),
+    el('tr',null,el('td',null,'Wenigste Versuche'),el('td',null,el('b',null,rec.best==null?'–':String(rec.best)))))));
+  fillStats();
+  main.append(phoneSwitch(id),el('div',{class:'worktop'},el('h2',null,'S01 · Bruch-Memory'),levelControl(id)));
+  const card=el('div',{class:'card'});
+  const stats=el('div',{class:'memstats','aria-live':'polite'});
+  const msg=el('div',{'aria-live':'polite'});
+  const grid=el('div',{class:'memgrid n'+m.cards.length,id:'memhost'});
+  const hints=el('div',{class:'hints'});
+  card.append(el('p',null,'Decke zwei Karten auf. Ein Paar zeigt denselben Anteil – auch wenn die Karten verschieden aussehen. Bruchbilder und Brüche mit Bruchstrich gehören zusammen.'),stats,msg,grid,hints);
+  main.append(card);
+  const hintBtn=el('button',{type:'button',class:'btn'},'💡 Tipp');
+  const noteBtn=el('button',{type:'button',class:'btn only-compact'},'📘 Merkkasten');
+  const again=el('button',{type:'button',class:'btn primary'},'Neu mischen');
+  main.append(el('div',{class:'actionbar'},el('div',{class:'primaryrow'},hintBtn,noteBtn,again)));
+  const renderHints=()=>{hints.replaceChildren();HINT.memory.slice(0,m.hintStage).forEach((h,i)=>hints.append(el('div',{class:'hint'},el('b',{class:'lab'},'Tipp '+(i+1)),el('p',null,h))));hintBtn.disabled=m.hintStage>=HINT.memory.length;};
+  const updStats=()=>{
+    const found=m.cards.filter(c=>c.state==='matched').length/2;
+    stats.replaceChildren(el('span',null,`Gefundene Paare: ${found} von ${m.cards.length/2}`),el('span',null,`Versuche: ${m.attempts}`),el('span',null,`Tipps: ${m.hints}`));
+  };
+  const faceNode=(c)=>c.face.mode==='num'?frac(c.face.n,c.face.d):drawMode(c.face.mode,c.face.n,c.face.d,{maxW:100,label:'Bruchbild'});
+  const draw=()=>{
+    grid.replaceChildren();
+    m.cards.forEach((c,i)=>{
+      const down=c.state==='down';
+      const b=el('button',{type:'button',class:'mcard '+c.state,'aria-label':down?`Karte ${i+1}, verdeckt`:(c.face.mode==='num'?`Karte ${i+1}: ${c.face.n} durch ${c.face.d}`:`Karte ${i+1}: Bruchbild`)},down?'?':faceNode(c));
+      b.addEventListener('click',()=>flip(i));
+      grid.append(b);
+    });
+    updStats();
+  };
+  const flip=(i)=>{
+    if(busy||m.done)return;
+    const c=m.cards[i];if(c.state!=='down')return;
+    c.state='up';
+    if(m.first===null){m.first=i;draw();persist();return;}
+    const f=m.cards[m.first];m.attempts++;
+    if(f.pair===c.pair){
+      f.state=c.state='matched';m.first=null;
+      if(m.cards.every(x=>x.state==='matched')){
+        m.done=true;rec.won++;rec.best=rec.best==null?m.attempts:Math.min(rec.best,m.attempts);
+        msg.replaceChildren(el('div',{class:'msg ok'},`Geschafft! Du hast alle ${m.cards.length/2} Paare in ${m.attempts} Versuchen gefunden.`));fillStats();
+      }
+      draw();persist();
+    }else{
+      busy=true;draw();
+      setTimeout(()=>{f.state='down';c.state='down';m.first=null;busy=false;if(document.getElementById('memhost')===grid)draw();persist();},1100);
+    }
+  };
+  hintBtn.addEventListener('click',()=>{if(m.hintStage<HINT.memory.length){m.hintStage++;m.hints++;renderHints();updStats();persist();}});
+  noteBtn.addEventListener('click',()=>setHelp(!helpOpen));
+  again.addEventListener('click',()=>{rec.state=newMemory(lvl);rec.played++;persist();renderAll();});
+  if(m.done)msg.replaceChildren(el('div',{class:'msg ok'},`Runde beendet: ${m.attempts} Versuche. Mit „Neu mischen“ startet eine neue Runde.`));
+  renderHints();draw();
+}
+
+/* =====================================================================
+   9 Spiel S02 – Der Bruch-Tresor
+   ===================================================================== */
+const VAULT_GROUPS={
+  1:[['G02','G03'],['U01','U02'],['B01'],['D01','D02','D03']],
+  2:[['G02','G03'],['U01','U02'],['U03','B01'],['O01','O02'],['D01','D02'],['D03']]
+};
+function newVault(level){
+  const types=RNG.shuffle(VAULT_GROUPS[level].map(g=>RNG.pick(g)));
+  return {level,code:types.map(()=>RNG.int(0,9)),locks:types.map(t=>newState(generateUnique(t,level))),active:0,opened:false,entry:''};
+}
+function renderVault(id){
+  const lvl=levelOf(id),key=keyOf(id,lvl),rec=gameRec(key);
+  if(!rec.state||rec.state.level!==lvl||!rec.state.locks){rec.state=newVault(lvl);rec.played++;persist();}
+  const v=rec.state;
+  const root=el('div');root.append(topbar(GAMES[id].name,true));
+  const shell=el('div',{class:'shell'});const help=helpPanel();const main=el('main',{class:'work'});
+  shell.append(buildNav(id),main,help.el);root.append(shell);app.append(root);
+  const fillStats=()=>help.setStats(el('div',null,el('h3',null,'Deine Runden'),el('table',{class:'stats'},
+    el('tr',null,el('td',null,'Gespielte Runden'),el('td',null,el('b',null,String(rec.played)))),
+    el('tr',null,el('td',null,'Geknackte Tresore'),el('td',null,el('b',null,String(rec.won)))))));
+  fillStats();
+  main.append(phoneSwitch(id),el('div',{class:'worktop'},el('h2',null,'S02 · Der Bruch-Tresor'),levelControl(id)));
+  const top=el('div',{class:'card'});
+  const puzzle=el('div',{class:'card',style:'margin-top:14px'});
+  const entryBox=el('div',{class:'card',style:'margin-top:14px'});
+  const bar=el('div',{class:'actionbar'});
+  main.append(top,puzzle,entryBox,bar);
+
+  const solved=(l)=>l.status==='correct';
+  const allSolved=()=>v.locks.every(solved);
+  const hintBtn=el('button',{type:'button',class:'btn'},'💡 Tipp');
+  const noteBtn=el('button',{type:'button',class:'btn only-compact'},'📘 Merkkasten');
+  const primary=el('button',{type:'button',class:'btn primary'},'Prüfen');
+  const solBtn=el('button',{type:'button',class:'btn small'},'Lösung zeigen');
+  bar.append(el('div',{class:'primaryrow'},hintBtn,noteBtn,primary),el('div',{class:'secondary'},solBtn));
+  let ctrl=null;
+  const host=el('div');
+
+  const drawTop=()=>{
+    top.replaceChildren(el('p',null,v.opened?el('b',null,'Der Tresor ist geöffnet!'):`Löse die Rätsel an den Schlössern. Jedes geöffnete Schloss zeigt eine Ziffer des Codes. Geöffnet: ${v.locks.filter(solved).length} von ${v.locks.length}.`));
+    const vault=el('div',{class:'vault',role:'group','aria-label':'Schlösser'});
+    v.locks.forEach((l,i)=>{
+      const open=solved(l);
+      const b=el('button',{type:'button',class:'lock'+(open?' open':''),'aria-current':String(i===v.active&&!v.opened),'aria-label':`Schloss ${i+1}, ${open?'offen, Ziffer '+v.code[i]:'verschlossen'}`},
+        el('span',{class:'st'},'Schloss '+(i+1)),el('span',{class:'dg'},open?String(v.code[i]):'🔒'),el('span',{class:'st'},open?'offen':'verschlossen'));
+      b.addEventListener('click',()=>{v.active=i;persist();drawPuzzle();});
+      vault.append(b);
+    });
+    top.append(vault);
+  };
+  const drawEntry=()=>{
+    entryBox.replaceChildren();
+    if(!allSolved()){entryBox.classList.add('hidden');return;}
+    entryBox.classList.remove('hidden');
+    if(v.opened){
+      entryBox.append(el('div',{class:'msg ok'},'Der Code stimmt – der Tresor ist offen! Gut gemacht.'),el('button',{type:'button',class:'btn primary',onclick:()=>{rec.state=newVault(lvl);rec.played++;persist();renderAll();}},'Neue Runde'));
+      return;
+    }
+    entryBox.append(el('h3',null,'Gib den Code ein'),el('p',null,`Alle Schlösser sind offen. Der Code hat ${v.code.length} Ziffern – in der Reihenfolge der Schlösser.`));
+    const row=el('div',{class:'codeline'});
+    const inputs=v.code.map((_,i)=>{
+      const inp=el('input',{type:'text',inputmode:'numeric',maxlength:'1','aria-label':'Ziffer '+(i+1),autocomplete:'off'});
+      inp.value=v.entry[i]||'';
+      inp.addEventListener('input',()=>{inp.value=inp.value.replace(/\D/g,'');const a=inputs.map(x=>x.value||' ').join('');v.entry=a;persist();if(inp.value&&inputs[i+1])inputs[i+1].focus();});
+      inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();tryCode();}if(e.key==='Backspace'&&!inp.value&&inputs[i-1])inputs[i-1].focus();});
+      row.append(inp);return inp;
+    });
+    const res=el('div',{'aria-live':'polite'});
+    const tryCode=()=>{
+      const guess=inputs.map(x=>x.value).join('');
+      if(guess.length<v.code.length){res.replaceChildren(el('div',{class:'msg bad'},'Trage in jedes Feld eine Ziffer ein.'));return;}
+      if(guess===v.code.join('')){v.opened=true;rec.won++;persist();fillStats();drawTop();drawEntry();drawPuzzle();}
+      else res.replaceChildren(el('div',{class:'msg bad'},'Der Code stimmt nicht. Schau dir die Ziffern an den Schlössern noch einmal an. Du kannst es erneut versuchen.'));
+    };
+    entryBox.append(row,res,el('button',{type:'button',class:'btn primary',onclick:tryCode},'Tresor öffnen'));
+  };
+  const refresh=()=>{
+    const l=v.locks[v.active];
+    if(v.opened){primary.disabled=true;hintBtn.disabled=true;solBtn.disabled=true;primary.textContent='Prüfen';return;}
+    const open=l.status==='open';
+    primary.disabled=false;
+    primary.textContent=open?'Prüfen':(l.status==='correct'?(allSolved()?'Zum Code':'Nächstes Schloss'):'Anderes Rätsel');
+    solBtn.disabled=!open;
+    const all=ctrl?ctrl.hintCount():0;
+    hintBtn.disabled=!open||l.hint>=all;
+    hintBtn.textContent=l.hint>=all&&open?'💡 Alle Tipps':(l.hint?`💡 Tipp ${l.hint+1}`:'💡 Tipp');
+  };
+  const drawPuzzle=()=>{
+    const l=v.locks[v.active];
+    puzzle.replaceChildren();
+    if(v.opened){puzzle.classList.add('hidden');refresh();drawTop();return;}
+    puzzle.classList.remove('hidden');
+    puzzle.append(el('h3',null,`Schloss ${v.active+1} – ${TASKS[l.task.type].name}`),host);
+    help.setNotes(noteFor(l.task.type,l.task));
+    ctrl=mountTask(host,l,{
+      save:()=>persist(),
+      prefixHints:[[HINT.vault[0]]],
+      done(kind){
+        persist();
+        if(kind==='correct'){drawTop();drawEntry();}
+        ctrl=mountTask(host,l,this);
+        refresh();
+      }
+    });
+    refresh();drawTop();
+  };
+  const onPrimary=()=>{
+    if(v.opened)return;
+    const l=v.locks[v.active];
+    if(l.status==='open'){ctrl.check();refresh();return;}
+    if(l.status==='shown'){ /* anderes Rätsel derselben Art */
+      v.locks[v.active]=newState(generateUnique(l.task.type,lvl));persist();drawPuzzle();return;
+    }
+    const nxt=v.locks.findIndex((x,i)=>!solved(x)&&i!==v.active);
+    if(nxt>=0){v.active=nxt;persist();drawPuzzle();}
+    else{drawEntry();entryBox.scrollIntoView({block:'center'});const f=entryBox.querySelector('input');if(f)f.focus();}
+  };
+  primary.addEventListener('click',onPrimary);
+  hintBtn.addEventListener('click',()=>{ctrl.hint();refresh();});
+  noteBtn.addEventListener('click',()=>setHelp(!helpOpen));
+  solBtn.addEventListener('click',()=>{ctrl.solution();refresh();});
+  main.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&e.target.tagName==='INPUT'&&e.target.type!=='radio'&&host.contains(e.target)){e.preventDefault();onPrimary();}
+  });
+  drawTop();drawEntry();drawPuzzle();
+}
+
+/* =====================================================================
+   10 Startseite
+   ===================================================================== */
+const AREA_TEXT={
+  'Grundlagen':'Gleichwertigkeit, Erweitern, Kürzen und Bruchbilder.',
+  'Umkehraufgaben':'Lücken füllen, Zahlen finden, Fehler entdecken.',
+  'Offene Aufgaben':'Mehrere Lösungen und verschiedene Rechenwege.',
+  'Darstellungen umwandeln':'Dezimalbruch, Dezimalzahl und gemischte Schreibweise.',
+  'Spiele':'Bruch-Memory und Bruch-Tresor.'
+};
+function renderHome(){
+  const root=el('div');root.append(topbar('',false));
+  const home=el('div',{class:'home'});
+  home.append(el('h1',null,'Bruchwerkstatt'),
+    el('p',null,'Beim Erweitern und Kürzen ändert sich die Einteilung, aber nicht der Wert des Bruchs. Wähle eine Übung. Jede Übung gibt es auf zwei Niveaus. Merkkasten und Tipps helfen dir jederzeit.'),
+    el('div',{class:'rule'},strong('Gut zu wissen: '),RULE2,' Mit 5 und 10 geht es auch einfach: Enden beide Zahlen auf 0 oder 5, kannst du durch 5 kürzen. Enden beide auf 0, kannst du durch 10 kürzen.'));
+  AREAS.forEach(a=>{
+    home.append(el('h2',{class:'area'},a,' ',el('small',null,'– '+AREA_TEXT[a])));
+    const grid=el('div',{class:'homegrid'});
+    ALL_IDS.filter(id=>infoOf(id).area===a).forEach(id=>{
+      const info=infoOf(id),l=levelOf(id),P=S.progress[keyOf(id,l)];
+      grid.append(el('div',{class:'card tcard'},
+        el('span',{class:'tid'},id),el('h3',null,info.name),el('p',null,info.desc),levelControl(id),
+        el('div',{class:'row'},el('button',{type:'button',class:'btn primary',onclick:()=>openEntry(id)},isGame(id)?'Spielen':'Üben'),
+          el('span',{class:'pg'},isGame(id)?(S.games[keyOf(id,l)]?`Runden: ${S.games[keyOf(id,l)].played}`:'Noch nicht gespielt'):(P&&P.done?`${P.done} Aufgaben bearbeitet`:'Noch nicht begonnen')))));
+    });
+    home.append(grid);
+  });
+  home.append(el('p',null,el('button',{type:'button',class:'btn small danger',onclick:()=>{
+    if(confirm('Wirklich den gesamten Fortschritt auf diesem Gerät löschen?')){Store.clear();S=defaultState();SEEN.clear();renderAll();}
+  }},'Gesamten Fortschritt löschen')));
+  root.append(home);app.append(root);
+}
+
+function renderAll(){
+  setHelp(false);
+  app.replaceChildren();
+  const v=S.view||{kind:'home'};
+  if(v.kind==='practice'&&TASKS[v.id])renderPractice(v.id);
+  else if(v.kind==='game'&&v.id==='S01')renderMemory(v.id);
+  else if(v.kind==='game'&&v.id==='S02')renderVault(v.id);
+  else renderHome();
+  if(!Store.ok)app.append(el('div',{class:'note-storage'},'Hinweis: Der Browser erlaubt kein lokales Speichern. Dein Fortschritt bleibt nur erhalten, solange diese Seite geöffnet ist.'));
+}
+
+/* =====================================================================
+   11 Selbsttest (Entwicklerkonsole: runSelfTests())
+   ===================================================================== */
+function runSelfTests(){
+  const res=[],t=(name,ok)=>res.push({name,ok:!!ok});
+  t('2/3 = 4/6',equivalent(2,3,4,6));
+  t('12/18 = 2/3',equivalent(12,18,2,3));
+  t('4/6 ≠ 8/6',!equivalent(4,6,8,6));
+  const g02={type:'G02',level:1,mode:'factor',a:2,b:5,k:3};
+  t('Erweitere 2/5 mit 3 → 6/15',validateTask(g02,{'r.n':'6','r.d':'15'}).correct);
+  t('… nicht 4/10',!validateTask(g02,{'r.n':'4','r.d':'10'}).correct);
+  const g03={type:'G03',level:1,mode:'factor',a:8,b:12,k:2};
+  t('Kürze 8/12 mit 2 → 4/6',validateTask(g03,{'r.n':'4','r.d':'6'}).correct);
+  t('8/12 ist nicht vollständig gekürzt',!isFullyReduced(8,12));
+  const g03f={type:'G03',level:2,mode:'full',a:84,b:126,p:2,q:3};
+  t('84/126 → 2/3',validateTask(g03f,{'r.n':'2','r.d':'3'}).correct);
+  t('84/126 → 42/63 noch kürzbar',validateTask(g03f,{'r.n':'42','r.d':'63'}).errorCode==='notFull');
+  const u01={type:'U01',level:1,terms:[{n:2,d:3,blank:null},{n:8,d:12,blank:'n'}]};
+  t('2/3 = □/12 → 8',validateTask(u01,{g1:'8'}).correct&&!validateTask(u01,{g1:'9'}).correct);
+  t('7/1000 → 0,007',fractionToDecimalString(7,1000)==='0,007');
+  t('125/100 → 1,25',fractionToDecimalString(125,100)==='1,25');
+  const d02=(s,den)=>{const p=parseGermanDecimal(s);return {type:'D02',level:1,n:p.num,den:Math.pow(10,p.places),places:p.places,s};};
+  t('0,04 → 4/100',validateTask(d02('0,04'),{'r.n':'4','r.d':'100'}).correct&&!validateTask(d02('0,04'),{'r.n':'4','r.d':'10'}).correct);
+  t('0,050 → 50/1000',validateTask(d02('0,050'),{'r.n':'50','r.d':'1000'}).correct&&!validateTask(d02('0,050'),{'r.n':'5','r.d':'100'}).correct);
+  t('1,25 → 125/100',validateTask(d02('1,25'),{'r.n':'125','r.d':'100'}).correct);
+  t('parse 0.25',parseGermanDecimal('0.25').num===25);
+  const d03a={type:'D03',level:1,w:2,n:1,d:3},d03b={type:'D03',level:2,w:6,n:5,d:7};
+  t('2 1/3 → 7/3',validateTask(d03a,{'r.n':'7','r.d':'3'}).correct);
+  t('6 5/7 → 47/7',validateTask(d03b,{'r.n':'47','r.d':'7'}).correct);
+  const d01={type:'D01',level:1,n:7,den:1000};
+  t('D01 7/1000 = 0,007',validateTask(d01,{dec:'0,007'}).correct&&!validateTask(d01,{dec:'0,07'}).correct);
+  const o01={type:'O01',level:1,p:2,q:3,need:4};
+  t('O01: vier verschiedene',validateTask(o01,{rows:4,'x0.n':'4','x0.d':'6','x1.n':'6','x1.d':'9','x2.n':'8','x2.d':'12','x3.n':'10','x3.d':'15'}).correct);
+  t('O01: Doppelte abgelehnt',!validateTask(o01,{rows:4,'x0.n':'4','x0.d':'6','x1.n':'4','x1.d':'6','x2.n':'8','x2.d':'12','x3.n':'10','x3.d':'15'}).correct);
+  const o02={type:'O02',level:1,a:12,b:18,p:2,q:3,mode:'target'};
+  t('O02: 6 | 2,3',validateTask(o02,{'c0.len':1,'c0s0.n':'2','c0s0.d':'3','c1.len':2,'c1s0.n':'6','c1s0.d':'9','c1s1.n':'2','c1s1.d':'3'}).correct);
+  t('O02: gleiche Wege abgelehnt',!validateTask(o02,{'c0.len':2,'c0s0.n':'6','c0s0.d':'9','c0s1.n':'2','c0s1.d':'3','c1.len':2,'c1s0.n':'6','c1s0.d':'9','c1s1.n':'2','c1s1.d':'3'}).correct);
+  /* Generatoren: viele Läufe, jede Variante muss lösbar und erzeugbar sein */
+  let gen=0;
+  for(const id of PRACTICE_ORDER)for(const lvl of [1,2])for(let i=0;i<150;i++){
+    const task=generateTask(id,lvl);gen++;
+    if(!task||task.type!==id)t('Generator '+id,false);
+    if(TASKS[id].hints(task).length<2)t('Tipps '+id,false);
+    if(!Array.isArray(task.avoid))t('avoid '+id,false);
+  }
+  t('Generatoren liefen ('+gen+' Aufgaben)',true);
+  /* Memory: Werte paarweise verschieden */
+  for(const lvl of [1,2]){
+    const p=genMemoryPairs(lvl,lvl===1?6:10,RNG),keys=p.map(x=>redKey(x[0].n,x[0].d));
+    t('Memory Niveau '+lvl+': '+p.length+' Paare, Werte verschieden',p.length===(lvl===1?6:10)&&new Set(keys).size===keys.length&&p.every(x=>equivalent(x[0].n,x[0].d,x[1].n,x[1].d)));
+  }
+  const bad=res.filter(r=>!r.ok);
+  console.log(`Selbsttest: ${res.length-bad.length}/${res.length} bestanden`);
+  bad.forEach(b=>console.error('FEHLER:',b.name));
+  return {total:res.length,failed:bad.map(b=>b.name),passed:res.length-bad.length};
+}
+window.runSelfTests=runSelfTests;
+
+/* ---------- Start ---------- */
+(function boot(){
+  try{localStorage.setItem(KEY+'_probe','1');localStorage.removeItem(KEY+'_probe');}catch(e){Store.ok=false;}
+  renderAll();
+})();
+</script>
+</body>
+</html>
