@@ -607,17 +607,34 @@ svg.interactive{touch-action:none}
 .mcard.up{border-color:var(--amber);box-shadow:inset 0 0 0 3px var(--amber)}
 .mcard.matched{border-color:var(--ok);box-shadow:inset 0 0 0 3px var(--ok)}
 .mcard svg{max-height:5.75rem;max-width:100%}
-.vault{display:grid;gap:0.625rem;grid-template-columns:repeat(auto-fit,minmax(6.5rem,1fr));margin:0.625rem 0}
-.lock{position:relative;min-height:5.75rem;padding:0.625rem 0.5rem 0.5rem;text-align:center;cursor:pointer;color:var(--chalk);background:var(--bp);border:2px solid var(--chalk-dim);border-radius:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.125rem}
-.lock::before{content:"";position:absolute;top:0.375rem;right:0.375rem;width:0.625rem;height:0.625rem;border-radius:50%;background:var(--bad);box-shadow:0 0 0 2px rgba(0,0,0,.35)}
+/* Bruch-Tresor: Code-Anzeige (Bruch mit Ziffernfeldern), Schlösser als Kontrollfelder */
+.vaultcard{padding-bottom:0.875rem}
+.vaultpuzzle{margin-top:0.875rem}
+.vhead{display:flex;align-items:center;justify-content:space-between;gap:0.5rem}
+.vhead .stampbox{font-size:.8rem}
+.vpanel{display:flex;align-items:flex-start;gap:0.875rem 1rem;margin-top:0.5rem}
+.vside{display:flex;flex-direction:column;gap:0.375rem;flex:1 1 auto;min-width:0}
+.vcount{white-space:nowrap}
+.vside small{color:var(--chalk-dim)}
+.codefrac{display:inline-flex;flex-direction:column;align-items:center;gap:0.25rem;padding:0.5rem 0.625rem;background:var(--bp);border:2px solid var(--chalk-dim);box-shadow:inset 0 0 0 2px rgba(0,0,0,.28)}
+.cf-row{display:flex;gap:0.25rem}
+.cf-bar{display:block;align-self:stretch;height:0.1875rem;background:var(--chalk)}
+.cf-slot{display:inline-flex;align-items:center;justify-content:center;width:2.25rem;height:2.9rem;font:700 1.75rem var(--font-mono);color:var(--chalk-dim);background:var(--bp-2);border:2px solid var(--grid-2)}
+.cf-slot.on{color:var(--amber);border-color:var(--amber)}
+.cf-slot.cur{border-color:var(--amber);animation:blink 1.4s infinite}
+.cf-slot.in{animation:slotin .5s ease-out}
+@keyframes slotin{from{transform:translateY(-70%) scale(1.5);opacity:0}to{transform:none;opacity:1}}
+.locks{display:flex;flex-wrap:wrap;gap:0.375rem}
+.lock{position:relative;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:0.0625rem;min-width:max(44px,2.75rem);min-height:max(48px,3rem);padding:0.25rem 0.375rem;cursor:pointer;color:var(--chalk);background:var(--bp);border:2px solid var(--chalk-dim);border-radius:2px;box-shadow:0 2px 0 rgba(0,0,0,.35)}
+.lock::before{content:"";position:absolute;top:0.1875rem;right:0.1875rem;width:0.4375rem;height:0.4375rem;border-radius:50%;background:var(--bad);box-shadow:0 0 0 1px rgba(0,0,0,.35)}
 .lock.open::before{background:var(--ok)}
+.lock .lk-n{font:700 .72rem var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--chalk-dim)}
+.lock .ic{width:1.15rem;height:1.15rem}
+.lock.open{border-color:var(--ok);color:var(--ok)}
+.lock.locked{border-style:dashed;opacity:.55;cursor:default;box-shadow:none}
+.lock.locked::before{display:none}
 .lock[aria-current="true"]{border-color:var(--amber);box-shadow:inset 0 0 0 2px var(--amber)}
-.lock.open{border-color:var(--ok)}
-.lock .st{display:block;font:600 .68rem var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--chalk-dim)}
-.lock .dg{display:block;font:700 1.8rem var(--font-mono);color:var(--amber);line-height:1.1}
-.lock .dg .ic{width:1.6rem;height:1.6rem;color:var(--chalk-dim)}
-.codeline{display:flex;gap:0.5rem;align-items:center;margin:0.375rem 0;flex-wrap:wrap}
-.codeline input{width:max(56px,3.5rem);height:max(56px,3.5rem);text-align:center;font:700 1.6rem var(--font-mono);background:var(--bp-2);color:var(--amber);border:2px solid var(--chalk);border-radius:2px}
+.lootlist{font-size:.9rem;color:var(--ink-dim)}
 .lvlbadge{margin-left:auto;padding:0.125rem 0.5rem;border:2px solid var(--chalk-dim);font:700 .7rem var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--chalk-dim)}
 .progress{display:flex;align-items:center;gap:0.625rem;margin:0.125rem 0 0.625rem}
 
@@ -1057,7 +1074,7 @@ const HINT={
   d2:['Zähle zuerst die Stellen nach dem Komma.','Der Nenner hängt von der Zahl der Nachkommastellen ab.'],
   mixed:['Die ganzen Anteile müssen in Bruchteile umgerechnet werden.','Denke an Ganze · Nenner + Zähler; der Nenner bleibt gleich.'],
   memory:['Vielleicht sehen zwei Karten anders aus, zeigen aber den gleichen Anteil.','Vergleiche den Wert der Brüche, nicht nur ihre Zahlen.'],
-  vault:['Lies zuerst genau, ob du erweitern, kürzen oder umwandeln sollst.']
+  vault:['Lies zuerst genau, ob du erweitern oder kürzen sollst.','Der Tresor nimmt nur einen Bruch, der sich nicht weiter kürzen lässt.']
 };
 /* Kürzen-Hinweise nennen immer die 2-Regel */
 function withRules(h){return [[h[0],RULE2],[h[1],RULE510]];}
@@ -1861,6 +1878,24 @@ TASKS.G04=Object.assign({},TASKS.G03,{name:'Kürzen so weit wie möglich',desc:'
     h[1]=h[1].concat(['Achtung: Manchmal geht es nicht mehr. Dann tippe „Nicht kürzbar“.']);
     return h;
   }
+});
+
+/* ---------- V01 Tresortür (nur im Bruch-Tresor) ---------- */
+/* Der Code-Bruch a/b entsteht aus einem gekürzten Bruch p/q und einer Zahl g (a = p·g, b = q·g).
+   Leicht: Zähler einstellig, Nenner zweistellig bis 60 (3 Ziffern). Knifflig: beide zweistellig, Teiler ab 6 und nicht 10 oder 20 (4 Ziffern). */
+function vaultCode(level,R){
+  const combos={},add=(g,p,q)=>(combos[g]=combos[g]||[]).push([p,q,g]);
+  if(level===1){
+    for(let g=2;g<=9;g++)for(let p=1;p*g<=9;p++)for(let q=p+1;q*g<=60;q++)if(q*g>=10&&gcd(p,q)===1)add(g,p,q);
+  }else{
+    for(let g=6;g<=24;g++)if(g%10)for(let p=1;p*g<=99;p++)for(let q=Math.max(3,p+1);q*g<=99;q++)if(p*g>=10&&gcd(p,q)===1)add(g,p,q);
+  }
+  const [p,q,g]=R.pick(combos[R.pick(Object.keys(combos))]);
+  return {a:p*g,b:q*g,p,q,g};
+}
+TASKS.V01=Object.assign({},TASKS.G03,{area:'Spiele',name:'Tresortür',desc:'Kürze den Code-Bruch so weit wie möglich.',notes:['M3'],size:1,
+  gen(level,R){const c=vaultCode(level,R);return {type:'V01',level,mode:'full',a:c.a,b:c.b,p:c.p,q:c.q,avoid:[]};},
+  prompt(t,h){h.append(el('p',{class:'q'},'Der Code-Bruch ist ',frac(t.a,t.b),'. Der Tresor nimmt nur den Bruch, der sich nicht weiter kürzen lässt.'));}
 });
 
 /* ---------- T01 Teilbarkeit ---------- */
@@ -2854,7 +2889,7 @@ const AREAS=['Grundlagen','Umkehraufgaben','Offene Aufgaben','Darstellungen umwa
 const PRACTICE_ORDER=['Q00','G01','T01','G02','G03','G04','G05','B01','U01','U02','U03','O01','O02','D01','D02','D03'];
 const GAMES={
   S01:{area:'Spiele',name:'Bruch-Memory',desc:'Finde Kartenpaare, die denselben Anteil zeigen.',notes:['M1','M2','M3']},
-  S02:{area:'Spiele',name:'Der Bruch-Tresor',desc:'Löse die Rätsel an den Schlössern und knacke den Code.',notes:['M2','M3','M4','M5','M6']}
+  S02:{area:'Spiele',name:'Bruch-Tresor',desc:'Der Code ist ein Bruch: Öffne die Schlösser, sammle die Ziffern und kürze den Code-Bruch.',notes:['M2','M3']}
 };
 const ALL_IDS=PRACTICE_ORDER.concat(['S01','S02']);
 const infoOf=(id)=>TASKS[id]||GAMES[id];
@@ -3442,131 +3477,185 @@ function renderMemory(id){
 
 /* =====================================================================
    9 Spiel S02 – Der Bruch-Tresor
+   Der Code ist ein Bruch. Jedes Schloss (Erweitern oder Kürzen) gibt eine Ziffer frei.
+   Sind alle Schlösser offen, steht der Code-Bruch da – der Tresor nimmt aber nur den
+   gekürzten Bruch. Wer ihn knackt, findet einen Bauplan für die Sammlung.
    ===================================================================== */
 const VAULT_GROUPS={
-  1:[['G02','G03','G04','G05'],['U01','U02','B01'],['D01','D02','D03']],
-  2:[['G02','G03','G04','G05'],['U01','U02'],['U03','B01'],['O01','O02'],['D01','D02'],['D03']]
+  1:[['G02','U02'],['G03','G04','T01'],['U01','B01','G05']],
+  2:[['G02','G05'],['G03','G04'],['U01','U02','T01'],['U03','B01','O01','O02']]
 };
-function newVault(level){
-  const types=RNG.shuffle(VAULT_GROUPS[level].map(g=>RNG.pick(g)));
-  return {level,code:types.map(()=>RNG.int(0,9)),locks:types.map(t=>newState(generateUnique(t,level))),active:0,opened:false,entry:''};
+const LOOT=['Zahnradwagen','Dampfschiff','Windmühle','Leuchtturm','Hängebrücke','Segelflieger','Uhrwerk','Hebekran','Schleusentor','Wasserrad','Fernrohr','Seilbahn'];
+const lootOf=()=>S.loot||(S.loot=[]);
+/* Bevorzugt einen Bauplan, den es in der Sammlung noch nicht gibt */
+function pickLoot(){
+  const have=lootOf(),rest=LOOT.filter(x=>!have.includes(x));
+  return RNG.pick(rest.length?rest:LOOT);
 }
+function newVault(level){
+  const c=vaultCode(level,RNG);
+  const types=RNG.shuffle(VAULT_GROUPS[level].map(g=>RNG.pick(g)));
+  return {
+    ver:2,level,digits:(String(c.a)+String(c.b)).split('').map(Number),numLen:String(c.a).length,
+    locks:types.map(t=>newState(generateUnique(t,level))),
+    door:newState({type:'V01',level,mode:'full',a:c.a,b:c.b,p:c.p,q:c.q,avoid:[]}),
+    active:0,opened:false,loot:pickLoot()
+  };
+}
+const vaultOk=(v,lvl)=>!!v&&v.ver===2&&v.level===lvl&&Array.isArray(v.locks)&&v.locks.length===v.digits.length&&!!v.door;
 function renderVault(id){
   const lvl=levelOf(id),key=keyOf(id,lvl),rec=gameRec(key);
-  if(!rec.state||rec.state.level!==lvl||!rec.state.locks){rec.state=newVault(lvl);rec.played++;persist();}
-  const v=rec.state;
+  if(!vaultOk(rec.state,lvl)){rec.state=newVault(lvl);rec.played++;persist();}
+  const v=rec.state,n=v.locks.length;
+  const solved=(l)=>l.status==='correct';
+  const allSolved=()=>v.locks.every(solved);
+  if(v.active<0||v.active>n||(v.active===n&&!allSolved()&&!v.opened))v.active=Math.max(0,v.locks.findIndex(l=>!solved(l)));
+  const onDoor=()=>v.active>=n;
+  const cur=()=>onDoor()?v.door:v.locks[v.active];
+  let fresh=-1,ctrl=null;
+
   const root=el('div',{class:'page'});root.append(topbar(GAMES[id].name));
   const shell=el('div',{class:'shell'});const help=helpPanel();const main=el('main',{class:'work'});
   shell.append(main,help.el);root.append(shell);app.append(root);
   const fillStats=()=>help.setStats(el('div',null,el('h3',null,'Deine Runden'),el('table',{class:'stats'},
     el('tr',null,el('td',null,'Gespielte Runden'),el('td',null,el('b',null,String(rec.played)))),
-    el('tr',null,el('td',null,'Geknackte Tresore'),el('td',null,el('b',null,String(rec.won)))))));
+    el('tr',null,el('td',null,'Geknackte Tresore'),el('td',null,el('b',null,String(rec.won)))),
+    el('tr',null,el('td',null,'Baupläne gesammelt'),el('td',null,el('b',null,lootOf().length+' von '+LOOT.length)))),
+    lootOf().length?el('p',{class:'lootlist'},lootOf().join(' · ')):null));
   fillStats();
   main.append(el('div',{class:'progress'},el('span',{class:'lvlbadge'},'Niveau '+LEVEL_LABEL[lvl])));
-  const top=el('div',{class:'card'});
-  const puzzle=el('div',{class:'card',style:'margin-top:14px'});
-  const entryBox=el('div',{class:'card',style:'margin-top:14px'});
-  main.append(top,puzzle,entryBox);
+  const top=el('div',{class:'card vaultcard'});
+  const puzzle=el('div',{class:'card vaultpuzzle'});
+  const live=el('div',{class:'sr','aria-live':'polite'});
+  main.append(top,puzzle,live);
 
-  const solved=(l)=>l.status==='correct';
-  const allSolved=()=>v.locks.every(solved);
   const hintBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('hinweis')),'Tipp');
   const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkkasten');
   const primary=el('button',{type:'button',class:'btn primary'},'Prüfen');
   const solBtn=el('button',{type:'button',class:'linkbtn'},icon('auge'),'Lösung ansehen');
   const links=el('div',{class:'linkrow hidden'},solBtn);
   main.append(links);
-  let ctrl=null;
   const host=el('div');
   const pad=makeKeypad(host,()=>onPrimary());
   const msg=el('div',{class:'dockmsg'});
   buildDock(main,{hintBtn,noteBtn,primary,pad,msg});
 
-  const drawTop=()=>{
-    top.replaceChildren(el('p',null,v.opened?el('b',null,'Der Tresor ist geöffnet!'):`Löse die Rätsel an den Schlössern. Jedes geöffnete Schloss zeigt eine Ziffer des Codes. Geöffnet: ${v.locks.filter(solved).length} von ${v.locks.length}.`));
-    const vault=el('div',{class:'vault',role:'group','aria-label':'Schlösser'});
+  /* Code-Anzeige: der Code-Bruch mit einem Feld je Ziffer */
+  const range=(a,b)=>Array.from({length:b-a},(_,k)=>a+k);
+  const codeFrac=()=>{
+    const slot=(i)=>{
+      const open=solved(v.locks[i]);
+      return el('b',{class:'cf-slot'+(open?' on':'')+(i===fresh?' in':'')+(!open&&!v.opened&&!onDoor()&&i===v.active?' cur':''),'aria-hidden':'true'},open?String(v.digits[i]):'?');
+    };
+    const say=(a,b)=>range(a,b).map(i=>solved(v.locks[i])?String(v.digits[i]):'fehlt').join(' ');
+    return el('div',{class:'codefrac',role:'img','aria-label':'Code-Bruch. Zähler: '+say(0,v.numLen)+'. Nenner: '+say(v.numLen,v.digits.length)+'.'},
+      el('span',{class:'cf-row'},...range(0,v.numLen).map(slot)),el('span',{class:'cf-bar'}),el('span',{class:'cf-row'},...range(v.numLen,v.digits.length).map(slot)));
+  };
+  const lockChips=()=>{
+    const box=el('div',{class:'locks',role:'group','aria-label':'Schlösser und Tür'});
     v.locks.forEach((l,i)=>{
       const open=solved(l);
-      const b=el('button',{type:'button',class:'lock'+(open?' open':''),'aria-current':String(i===v.active&&!v.opened),'aria-label':`Schloss ${i+1}, ${open?'offen, Ziffer '+v.code[i]:'verschlossen'}`},
-        el('span',{class:'st'},'Schloss '+(i+1)),el('span',{class:'dg'},open?String(v.code[i]):icon('schloss')),el('span',{class:'st'},open?'offen':'verschlossen'));
-      b.addEventListener('click',()=>{v.active=i;persist();drawPuzzle();});
-      vault.append(b);
+      const b=el('button',{type:'button',class:'lock'+(open?' open':''),'aria-current':String(!v.opened&&i===v.active),'aria-label':`Schloss ${i+1}, ${open?'offen, Ziffer '+v.digits[i]:'verschlossen'}`},
+        el('span',{class:'lk-n'},String(i+1)),icon(open?'haken':'schloss'));
+      b.addEventListener('click',()=>{v.active=i;fresh=-1;persist();drawPuzzle(true);});
+      box.append(b);
     });
-    top.append(vault);
+    const ready=allSolved(),doorState=v.opened?'offen':(ready?'bereit':'gesperrt, erst alle Schlösser öffnen');
+    const d=el('button',{type:'button',class:'lock door'+(v.opened?' open':'')+(ready?'':' locked'),'aria-current':String(!v.opened&&onDoor()),'aria-disabled':String(!ready),'aria-label':'Tresortür, '+doorState},
+      icon(v.opened?'haken':'tresor'),el('span',{class:'lk-n'},'Tür'));
+    d.addEventListener('click',()=>{if(!ready||v.opened)return;v.active=n;fresh=-1;persist();drawPuzzle(true);});
+    box.append(d);
+    return box;
   };
-  let codeSubmit=null;
-  const codePad=makeKeypad(entryBox,()=>codeSubmit&&codeSubmit());
-  const drawEntry=()=>{
-    entryBox.replaceChildren();
-    if(!allSolved()){entryBox.classList.add('hidden');return;}
-    entryBox.classList.remove('hidden');
-    if(v.opened){
-      entryBox.append(el('div',{class:'msg ok'},'Der Code stimmt – der Tresor ist offen! Gut gemacht.'),el('button',{type:'button',class:'btn primary',onclick:()=>{rec.state=newVault(lvl);rec.played++;persist();renderAll();}},'Neue Runde'));
-      return;
-    }
-    entryBox.append(el('h3',null,'Gib den Code ein'),el('p',null,`Alle Schlösser sind offen. Der Code hat ${v.code.length} Ziffern – in der Reihenfolge der Schlösser.`));
-    const row=el('div',{class:'codeline'});
-    const inputs=v.code.map((_,i)=>{
-      const inp=el('input',{type:'text',inputmode:'none',maxlength:'1','aria-label':'Ziffer '+(i+1),autocomplete:'off'});
-      inp.value=v.entry[i]||'';
-      inp.addEventListener('input',()=>{inp.value=inp.value.replace(/\D/g,'');const a=inputs.map(x=>x.value||' ').join('');v.entry=a;persist();if(inp.value&&inputs[i+1])inputs[i+1].focus();});
-      inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();tryCode();}if(e.key==='Backspace'&&!inp.value&&inputs[i-1])inputs[i-1].focus();});
-      row.append(inp);return inp;
-    });
-    const res=el('div',{'aria-live':'polite'});
-    const tryCode=()=>{
-      const guess=inputs.map(x=>x.value).join('');
-      if(guess.length<v.code.length){res.replaceChildren(el('div',{class:'msg bad'},'Trage in jedes Feld eine Ziffer ein.'));return;}
-      if(guess===v.code.join('')){v.opened=true;rec.won++;award(40,'Tresor geknackt!');persist();fillStats();drawTop();drawEntry();drawPuzzle();}
-      else res.replaceChildren(el('div',{class:'msg bad'},'Der Code stimmt nicht. Schau dir die Ziffern an den Schlössern noch einmal an. Du kannst es erneut versuchen.'));
-    };
-    codeSubmit=tryCode;
-    entryBox.append(row,res,codePad.el,el('button',{type:'button',class:'btn primary',onclick:tryCode},'Tresor öffnen'));
-    codePad.refresh();
+  const drawTop=()=>{
+    const open=v.locks.filter(solved).length;
+    const text=v.opened?`Der Tresor ist offen! Du hast den Bauplan »${v.loot}« gefunden.`
+      :allSolved()?'Alle Schlösser sind offen. Jetzt steht der ganze Code-Bruch da.'
+      :`Im Tresor liegt der Bauplan »${v.loot}«. Der Code ist ein Bruch – jedes Schloss verrät dir eine Ziffer.`;
+    top.replaceChildren(
+      el('div',{class:'vhead'},el('span',{class:'lblm'},'Code-Bruch'),
+        v.opened?el('span',{class:'stampbox'},'Geknackt'):el('span',{class:'lblm vcount'},`${open} von ${n} offen`)),
+      el('p',null,text),
+      el('div',{class:'vpanel'},codeFrac(),el('div',{class:'vside'},lockChips(),
+        v.opened?el('small',null,'Deine Sammlung: '+lootOf().length+' von '+LOOT.length+' Baupläne'):null)));
+    fresh=-1;
   };
+
   const refresh=()=>{
-    const l=v.locks[v.active];
-    if(v.opened){primary.disabled=true;hintBtn.disabled=true;solBtn.disabled=true;primary.textContent='Prüfen';links.classList.add('hidden');pad.refresh();return;}
-    const open=l.status==='open';
+    if(v.opened){primary.disabled=false;primary.textContent='Neue Runde';hintBtn.disabled=true;links.classList.add('hidden');pad.refresh();return;}
+    const l=cur(),open=l.status==='open';
     primary.disabled=false;
-    primary.textContent=open?'Prüfen':(l.status==='correct'?(allSolved()?'Zum Code':'Nächstes Schloss'):'Neues Rätsel');
+    primary.textContent=open?'Prüfen':(l.status==='correct'?(allSolved()?'Zur Tür':'Nächstes Schloss'):(onDoor()?'Nochmal versuchen':'Neues Rätsel'));
     links.classList.toggle('hidden',!(open&&(l.attempts>0||l.hint>0)));
     const all=ctrl?ctrl.hintCount():0;
     hintBtn.disabled=!open||l.hint>=all;
     setHintLabel(hintBtn,l.hint>=all&&open?'Alle Tipps':(l.hint?`Tipp ${l.hint+1}`:'Tipp'));
     pad.refresh();
   };
-  const drawPuzzle=()=>{
-    const l=v.locks[v.active];
-    puzzle.replaceChildren();
-    if(v.opened){puzzle.classList.add('hidden');refresh();drawTop();return;}
-    puzzle.classList.remove('hidden');
-    puzzle.append(el('h3',null,`Schloss ${v.active+1} – ${TASKS[l.task.type].name}`),host);
-    help.setNotes(noteFor(l.task.type,l.task));
-    ctrl=mountTask(host,l,{
-      save:()=>persist(),
-      prefixHints:[[HINT.vault[0]]],
-      msgHost:msg,
-      afterCheck:()=>refresh(),
-      done(kind){
-        persist();
-        if(kind==='correct'){drawTop();drawEntry();}
-        ctrl=mountTask(host,l,this);
-        refresh();
-      }
-    });
-    refresh();drawTop();
+  const openVault=()=>{
+    v.opened=true;rec.won++;
+    const have=lootOf();if(!have.includes(v.loot))have.push(v.loot);
+    live.textContent='Der Tresor ist offen. Bauplan '+v.loot+' gefunden.';
+    persist();fillStats();drawPuzzle();toTop();
+    award(40,'Tresor geknackt!'); /* erst nach dem Umbau, damit die Einblendung über dem endgültigen Bedienpult liegt */
   };
+  /* Erster Tipp: allgemeiner Hinweis; bei Kürzen-Aufgaben (und an der Tür) nennt er auch die 2-Regel */
+  const prefixFor=()=>{
+    if(onDoor())return [[HINT.vault[1],RULE2]];
+    const l=cur(),own=TASKS[l.task.type].hints(l.task);
+    return [own.length&&own.every(h=>h.some(x=>/2 geht IMMER/i.test(x)))?[HINT.vault[0],RULE2]:[HINT.vault[0]]];
+  };
+  const cbFor=()=>({
+    save:()=>persist(),
+    msgHost:msg,
+    prefixHints:prefixFor(),
+    afterCheck:()=>refresh(),
+    done(kind){
+      persist();
+      if(kind==='correct'){
+        if(onDoor()){openVault();return;}
+        fresh=v.active;live.textContent='Schloss '+(v.active+1)+' ist offen. Ziffer '+v.digits[v.active]+' im Code.';drawTop();
+        ctrl=mountTask(host,cur(),cbFor());refresh();toTop();
+        return;
+      }
+      ctrl=mountTask(host,cur(),cbFor());refresh();
+    }
+  });
+  /* Bereich sichtbar machen: auf kleinen Displays liegen Aufgabe und Code-Anzeige sonst unter Kopfzeile oder Bedienpult */
+  const showEl=(node)=>{
+    const bar=document.querySelector('.actionbar'),tb=document.querySelector('.topbar');
+    const barTop=bar?bar.getBoundingClientRect().top:innerHeight,topEdge=tb?tb.getBoundingClientRect().bottom:0;
+    const r=node.getBoundingClientRect();
+    let dy=r.bottom>barTop-8?r.bottom-(barTop-8):0;
+    if(r.top-dy<topEdge+8)dy=r.top-(topEdge+8);
+    if(Math.abs(dy)>2)window.scrollBy({top:dy,behavior:'smooth'});
+  };
+  const reveal=()=>showEl(puzzle);
+  const toTop=()=>showEl(top.querySelector('.vpanel')||top);
+  const drawPuzzle=(show)=>{
+    puzzle.replaceChildren();
+    if(v.opened){host.replaceChildren();puzzle.classList.add('hidden');drawTop();refresh();return;}
+    puzzle.classList.remove('hidden');
+    const l=cur();
+    puzzle.append(el('h3',null,onDoor()?'Tresortür – Code-Bruch kürzen':`Schloss ${v.active+1} – ${TASKS[l.task.type].name}`),host);
+    help.setNotes(noteFor(l.task.type,l.task));
+    ctrl=mountTask(host,l,cbFor());
+    drawTop();refresh();
+    if(show)reveal();
+  };
+  const newRound=()=>{rec.state=newVault(lvl);rec.played++;persist();renderAll();window.scrollTo(0,0);};
   const onPrimary=()=>{
-    if(v.opened)return;
-    const l=v.locks[v.active];
+    if(v.opened){newRound();return;}
+    const l=cur();
     if(l.status==='open'){ctrl.check();refresh();return;}
-    if(l.status==='shown'){ /* anderes Rätsel derselben Art */
-      v.locks[v.active]=newState(generateUnique(l.task.type,lvl));persist();drawPuzzle();return;
+    if(l.status==='shown'){ /* Lösung gesehen: neuer Versuch (Schloss: anderes Rätsel, Tür: derselbe Code-Bruch) */
+      if(onDoor())v.door=newState(v.door.task);
+      else v.locks[v.active]=newState(generateUnique(l.task.type,lvl));
+      persist();drawPuzzle();return;
     }
     const nxt=v.locks.findIndex((x,i)=>!solved(x)&&i!==v.active);
-    if(nxt>=0){v.active=nxt;persist();drawPuzzle();}
-    else{drawEntry();entryBox.scrollIntoView({block:'center'});const f=entryBox.querySelector('input');if(f)f.focus();}
+    v.active=nxt>=0?nxt:n;
+    persist();drawPuzzle(true);
   };
   primary.addEventListener('click',onPrimary);
   hintBtn.addEventListener('click',()=>{ctrl.hint();refresh();});
@@ -3575,7 +3664,7 @@ function renderVault(id){
   main.addEventListener('keydown',e=>{
     if(e.key==='Enter'&&e.target.tagName==='INPUT'&&e.target.type!=='radio'&&host.contains(e.target)){e.preventDefault();onPrimary();}
   });
-  drawTop();drawEntry();drawPuzzle();
+  drawPuzzle();
 }
 
 /* =====================================================================
@@ -3620,7 +3709,7 @@ function renderHome(){
     pfadTab(home);
   }else if(tab==='spiele'){
     home.append(el('h1',null,'Spiele'),listLevel(['S01','S02']),el('div',{class:'menu'},
-      ...['S01','S02'].map(id=>{const r=S.games[keyOf(id,levelOf(id))];return bigBtn(ICON[id],()=>openEntry(id),GAMES[id].name,GAMES[id].desc,r?`Runden: ${r.played}`:'','',null,id==='S01'?'dots':'hatch');})));
+      ...['S01','S02'].map(id=>{const r=S.games[keyOf(id,levelOf(id))];return bigBtn(ICON[id],()=>openEntry(id),GAMES[id].name,GAMES[id].desc,[r?`Runden: ${r.played}`:'',id==='S02'&&lootOf().length?`Baupläne: ${lootOf().length} von ${LOOT.length}`:''].filter(Boolean).join(' · '),'',null,id==='S01'?'dots':'hatch');})));
   }else if(tab==='rang'){
     const total=Object.values(S.progress).reduce((a,p)=>a+p.done,0);
     home.append(el('h1',null,'Dein Rang'),rankCard(),
@@ -3881,6 +3970,32 @@ function runSelfTests(){
   const old={progress:{'G03-L1':{first:5},'G02-L2':{first:3},'D01-L1':{first:9},'G01-L1':{first:4}}};
   migrate4(old);
   t('Migration: mind. 4 Treffer ⇒ bestanden; Rest und Nicht-Pfad-Übungen nicht',old.passed['G03-L1']&&old.passed['G01-L1']&&!old.passed['G02-L2']&&!old.passed['D01-L1']&&!!old.checked&&!!old.days);
+  /* Bruch-Tresor: Code-Bruch, Schlösser, Tür */
+  {
+    let okCode=true,okSlots=true,okTypes=true,okDoor=true,okRange=true;
+    const allowed=new Set([].concat(...Object.values(VAULT_GROUPS).map(gs=>[].concat(...gs))));
+    for(const lvl of [1,2])for(let i=0;i<300;i++){
+      const v=newVault(lvl),c=v.door.task;
+      okCode=okCode&&c.a===c.p*(c.a/c.p)&&c.a%c.p===0&&c.b/c.q===c.a/c.p&&gcd(c.p,c.q)===1&&c.a/c.p>=2&&c.p<c.q;
+      okSlots=okSlots&&v.digits.length===v.locks.length&&v.digits.join('')===String(c.a)+String(c.b)&&v.numLen===String(c.a).length&&v.locks.length===(lvl===1?3:4);
+      okTypes=okTypes&&v.locks.every(l=>allowed.has(l.task.type)&&!/^D0/.test(l.task.type))&&new Set(v.locks.map(l=>l.task.type)).size===v.locks.length;
+      okRange=okRange&&(lvl===1?(c.a<=9&&c.b>=10&&c.b<=60):(c.a>=10&&c.b<=99&&c.b>c.a&&(c.a/c.p)%10!==0&&(c.a/c.p)>=6));
+      const g=c.a/c.p,k=smallestPrimeFactor(g),part=validateTask(c,{'r.n':String(c.a/k),'r.d':String(c.b/k)});
+      okDoor=okDoor&&validateTask(c,{'r.n':String(c.p),'r.d':String(c.q)}).correct
+        &&!validateTask(c,{'r.n':String(c.a),'r.d':String(c.b)}).correct
+        &&(k===g?part.correct:(!part.correct&&part.soft&&part.errorCode==='notFull')); /* Teilschritt: bei zusammengesetztem Teiler nur „fast“ */
+    }
+    t('Tresor: Code-Bruch a/b = p/q erweitert, p/q gekürzt, Teiler ≥ 2',okCode);
+    t('Tresor: ein Schloss je Ziffer (leicht 3, knifflig 4), Ziffern = Zähler + Nenner',okSlots);
+    t('Tresor: nur Erweitern/Kürzen-Schlösser, jede Art höchstens einmal',okTypes);
+    t('Tresor: Zahlenbereich leicht a ≤ 9, b ≤ 60; knifflig zweistellig, Teiler ab 6 (nicht 10, 20)',okRange);
+    t('Tresor: Tür akzeptiert nur den gekürzten Code-Bruch',okDoor);
+    const dv=newVault(2).door.task,h=TASKS.V01.hints(dv);
+    t('Tresor: Tür-Tipps nennen „Die 2 geht IMMER“',h.every(x=>x.some(l=>/2 geht IMMER/i.test(l))));
+    const half=validateTask({type:'V01',level:2,mode:'full',a:48,b:72,p:2,q:3},{'r.n':'24','r.d':'36'});
+    t('Tresor: Tür 48/72 → 24/36 ist „fast“ (noch kürzbar)',!half.correct&&half.soft&&half.errorCode==='notFull');
+    t('Tresor: alte Tresor-Zustände ohne ver:2 werden verworfen',!vaultOk({level:1,code:[1,2,3],locks:[{},{},{}],active:0,opened:false},1)&&vaultOk(newVault(1),1)&&!vaultOk(newVault(1),2));
+  }
   Object.assign(S,keepP);persist();
   const bad=res.filter(r=>!r.ok);
   console.log(`Selbsttest: ${res.length-bad.length}/${res.length} bestanden`);
@@ -3894,6 +4009,7 @@ window.runSelfTests=runSelfTests;
   try{localStorage.setItem(KEY+'_probe','1');localStorage.removeItem(KEY+'_probe');}catch(e){Store.ok=false;}
   if((S.schema||1)<3){S.rounds={};Object.keys(S.games||{}).forEach(k=>{S.games[k].state=null;});S.schema=3;persist();}
   if((S.schema||1)<4){migrate4(S);S.view={kind:'home',tab:'pfad'};S.schema=4;persist();}
+  if((S.schema||1)<5){Object.keys(S.games||{}).forEach(k=>{if(k.indexOf('S02')===0)S.games[k].state=null;});S.schema=5;persist();}
   if(!S.perfect)S.perfect={};
   if(!S.ui)S.ui={size:'m'};
   applyUi();
