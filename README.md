@@ -10,6 +10,7 @@ Interaktive Übungsumgebung als einzelne Datei: `index.html` im Browser öffnen 
 - Brüche werden immer mit Bruchstrich dargestellt; Zahlenbereich der Brüche: leicht bis 60, knifflig bis 300; Teilbarkeit: leicht bis 500, knifflig bis 1000
 - Merkkästen M1–M7, zweistufige und einklappbare Tipps (Kürzen-Tipps nennen immer: *Die 2 geht IMMER, wenn Zähler und Nenner gerade sind*; ebenso 5 und 10)
 - 12 Ränge (Praktikant … Legende); die Legende gibt es nur, wenn wirklich alles perfekt ist (perfekte Runden und 3 Sterne überall, Lernpfad, Labor, Spiele, Serien). Ein Tipp auf die Rang-Anzeige oben rechts öffnet die Optionen – dort ist auch das Bruchlabor jederzeit erreichbar
+- Passt sich dem Display an: Schrift und Elemente wachsen stufenlos mit der Bildschirmbreite (kleines Handy bis Großbildschirm, hoch und quer); in den Optionen gibt es die Textgröße in vier Stufen (Klein, Normal, Groß, Sehr groß); das Bedienpult bricht bei wenig Platz in zwei Reihen um, damit nichts abgeschnitten wird
 - Fortschritt (Punkte, Ränge, Serien, Sterne) wird lokal im Browser gespeichert
 - Selbsttest in der Entwicklerkonsole: `runSelfTests()`
 
