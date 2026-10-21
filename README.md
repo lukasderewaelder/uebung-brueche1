@@ -53,3 +53,7 @@ Die Funktionen für Zahlenstrahl, Vergleichen und Rechnen (`math.js`, `viz.js`) 
 
 - Browser: Konsole, `runSelfTests()`
 - Node (ab Version 18, ohne Pakete): `node tests/run.mjs`
+
+## Veröffentlichen
+
+GitHub Pages liefert die Dateien mit zehn Minuten Zwischenspeicher aus. Damit niemand eine neue `index.html` mit alten Skripten mischt (leere Seite), tragen alle Skript- und CSS-Verweise in `index.html` `?v=N`. **Bei jeder Änderung an `js/` oder `css/` die Zahl überall hochzählen** (Suchen und Ersetzen von `?v=3`).
