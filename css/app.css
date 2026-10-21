@@ -798,3 +798,19 @@ svg.nline .nl-tick.major{stroke-width:2.5}
 svg.nline .nl-num,svg.nline .nl-lab{fill:var(--chalk);font:700 14px var(--font-mono)}
 svg.nline .nl-lab{fill:var(--amber)}
 svg.nline .nl-mark{fill:var(--amber);stroke:var(--on-amber);stroke-width:2}
+
+/* Reiter „Lernen“: Themenkarten und geplante Themen */
+.tcard{margin:0.75rem 0;padding:0.875rem;background:var(--bp-2);border:3px double var(--chalk)}
+.tc-head{display:flex;gap:0.75rem;align-items:flex-start}
+.tc-head .ico{flex:none;width:2.5rem;height:2.5rem;color:var(--amber)}
+.tc-head h2{margin:0 0 0.125rem;font-size:1.15rem}
+.tc-head p{margin:0;color:var(--chalk-dim)}
+.tc-prog{display:flex;align-items:center;gap:0.75rem;margin:0.75rem 0}
+.tcard .rowbtns{display:flex;flex-wrap:wrap;gap:0.5rem}
+.soon{margin-top:1.25rem}
+.soon ul{list-style:none;margin:0;padding:0}
+.soon li{display:flex;align-items:center;gap:0.75rem;padding:0.625rem 0.75rem;margin:0.375rem 0;border:2px dashed var(--chalk-dim);color:var(--chalk-dim)}
+.soon li .ic{flex:none;width:1.5rem;height:1.5rem}
+.soon li span{flex:1;min-width:0}
+.soon li small{display:block}
+.soon li em{font:700 .68rem var(--font-mono);letter-spacing:.12em;text-transform:uppercase;font-style:normal}

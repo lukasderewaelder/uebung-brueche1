@@ -120,7 +120,7 @@ function openOptions(){
       optRow('plakette','Alle Ränge',pf.all?'Alles perfekt!':'Legende: '+pf.done+' von '+pf.items.length+' Bedingungen',()=>{closeOptions();go({kind:'home',tab:'rang'});}),
       inLab?null:optRow('kolben','Bruchlabor','Erweitern und Kürzen ausprobieren',()=>{
         closeOptions();const prev=JSON.parse(JSON.stringify(S.view));go({kind:'lab',from:'opt',back:prev});}),
-      optRow('pfad','Lernpfad','Weiter geht’s',()=>{closeOptions();go({kind:'home',tab:'pfad'});}),
+      optRow('pfad','Lernpfad','Weiter geht’s',()=>{closeOptions();go(pfadView());}),
       optRow('schluessel','Hilfe bei Problemen','Wenn etwas nicht klappt',()=>{closeOptions();openProblemHelp();})),
     optionsExtra(),
     el('div',{class:'optfoot'},

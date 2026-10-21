@@ -438,6 +438,16 @@ function runSelfTests(){
   t('Registry: geplante Themen haben keine Aufgaben, keine Gruppen, keinen Lernpfad',plannedModules().length>0&&plannedModules().every(m=>!m.practice&&!m.groups&&!m.path));
   t('Registry: Themen-IDs und Aufgaben-IDs sind eindeutig',new Set(MODULES.map(m=>m.id)).size===MODULES.length&&new Set(PRACTICE_ORDER).size===PRACTICE_ORDER.length&&new Set(PATH.map(p=>p.id)).size===PATH.length);
   t('Registry: Rang zählt „Brüche verändern“ (16 Übungen, 13 Bauteile)',rankPractice().length===16&&rankPath().length===13&&moduleOf('G02').id==='veraendern'&&moduleOf('Entdecken').id==='veraendern');
+  /* Navigation: Lernen (Themen) → Lernpfad des Themas → Bauteil, und zurück */
+  {
+    const keepV=S.view;
+    const bt=(v)=>{S.view=v;return backTarget();};
+    t('Navigation: pfadView findet das Thema zu Bauteil, Labor und unbekannter ID',pfadView('G02').thema==='veraendern'&&pfadView('LAB').thema==='veraendern'&&pfadView('Q01').thema==='veraendern'&&pfadView().thema==='veraendern');
+    t('Navigation: Zurück aus dem Lernpfad führt zur Themenübersicht, aus der Übersicht nirgends hin',JSON.stringify(bt({kind:'home',tab:'pfad',thema:'veraendern'}))==='{"kind":"home","tab":"pfad"}'&&bt({kind:'home',tab:'pfad'})===null);
+    t('Navigation: Zurück aus einem Bauteil des Lernpfads führt in den Lernpfad dieses Themas',bt({kind:'practice',id:'G02',from:'pfad'}).thema==='veraendern'&&bt({kind:'lab',from:'pfad'}).thema==='veraendern');
+    t('Navigation: Zurück aus Üben führt in die Gruppe, aus der Gruppe in die Übersicht',bt({kind:'practice',id:'G02'}).group==='Entdecken'&&bt({kind:'home',tab:'ueben',group:'Entdecken'}).tab==='ueben'&&!bt({kind:'home',tab:'ueben',group:'Entdecken'}).group);
+    S.view=keepV;
+  }
   const bad=res.filter(r=>!r.ok);
   console.log(`Selbsttest: ${res.length-bad.length}/${res.length} bestanden`);
   bad.forEach(b=>console.error('FEHLER:',b.name));

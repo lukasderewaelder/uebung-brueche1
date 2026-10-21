@@ -33,22 +33,42 @@ function bomList(ids){
   });
   return el('div',{class:'bom'},head,...rows);
 }
+/* Reiter „Lernen“: ein Thema wählen. Geplante Themen sind nur ein Hinweis, kein Link. */
+function moduleCard(m){
+  const {must,doneN,go1}=pfadInfo(m);
+  const seg=el('span',{class:'segn',role:'img','aria-label':doneN+' von '+must.length+' Pflicht-Bauteilen fertig'});
+  must.forEach((r,i)=>seg.append(el('i',{class:i<doneN?'on':''})));
+  return el('section',{class:'tcard'},
+    el('div',{class:'tc-head'},el('span',{class:'ico','aria-hidden':'true'},icon(m.icon)),el('div',null,el('h2',null,m.name),el('p',null,m.desc))),
+    el('div',{class:'tc-prog'},seg,el('b',null,doneN+' von '+must.length)),
+    el('div',{class:'rowbtns'},
+      go1?el('button',{type:'button',class:'btn primary',onclick:()=>openStation(go1.id)},icon('play'),'Weiter: '+stationTitle(go1.id)):null,
+      el('button',{type:'button',class:'btn'+(go1?'':' primary'),onclick:()=>go({kind:'home',tab:'pfad',thema:m.id})},'Lernpfad ansehen')));
+}
+function lernenTab(home){
+  home.append(el('h1',null,'Lernen'),...activeModules().map(moduleCard));
+  const soon=plannedModules();
+  if(soon.length)home.append(el('section',{class:'soon','aria-label':'Geplante Themen'},el('h2',{class:'area'},'Bald'),
+    el('ul',null,...soon.map(m=>el('li',null,icon(m.icon),el('span',null,el('b',null,m.name),el('small',null,m.desc)),el('em',null,'geplant'))))));
+}
 /* Einklappbarer Abschnitt: hält lange Listen aus dem ersten Blick heraus */
 function fold(title,content){
   return el('details',{class:'fold'},el('summary',null,title),content);
 }
 function renderHome(){
   const v=S.view,tab=homeTab(),root=el('div');
-  root.append(topbar(''));
+  const thema=tab==='pfad'&&v.thema?activeModules().find(m=>m.id===v.thema):null;
+  const gmod=tab==='ueben'&&v.group?moduleOf(v.group):null;
+  root.append(topbar(thema?thema.name:gmod?gmod.name+' › '+v.group:''));
   const home=el('div',{class:'home'});
   if(tab==='pfad'){
-    pfadTab(home);
+    if(thema)pfadTab(home,thema);else lernenTab(home);
   }else if(tab==='spiele'){
     home.append(el('h1',null,'Spiele'),listLevel(['S01','S02']),el('div',{class:'menu'},
       ...['S01','S02'].map(id=>{const r=S.games[keyOf(id,levelOf(id))];return bigBtn(ICON[id],()=>openEntry(id),GAMES[id].name,GAMES[id].desc,[r?`Runden: ${r.played}`:'',id==='S02'&&lootOf().length?`Baupläne: ${lootOf().length} von ${LOOT.length}`:''].filter(Boolean).join(' · '),'',null,id==='S01'?'dots':'hatch');})));
   }else if(tab==='rang'){
     const total=Object.values(S.progress).reduce((a,p)=>a+p.done,0);
-    home.append(el('h1',null,'Dein Rang'),rankCard(),
+    home.append(el('h1',null,'Ich'),rankCard(),
       el('p',{class:'stats'},`Aufgaben bearbeitet: ${total} · Längste Serie: ${S.bestStreak||0}`),
       fold('Alle Ränge',rankLadder()),
       fold('Legende: alles perfekt',perfectionList()),
@@ -59,8 +79,12 @@ function renderHome(){
   }else if(!v.group||!GROUPS[v.group]){
     const last=S.last&&TASKS[S.last]?S.last:null;
     if(last)home.append(bigBtn('play',()=>openEntry(last),'Weiter üben',TASKS[last].name,LEVEL_LABEL[levelOf(last)],'go'));
-    home.append(el('h1',null,'Baugruppen'),el('div',{class:'menu'},
-      ...Object.keys(GROUPS).map(g=>bigBtn(GROUPS[g].icon,()=>go({kind:'home',tab:'ueben',group:g}),g,GROUPS[g].text,null,'',null,GROUPS[g].pat))));
+    home.append(el('h1',null,'Üben'));
+    /* Mit mehr als einem aktiven Thema steht über den Gruppen der Name des Themas */
+    activeModules().forEach(m=>{
+      if(activeModules().length>1)home.append(el('h2',{class:'area'},m.name));
+      home.append(el('div',{class:'menu'},...Object.keys(m.groups).map(g=>bigBtn(m.groups[g].icon,()=>go({kind:'home',tab:'ueben',group:g}),g,m.groups[g].text,null,'',null,m.groups[g].pat))));
+    });
   }else{
     const g=GROUPS[v.group];
     home.append(el('h1',null,v.group),listLevel(g.ids),bomList(g.ids));

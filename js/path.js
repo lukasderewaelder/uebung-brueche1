@@ -16,9 +16,9 @@ function stationDone(id){
 }
 const stationVia=(id)=>!!S.checked[id]&&!(S.passed[id+'-L1']||S.passed[id+'-L2']);
 /* Reihenfolge, Freischaltung: ein Bauteil ist offen, wenn alle Pflicht-Bauteile davor fertig sind */
-function pathState(){
+function pathState(mod){
   const rows=[];let blocker=null;
-  PATH.forEach(m=>{
+  (mod?mod.path:PATH).forEach(m=>{
     const done=stationDone(m.id),open=!blocker;
     rows.push({m,id:m.id,must:!!m.must,done,via:done&&stationVia(m.id),open,locked:!done&&!open,blocker:open?null:blocker,next:false});
     if(m.must&&!done&&!blocker)blocker=m.id;
@@ -107,7 +107,7 @@ function roundAward(info){
 function finalCard(){
   const m=modal([icon('plakette','big'),el('h2',null,'Urkunde'),el('p',{class:'rankname'},'Lernpfad geschafft'),el('div',{class:'stampbox'},'Geprüft'),
     el('p',null,'Du kannst Erweitern und Kürzen. Stark!'),
-    el('button',{type:'button',class:'btn',onclick:()=>{m.remove();go({kind:'home',tab:'pfad'});}},'Zum Lernpfad')]);
+    el('button',{type:'button',class:'btn',onclick:()=>{m.remove();go(pfadView());}},'Zum Lernpfad')]);
 }
 /* Schema 4: Lernpfad-Felder; Bestandsnutzer behalten ihren Stand (mind. 4 Treffer beim 1. Versuch ⇒ bestanden) */
 function migrate4(st){
@@ -222,18 +222,25 @@ function pfadHead(doneN,total){
       el('span',{class:'lblm'},'Tagesziel'),el('small',null,today?'geschafft':'1 Runde'),
       streak>1?el('small',{class:'gstreak'},'Serie '+streak+' Tage'):null));
 }
-function pfadTab(home){
-  const rows=pathState(),must=rows.filter(r=>r.must),doneN=must.filter(r=>r.done).length,next=rows.find(r=>r.next);
-  const plan=planOf(rows);
+/* Stand eines Themas: Zeilen, Pflicht-Bauteile, nächstes Bauteil und Plan */
+function pfadInfo(mod){
+  const rows=pathState(mod),must=rows.filter(r=>r.must),doneN=must.filter(r=>r.done).length,next=rows.find(r=>r.next);
+  const plan=mod.quickcheck?planOf(rows):null;
   /* „Weiter geht’s“ folgt dem Plan (bei „von vorn“ das Bruchlabor), sonst dem nächsten Pflicht-Bauteil */
   const go1=(plan&&rows.find(r=>r.id===plan.now.id&&!r.locked))||next;
+  return {rows,must,doneN,next,plan,go1};
+}
+/* Ansicht eines Themas: sein Lernpfad */
+function pfadView(id){const m=(id&&moduleOf(id))||activeModules()[0];return {kind:'home',tab:'pfad',thema:m.id};}
+function pfadTab(home,mod){
+  const {rows,must,doneN,next,plan,go1}=pfadInfo(mod);
   home.append(el('h1',null,'Lernpfad'));
   /* Erst die nächste Handlung, dann Stand und Einstufung – die Karte „Weiter geht’s“ steht oben */
   if(go1)home.append(bigBtn('play',()=>openStation(go1.id),'Weiter geht’s',stationTitle(go1.id),go1.id==='Q00'||go1.id==='LAB'?'':LEVEL_LABEL[levelOf(go1.id)],'go'));
   else home.append(el('div',{class:'msg ok'},'Alle Pflicht-Bauteile sind fertig – stark! Probiere die Knobel-Bauteile oder ein Spiel.'));
   home.append(pfadHead(doneN,must.length));
   if(plan)home.append(planCard(plan));
-  if(!S.placed&&next)home.append(el('div',{class:'pfadbanner'},icon('blitz'),
+  if(mod.quickcheck&&!S.placed&&next)home.append(el('div',{class:'pfadbanner'},icon('blitz'),
     el('div',{class:'pb-tx'},el('b',null,'Schon fit?'),el('span',null,TASKS.Q00.size+' Blitzfragen zeigen, was du schon kannst.')),
     el('button',{type:'button',class:'btn small',onclick:()=>{S.last='Q00';go({kind:'practice',id:'Q00',from:'pfad'});}},'Schnellcheck starten')));
   home.append(pfadMap(rows,plan));

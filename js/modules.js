@@ -11,7 +11,7 @@
 const needOf=(size)=>Math.ceil(size*4/5); /* 80 % */
 
 const MODULES=[
-  {id:'veraendern',name:'Brüche verändern',desc:'Gleiche Anteile erkennen, erweitern und kürzen.',icon:'aus',status:'aktiv',rank:true,
+  {id:'veraendern',name:'Brüche verändern',desc:'Gleiche Anteile erkennen, erweitern und kürzen.',icon:'aus',status:'aktiv',rank:true,quickcheck:true,
     /* Übungsgruppen (Reiter „Üben“): Name → Symbol, Muster, Text, Aufgaben */
     groups:{
       'Entdecken':{pat:'dots',icon:'lupe',text:'Labor, Schnellcheck, Teilbarkeit, Erweitern und Kürzen',ids:['LAB','Q00','G01','T01','G02','G03','G04','G05','B01']},
