@@ -426,6 +426,13 @@ function runSelfTests(){
   t('Vergleich: 3/4 > 2/3, 2/4 = 1/2, 1/3 < 3/8',compareFrac(3,4,2,3)===1&&compareFrac(2,4,1,2)===0&&compareFrac(1,3,3,8)===-1);
   t('Ordnen: 3/4, 1/2, 2/3, 5/6 → 1/2, 2/3, 3/4, 5/6',JSON.stringify(sortFracs([[3,4],[1,2],[2,3],[5,6]]))==='[[1,2],[2,3],[3,4],[5,6]]');
   t('Unechter Bruch: 7/4 ja, 4/4 ja, 3/4 nein; 7/4 = 1 3/4, 8/4 = 2 0/4',isImproper(7,4)&&isImproper(4,4)&&!isImproper(3,4)&&toMixed(7,4).w===1&&toMixed(7,4).n===3&&toMixed(8,4).w===2&&toMixed(8,4).n===0);
+  /* Zahlengerade: Geometrie (ohne DOM) und Zeichnung */
+  const ng=numberLineGeometry(0,2,4,[{n:3,d:4},{n:5,d:4,text:''},{n:9,d:4},{n:1,d:0}]);
+  t('Zahlengerade: 0 bis 2 mit Viertelteilung hat 9 Teilstriche, 3 Hauptstriche',ng.ticks.length===9&&ng.ticks.filter(x=>x.major).length===3);
+  t('Zahlengerade: 3/4 liegt bei 3/8 der Länge, 1 genau in der Mitte; außerhalb und Nenner 0 entfallen',ng.marks.length===2&&Math.abs(ng.marks[0].x-(ng.pad+0.375*(ng.W-2*ng.pad)))<1e-9&&Math.abs(ng.ticks[4].x-ng.W/2)<1e-9);
+  t('Zahlengerade: Beschriftung „n/d“ standardmäßig, leer = ohne',ng.marks[0].text==='3/4'&&ng.marks[1].text==='');
+  const nlSvg=drawNumberLine({from:0,to:1,parts:3,marks:[{n:2,d:3}]});
+  t('Zahlengerade: SVG hat Achse, 4 Teilstriche, 2 Zahlen (0, 1) und eine Marke',nlSvg.querySelectorAll('.nl-axis').length===1&&nlSvg.querySelectorAll('.nl-tick').length===4&&nlSvg.querySelectorAll('.nl-num').length===2&&nlSvg.querySelectorAll('.nl-mark').length===1&&nlSvg.querySelector('.nl-lab').textContent==='2/3');
   /* Themen-Registry */
   t('Registry: jede Aufgabe, Gruppe und jedes Bauteil eines aktiven Themas gibt es',activeModules().every(m=>(m.practice||[]).every(id=>TASKS[id])&&Object.values(m.groups||{}).every(g=>g.ids.every(id=>id==='LAB'||TASKS[id]))&&(m.path||[]).every(p=>p.id==='LAB'||TASKS[p.id])));
   t('Registry: geplante Themen haben keine Aufgaben, keine Gruppen, keinen Lernpfad',plannedModules().length>0&&plannedModules().every(m=>!m.practice&&!m.groups&&!m.path));

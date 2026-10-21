@@ -790,3 +790,11 @@ svg.interactive{touch-action:none}
 .fold{margin:0.75rem 0;border:2px solid var(--chalk-dim);background:var(--bp-2)}
 .fold>summary{cursor:pointer;padding:0.75rem 0.875rem;font:700 .78rem var(--font-mono);letter-spacing:.12em;text-transform:uppercase}
 .fold>:not(summary){margin:0 0.875rem 0.875rem}
+
+/* Zahlengerade */
+svg.nline .nl-axis,svg.nline .nl-tick{stroke:var(--chalk);stroke-width:2;stroke-linecap:round}
+svg.nline .nl-tick{stroke-width:1.5}
+svg.nline .nl-tick.major{stroke-width:2.5}
+svg.nline .nl-num,svg.nline .nl-lab{fill:var(--chalk);font:700 14px var(--font-mono)}
+svg.nline .nl-lab{fill:var(--amber)}
+svg.nline .nl-mark{fill:var(--amber);stroke:var(--on-amber);stroke-width:2}
