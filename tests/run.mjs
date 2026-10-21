@@ -7,7 +7,7 @@ import {fileURLToPath} from 'node:url';
 
 const root=path.join(path.dirname(fileURLToPath(import.meta.url)),'..');
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
-const files=[...html.matchAll(/<script src="([^"?]+)(?:?[^"]*)?"></script>/g)].map(m=>m[1]).filter(f=>f!=='js/app.js');
+const files=[...html.matchAll(/<script src="([^"?]+)(?:\?[^"]*)?"><\/script>/g)].map(m=>m[1]).filter(f=>f!=='js/app.js');
 
 /* Attrappe: jede Eigenschaft ist wieder aufrufbar und liefert eine Attrappe */
 const stub=()=>{const f=function(){return stub();};return new Proxy(f,{get:(t,k)=>k===Symbol.toPrimitive?()=>'':k==='length'?0:stub(),apply:()=>stub(),construct:()=>stub(),set:()=>true});};
