@@ -414,6 +414,23 @@ function runSelfTests(){
     t('Zustand: neuer Spielstand hat intro:{} (Erklärungen ungesehen)',typeof defaultState().intro==='object'&&Object.keys(defaultState().intro).length===0);
   }
   Object.assign(S,keepP);persist();
+  /* Bruchrechnung (Grundlage für spätere Themen) */
+  const eqF=(x,y)=>x&&y&&x[0]===y[0]&&x[1]===y[1];
+  t('kgV: 4 und 6 → 12, 5 und 7 → 35, 6 und 6 → 6, 0 → 0',lcm(4,6)===12&&lcm(5,7)===35&&lcm(6,6)===6&&lcm(0,5)===0);
+  t('1/2 + 1/3 = 5/6 (nicht 2/5)',eqF(addFrac(1,2,1,3),[5,6]));
+  t('3/4 + 1/4 = 4/4, gekürzt 1/1',eqF(addFrac(3,4,1,4),[4,4])&&eqF(simplify(4,4),[1,1]));
+  t('2/3 + 5/6 = 9/6, gekürzt 3/2, gemischt 1 1/2',eqF(addFrac(2,3,5,6),[9,6])&&eqF(simplify(9,6),[3,2])&&toMixed(3,2).w===1&&toMixed(3,2).n===1);
+  t('3/4 − 1/6 = 7/12',eqF(subFrac(3,4,1,6),[7,12]));
+  t('2/3 · 3/4 = 6/12, gekürzt 1/2',eqF(mulFrac(2,3,3,4),[6,12])&&eqF(simplify(6,12),[1,2]));
+  t('2/3 : 4/5 = 10/12 (mit Kehrwert), gekürzt 5/6; Teilen durch 0 → null',eqF(divFrac(2,3,4,5),[10,12])&&divFrac(1,2,0,3)===null);
+  t('Vergleich: 3/4 > 2/3, 2/4 = 1/2, 1/3 < 3/8',compareFrac(3,4,2,3)===1&&compareFrac(2,4,1,2)===0&&compareFrac(1,3,3,8)===-1);
+  t('Ordnen: 3/4, 1/2, 2/3, 5/6 → 1/2, 2/3, 3/4, 5/6',JSON.stringify(sortFracs([[3,4],[1,2],[2,3],[5,6]]))==='[[1,2],[2,3],[3,4],[5,6]]');
+  t('Unechter Bruch: 7/4 ja, 4/4 ja, 3/4 nein; 7/4 = 1 3/4, 8/4 = 2 0/4',isImproper(7,4)&&isImproper(4,4)&&!isImproper(3,4)&&toMixed(7,4).w===1&&toMixed(7,4).n===3&&toMixed(8,4).w===2&&toMixed(8,4).n===0);
+  /* Themen-Registry */
+  t('Registry: jede Aufgabe, Gruppe und jedes Bauteil eines aktiven Themas gibt es',activeModules().every(m=>(m.practice||[]).every(id=>TASKS[id])&&Object.values(m.groups||{}).every(g=>g.ids.every(id=>id==='LAB'||TASKS[id]))&&(m.path||[]).every(p=>p.id==='LAB'||TASKS[p.id])));
+  t('Registry: geplante Themen haben keine Aufgaben, keine Gruppen, keinen Lernpfad',plannedModules().length>0&&plannedModules().every(m=>!m.practice&&!m.groups&&!m.path));
+  t('Registry: Themen-IDs und Aufgaben-IDs sind eindeutig',new Set(MODULES.map(m=>m.id)).size===MODULES.length&&new Set(PRACTICE_ORDER).size===PRACTICE_ORDER.length&&new Set(PATH.map(p=>p.id)).size===PATH.length);
+  t('Registry: Rang zählt „Brüche verändern“ (16 Übungen, 13 Bauteile)',rankPractice().length===16&&rankPath().length===13&&moduleOf('G02').id==='veraendern'&&moduleOf('Entdecken').id==='veraendern');
   const bad=res.filter(r=>!r.ok);
   console.log(`Selbsttest: ${res.length-bad.length}/${res.length} bestanden`);
   bad.forEach(b=>console.error('FEHLER:',b.name));
