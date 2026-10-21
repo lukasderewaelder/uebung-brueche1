@@ -1,6 +1,6 @@
 # Bruchwerkstatt – Erweitern und Kürzen
 
-Interaktive Übungsumgebung als einzelne Datei: `index.html` im Browser öffnen (kein Server, keine Bibliotheken, kein Internet nötig). Gedacht für Schülerinnen und Schüler ab Klasse 6, vor allem am Handy.
+Interaktive Übungsumgebung ohne Build: `index.html` im Browser öffnen (kein Server, keine Bibliotheken, kein Internet nötig; auch per GitHub Pages). Gedacht für Schülerinnen und Schüler ab Klasse 6, vor allem am Handy.
 
 - 16 Übungen, das Bruchlabor und 2 Spiele (Bruch-Memory, Bruch-Tresor), je Niveau „Leicht“ und „Knifflig“
 - **Lernpfad** (Startseite): Bauteile als Anlagenschema, nacheinander freigeschaltet (Gleiche Anteile → Erweitern → Teilbarkeit → Kürzen → Kürzen so weit wie möglich → gemischt → Abschlusscheck); ein Bauteil ist fertig bei mindestens 80 % richtig in einer Runde oder per Check; der **Schnellcheck** schaltet am Anfang schon Gekonntes frei, ein **Kurztest** (5 Fragen) schaltet das nächste Bauteil frei; Tagesziel (1 Runde) mit Tage-Serie; Urkunde nach dem Abschlusscheck
@@ -21,3 +21,26 @@ Interaktive Übungsumgebung als einzelne Datei: `index.html` im Browser öffnen 
 ## Design
 
 Blaupausen-Look: Aufgaben sind Zeichenblätter mit Schriftfeld, Erweitern (orange, ×) und Kürzen (petrol, ÷) haben feste Farben, Hilfen liegen auf hellem Pauspapier. Eigene Linien-Symbole statt Emoji, nur System-Schriften.
+
+## Aufbau
+
+`index.html` (Gerüst) lädt `css/app.css` und die Skripte aus `js/` in dieser Reihenfolge (gemeinsamer globaler Gültigkeitsbereich, keine Module nötig):
+
+| Datei | Inhalt |
+| --- | --- |
+| `math.js` | Zufall, Bruch-Mathematik, Zahlen-Parser (ohne DOM) |
+| `dom.js`, `viz.js` | DOM/SVG-Helfer, Bruchbilder (Streifen, Kreis, Raster) |
+| `store.js` | Speicher (localStorage) |
+| `notes.js`, `help.js`, `intro.js` | Merkkästen und Tipps, Hilfe bei Problemen, Erklärkarten |
+| `tasks.js` | Aufgabentypen (`TASKS`: Generator, Darstellung, Prüfung, Musterlösung, Tipps) |
+| `quickcheck.js`, `lab.js`, `path.js` | Schnellcheck, Bruchlabor, Lernpfad |
+| `rank.js`, `exercise.js` | Ränge/Optionen, gemeinsame Übungsoberfläche, Navigation |
+| `games.js`, `home.js` | Spiele, Startseite und Ansichtswechsel |
+| `selftest.js`, `app.js` | Selbsttest, Start |
+
+Ein neues Lernmodul ergänzt man als neuen Aufgabentyp in `TASKS` bzw. als eigene Datei vor `selftest.js`.
+
+## Tests
+
+- Browser: Konsole, `runSelfTests()`
+- Node (ab Version 18, ohne Pakete): `node tests/run.mjs`

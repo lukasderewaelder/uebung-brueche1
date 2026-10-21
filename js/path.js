@@ -243,12 +243,14 @@ function pfadTab(home){
   const plan=planOf(rows);
   /* „Weiter geht’s“ folgt dem Plan (bei „von vorn“ das Bruchlabor), sonst dem nächsten Pflicht-Bauteil */
   const go1=(plan&&rows.find(r=>r.id===plan.now.id&&!r.locked))||next;
-  home.append(el('h1',null,'Lernpfad'),pfadHead(doneN,must.length));
-  if(plan)home.append(planCard(plan));
+  home.append(el('h1',null,'Lernpfad'));
+  /* Erst die nächste Handlung, dann Stand und Einstufung – die Karte „Weiter geht’s“ steht oben */
   if(go1)home.append(bigBtn('play',()=>openStation(go1.id),'Weiter geht’s',stationTitle(go1.id),go1.id==='Q00'||go1.id==='LAB'?'':LEVEL_LABEL[levelOf(go1.id)],'go'));
   else home.append(el('div',{class:'msg ok'},'Alle Pflicht-Bauteile sind fertig – stark! Probiere die Knobel-Bauteile oder ein Spiel.'));
+  home.append(pfadHead(doneN,must.length));
+  if(plan)home.append(planCard(plan));
   if(!S.placed&&next)home.append(el('div',{class:'pfadbanner'},icon('blitz'),
-    el('div',{class:'pb-tx'},el('b',null,'Schon fit?'),el('span',null,TASKS.Q00.size+' Blitzfragen zeigen, was du schon kannst, und machen dir einen Plan.')),
+    el('div',{class:'pb-tx'},el('b',null,'Schon fit?'),el('span',null,TASKS.Q00.size+' Blitzfragen zeigen, was du schon kannst.')),
     el('button',{type:'button',class:'btn small',onclick:()=>{S.last='Q00';go({kind:'practice',id:'Q00',from:'pfad'});}},'Schnellcheck starten')));
   home.append(pfadMap(rows,plan));
 }

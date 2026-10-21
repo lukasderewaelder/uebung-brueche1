@@ -785,3 +785,8 @@ svg.interactive{touch-action:none}
 .shake{animation:shake .3s}
 @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* Einklappbare Abschnitte der Rang-Seite */
+.fold{margin:0.75rem 0;border:2px solid var(--chalk-dim);background:var(--bp-2)}
+.fold>summary{cursor:pointer;padding:0.75rem 0.875rem;font:700 .78rem var(--font-mono);letter-spacing:.12em;text-transform:uppercase}
+.fold>:not(summary){margin:0 0.875rem 0.875rem}

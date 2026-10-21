@@ -33,6 +33,10 @@ function bomList(ids){
   });
   return el('div',{class:'bom'},head,...rows);
 }
+/* Einklappbarer Abschnitt: hält lange Listen aus dem ersten Blick heraus */
+function fold(title,content){
+  return el('details',{class:'fold'},el('summary',null,title),content);
+}
 function renderHome(){
   const v=S.view,tab=homeTab(),root=el('div');
   root.append(topbar(''));
@@ -46,15 +50,14 @@ function renderHome(){
     const total=Object.values(S.progress).reduce((a,p)=>a+p.done,0);
     home.append(el('h1',null,'Dein Rang'),rankCard(),
       el('p',{class:'stats'},`Aufgaben bearbeitet: ${total} · Längste Serie: ${S.bestStreak||0}`),
-      el('h2',{class:'area'},'Alle Ränge'),rankLadder(),
-      el('h2',{class:'area'},'Legende: alles perfekt'),perfectionList(),
-      el('h2',{class:'area'},'Deine Sterne'),bomList(PRACTICE_ORDER),
+      fold('Alle Ränge',rankLadder()),
+      fold('Legende: alles perfekt',perfectionList()),
+      fold('Deine Sterne',bomList(PRACTICE_ORDER)),
       el('div',{class:'rowbtns'},
         el('button',{type:'button',class:'btn small',onclick:openOptions},icon('zahnrad'),' Optionen'),
         el('button',{type:'button',class:'btn small',onclick:()=>openProblemHelp()},icon('schluessel'),' Hilfe bei Problemen')));
   }else if(!v.group||!GROUPS[v.group]){
     const last=S.last&&TASKS[S.last]?S.last:null;
-    home.append(rankCard());
     if(last)home.append(bigBtn('play',()=>openEntry(last),'Weiter üben',TASKS[last].name,LEVEL_LABEL[levelOf(last)],'go'));
     home.append(el('h1',null,'Baugruppen'),el('div',{class:'menu'},
       ...Object.keys(GROUPS).map(g=>bigBtn(GROUPS[g].icon,()=>go({kind:'home',tab:'ueben',group:g}),g,GROUPS[g].text,null,'',null,GROUPS[g].pat))));
