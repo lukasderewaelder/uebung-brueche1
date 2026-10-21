@@ -292,8 +292,9 @@ input:disabled{opacity:.8}
 .note strong{background:linear-gradient(transparent 55%,var(--mark) 55%)}
 .note .ex{margin:0.5rem 0}
 .note .figrow{display:flex;flex-direction:column;gap:0.375rem;margin-top:0.5rem}
-.note .fig{display:flex;align-items:center;gap:0.625rem}
-.note .fig svg{flex:1;min-width:0}
+.note .fig{display:grid;grid-template-columns:3.5rem minmax(0,1fr);column-gap:0.625rem;align-items:center} /* feste Beschriftungsspalte: alle Streifen beginnen und enden bündig */
+.note .fig>.frac{justify-self:center}
+.note .fig svg{min-width:0}
 .note table{border-collapse:collapse;width:100%;font-size:.95rem;margin:0.375rem 0}
 .note th,.note td{border:1.5px solid var(--ink);padding:0.25rem 0.5rem;text-align:center}
 .note .eq,.note .frac{color:var(--ink)}
