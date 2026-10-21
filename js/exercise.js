@@ -3,7 +3,6 @@
    7 Aufgaben-Oberfläche (mountTask), Runden, Fortschritt
    ===================================================================== */
 const AREAS=['Grundlagen','Umkehraufgaben','Offene Aufgaben','Darstellungen umwandeln','Spiele'];
-const PRACTICE_ORDER=['Q00','G01','T01','G02','G03','G04','G05','B01','U01','U02','U03','O01','O02','D01','D02','D03'];
 const GAMES={
   S01:{area:'Spiele',name:'Bruch-Memory',desc:'Finde Kartenpaare, die denselben Anteil zeigen.',notes:['M1','M2','M3']},
   S02:{area:'Spiele',name:'Bruch-Tresor',desc:'Der Code ist ein Bruch: Öffne die Schlösser, sammle die Ziffern und kürze den Code-Bruch.',notes:['M2','M3']}
@@ -243,18 +242,14 @@ window.addEventListener('popstate',e=>{S.view=(e.state&&e.state.v)||{kind:'home'
 const openEntry=(id)=>{if(!isGame(id))S.last=id;go({kind:isGame(id)?'game':'practice',id});};
 function setLevel(id,l){S.levelByType[id]=l;persist();renderAll();}
 
-const GROUPS={
-  'Entdecken':{pat:'dots',icon:'lupe',text:'Labor, Schnellcheck, Teilbarkeit, Erweitern und Kürzen',ids:['LAB','Q00','G01','T01','G02','G03','G04','G05','B01']},
-  'Knobeln':{pat:'dash',icon:'zirkel',text:'Lücken, Fehler und mehrere Lösungen',ids:['U01','U02','U03','O01','O02']},
-  'Umwandeln':{pat:'hatch',icon:'wechsel',text:'Dezimalzahlen und gemischte Zahlen',ids:['D01','D02','D03']}
-};
 /* Symbole und Kennfarbe je Übung (erw = Erweitern/Orange, kue = Kürzen/Petrol) */
 const ICON={Q00:'blitz',Q01:'blitz',G01:'lineal',T01:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'zahnrad',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor'};
 const ACC={G02:'erw',O01:'erw',G03:'kue',G04:'kue',T01:'kue',O02:'kue',G05:'mix'};
 function backTarget(){
   const v=S.view;
   if(v.from==='opt'&&v.back)return v.back;
-  if(v.from==='pfad'&&(v.kind==='practice'||v.kind==='lab'))return {kind:'home',tab:'pfad'};
+  if(v.from==='pfad'&&(v.kind==='practice'||v.kind==='lab'))return pfadView(v.kind==='lab'?'LAB':v.id);
+  if(v.kind==='home'&&v.tab==='pfad'&&v.thema)return {kind:'home',tab:'pfad'};
   if(v.kind==='practice'){const g=Object.keys(GROUPS).find(k=>GROUPS[k].ids.includes(v.id));return {kind:'home',tab:'ueben',group:g};}
   if(v.kind==='game')return {kind:'home',tab:'spiele'};
   if(v.kind==='lab')return {kind:'home',tab:'ueben',group:'Entdecken'};
@@ -272,7 +267,7 @@ const homeTab=()=>{const t=S.view.tab;return t==='ueben'||t==='spiele'||t==='ran
 function bottomNav(){
   const tab=homeTab();
   const b=(key,ic,label)=>el('button',{type:'button',class:'navb','aria-current':String(tab===key),onclick:()=>go({kind:'home',tab:key})},icon(ic),el('span',null,label));
-  return el('nav',{class:'bottomnav','aria-label':'Hauptmenü'},b('pfad','pfad','Pfad'),b('ueben','heft','Üben'),b('spiele','karten','Spiele'),b('rang','plakette','Rang'));
+  return el('nav',{class:'bottomnav','aria-label':'Hauptmenü'},b('pfad','pfad','Lernen'),b('ueben','heft','Üben'),b('spiele','karten','Spiele'),b('rang','plakette','Ich'));
 }
 const LEVEL_LABEL={1:'Leicht',2:'Knifflig'};
 function levelControl(id){
@@ -408,7 +403,7 @@ function renderSummary(main,id,lvl,key,round){
   const stars=c('f')/round.size>=0.8?3:c('f')/round.size>=0.5?2:c('f')>=1?1:0;
   const info=round.info,inPath=!!info&&PATH.some(m=>m.id===id),passed=inPath&&info.passed;
   const again=()=>{S.rounds[key]={results:[],cur:null,size:TASKS[id].size};persist();renderAll();};
-  const toPfad=()=>go({kind:'home',tab:'pfad'});
+  const toPfad=()=>go(pfadView(id));
   const btn=(label,fn,primary)=>el('button',{type:'button',class:'btn'+(primary?' primary':''),onclick:fn},label);
   const lvlBtn=btn(lvl===1?'Knifflig probieren':'Zurück zu Leicht',()=>setLevel(id,lvl===1?2:1));
   let msg=null,btns;
@@ -439,7 +434,7 @@ function renderQuickSummary(main,id,lvl,key,round){
   const right=round.results.filter(r=>r==='f'||r==='l').length,share=right/round.size;
   const again=()=>{S.rounds[key]={results:[],cur:null,size:TASKS[id].size};persist();renderAll();};
   const btn=(label,fn,primary)=>el('button',{type:'button',class:'btn'+(primary?' primary':''),onclick:fn},label);
-  const toPfad=()=>go({kind:'home',tab:'pfad'});
+  const toPfad=()=>go(pfadView(id));
   const stars=bigStars(share>=0.9?3:share>=0.7?2:share>=0.4?1:0);
   if(id==='Q01'){
     const q=info.quiz||{},st=q.station||S.quizFor,name=st?stationTitle(st):'das Bauteil',ok=!!q.passed;

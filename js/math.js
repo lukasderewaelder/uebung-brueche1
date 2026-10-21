@@ -50,3 +50,16 @@ function fractionToDecimalString(a,den){
 }
 const decOf=(n,places)=>fractionToDecimalString(n,Math.pow(10,places));
 
+
+/* ---------- Bruchrechnung (Grundlage für spätere Themen; Brüche als [Zähler, Nenner], Nenner > 0) ----------
+   Ergebnisse sind nicht gekürzt – gekürzt wird mit simplify(). Noch in keiner Aufgabe verwendet, nur getestet. */
+const lcm=(a,b)=>(a&&b)?Math.abs(a/gcd(a,b)*b):0;
+const addFrac=(a,b,c,d)=>{const m=lcm(b,d);return [a*(m/b)+c*(m/d),m];};
+const subFrac=(a,b,c,d)=>{const m=lcm(b,d);return [a*(m/b)-c*(m/d),m];};
+const mulFrac=(a,b,c,d)=>[a*c,b*d];
+const divFrac=(a,b,c,d)=>c>0?[a*d,b*c]:null; /* Teilen durch 0 gibt null */
+/* −1, 0 oder 1: a/b ist kleiner, gleich oder größer als c/d */
+const compareFrac=(a,b,c,d)=>Math.sign(a*d-c*b);
+const sortFracs=(list)=>list.slice().sort((x,y)=>compareFrac(x[0],x[1],y[0],y[1]));
+const isImproper=(a,b)=>a>=b;
+const toMixed=(a,b)=>({w:Math.floor(a/b),n:a%b,d:b});

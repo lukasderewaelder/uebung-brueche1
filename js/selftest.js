@@ -414,6 +414,40 @@ function runSelfTests(){
     t('Zustand: neuer Spielstand hat intro:{} (Erklärungen ungesehen)',typeof defaultState().intro==='object'&&Object.keys(defaultState().intro).length===0);
   }
   Object.assign(S,keepP);persist();
+  /* Bruchrechnung (Grundlage für spätere Themen) */
+  const eqF=(x,y)=>x&&y&&x[0]===y[0]&&x[1]===y[1];
+  t('kgV: 4 und 6 → 12, 5 und 7 → 35, 6 und 6 → 6, 0 → 0',lcm(4,6)===12&&lcm(5,7)===35&&lcm(6,6)===6&&lcm(0,5)===0);
+  t('1/2 + 1/3 = 5/6 (nicht 2/5)',eqF(addFrac(1,2,1,3),[5,6]));
+  t('3/4 + 1/4 = 4/4, gekürzt 1/1',eqF(addFrac(3,4,1,4),[4,4])&&eqF(simplify(4,4),[1,1]));
+  t('2/3 + 5/6 = 9/6, gekürzt 3/2, gemischt 1 1/2',eqF(addFrac(2,3,5,6),[9,6])&&eqF(simplify(9,6),[3,2])&&toMixed(3,2).w===1&&toMixed(3,2).n===1);
+  t('3/4 − 1/6 = 7/12',eqF(subFrac(3,4,1,6),[7,12]));
+  t('2/3 · 3/4 = 6/12, gekürzt 1/2',eqF(mulFrac(2,3,3,4),[6,12])&&eqF(simplify(6,12),[1,2]));
+  t('2/3 : 4/5 = 10/12 (mit Kehrwert), gekürzt 5/6; Teilen durch 0 → null',eqF(divFrac(2,3,4,5),[10,12])&&divFrac(1,2,0,3)===null);
+  t('Vergleich: 3/4 > 2/3, 2/4 = 1/2, 1/3 < 3/8',compareFrac(3,4,2,3)===1&&compareFrac(2,4,1,2)===0&&compareFrac(1,3,3,8)===-1);
+  t('Ordnen: 3/4, 1/2, 2/3, 5/6 → 1/2, 2/3, 3/4, 5/6',JSON.stringify(sortFracs([[3,4],[1,2],[2,3],[5,6]]))==='[[1,2],[2,3],[3,4],[5,6]]');
+  t('Unechter Bruch: 7/4 ja, 4/4 ja, 3/4 nein; 7/4 = 1 3/4, 8/4 = 2 0/4',isImproper(7,4)&&isImproper(4,4)&&!isImproper(3,4)&&toMixed(7,4).w===1&&toMixed(7,4).n===3&&toMixed(8,4).w===2&&toMixed(8,4).n===0);
+  /* Zahlengerade: Geometrie (ohne DOM) und Zeichnung */
+  const ng=numberLineGeometry(0,2,4,[{n:3,d:4},{n:5,d:4,text:''},{n:9,d:4},{n:1,d:0}]);
+  t('Zahlengerade: 0 bis 2 mit Viertelteilung hat 9 Teilstriche, 3 Hauptstriche',ng.ticks.length===9&&ng.ticks.filter(x=>x.major).length===3);
+  t('Zahlengerade: 3/4 liegt bei 3/8 der Länge, 1 genau in der Mitte; außerhalb und Nenner 0 entfallen',ng.marks.length===2&&Math.abs(ng.marks[0].x-(ng.pad+0.375*(ng.W-2*ng.pad)))<1e-9&&Math.abs(ng.ticks[4].x-ng.W/2)<1e-9);
+  t('Zahlengerade: Beschriftung „n/d“ standardmäßig, leer = ohne',ng.marks[0].text==='3/4'&&ng.marks[1].text==='');
+  const nlSvg=drawNumberLine({from:0,to:1,parts:3,marks:[{n:2,d:3}]});
+  t('Zahlengerade: SVG hat Achse, 4 Teilstriche, 2 Zahlen (0, 1) und eine Marke',nlSvg.querySelectorAll('.nl-axis').length===1&&nlSvg.querySelectorAll('.nl-tick').length===4&&nlSvg.querySelectorAll('.nl-num').length===2&&nlSvg.querySelectorAll('.nl-mark').length===1&&nlSvg.querySelector('.nl-lab').textContent==='2/3');
+  /* Themen-Registry */
+  t('Registry: jede Aufgabe, Gruppe und jedes Bauteil eines aktiven Themas gibt es',activeModules().every(m=>(m.practice||[]).every(id=>TASKS[id])&&Object.values(m.groups||{}).every(g=>g.ids.every(id=>id==='LAB'||TASKS[id]))&&(m.path||[]).every(p=>p.id==='LAB'||TASKS[p.id])));
+  t('Registry: geplante Themen haben keine Aufgaben, keine Gruppen, keinen Lernpfad',plannedModules().length>0&&plannedModules().every(m=>!m.practice&&!m.groups&&!m.path));
+  t('Registry: Themen-IDs und Aufgaben-IDs sind eindeutig',new Set(MODULES.map(m=>m.id)).size===MODULES.length&&new Set(PRACTICE_ORDER).size===PRACTICE_ORDER.length&&new Set(PATH.map(p=>p.id)).size===PATH.length);
+  t('Registry: Rang zählt „Brüche verändern“ (16 Übungen, 13 Bauteile)',rankPractice().length===16&&rankPath().length===13&&moduleOf('G02').id==='veraendern'&&moduleOf('Entdecken').id==='veraendern');
+  /* Navigation: Lernen (Themen) → Lernpfad des Themas → Bauteil, und zurück */
+  {
+    const keepV=S.view;
+    const bt=(v)=>{S.view=v;return backTarget();};
+    t('Navigation: pfadView findet das Thema zu Bauteil, Labor und unbekannter ID',pfadView('G02').thema==='veraendern'&&pfadView('LAB').thema==='veraendern'&&pfadView('Q01').thema==='veraendern'&&pfadView().thema==='veraendern');
+    t('Navigation: Zurück aus dem Lernpfad führt zur Themenübersicht, aus der Übersicht nirgends hin',JSON.stringify(bt({kind:'home',tab:'pfad',thema:'veraendern'}))==='{"kind":"home","tab":"pfad"}'&&bt({kind:'home',tab:'pfad'})===null);
+    t('Navigation: Zurück aus einem Bauteil des Lernpfads führt in den Lernpfad dieses Themas',bt({kind:'practice',id:'G02',from:'pfad'}).thema==='veraendern'&&bt({kind:'lab',from:'pfad'}).thema==='veraendern');
+    t('Navigation: Zurück aus Üben führt in die Gruppe, aus der Gruppe in die Übersicht',bt({kind:'practice',id:'G02'}).group==='Entdecken'&&bt({kind:'home',tab:'ueben',group:'Entdecken'}).tab==='ueben'&&!bt({kind:'home',tab:'ueben',group:'Entdecken'}).group);
+    S.view=keepV;
+  }
   const bad=res.filter(r=>!r.ok);
   console.log(`Selbsttest: ${res.length-bad.length}/${res.length} bestanden`);
   bad.forEach(b=>console.error('FEHLER:',b.name));

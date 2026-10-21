@@ -107,3 +107,32 @@ function pickMode(d,R,max){
   return m.length?R.pick(m):null;
 }
 
+
+/* ---------- Zahlengerade (Grundlage für spätere Themen; noch in keiner Ansicht eingebunden) ----------
+   numberLineGeometry rechnet nur (ohne DOM, testbar); drawNumberLine zeichnet daraus eine SVG.
+   from, to: ganze Zahlen (to > from); parts: Teile je Ganzem (Nenner der Teilstriche);
+   marks: [{n,d,text}] – Stelle n/d, text optional (Standard „n/d“, '' = ohne Beschriftung). */
+function numberLineGeometry(from,to,parts,marks){
+  const W=362,pad=18,len=W-2*pad,steps=(to-from)*parts;
+  const ticks=[];
+  for(let i=0;i<=steps;i++)ticks.push({x:pad+i/steps*len,major:i%parts===0,whole:from+i/parts,n:from*parts+i,d:parts});
+  const pts=(marks||[]).filter(m=>m.d>0&&m.n>=from*m.d&&m.n<=to*m.d)
+    .map(m=>({x:pad+(m.n/m.d-from)/(to-from)*len,n:m.n,d:m.d,text:m.text==null?m.n+'/'+m.d:m.text}));
+  return {W,H:70,pad,y:44,ticks,marks:pts};
+}
+function drawNumberLine(opts={}){
+  const from=opts.from==null?0:opts.from,to=opts.to==null?1:opts.to,parts=opts.parts||2;
+  const g=numberLineGeometry(from,to,parts,opts.marks);
+  const svg=S_('svg',{viewBox:`0 0 ${g.W} ${g.H}`,class:'fracsvg nline',role:'img','aria-label':opts.label||`Zahlengerade von ${from} bis ${to}`});
+  svg.style.maxWidth=((opts.maxW||460)/16).toFixed(3)+'rem';
+  svg.append(S_('line',{class:'nl-axis',x1:g.pad,y1:g.y,x2:g.W-g.pad,y2:g.y}));
+  g.ticks.forEach(t=>{
+    svg.append(S_('line',{class:'nl-tick'+(t.major?' major':''),x1:t.x,x2:t.x,y1:g.y-(t.major?9:5),y2:g.y+(t.major?9:5)}));
+    if(t.major&&opts.wholes!==false){const tx=S_('text',{class:'nl-num',x:t.x,y:g.y+24,'text-anchor':'middle'});tx.textContent=String(t.whole);svg.append(tx);}
+  });
+  g.marks.forEach(m=>{
+    svg.append(S_('circle',{class:'nl-mark',cx:m.x,cy:g.y,r:5}));
+    if(m.text){const tx=S_('text',{class:'nl-lab',x:m.x,y:g.y-16,'text-anchor':'middle'});tx.textContent=m.text;svg.append(tx);}
+  });
+  return svg;
+}
