@@ -447,6 +447,20 @@ svg.interactive{touch-action:none}
 @media (min-width:521px){.pfadbanner .btn{flex:0 0 auto}}
 .pb-tx{flex:1;min-width:0;display:flex;flex-direction:column;font-size:.92rem;line-height:1.3}
 .pb-tx span{color:var(--chalk-dim)}
+/* Dein Plan (nach dem Schnellcheck) und Marke „Empfohlen“ */
+.plancard{margin:0.75rem 0;padding:0.75rem 0.875rem;background:var(--bp-2);border:3px double var(--amber)}
+.plancard p{margin:0.25rem 0 0.5rem}
+.planlist{list-style:none;margin:0;padding:0;display:grid;gap:0.25rem}
+.plan-it{display:grid;grid-template-columns:1.5rem 1fr auto;column-gap:0.5rem;align-items:center;min-height:2.5rem;padding:0.125rem 0}
+.plan-it .pl-ic .ic{width:1.25rem;height:1.25rem;color:var(--amber)}
+.plan-it .pl-nm{display:flex;flex-direction:column;min-width:0;font-weight:600}
+.plan-it .pl-nm small{font:700 .65rem var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--amber)}
+.plan-it .pl-st{font:700 .68rem var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--amber)}
+.plan-it.done{color:var(--chalk-dim)}
+.plan-it.done .pl-ic .ic,.plan-it.done .pl-st{color:var(--ok)}
+.plan-it.now .pl-nm{font-weight:700}
+.pl-act{grid-column:2 / -1;display:flex;gap:0.5rem;flex-wrap:wrap;margin:0.25rem 0 0.375rem}
+.mrec{padding:0.0625rem 0.375rem;background:var(--amber);color:var(--on-amber);font:700 .6rem var(--font-mono);letter-spacing:.1em;text-transform:uppercase}
 .rail{list-style:none;margin:0.875rem 0 0;padding:0}
 .rail>li{position:relative;padding:0 0 0.625rem 3rem}
 .rail>li::before{content:"";position:absolute;left:1.125rem;top:0;bottom:0;border-left:3px dashed var(--grid-2)}
@@ -2136,7 +2150,7 @@ function buildWorkedSolution(task){return TASKS[task.type].solution(task);}
 function hintFor(task,stage){const h=TASKS[task.type].hints(task);return h[Math.min(stage,h.length-1)];}
 
 /* =====================================================================
-   Schnellcheck: Q00 (Mix, 10 Fragen) und Q01 (Kurztest, 5 Fragen)
+   Schnellcheck: Q00 (Mix, 15 Fragen: je Fähigkeit 3) und Q01 (Kurztest, 5 Fragen)
    Alle Fragen sind Antipp-Fragen; jede trägt ein skill-Etikett.
    Zahlen der Bruchfragen: leicht ≤ 60, schwer ≤ 300 (Teilbarkeit wie T01).
    ===================================================================== */
@@ -2155,6 +2169,20 @@ const Q_HINT={
 const Q_SKILL_NAME={gleich:'Gleiche Brüche erkennen',teilbar:'Teilbarkeit',erweitern:'Erweitern',kuerzen:'Kürzen',vollstaendig:'Vollständig kürzen'};
 /* Zu welcher Übung gehört die Fähigkeit? */
 const Q_STATION={gleich:'G01',teilbar:'T01',erweitern:'G02',kuerzen:'G03',vollstaendig:'G04'};
+const Q_PER_SKILL=3;                        /* Fragen je Fähigkeit im Schnellcheck */
+const Q_COUNT=Q_SKILLS.length*Q_PER_SKILL;  /* 15 */
+const Q_START_SHARE=0.3;                    /* höchstens dieser Anteil richtig = „fast alles falsch“ (bei 15 Fragen: 4) */
+/* Fragenplan: Q_PER_SKILL Blöcke mit allen Fähigkeiten in zufälliger Reihenfolge, nie zweimal dieselbe hintereinander */
+function qPlan(R){
+  R=R||RNG;
+  const out=[];
+  for(let b=0;b<Q_PER_SKILL;b++){
+    let blk;
+    do{blk=R.shuffle(Q_SKILLS);}while(out.length&&blk[0]===out[out.length-1]);
+    out.push(...blk);
+  }
+  return out;
+}
 const qLim=(level)=>level===1?60:300;
 const Q_LETTERS=['A','B','C','D'];
 
@@ -2442,15 +2470,11 @@ const QUICK={
     return t.kind==='div'?[['Schau dir die Ziffern an.'],[DIV_RULE[t.k]]]:[['Lies die Frage genau.'],Q_HINT[t.kind]];
   }
 };
-TASKS.Q00=Object.assign({area:'Grundlagen',name:'Schnellcheck',desc:'10 Blitzfragen zum Antippen – ohne Zeitdruck.',size:10,
+TASKS.Q00=Object.assign({area:'Grundlagen',name:'Schnellcheck',desc:Q_COUNT+' Blitzfragen zum Antippen – ohne Zeitdruck.',size:Q_COUNT,
   gen:makeQuickGen('Q00'),
   ctx(round){
-    if(!round.plan){
-      let p;
-      for(let i=0;i<80;i++){p=RNG.shuffle(Q_SKILLS.concat(Q_SKILLS));if(p.every((x,j)=>!j||x!==p[j-1]))break;}
-      round.plan=p;
-    }
-    return {skill:round.plan[round.results.length]||Q_SKILLS[0]};
+    if(!round.plan)round.plan=qPlan();
+    return {skill:round.plan[round.results.length%round.plan.length]};
   }},QUICK);
 TASKS.Q01=Object.assign({area:'Grundlagen',name:'Kurztest',desc:'5 Fragen, um eine Station freizuschalten.',size:5,
   gen:makeQuickGen('Q01'),
@@ -2657,6 +2681,7 @@ function renderLab(){
    Bauteile blockieren nichts. „Fertig“ = bestanden (mind. 80 % der Runde
    richtig) oder per Check (Schnellcheck / Kurztest).
    ===================================================================== */
+const needOf=(size)=>Math.ceil(size*4/5); /* 80 % */
 const PATH=[
   {id:'LAB',grp:'Entdecken',title:'Bruchlabor',desc:'Erweitern und Kürzen ausprobieren.'},
   {id:'G01',grp:'Entdecken',must:true},
@@ -2667,13 +2692,12 @@ const PATH=[
   {id:'G04',grp:'Kürzen',must:true},
   {id:'G05',grp:'Mischen',must:true},
   {id:'U01',grp:'Knobeln'},{id:'U02',grp:'Knobeln'},{id:'U03',grp:'Knobeln'},{id:'O02',grp:'Knobeln'},
-  {id:'Q00',grp:'Abschluss',must:true,final:true,title:'Abschlusscheck',desc:'10 Fragen zeigen, was du kannst. Ab 8 richtig gibt es die Urkunde.'}
+  {id:'Q00',grp:'Abschluss',must:true,final:true,title:'Abschlusscheck',desc:TASKS.Q00.size+' Fragen zeigen, was du kannst. Ab '+needOf(TASKS.Q00.size)+' richtig gibt es die Urkunde.'}
 ];
 const PATH_GROUPS={Entdecken:'lupe',Erweitern:'aus','Kürzen':'ein',Mischen:'zahnrad',Knobeln:'zirkel',Abschluss:'plakette'};
 /* Welche Fähigkeiten prüft der Kurztest für ein Bauteil? */
 const PATH_SKILLS={G01:['gleich'],G02:['erweitern'],T01:['teilbar'],G03:['kuerzen'],G04:['vollstaendig','kuerzen'],G05:['erweitern','kuerzen']};
 const PATH_ACC={LAB:'mix',Q00:'ok'};
-const needOf=(size)=>Math.ceil(size*4/5); /* 80 % */
 const stationTitle=(id)=>{const m=PATH.find(x=>x.id===id);return (m&&m.title)||(TASKS[id]&&TASKS[id].name)||id;};
 
 /* ---------- Zustand ---------- */
@@ -2714,19 +2738,40 @@ function dayStreak(){
 }
 
 /* ---------- Auswertung am Ende einer Runde ---------- */
+/* Auswertung des Schnellchecks (rein): je Fähigkeit „sitzt“ (alle Fragen richtig), „fast“ (eine falsch bei mindestens
+   3 Fragen) oder „üben“; Gesamtstufe „start“ (fast alles falsch: von vorn beginnen), „plan“ (Themenliste) oder „fit“
+   (ab 80 %). Bei fast allem falsch sind Treffer oft Raten: dann gilt keine Fähigkeit als „sitzt“, nichts wird freigeschaltet.
+   hadProgress: ist schon ein Pflicht-Bauteil fertig? Dann gibt es nie „von vorn“. Rechnet auch mit Runden à 2 Fragen je Fähigkeit. */
+function qEvaluate(results,sk,size,hadProgress){
+  const per={};
+  results.forEach((r,i)=>{const s=(sk||[])[i];if(s){const x=per[s]||(per[s]={ok:0,n:0});x.n++;if(r==='f'||r==='l')x.ok++;}});
+  const right=results.filter(r=>r==='f'||r==='l').length;
+  const trust=right>Math.floor(size*Q_START_SHARE);
+  const skills={};
+  Q_SKILLS.forEach(s=>{
+    const x=per[s]||{ok:0,n:0};
+    skills[s]={ok:x.ok,n:x.n,status:trust&&x.n>=2&&x.ok===x.n?'sitzt':trust&&x.n>=3&&x.ok===x.n-1?'fast':'ueben'};
+  });
+  return {right,size,trust,skills,stufe:!trust?(hadProgress?'plan':'start'):right>=needOf(size)?'fit':'plan'};
+}
 function onRoundEnd(id,lvl,round){
   const right=round.results.filter(r=>r==='f'||r==='l').length,need=needOf(round.size);
   const info={right,need,passed:right>=need,firstPass:false,placed:[],final:false,daily:false,quiz:null};
   if(id==='Q00'){
-    /* Einstufung: je Fähigkeit beide Fragen richtig ⇒ Bauteil per Check fertig */
-    const per={};
-    round.results.forEach((r,i)=>{const sk=(round.sk||[])[i];if(sk)(per[sk]=per[sk]||[]).push(r==='f'||r==='l');});
-    const sure=Object.keys(per).filter(sk=>per[sk].length>=2&&per[sk].every(Boolean));
+    /* Einstufung: nur „sitzt“ (alle Fragen einer Fähigkeit richtig) schaltet das Bauteil per Check frei – und nur,
+       wenn nicht fast alles falsch war */
+    const hadProgress=pathState().some(r=>r.must&&!r.m.final&&r.done);
+    const ev=qEvaluate(round.results,round.sk,round.size,hadProgress);
+    info.ev=ev;
     S.placed=true;
+    const sure=Q_SKILLS.filter(sk=>ev.skills[sk].status==='sitzt');
     sure.forEach(sk=>{const st=Q_STATION[sk];if(st&&!stationDone(st)){S.checked[st]=true;info.placed.push(st);}});
     if(sure.length===Q_SKILLS.length&&!stationDone('G05')){S.checked.G05=true;info.placed.push('G05');}
-    /* Abschluss: alle Pflicht-Bauteile davor fertig und mindestens 8 von 10 */
+    /* Ergebnis für „Dein Plan“ merken; wenige Treffer mitten im Pfad überschreiben einen vorhandenen Plan nicht */
+    if(ev.trust||!S.einstufung)S.einstufung={at:Date.now(),right:ev.right,size:ev.size,stufe:ev.stufe,skills:ev.skills};
+    /* Abschluss: alle Pflicht-Bauteile davor fertig und mindestens 80 % richtig */
     const ready=pathState().filter(r=>r.must&&!r.m.final).every(r=>r.done);
+    info.ready=ready;
     if(ready&&info.passed&&!S.final){S.final=true;info.final=true;}
   }else if(id==='Q01'){
     const st=S.quizFor;
@@ -2765,6 +2810,11 @@ function migrate4(st){
   });
 }
 
+/* Schema 6: Schnellcheck mit 15 statt 10 Fragen – alte (laufende oder fertige) Runden verwerfen; Punkte, Checks und Fortschritt bleiben */
+function migrate6(st){
+  [1,2].forEach(l=>{const k=keyOf('Q00',l),r=st.rounds&&st.rounds[k];if(r&&r.size!==TASKS.Q00.size)delete st.rounds[k];});
+}
+
 /* ---------- Wege zu den Bauteilen ---------- */
 function openStation(id){
   if(id==='LAB')go({kind:'lab',from:'pfad'});
@@ -2785,25 +2835,71 @@ function lockSheet(row){
       el('button',{type:'button',class:'btn alt',onclick:()=>m.remove()},'Schließen'))]);
 }
 
+/* ---------- Dein Plan (nach dem Schnellcheck) ---------- */
+/* Zustandslos aus S.einstufung und dem Lernpfad berechnet; null, wenn es keinen (mehr) gibt.
+   Posten in Lernpfad-Reihenfolge (Grundlegendes zuerst): Bauteile, deren Fähigkeit nicht „sitzt“, dazu G05, solange
+   etwas nicht sitzt; bei „von vorn“ das Bruchlabor und Gleiche Anteile (danach läuft der normale Pfad). */
+function planOf(rows){
+  try{
+    const e=S.einstufung;
+    if(!e||S.final)return null;
+    rows=rows||pathState();
+    const byId={};rows.forEach(r=>{byId[r.id]=r;});
+    const skillOf={};Object.keys(Q_STATION).forEach(sk=>{skillOf[Q_STATION[sk]]=sk;});
+    const stat=(id)=>{const x=e.skills&&e.skills[skillOf[id]];return x?x.status:'ueben';};
+    const items=[];
+    if(e.stufe==='start'){
+      ['LAB','G01'].forEach(id=>{if(byId[id])items.push({id,status:'ueben'});});
+    }else{
+      let weak=false;
+      PATH.forEach(m=>{
+        if(skillOf[m.id]){const st=stat(m.id);if(st!=='sitzt'){weak=true;items.push({id:m.id,status:st});}}
+        else if(m.id==='G05'&&weak)items.push({id:'G05',status:'ueben'});
+      });
+    }
+    items.forEach(it=>{it.done=!!(byId[it.id]&&byId[it.id].done);});
+    const now=items.find(it=>!it.done);
+    return now?{items,now,stufe:e.stufe}:null;
+  }catch(err){return null;}
+}
+function planCard(plan){
+  const li=plan.items.map(it=>{
+    const now=it.id===plan.now.id;
+    const kurz=now&&it.status==='fast'&&PATH_SKILLS[it.id];
+    return el('li',{class:'plan-it'+(it.done?' done':'')+(now?' now':'')},
+      el('span',{class:'pl-ic','aria-hidden':'true'},it.done?icon('haken'):now?icon('weiter'):null),
+      el('span',{class:'pl-nm'},stationTitle(it.id),now?el('small',null,'jetzt'):null),
+      el('span',{class:'pl-st'},it.done?'fertig':it.status==='fast'?'fast':'üben'),
+      kurz?el('span',{class:'pl-act'},
+        el('button',{type:'button',class:'btn small',onclick:()=>startKurztest(it.id)},'Kurztest'),
+        el('button',{type:'button',class:'btn small alt',onclick:()=>openStation(it.id)},'Üben')):null);
+  });
+  return el('section',{class:'plancard','aria-label':'Dein Plan'},
+    el('div',{class:'lblm'},'Dein Plan'),
+    el('p',null,plan.stufe==='start'?'Fang vorn an – dann geht es Schritt für Schritt weiter.':'Das solltest du üben:'),
+    el('ol',{class:'planlist'},...li));
+}
+
 /* ---------- Ansicht: Anlagenschema ---------- */
-function modNode(r,pos){
+function modNode(r,pos,plan){
   const id=r.id,m=r.m,title=stationTitle(id),desc=m.desc||(TASKS[id]&&TASKS[id].desc)||'';
+  const rec=!!(plan&&!r.done&&plan.items.some(it=>it.id===id));
   const state=r.done?'done':r.next?'next':r.locked?'locked':'open';
   const tag=r.done?(r.via?'Per Check':'Fertig'):r.next?'Weiter':r.locked?'Gesperrt':'Freiwillig';
   const stars=(id==='LAB'||id==='Q00')?null:starNodes((S.passed[id+'-L1']?1:0)+(S.passed[id+'-L2']?1:0),2);
   const li=el('li',{class:'mod '+state+(r.must?'':' frei'),'data-acc':ACC[id]||PATH_ACC[id]||null});
   li.append(el('span',{class:'lamp','aria-hidden':'true'},r.done?icon('haken'):r.locked?icon('schloss'):null),
-    el('button',{type:'button',class:'modbtn','aria-label':title+': '+tag.toLowerCase()+(r.must||tag==='Freiwillig'?'':', freiwillig'),onclick:()=>r.locked?lockSheet(r):openStation(id)},
+    el('button',{type:'button',class:'modbtn','aria-label':title+': '+tag.toLowerCase()+(r.must||tag==='Freiwillig'?'':', freiwillig')+(rec?', empfohlen':''),onclick:()=>r.locked?lockSheet(r):openStation(id)},
       el('span',{class:'mpos'},String(pos+1).padStart(2,'0')),
       el('span',{class:'mnm'},el('b',null,title),el('small',null,desc)),
-      el('span',{class:'mside'},el('span',{class:'mtag'},tag),stars)));
+      el('span',{class:'mside'},rec?el('span',{class:'mrec'},'Empfohlen'):null,el('span',{class:'mtag'},tag),stars)));
   return li;
 }
-function pfadMap(rows){
+function pfadMap(rows,plan){
   const ol=el('ol',{class:'rail'});let last=null;
   rows.forEach((r,i)=>{
     if(r.m.grp!==last){last=r.m.grp;ol.append(el('li',{class:'pgrp'},icon(PATH_GROUPS[last]),last));}
-    ol.append(modNode(r,i));
+    ol.append(modNode(r,i,plan));
   });
   return ol;
 }
@@ -2820,13 +2916,17 @@ function pfadHead(doneN,total){
 }
 function pfadTab(home){
   const rows=pathState(),must=rows.filter(r=>r.must),doneN=must.filter(r=>r.done).length,next=rows.find(r=>r.next);
+  const plan=planOf(rows);
+  /* „Weiter geht’s“ folgt dem Plan (bei „von vorn“ das Bruchlabor), sonst dem nächsten Pflicht-Bauteil */
+  const go1=(plan&&rows.find(r=>r.id===plan.now.id&&!r.locked))||next;
   home.append(el('h1',null,'Lernpfad'),pfadHead(doneN,must.length));
-  if(next)home.append(bigBtn('play',()=>openStation(next.id),'Weiter geht’s',stationTitle(next.id),next.id==='Q00'||next.id==='LAB'?'':LEVEL_LABEL[levelOf(next.id)],'go'));
+  if(plan)home.append(planCard(plan));
+  if(go1)home.append(bigBtn('play',()=>openStation(go1.id),'Weiter geht’s',stationTitle(go1.id),go1.id==='Q00'||go1.id==='LAB'?'':LEVEL_LABEL[levelOf(go1.id)],'go'));
   else home.append(el('div',{class:'msg ok'},'Alle Pflicht-Bauteile sind fertig – stark! Probiere die Knobel-Bauteile oder ein Spiel.'));
   if(!S.placed&&next)home.append(el('div',{class:'pfadbanner'},icon('blitz'),
-    el('div',{class:'pb-tx'},el('b',null,'Schon fit?'),el('span',null,'10 Blitzfragen schalten Bauteile frei, die du schon kannst.')),
+    el('div',{class:'pb-tx'},el('b',null,'Schon fit?'),el('span',null,TASKS.Q00.size+' Blitzfragen zeigen, was du schon kannst, und machen dir einen Plan.')),
     el('button',{type:'button',class:'btn small',onclick:()=>{S.last='Q00';go({kind:'practice',id:'Q00',from:'pfad'});}},'Schnellcheck starten')));
-  home.append(pfadMap(rows));
+  home.append(pfadMap(rows,plan));
 }
 
 /* =====================================================================
@@ -3524,27 +3624,55 @@ function renderQuickSummary(main,id,lvl,key,round){
       el('div',{class:'rowbtns'},...(ok?[btn('Weiter im Lernpfad',toPfad,true)]:[btn('Zum Bauteil',()=>openStation(st),true),btn('Nochmal',again),btn('Zum Lernpfad',toPfad)]))));
     return;
   }
+  /* Schnellcheck (Q00): Ergebnis je nach Stufe – von vorn beginnen, Themenliste oder fit */
+  const ev=info.ev||qEvaluate(round.results,round.sk,round.size,true); /* Runden ohne info.ev: aus den Antworten rechnen */
   const per={};
   round.results.forEach((r,i)=>{const sk=(round.sk||[])[i];if(sk)(per[sk]=per[sk]||[]).push(r==='f'||r==='l');});
-  const skills=Q_SKILLS.filter(sk=>per[sk]);
-  const weak=skills.map(sk=>({sk,ok:per[sk].filter(Boolean).length,n:per[sk].length})).filter(x=>x.ok<x.n).sort((a,b)=>a.ok/a.n-b.ok/b.n)[0];
-  const rows=skills.map(sk=>{
-    const all=per[sk].every(Boolean);
+  if(ev.stufe==='start'){
+    main.append(el('div',{class:'card summary'},
+      el('div',{class:'stampbox'},'Check fertig'),el('p',null),
+      el('p',null,`${right} von ${round.size} richtig`),
+      el('p',null,'Das war noch schwer. Das ist ganz normal.'),
+      el('p',null,'Im Lernpfad lernst du alles Schritt für Schritt. Fang vorn an: Erst probierst du im Bruchlabor aus.'),
+      el('div',{class:'rowbtns'},btn('Lernpfad von vorn beginnen',()=>openStation('LAB'),true),btn('Nochmal',again))));
+    return;
+  }
+  /* Fähigkeiten in Lernpfad-Reihenfolge */
+  const pathIx=(sk)=>PATH.findIndex(m=>m.id===Q_STATION[sk]);
+  const order=Q_SKILLS.filter(sk=>per[sk]).sort((a,b)=>pathIx(a)-pathIx(b));
+  const rows=order.map(sk=>{
+    const x=ev.skills[sk];
     return el('tr',null,
       el('td',null,per[sk].map(ok=>el('span',{class:'qm '+(ok?'ok':'bad'),role:'img','aria-label':ok?'richtig':'falsch'},icon(ok?'haken':'kreuz')))),
       el('td',null,Q_SKILL_NAME[sk]),
-      el('td',{class:all?'sits':'ueben'},el('b',null,all?'sitzt':'üben')));
+      el('td',{class:x.status==='sitzt'?'sits':'ueben'},el('b',null,x.status==='sitzt'?'sitzt':x.status==='fast'?'fast':'üben')));
   });
   const placed=(info.placed||[]).map(stationTitle);
-  const line=info.final?'Urkunde! Du hast den Lernpfad geschafft.':placed.length?'Per Check fertig: '+placed.join(', ')+'.':weak?'Als Nächstes üben: '+TASKS[Q_STATION[weak.sk]].name+'.':'Alles sitzt – stark!';
-  const btns=[btn('Weiter im Lernpfad',toPfad,true)];
-  if(!weak&&lvl===1)btns.push(btn('Knifflig probieren',()=>setLevel(id,2)));
+  const plan=planOf();
+  const lines=[];
+  if(info.final)lines.push('Urkunde! Du hast den Lernpfad geschafft.');
+  else{
+    if(ev.stufe==='fit')lines.push('Du bist fit!');
+    if(placed.length)lines.push('Per Check fertig: '+placed.join(', ')+'.');
+    if(plan){
+      lines.push((ev.stufe==='fit'?'Noch offen: ':'Das solltest du üben: ')+plan.items.filter(it=>!it.done).map(it=>stationTitle(it.id)).join(', ')+'.');
+      if(plan.items.some(it=>!it.done&&it.status==='fast'))lines.push('Bei „fast“ kannst du es mit dem Kurztest versuchen.');
+    }else if(!placed.length)lines.push('Alles sitzt – stark!');
+    if(info.ready&&!info.passed)lines.push('Für die Urkunde brauchst du '+needOf(round.size)+' von '+round.size+' richtig.');
+  }
+  const btns=[];
+  const nowIt=plan&&plan.now;
+  if(nowIt){
+    const nm=stationTitle(nowIt.id);
+    btns.push(nowIt.status==='fast'&&PATH_SKILLS[nowIt.id]?btn('Kurztest: '+nm,()=>startKurztest(nowIt.id),true):btn('Mit '+nm+' beginnen',()=>openStation(nowIt.id),true),btn('Zum Lernpfad',toPfad));
+  }else btns.push(btn('Weiter im Lernpfad',toPfad,true));
+  if(order.every(sk=>ev.skills[sk].status==='sitzt')&&lvl===1)btns.push(btn('Knifflig probieren',()=>setLevel(id,2)));
   btns.push(btn('Nochmal',again));
   main.append(el('div',{class:'card summary'},
     el('div',{class:'stampbox'},'Check fertig'),el('p',null),stars,
     el('p',null,`${right} von ${round.size} richtig · ${LEVEL_LABEL[lvl]}`),
     el('table',{class:'qsum'},...rows),
-    el('p',null,line),
+    ...lines.map(x=>el('p',null,x)),
     el('div',{class:'rowbtns'},...btns)));
 }
 
@@ -4069,8 +4197,9 @@ function runSelfTests(){
   t('Schnellcheck: '+qN+' Fragen korrekt'+(qBad.length?' – '+qBad.slice(0,3).join(' | '):''),qBad.length===0);
   const kinds=new Set();for(let i=0;i<600;i++)kinds.add(generateTask('Q00',1).kind);
   t('Schnellcheck: alle 7 Fragearten kommen vor',kinds.size===7);
-  const rr={results:[]};let plan=[];for(let i=0;i<10;i++){plan.push(TASKS.Q00.ctx(rr).skill);rr.results.push('f');}
-  t('Q00: je Fähigkeit 2 Fragen, keine direkt doppelt',Q_SKILLS.every(sk=>plan.filter(x=>x===sk).length===2)&&plan.every((x,j)=>!j||x!==plan[j-1]));
+  const rr={results:[]};let plan=[];for(let i=0;i<Q_COUNT;i++){plan.push(TASKS.Q00.ctx(rr).skill);rr.results.push('f');}
+  t('Q00: '+Q_COUNT+' Fragen, je Fähigkeit '+Q_PER_SKILL+', keine direkt doppelt',Q_COUNT===15&&Q_SKILLS.every(sk=>plan.filter(x=>x===sk).length===Q_PER_SKILL)&&plan.every((x,j)=>!j||x!==plan[j-1]));
+  t('Fragenplan: 500 Mischungen, je Fähigkeit 3, nie dieselbe hintereinander',(()=>{for(let i=0;i<500;i++){const q=qPlan();if(q.length!==Q_COUNT||q.some((x,j)=>j&&x===q[j-1])||Q_SKILLS.some(sk=>q.filter(x=>x===sk).length!==Q_PER_SKILL))return false;}return true;})());
   const keepSk=S.skills;S.skills={};
   for(let i=0;i<4;i++)recordSkill('gleich',true);
   t('Fähigkeit sicher: 4 von 4',skillSure('gleich'));
@@ -4163,8 +4292,8 @@ function runSelfTests(){
   t('G04: nur „Nicht kürzbar“ bei kürzbarem Bruch ist falsch',!validateTask({type:'G04',level:1,mode:'full',a:6,b:9,p:2,q:3},{none:true}).correct);
   t('„Fast“-Meldung: richtiger Wert, aber andere Form',validateTask({type:'G03',level:1,mode:'factor',a:12,b:18,k:3},{'r.n':'2','r.d':'3'}).soft===true&&!validateTask({type:'G03',level:1,mode:'factor',a:12,b:18,k:3},{'r.n':'3','r.d':'5'}).soft);
   /* Lernpfad */
-  const keepP={passed:S.passed,checked:S.checked,final:S.final,placed:S.placed,days:S.days,lab:S.lab,quizFor:S.quizFor,quizSkills:S.quizSkills};
-  const freshP=()=>{S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;};
+  const keepP={passed:S.passed,checked:S.checked,final:S.final,placed:S.placed,days:S.days,lab:S.lab,quizFor:S.quizFor,quizSkills:S.quizSkills,einstufung:S.einstufung,perfect:Object.assign({},S.perfect)};
+  const freshP=()=>{S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;S.einstufung=null;S.perfect={};};
   const R_=(id)=>pathState().find(r=>r.id===id);
   freshP();
   t('Pfad: Start – nächstes Bauteil G01, Labor offen, G02/B01/Abschluss gesperrt',pathState().find(r=>r.next).id==='G01'&&R_('LAB').open&&R_('G02').locked&&R_('G02').blocker==='G01'&&R_('B01').locked&&R_('Q00').locked);
@@ -4178,7 +4307,7 @@ function runSelfTests(){
   t('Pfad: nach G05 sind Knobel-Bauteile und Abschluss offen',['U01','U02','U03','O02','Q00'].every(x=>R_(x).open)&&R_('Q00').next);
   S.final=true;
   t('Pfad: alles fertig ⇒ kein nächstes Bauteil',!pathState().some(r=>r.next));
-  t('Pfad: 80 %-Regel (5→4, 8→7, 10→8)',needOf(5)===4&&needOf(8)===7&&needOf(10)===8);
+  t('Pfad: 80 %-Regel (5→4, 8→7, 10→8)',needOf(5)===4&&needOf(8)===7&&needOf(10)===8&&needOf(15)===12);
   const rnd=(res,sk)=>({results:res.slice(),size:res.length,sk});
   freshP();
   let inf=onRoundEnd('G03',1,rnd(['f','f','l','x','f']));
@@ -4187,16 +4316,58 @@ function runSelfTests(){
   t('Rundenende: zweites Mal kein firstPass, Tagesziel nur einmal',inf.passed&&!inf.firstPass&&!inf.daily);
   inf=onRoundEnd('G04',1,rnd(['f','x','x','l','s']));
   t('Rundenende: 2 von 5 ⇒ nicht bestanden',!inf.passed&&!S.passed['G04-L1']);
-  const qplan=['gleich','gleich','teilbar','teilbar','erweitern','erweitern','kuerzen','kuerzen','vollstaendig','vollstaendig'];
+  /* Schnellcheck: 15 Fragen (je Fähigkeit 3) – sitzt = 3 von 3, fast = 2 von 3, sonst üben; Stufen start / plan / fit */
+  const qplan=[].concat(Q_SKILLS,Q_SKILLS,Q_SKILLS);
+  const qres=(bad)=>qplan.map((_,i)=>bad.includes(i)?'x':'f');
+  const pos=(sk)=>qplan.map((x,i)=>x===sk?i:-1).filter(i=>i>=0);
+  const qev=(res,prog)=>qEvaluate(res,qplan,15,!!prog);
+  t('Schnellcheck: 15 Fragen, Hürde 12 von 15, Texte nennen diese Zahlen',TASKS.Q00.size===15&&needOf(15)===12&&PATH.find(m=>m.id==='Q00').desc.includes('15 Fragen')&&PATH.find(m=>m.id==='Q00').desc.includes('Ab 12')&&TASKS.Q00.desc.includes('15'));
+  t('Auswertung: 0 und 4 von 15 = von vorn (nichts „sitzt“), 4 mit Fortschritt = Plan',qev(qres(qplan.map((_,i)=>i))).stufe==='start'&&qev(qres(qplan.map((_,i)=>i).filter(i=>i>=4))).stufe==='start'&&Q_SKILLS.every(sk=>qev(qres(qplan.map((_,i)=>i).filter(i=>i>=4))).skills[sk].status==='ueben')&&qev(qres(qplan.map((_,i)=>i).filter(i=>i>=4)),true).stufe==='plan');
+  t('Auswertung: 5 und 11 = Themenliste, 12 und 15 = fit',qev(qres(qplan.map((_,i)=>i).filter(i=>i>=5))).stufe==='plan'&&qev(qres(qplan.map((_,i)=>i).filter(i=>i>=11))).stufe==='plan'&&qev(qres(qplan.map((_,i)=>i).filter(i=>i>=12))).stufe==='fit'&&qev(qres([])).stufe==='fit');
+  const mix=qev(qres([].concat(pos('teilbar').slice(0,1),pos('erweitern').slice(0,2),pos('kuerzen'))));
+  t('Auswertung je Fähigkeit: 3/3 sitzt, 2/3 fast, 1/3 und 0/3 üben',mix.skills.gleich.status==='sitzt'&&mix.skills.teilbar.status==='fast'&&mix.skills.erweitern.status==='ueben'&&mix.skills.kuerzen.status==='ueben'&&mix.skills.vollstaendig.status==='sitzt');
+  const oldPlan=['gleich','gleich','teilbar','teilbar','erweitern','erweitern','kuerzen','kuerzen','vollstaendig','vollstaendig'];
+  const oldEv=qEvaluate(['f','f','x','f','f','f','f','x','f','f'],oldPlan,10,false);
+  t('Auswertung: Runden mit 2 Fragen je Fähigkeit (Altdaten) funktionieren (2 von 2 = sitzt)',oldEv.skills.gleich.status==='sitzt'&&oldEv.skills.teilbar.status==='ueben'&&oldEv.skills.erweitern.status==='sitzt'&&oldEv.stufe==='fit');
+  /* Rundenende: Platzierung, Plan, Urkunde */
+  const badIx=[1,3,8]; /* teilbar 2/3, kuerzen 1/3, Rest 3/3 → 12 richtig */
   freshP();
-  inf=onRoundEnd('Q00',1,rnd(['f','f','x','f','f','f','f','x','f','f'],qplan));
-  t('Einstufung: nur Fähigkeiten mit 2 von 2 sind per Check frei',S.checked.G01&&!S.checked.T01&&S.checked.G02&&!S.checked.G03&&S.checked.G04&&!S.checked.G05&&S.placed&&!inf.final);
+  inf=onRoundEnd('Q00',1,rnd(qres(badIx),qplan));
+  t('Einstufung: nur 3 von 3 ist per Check frei (G01, G02, G04), „fast“ und „üben“ nicht',S.checked.G01&&S.checked.G02&&S.checked.G04&&!S.checked.T01&&!S.checked.G03&&!S.checked.G05&&S.placed&&!inf.final&&inf.ev.stufe==='fit');
+  const pl1=planOf();
+  t('Plan: Bauteile in Pfadreihenfolge, die nicht sitzen, dazu G05; „jetzt“ ist das erste (fast)',!!pl1&&pl1.items.map(x=>x.id).join()==='T01,G03,G05'&&pl1.now.id==='T01'&&pl1.now.status==='fast'&&pl1.items[1].status==='ueben');
+  t('Plan: Karte mit Kurztest-Knopf bei „fast“, Marke Empfohlen nur bei offenen Plan-Bauteilen',(()=>{const c=planCard(pl1);return c.querySelectorAll('li.plan-it').length===3&&c.querySelectorAll('li.now .pl-act button').length===2&&/Kurztest/.test(c.textContent);})());
+  S.passed['T01-L1']=true;
+  const pl2=planOf();
+  t('Plan: erledigtes Bauteil rückt vor, „jetzt“ wechselt',pl2.now.id==='G03'&&pl2.items[0].done);
+  S.passed['G03-L1']=true;S.passed['G05-L1']=true;
+  t('Plan: alles erledigt ⇒ Karte verschwindet',planOf()===null);
   freshP();
-  inf=onRoundEnd('Q00',1,rnd(qplan.map(()=>'f'),qplan));
-  t('Einstufung: 10 von 10 schaltet alles frei, Urkunde',['G01','G02','T01','G03','G04','G05'].every(x=>S.checked[x])&&inf.final&&S.final);
+  inf=onRoundEnd('Q00',1,rnd(qres([]),qplan));
+  t('Einstufung: 15 von 15 schaltet alles frei, Urkunde, kein Plan',['G01','G02','T01','G03','G04','G05'].every(x=>S.checked[x])&&inf.final&&S.final&&planOf()===null);
+  freshP();
+  inf=onRoundEnd('Q00',1,rnd(qres(qplan.map((_,i)=>i).filter(i=>i>=4)),qplan));
+  t('Von vorn: höchstens 4 richtig ohne Fortschritt – nichts freigeschaltet, Plan = Bruchlabor + Gleiche Anteile',inf.ev.stufe==='start'&&Object.keys(S.checked).length===0&&S.placed&&!S.final&&(()=>{const p=planOf();return !!p&&p.items.map(x=>x.id).join()==='LAB,G01'&&p.now.id==='LAB'&&p.stufe==='start';})());
+  S.lab={done:true};
+  t('Von vorn: nach dem Labor ist Gleiche Anteile dran, danach verschwindet der Plan',planOf().now.id==='G01'&&(()=>{S.passed['G01-L1']=true;return planOf()===null;})());
   freshP();S.passed['G01-L1']=true;
-  inf=onRoundEnd('Q00',1,rnd(['f','f','f','f','f','f','x','x','f','f'],qplan));
+  inf=onRoundEnd('Q00',1,rnd(qres(qplan.map((_,i)=>i).filter(i=>i>=4)),qplan));
+  t('Wenige Treffer mitten im Pfad: kein „von vorn“, nichts frei, Plan mit allem „üben“',inf.ev.stufe==='plan'&&Object.keys(S.checked).length===0&&S.einstufung.stufe==='plan'&&S.einstufung.skills.erweitern.status==='ueben');
+  S.einstufung={at:1,right:13,size:15,stufe:'fit',skills:S.einstufung.skills};
+  inf=onRoundEnd('Q00',1,rnd(qres(qplan.map((_,i)=>i).filter(i=>i>=4)),qplan));
+  t('Wenige Treffer überschreiben einen vorhandenen Plan nicht',S.einstufung.at===1&&S.einstufung.stufe==='fit');
+  freshP();
+  inf=onRoundEnd('Q00',1,rnd(qres(pos('vollstaendig')),qplan));
+  t('3+3+3+3+0 ist „fit“, aber nicht fertig: keine Urkunde, Plan = G04 und G05',inf.ev.stufe==='fit'&&!inf.final&&!S.final&&planOf().items.map(x=>x.id).join()==='G04,G05'&&S.checked.G03&&!S.checked.G04);
+  freshP();['G01','G02','T01','G03','G04','G05'].forEach(x=>{S.passed[x+'-L1']=true;});
+  inf=onRoundEnd('Q00',1,rnd(qres(qplan.map((_,i)=>i).filter(i=>i>=11)),qplan));
+  t('Abschlusscheck: alles fertig, aber nur 11 von 15 ⇒ keine Urkunde (ready, nicht passed)',inf.ready&&!inf.passed&&!inf.final&&!S.final);
+  inf=onRoundEnd('Q00',1,rnd(qres(qplan.map((_,i)=>i).filter(i=>i>=12)),qplan));
+  t('Abschlusscheck: alles fertig und 12 von 15 ⇒ Urkunde',inf.ready&&inf.passed&&inf.final&&S.final);
+  freshP();S.passed['G01-L1']=true;
+  inf=onRoundEnd('Q00',1,rnd(['f','f','f','f','f','f','x','x','f','f'],oldPlan));
   t('Abschluss: ohne alle Pflicht-Bauteile keine Urkunde',inf.passed&&!inf.final&&!S.final);
+  t('Migration 6: alte Schnellcheck-Runden (10 Fragen) werden verworfen, Rest bleibt',(()=>{const o={rounds:{'Q00-L1':{size:10,results:[]},'Q00-L2':{size:15,results:[]},'G02-L1':{size:5,results:[]},'Q01-L1':{size:5,results:[]}}};migrate6(o);return !o.rounds['Q00-L1']&&!!o.rounds['Q00-L2']&&!!o.rounds['G02-L1']&&!!o.rounds['Q01-L1'];})());
   freshP();S.quizFor='G02';
   inf=onRoundEnd('Q01',1,rnd(['f','f','f','x','f']));
   t('Kurztest: 4 von 5 ⇒ Bauteil per Check, kein Pfad-Eintrag Q01',inf.quiz.passed&&S.checked.G02&&!S.passed['Q01-L1']);
@@ -4270,6 +4441,7 @@ window.runSelfTests=runSelfTests;
   if((S.schema||1)<3){S.rounds={};Object.keys(S.games||{}).forEach(k=>{S.games[k].state=null;});S.schema=3;persist();}
   if((S.schema||1)<4){migrate4(S);S.view={kind:'home',tab:'pfad'};S.schema=4;persist();}
   if((S.schema||1)<5){Object.keys(S.games||{}).forEach(k=>{if(k.indexOf('S02')===0)S.games[k].state=null;});S.schema=5;persist();}
+  if((S.schema||1)<6){migrate6(S);S.schema=6;persist();}
   if(!S.perfect)S.perfect={};
   if(!S.ui)S.ui={size:'m'};
   applyUi();
