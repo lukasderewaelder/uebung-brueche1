@@ -5,22 +5,6 @@
    Bauteile blockieren nichts. „Fertig“ = bestanden (mind. 80 % der Runde
    richtig) oder per Check (Schnellcheck / Kurztest).
    ===================================================================== */
-const needOf=(size)=>Math.ceil(size*4/5); /* 80 % */
-const PATH=[
-  {id:'LAB',grp:'Entdecken',title:'Bruchlabor',desc:'Erweitern und Kürzen ausprobieren.'},
-  {id:'G01',grp:'Entdecken',must:true},
-  {id:'B01',grp:'Entdecken'},
-  {id:'G02',grp:'Erweitern',must:true},
-  {id:'T01',grp:'Kürzen',must:true},
-  {id:'G03',grp:'Kürzen',must:true},
-  {id:'G04',grp:'Kürzen',must:true},
-  {id:'G05',grp:'Mischen',must:true},
-  {id:'U01',grp:'Knobeln'},{id:'U02',grp:'Knobeln'},{id:'U03',grp:'Knobeln'},{id:'O02',grp:'Knobeln'},
-  {id:'Q00',grp:'Abschluss',must:true,final:true,title:'Abschlusscheck',desc:TASKS.Q00.size+' Fragen zeigen, was du kannst. Ab '+needOf(TASKS.Q00.size)+' richtig gibt es die Urkunde.'}
-];
-const PATH_GROUPS={Entdecken:'lupe',Erweitern:'aus','Kürzen':'ein',Mischen:'zahnrad',Knobeln:'zirkel',Abschluss:'plakette'};
-/* Welche Fähigkeiten prüft der Kurztest für ein Bauteil? */
-const PATH_SKILLS={G01:['gleich'],G02:['erweitern'],T01:['teilbar'],G03:['kuerzen'],G04:['vollstaendig','kuerzen'],G05:['erweitern','kuerzen']};
 const PATH_ACC={LAB:'mix',Q00:'ok'};
 const stationTitle=(id)=>{const m=PATH.find(x=>x.id===id);return (m&&m.title)||(TASKS[id]&&TASKS[id].name)||id;};
 

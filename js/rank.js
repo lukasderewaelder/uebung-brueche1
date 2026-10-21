@@ -14,15 +14,15 @@ const RANK_TOP=RANKS.length-1;
 /* Bedingungen für „alles perfekt“ (höchster Rang) */
 function perfection(){
   const keys=[];
-  PRACTICE_ORDER.forEach(id=>[1,2].forEach(l=>keys.push(keyOf(id,l))));
+  rankPractice().forEach(id=>[1,2].forEach(l=>keys.push(keyOf(id,l))));
   const perf=keys.filter(k=>S.perfect&&S.perfect[k]).length;
   const stars=keys.filter(k=>starsFor((S.progress[k]||{}).first||0)===3).length;
-  const path=PATH.filter(m=>stationDone(m.id)).length;
+  const rp=rankPath(),path=rp.filter(m=>stationDone(m.id)).length;
   const games=['S01','S02'].reduce((n,id)=>n+[1,2].filter(l=>((S.games[keyOf(id,l)]||{}).won||0)>0).length,0);
   const items=[
     {id:'perfect',label:'Perfekte Runde in jeder Übung, leicht und knifflig',have:perf,need:keys.length},
     {id:'stars',label:'3 Sterne in jeder Übung, leicht und knifflig',have:stars,need:keys.length},
-    {id:'path',label:'Lernpfad komplett, mit Urkunde',have:path,need:PATH.length},
+    {id:'path',label:'Lernpfad komplett, mit Urkunde',have:path,need:rp.length},
     {id:'lab',label:'Bruchlabor: Entdeckerauftrag',have:(S.lab&&S.lab.done)?1:0,need:1},
     {id:'games',label:'Memory und Tresor, leicht und knifflig',have:games,need:4},
     {id:'streak',label:'30 richtige Antworten in Folge',have:Math.min(30,S.bestStreak||0),need:30},
