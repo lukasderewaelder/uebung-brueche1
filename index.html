@@ -308,6 +308,7 @@ input:disabled{opacity:.8}
 svg.fracsvg{display:block;width:100%;height:auto;overflow:visible}
 .cell>*{fill:transparent;stroke:var(--cell-stroke);stroke-width:1.6;transition:fill .12s}
 .cell.on>*{fill:var(--cell-on)}
+svg.sm .cell>*{stroke-width:1.5;vector-effect:non-scaling-stroke}
 g.cell[role="button"]{cursor:pointer}
 @media (hover:hover){g.cell[role="button"]:hover>*{fill:rgba(255,197,61,.18)}g.cell.on[role="button"]:hover>*{fill:var(--cell-on);opacity:.85}}
 g.cell{outline:none}
@@ -943,6 +944,7 @@ function drawCells(kind,d,dims,filled,opts={}){
   else{const [rows,cols]=dims,cs=Math.min(48,360/cols);vb=`0 0 ${cols*cs+2} ${rows*cs+2}`;maxW=opts.maxW||(cols*cs*1.3+2);}
   const svg=S_('svg',{viewBox:vb,class:'fracsvg',role:'img','aria-label':opts.label||'Bruchbild'});
   svg.style.maxWidth=(maxW/16).toFixed(3)+'rem';
+  if(maxW<=150)svg.classList.add('sm'); /* kleine Bilder: Linien in fester Stärke, damit man die Teile zählen kann */
   if(opts.onToggle)svg.classList.add('interactive');
   for(let i=0;i<d;i++){
     const on=filled.has(i);
@@ -964,9 +966,51 @@ function drawCells(kind,d,dims,filled,opts={}){
   return svg;
 }
 const firstN=(n)=>new Set(Array.from({length:n},(_,i)=>i));
-function drawFractionStrip(n,d,opts){return drawCells('strip',d,null,opts&&opts.filled||firstN(n),opts);}
-function drawFractionCircle(n,d,opts){return drawCells('circle',d,null,opts&&opts.filled||firstN(n),opts);}
-function drawFractionGrid(n,d,rows,cols,opts){return drawCells('grid',d,[rows,cols],opts&&opts.filled||firstN(n),opts);}
+/* Welche Teile gefärbt sind: opts.filled (Set, z. B. „Dein Bild“) vor opts.fill (gespeicherte Indexliste) vor den ersten n.
+   Fehlt die Liste (alter Spielstand) oder ist sie ungültig, werden die ersten n gefärbt. */
+const validFill=(a,n,d)=>Array.isArray(a)&&a.length===n&&a.every(i=>Number.isInteger(i)&&i>=0&&i<d)&&new Set(a).size===n;
+function fillOf(n,d,opts){
+  if(opts&&opts.filled)return opts.filled;
+  if(opts&&validFill(opts.fill,n,d))return new Set(opts.fill);
+  return firstN(n);
+}
+/* n gefärbte von d Teilen als sortierte Indexliste: mit Wahrscheinlichkeit pClassic die ersten n (das bekannte Bild),
+   sonst 1–3 Gruppen mit Lücken dazwischen (Kreis: zusätzlich gedreht, auch über 12 Uhr) – nie gleich „die ersten n“.
+   So lässt sich Gleichheit nicht am Umriss erkennen, man muss zählen oder rechnen. Zufall nur aus R; beim Erzeugen
+   der Aufgabe aufrufen (und als Liste speichern), nie beim Zeichnen. */
+function scatterFill(n,d,kind,R,o){
+  o=o||{};
+  const first=()=>Array.from({length:n},(_,i)=>i);
+  if(n<=0||n>=d||R.chance(o.pClassic||0))return first();
+  const circ=kind==='circle';
+  const cap=o.maxGroups||((kind==='strip'&&d>8)?2:3); /* kleine Streifenzellen: höchstens 2 Gruppen */
+  const maxG=Math.min(cap,n,circ?d-n:d-n+1);
+  const split=(total,parts,min)=>{const a=Array(parts).fill(min);for(let k=total-parts*min;k>0;k--)a[R.int(0,parts-1)]++;return a;};
+  const weights=[1,2,1].slice(0,maxG);
+  for(let t=0;t<30;t++){
+    let g=1,r=R.int(1,weights.reduce((x,y)=>x+y,0));
+    for(let k=0;k<weights.length;k++){if(r<=weights[k]){g=k+1;break;}r-=weights[k];}
+    const parts=split(n,g,1),cells=[];
+    if(circ){
+      const gaps=split(d-n,g,1),rot=R.int(0,d-1);
+      let pos=0;
+      parts.forEach((len,j)=>{for(let i=0;i<len;i++)cells.push((pos+i+rot)%d);pos+=len+gaps[j];});
+    }else{
+      /* Lücken vorn, zwischen den Gruppen (mindestens 1) und hinten: erst 1 je innere Lücke, den Rest frei verteilen */
+      const gap=Array(g+1).fill(0);
+      for(let j=1;j<g;j++)gap[j]=1;
+      for(let k=d-n-(g-1);k>0;k--)gap[R.int(0,g)]++;
+      let pos=gap[0];
+      parts.forEach((len,j)=>{for(let i=0;i<len;i++)cells.push(pos+i);pos+=len+gap[j+1];});
+    }
+    cells.sort((x,y)=>x-y);
+    if(cells.some((c,i)=>c!==i))return cells;
+  }
+  return Array.from({length:n},(_,i)=>i+1);
+}
+function drawFractionStrip(n,d,opts){return drawCells('strip',d,null,fillOf(n,d,opts),opts);}
+function drawFractionCircle(n,d,opts){return drawCells('circle',d,null,fillOf(n,d,opts),opts);}
+function drawFractionGrid(n,d,rows,cols,opts){return drawCells('grid',d,[rows,cols],fillOf(n,d,opts),opts);}
 /* Darstellung nach Modus (strip | circle | grid) */
 function drawMode(mode,n,d,opts){
   if(mode==='circle')return drawFractionCircle(n,d,opts);
@@ -1030,7 +1074,7 @@ const NOTES={
       el('p',null,'Drei Bilder können denselben Anteil einer Fläche zeigen, auch wenn sie unterschiedlich eingeteilt sind. Dieser Anteil kann durch verschiedene Brüche angegeben werden. Diese Brüche haben ',strong('denselben Wert'),'.'),
       el('div',{class:'ex'},strong('Beispiel: '),eq(...chain)),
       el('div',{class:'figrow'},terms.map(t=>figStrip(t[0],t[1]))),
-      el('p',null,strong('Merke: '),'Der Wert eines Bruchs hängt vom Anteil ab, nicht davon, in wie viele Teile die Fläche eingeteilt wurde.')
+      el('p',null,strong('Merke: '),'Der Wert eines Bruchs hängt vom Anteil ab, nicht davon, in wie viele Teile die Fläche eingeteilt wurde. Es kommt nur darauf an, wie viel gefärbt ist – nicht, wo die gefärbten Teile liegen.')
     ];}},
   M2:{title:'Erweitern eines Bruchs',build(avoid){
     const e=pickEx(NOTE_EX.M2,x=>redKey(x.a,x.b),avoid);
@@ -1101,14 +1145,14 @@ function noteFor(typeId,task){
 
 /* ---------- Hilfetexte (erster Tipp nennt nie eine Lösung) ---------- */
 const HINT={
-  equal:['Vergleiche die gefärbten Anteile, nicht nur die Zahl der Teile.','Prüfe, ob Zähler und Nenner jeweils mit derselben Zahl verändert wurden.'],
+  equal:['Zähle bei jedem Bild die gefärbten Teile und alle Teile. Vergleiche die Anteile, nicht nur die Zahl der Teile.','Prüfe, ob Zähler und Nenner jeweils mit derselben Zahl verändert wurden.'],
   expand:['Beim Erweitern musst du Zähler und Nenner verändern.','Rechne die Multiplikation für Zähler und Nenner getrennt.'],
   reduce:['Suche eine Zahl, durch die sich Zähler und Nenner teilen lassen.','Prüfe nach dem Kürzen, ob du noch einmal kürzen kannst.'],
   reduceGiven:['Beim Kürzen musst du Zähler und Nenner durch dieselbe Zahl teilen.','Rechne die Division für Zähler und Nenner getrennt.'],
   gaps:['Überlege zuerst, wie sich der bekannte Zähler oder Nenner verändert hat.','Derselbe Rechenschritt gilt für Zähler und Nenner.'],
   factor:['Vergleiche Zähler mit Zähler und Nenner mit Nenner.','Die Veränderung muss oben und unten mit derselben Zahl möglich sein.'],
   error:['Prüfe, ob in beiden Zeilen dieselbe Rechnung durchgeführt wurde.','Kontrolliere den Wert vor und nach dem Rechenschritt.'],
-  picture:['Der gefärbte Anteil muss gleich groß bleiben.','Überlege, wie viele neue Teile aus einem alten Teil entstehen.'],
+  picture:['Zähle im Vorgabebild: Wie viele Teile sind gefärbt, wie viele gibt es? Der Anteil muss gleich groß bleiben.','Überlege, wie viele neue Teile aus einem alten Teil entstehen.'],
   family:['Du kannst neue Brüche erzeugen, indem du Zähler und Nenner gleich veränderst.','Suche unterschiedliche Erweiterungszahlen und beachte die Bedingungen.'],
   ways:['Suche verschiedene Zahlen, durch die beide Zahlen teilbar sind.','Beginne die Rechenketten nicht beide mit derselben Kürzungszahl.'],
   d1:['Achte darauf, ob der Nenner 10, 100 oder 1000 ist.','Zähle, wie viele Stellen nach dem Komma benötigt werden.'],
@@ -1217,13 +1261,16 @@ TASKS.G01={area:'Grundlagen',name:'Gleiche Anteile erkennen',desc:'Finde die Bil
     [2,3,4].forEach(k=>{add(p*k+1,q*k);add(p*k-1,q*k);add(p*k,q*k+1);});
     for(const c of R.shuffle(pool)){if(dist.length>=total-nCorrect)break;dist.push(c);}
     /* Darstellung: Streifen und Kreis nur bei kleinen Nennern, große Nenner nur als Rechteckeinteilung */
+    /* Gefärbte Teile verstreut oder verschoben (nur bei Bildern); ein Teil der Bilder bleibt klassisch zusammenhängend */
+    const pC=level===1?0.3:0.1;
+    const withFill=(f)=>{if(f.mode!=='num')f.fill=scatterFill(f.n,f.d,f.mode,R,{pClassic:pC});return f;};
     const mk=([n,d])=>{
       const m=pickMode(d,R);
-      return {n,d,mode:(m&&R.chance(level===1?0.5:(d>12?0.6:0.35)))?m:'num'};
+      return withFill({n,d,mode:(m&&R.chance(level===1?0.5:(d>12?0.6:0.35)))?m:'num'});
     };
     const cards=R.shuffle(correct.concat(dist)).map(mk);
     const tm=level===1?(pickMode(b,R)||'strip'):'num';
-    return {type:'G01',level,target:{n:a,d:b,mode:tm},cards,avoid:[redKey(a,b)]};
+    return {type:'G01',level,target:withFill({n:a,d:b,mode:tm}),cards,avoid:[redKey(a,b)]};
   },
   prompt(t,h){
     const n=t.cards.filter(c=>equivalent(c.n,c.d,t.target.n,t.target.d)).length;
@@ -1232,11 +1279,11 @@ TASKS.G01={area:'Grundlagen',name:'Gleiche Anteile erkennen',desc:'Finde die Bil
   render(view,host){
     const t=view.task,d=view.draft;d.sel=d.sel||[];
     const tg=el('figure',{class:'fig',style:'max-width:12.5rem'});
-    if(t.target.mode!=='num')tg.append(drawMode(t.target.mode,t.target.n,t.target.d,{label:'Vorgabe',maxW:150}));
+    if(t.target.mode!=='num')tg.append(drawMode(t.target.mode,t.target.n,t.target.d,{label:'Vorgabe',maxW:150,fill:t.target.fill}));
     const cards=el('div',{class:'cards',role:'group','aria-label':'Karten'});
     t.cards.forEach((c,i)=>{
       const b=el('button',{type:'button',class:'pick','aria-pressed':String(d.sel.includes(i)),'aria-label':c.mode==='num'?`Karte ${i+1}: ${c.n} durch ${c.d}`:`Karte ${i+1}: Bruchbild`},
-        c.mode==='num'?frac(c.n,c.d):drawMode(c.mode,c.n,c.d,{maxW:110,label:'Bruchbild',tall:true}));
+        c.mode==='num'?frac(c.n,c.d):drawMode(c.mode,c.n,c.d,{maxW:110,label:'Bruchbild',tall:true,fill:c.fill}));
       b.disabled=view.locked();
       b.addEventListener('click',()=>{
         if(view.locked())return;
@@ -1554,13 +1601,13 @@ TASKS.B01={area:'Grundlagen',name:'Bruchbilder verändern',desc:'Teile ein Bild 
     if(level===1){
       const kind=R.pick(['strip','circle']),b=R.pick([2,3,4,5,6]),a=R.int(1,b-1);
       const k=R.pick([2,3].filter(x=>b*x<=12));
-      return {type:'B01',level,kind,a,b,k,target:b*k,avoid:[redKey(a,b)]};
+      return {type:'B01',level,kind,a,b,k,target:b*k,fill:scatterFill(a,b,kind,R,{pClassic:0.3}),avoid:[redKey(a,b)]};
     }
     const dims=R.pick([[2,3],[2,4],[3,3],[2,5],[3,4],[2,6]]),b=dims[0]*dims[1],a=R.int(1,b-1);
     let minTotal=b*R.pick([2,3]);
     const solvable=(m)=>{for(let r=1;r<=10;r++)for(let c=1;c<=10;c++)if(r*c>=m&&(r*c*a)%b===0)return true;return false;};
     while(!solvable(minTotal)&&minTotal>b)minTotal--;
-    return {type:'B01',level,kind:'grid',a,b,rows0:dims[0],cols0:dims[1],minTotal,avoid:[redKey(a,b)]};
+    return {type:'B01',level,kind:'grid',a,b,rows0:dims[0],cols0:dims[1],minTotal,fill:scatterFill(a,b,'grid',R,{pClassic:0.1}),avoid:[redKey(a,b)]};
   },
   prompt(t,h){
     if(t.level===1)h.append(el('p',{class:'q'},'Zeige ',frac(t.a,t.b),' mit ',strong(t.target),' Teilen: färbe die passenden Teile.'));
@@ -1572,7 +1619,7 @@ TASKS.B01={area:'Grundlagen',name:'Bruchbilder verändern',desc:'Teile ein Bild 
     else if(d.rows==null){d.rows=t.rows0;d.cols=t.cols0;}
     d.col=d.col||[];
     const total=()=>L1?d.parts:d.rows*d.cols;
-    const origFig=L1?drawMode(t.kind,t.a,t.b,{label:'Vorgabe',maxW:130}):drawFractionGrid(t.a,t.b,t.rows0,t.cols0,{label:'Vorgabe',maxW:130});
+    const origFig=L1?drawMode(t.kind,t.a,t.b,{label:'Vorgabe',maxW:130,fill:t.fill}):drawFractionGrid(t.a,t.b,t.rows0,t.cols0,{label:'Vorgabe',maxW:130,fill:t.fill});
     const orig=el('figure',{class:'fig'},origFig,dimCap(t.b+' Teile'),el('figcaption',null,frac(t.a,t.b)));
     const editBox=el('div'),steppers=[],info=el('div',{class:'q bigline'});
     const updInfo=()=>{
@@ -1582,7 +1629,7 @@ TASKS.B01={area:'Grundlagen',name:'Bruchbilder verändern',desc:'Teile ein Bild 
     const redraw=()=>{
       editBox.replaceChildren();
       const n=total(),opts={onToggle:i=>{
-        if(view.locked())return false;
+        if(view.locked())return; /* gesperrt: Zelle behält ihre Farbe */
         const j=d.col.indexOf(i);if(j>=0)d.col.splice(j,1);else d.col.push(i);
         view.save();updInfo();return j<0;
       },label:'Dein Bild',filled:new Set(d.col),maxW:320};
@@ -1623,7 +1670,12 @@ TASKS.B01={area:'Grundlagen',name:'Bruchbilder verändern',desc:'Teile ein Bild 
   },
   solution(t){
     let n,m,svg;
-    if(t.level===1){n=t.target;m=t.a*t.k;svg=drawMode(t.kind,m,n,{label:'Lösung'});}
+    if(t.level===1){
+      /* Jedes gefärbte alte Teil i wird zu den k gefärbten neuen Teilen i·k … i·k+k−1 */
+      n=t.target;m=t.a*t.k;
+      const ref=new Set();fillOf(t.a,t.b,{fill:t.fill}).forEach(i=>{for(let j=0;j<t.k;j++)ref.add(i*t.k+j);});
+      svg=drawMode(t.kind,m,n,{label:'Lösung',filled:ref});
+    }
     else{
       let best=null;
       for(let r=1;r<=10;r++)for(let c=1;c<=10;c++)if(r*c>=t.minTotal&&(r*c*t.a)%t.b===0&&(!best||r*c<best[0]*best[1]))best=[r,c];
@@ -3039,7 +3091,7 @@ const isGame=(id)=>!!GAMES[id];
 const app=document.getElementById('app');
 const scrim=document.getElementById('scrim');
 const SEEN=new Set();
-const SIG_SKIP=new Set(['avoid','cards','shown','opts','optNums','why']);
+const SIG_SKIP=new Set(['avoid','cards','shown','opts','optNums','why','fill']);
 const sigOf=t=>JSON.stringify(t,(k,v)=>(SIG_SKIP.has(k)||(k==='answer'&&TASKS[t.type].quick))?undefined:v);
 function generateUnique(typeId,level,ctx){
   let t=null;
@@ -3499,9 +3551,14 @@ function renderQuickSummary(main,id,lvl,key,round){
 /* =====================================================================
    8 Spiel S01 – Bruch-Memory
    ===================================================================== */
-function memoryFace(n,d,mode){return {n,d,mode};}
+function memoryFace(n,d,mode,R,level){
+  const f={n,d,mode};
+  if(mode!=='num'&&R)f.fill=scatterFill(n,d,mode,R,{pClassic:level===1?0.3:0.1}); /* gefärbte Teile verstreut oder verschoben */
+  return f;
+}
 function genMemoryPairs(level,count,R){
   const used=new Set(),pairs=[],maxQ=level===1?8:12;
+  const memoryFaceR=(n,d,mode)=>memoryFace(n,d,mode,R,level);
   const sameFace=(a,b)=>a.mode===b.mode&&a.n===b.n&&a.d===b.d;
   let guard=0;
   while(pairs.length<count&&guard++<2000){
@@ -3510,23 +3567,23 @@ function genMemoryPairs(level,count,R){
     let a,b;
     if(level===1){
       const kind=R.pick(['pic','pic','num']);
-      if(kind==='num'){const k=R.int(2,5);a=memoryFace(p,q,'num');b=memoryFace(p*k,q*k,'num');}
+      if(kind==='num'){const k=R.int(2,5);a=memoryFaceR(p,q,'num');b=memoryFaceR(p*k,q*k,'num');}
       else{
         const k1=R.int(1,2),k2=R.pick([1,2,3,4].filter(x=>x!==k1));
         const m=pickMode(q*k1,R,24);if(!m)continue;
-        a=memoryFace(p*k1,q*k1,m);b=memoryFace(p*k2,q*k2,'num');
+        a=memoryFaceR(p*k1,q*k1,m);b=memoryFaceR(p*k2,q*k2,'num');
       }
     }else{
       const kind=R.pick(['num','num','pic','picpic','red']);
       const ks=R.shuffle([1,2,3,4,5,6,7,8,9]);
-      if(kind==='num'){a=memoryFace(p*ks[0],q*ks[0],'num');b=memoryFace(p*ks[1],q*ks[1],'num');}
-      else if(kind==='red'){const k=R.int(4,9);a=memoryFace(p*k,q*k,'num');b=memoryFace(p,q,'num');}
+      if(kind==='num'){a=memoryFaceR(p*ks[0],q*ks[0],'num');b=memoryFaceR(p*ks[1],q*ks[1],'num');}
+      else if(kind==='red'){const k=R.int(4,9);a=memoryFaceR(p*k,q*k,'num');b=memoryFaceR(p,q,'num');}
       else if(kind==='pic'){
         const m=pickMode(q*ks[0],R,24);if(!m)continue;
-        a=memoryFace(p*ks[0],q*ks[0],m);b=memoryFace(p*ks[1],q*ks[1],'num');
+        a=memoryFaceR(p*ks[0],q*ks[0],m);b=memoryFaceR(p*ks[1],q*ks[1],'num');
       }else{
         const m1=pickMode(q*ks[0],R,24),m2=pickMode(q*ks[1],R,24);if(!m1||!m2)continue;
-        a=memoryFace(p*ks[0],q*ks[0],m1);b=memoryFace(p*ks[1],q*ks[1],m2);
+        a=memoryFaceR(p*ks[0],q*ks[0],m1);b=memoryFaceR(p*ks[1],q*ks[1],m2);
       }
     }
     if(sameFace(a,b))continue;
@@ -3580,7 +3637,7 @@ function renderMemory(id){
     const found=m.cards.filter(c=>c.state==='matched').length/2;
     stats.replaceChildren(el('span',null,`Gefundene Paare: ${found} von ${m.cards.length/2}`),el('span',null,`Versuche: ${m.attempts}`),el('span',null,`Tipps: ${m.hints}`));
   };
-  const faceNode=(c)=>c.face.mode==='num'?frac(c.face.n,c.face.d):drawMode(c.face.mode,c.face.n,c.face.d,{maxW:100,label:'Bruchbild',tall:true});
+  const faceNode=(c)=>c.face.mode==='num'?frac(c.face.n,c.face.d):drawMode(c.face.mode,c.face.n,c.face.d,{maxW:100,label:'Bruchbild',tall:true,fill:c.face.fill});
   const draw=()=>{
     grid.replaceChildren();
     m.cards.forEach((c,i)=>{
@@ -4062,6 +4119,46 @@ function runSelfTests(){
     t('G01 Niveau '+lvl+': Streifen/Kreis nur bis Nenner 12, große Nenner nur als Raster',badRep===0);
   }
   t('pickMode: Nenner 13–36 nie Streifen oder Kreis',(()=>{for(let d=13;d<=36;d++)for(let i=0;i<30;i++){const m=pickMode(d,RNG);if(m&&m!=='grid')return false;}return true;})());
+  /* Bruchbilder: gefärbte Teile verstreut oder verschoben (als Indexliste gespeichert, nur beim Erzeugen gewürfelt) */
+  {
+    const R2=makeRng(mulberry32(777));
+    const runs=(a,d,circ)=>{const z=new Set(a);let r=0;for(let i=0;i<d;i++){const prev=i===0?(circ&&z.has(d-1)):z.has(i-1);if(z.has(i)&&!prev)r++;}return r;};
+    let badSet=0,badGroups=0,total=0,oneAtZero=0;
+    for(const kind of ['strip','circle','grid'])for(let d=2;d<=36;d++)for(let n=1;n<d;n++)for(let rep=0;rep<12;rep++){
+      const f=scatterFill(n,d,kind,R2,{pClassic:0}),g=runs(f,d,kind==='circle'),cap=(kind==='strip'&&d>8)?2:3;
+      total++;
+      if(!validFill(f,n,d)||!f.some((c,i)=>c!==i)||f.some((c,i)=>i&&c<=f[i-1]))badSet++;
+      if(g<1||g>cap)badGroups++;
+      if(n===1&&f[0]===0)oneAtZero++;
+    }
+    t('Verstreute Färbung: gültige Listen, nie „die ersten n“ ('+total+' Fälle)',badSet===0&&oneAtZero===0);
+    t('Verstreute Färbung: höchstens 3 Gruppen, Streifen mit mehr als 8 Teilen höchstens 2',badGroups===0);
+    let cl=0,wrap=0;const N=4000;
+    for(let i=0;i<N;i++){if(scatterFill(3,8,'strip',R2,{pClassic:0.3}).every((c,j)=>c===j))cl++;const f=scatterFill(3,8,'circle',R2,{pClassic:0});if(f.includes(0)&&f.includes(7))wrap++;}
+    t('Verstreute Färbung: klassisch zu rund pClassic (0,3 → '+Math.round(100*cl/N)+' %), Kreis kann über 12 Uhr laufen',cl/N>0.25&&cl/N<0.35&&wrap>0);
+    t('Verstreute Färbung: Randfälle n=d−1 (Lücke nie ganz hinten) und d=2 (nur Teil 2)',(()=>{for(let i=0;i<60;i++){const a=scatterFill(5,6,'strip',R2,{pClassic:0}),b=scatterFill(1,2,'strip',R2,{pClassic:0});if(a.length!==5||!a.includes(5)||b.join()!=='1')return false;}return true;})());
+    t('fillOf: Liste, Set vor Liste, Rückfall auf die ersten n bei fehlender/ungültiger Liste',[...fillOf(3,8,{fill:[0,0,1]})].join()==='0,1,2'&&[...fillOf(2,5,{fill:[1,3]})].join()==='1,3'&&[...fillOf(2,5,{filled:new Set([4]),fill:[1,3]})].join()==='4'&&[...fillOf(2,5)].join()==='0,1'&&[...fillOf(2,5,{fill:[1,9]})].join()==='0,1');
+    const onIdx=(svg)=>[...svg.querySelectorAll('g.cell')].map((g,i)=>g.classList.contains('on')?i:-1).filter(i=>i>=0);
+    t('Zeichnen mit fill: genau diese Zellen gefärbt (Kreis, Streifen, Raster); ohne fill die ersten n',onIdx(drawFractionCircle(3,8,{fill:[1,4,6]})).join()==='1,4,6'&&onIdx(drawFractionStrip(2,5,{fill:[0,3]})).join()==='0,3'&&onIdx(drawMode('grid',4,12,{fill:[1,5,6,11]})).join()==='1,5,6,11'&&onIdx(drawFractionStrip(3,6)).join()==='0,1,2');
+    t('Kleine Bilder bekommen die Klasse „sm“ (feste Linienstärke), große nicht',drawFractionStrip(1,2,{maxW:110}).classList.contains('sm')&&!drawFractionStrip(1,2,{maxW:300}).classList.contains('sm'));
+    for(const lvl of [1,2]){
+      let bad=0,badNum=0,badRound=0;
+      for(let i=0;i<300;i++){
+        const g=generateTask('G01',lvl),b=generateTask('B01',lvl);
+        g.cards.concat([g.target]).forEach(c=>{if(c.mode==='num'){if(c.fill!==undefined)badNum++;}else if(!validFill(c.fill,c.n,c.d))bad++;});
+        if(!validFill(b.fill,b.a,b.b))bad++;
+        if(JSON.stringify(JSON.parse(JSON.stringify(g)))!==JSON.stringify(g)||JSON.stringify(JSON.parse(JSON.stringify(b)))!==JSON.stringify(b))badRound++;
+      }
+      t('G01/B01 Niveau '+lvl+': Bilder tragen eine gültige Färbungsliste, Zahlkarten keine, JSON-Roundtrip stabil',bad===0&&badNum===0&&badRound===0);
+      const pairs=genMemoryPairs(lvl,lvl===1?6:10,RNG),faces=[].concat(...pairs);
+      t('Memory Niveau '+lvl+': Bildkarten tragen eine gültige Färbungsliste, Zahlkarten keine',faces.every(f=>f.mode==='num'?f.fill===undefined:validFill(f.fill,f.n,f.d)));
+    }
+    const b1={type:'B01',level:1,kind:'strip',a:2,b:4,k:3,target:12,fill:[1,3],avoid:[]};
+    t('B01: Signatur ignoriert die Färbungsliste (Dedupe bleibt)',sigOf(b1)===sigOf(Object.assign({},b1,{fill:[0,2]})));
+    t('B01: verstreut gefärbtes Bild mit passender Anzahl ist richtig, falsche Anzahl nicht',validateTask(b1,{parts:12,col:[1,5,6,9,10,11]}).correct&&validateTask(b1,{parts:12,col:[0,1,2,3,4]}).errorCode==='area');
+    t('B01: Musterlösung zeigt die echte Verfeinerung (Teile 1 und 3 mit 3 verfeinert)',(()=>{const sol=buildWorkedSolution(b1),svg=sol[sol.length-1];return !!svg&&svg.querySelectorAll&&onIdx(svg).join()==='3,4,5,9,10,11';})());
+    t('Altstand ohne Färbungsliste: G01-Karte und B01 werden wie früher gezeichnet (erste n)',onIdx(drawMode('strip',2,4,{fill:undefined})).join()==='0,1'&&[...fillOf(2,4,{fill:null})].join()==='0,1');
+  }
   t('G04: getippter richtiger Bruch zählt trotz „Nicht kürzbar“',validateTask({type:'G04',level:1,mode:'full',a:6,b:9,p:2,q:3},{none:true,'r.n':'2','r.d':'3'}).correct);
   t('G04: nur „Nicht kürzbar“ bei kürzbarem Bruch ist falsch',!validateTask({type:'G04',level:1,mode:'full',a:6,b:9,p:2,q:3},{none:true}).correct);
   t('„Fast“-Meldung: richtiger Wert, aber andere Form',validateTask({type:'G03',level:1,mode:'factor',a:12,b:18,k:3},{'r.n':'2','r.d':'3'}).soft===true&&!validateTask({type:'G03',level:1,mode:'factor',a:12,b:18,k:3},{'r.n':'3','r.d':'5'}).soft);
