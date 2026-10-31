@@ -82,8 +82,8 @@ function lineWidget(view,host,cfg){
       box.append(draw({strip:stripNow(),secs:cfg.secs?{on:new Set(s.secs),onTap:locked?null:toggleSec}:null,onPick:pick,onNudge:nd,cur}));
     }
     if(cfg.secs)box.append(el('div',{class:'nlcount','aria-live':'polite'},'Gezählt: '+s.secs.length));
+    if(stepperBox){stepperBox.upd();box.append(el('div',{class:'nlrow'},stepperBox));}
     const row=el('div',{class:'nlrow'});
-    if(stepperBox){stepperBox.upd();row.append(stepperBox);}
     if(place.length>1){
       place.forEach((letter,k)=>{
         const b=el('button',{type:'button',class:'nlchip'+(s.pts[k]!=null?' set':''),'aria-pressed':String(k===s.act),'aria-label':'Punkt '+letter+(s.pts[k]!=null?' (gesetzt)':' (noch nicht gesetzt)')},letter);

@@ -2,9 +2,10 @@
 
 Interaktive Übungsumgebung ohne Build: `index.html` im Browser öffnen (kein Server, keine Bibliotheken, kein Internet nötig; auch per GitHub Pages). Gedacht für Schülerinnen und Schüler ab Klasse 6, vor allem am Handy.
 
-- 16 Übungen, das Bruchlabor und 2 Spiele (Bruch-Memory, Bruch-Tresor), je Niveau „Leicht“ und „Knifflig“
+- 24 Übungen (16 zu Brüche verändern, 8 zu Brüche am Zahlenstrahl), das Bruchlabor und 2 Spiele (Bruch-Memory, Bruch-Tresor), je Niveau „Leicht“ und „Knifflig“
 - **Navigation**: vier Reiter – **Lernen** (Startseite: Themenkarten mit Fortschritt; weitere Themen stehen nur als „Bald / geplant“ da, ohne Link), **Üben**, **Spiele**, **Ich** (Rang, Optionen, Hilfe). Ein Thema öffnet seinen Lernpfad, in der Kopfzeile steht der Weg zurück
 - **Lernpfad** (je Thema, Reiter **Lernen**): Der **Eingangstest** ist Pflicht, bevor man den Lernpfad sieht (Üben ist immer frei). Danach wählt man **„Dem Pfad folgen“** (empfohlen) oder **„Selbst aussuchen“** und kann jederzeit mit dem Schalter oben wechseln. Der Pfad führt alle Bauteile der Reihe nach (Gleiche Anteile → Erweitern → Teilbarkeit → Kürzen → Kürzen so weit wie möglich → gemischt → Abschlusscheck); der Eingangstest überspringt nichts, er setzt nur die Marke „Check: sitzt / fast / üben“. Bei „Selbst aussuchen“ ist alles sichtbar, offen sind aber nur im Eingangstest Beherrschtes („sitzt“) und schon Bestandenes (dazu Freiwilliges vor der ersten Lücke); alles andere schaltet der Pfad frei. Ein Bauteil ist fertig bei mindestens 80 % richtig in einer Runde. Wer schon Fortschritt hat, überspringt den Eingangstest und sieht die Wahl einmal. Die Hauptkarte heißt „Start: …“ und später „Weiter: …“, das nächste Bauteil trägt die Marke „Als Nächstes“; das Tagesziel (1 Runde) mit Tage-Serie steht im Reiter **Ich**; Urkunde nach dem Abschlusscheck
+- **Brüche am Zahlenstrahl** (zweites Thema, acht Bauteile Z01–Z08, alle Pflicht, ohne Eingangstest; zählt für die Punkte, noch nicht für den Rang): Einteilung erkennen → ablesen → eintragen → **Weg B: Einteilung anpassen** (der Nenner sagt die Zahl der Abschnitte je Ganzem; Teile-Stepper) → **Weg A: Bruch anpassen** (erweitern oder kürzen auf den Nenner der vorhandenen Einteilung; knifflig mit der Frage „Passt die Einteilung genau?“) → mehrere Brüche (gemeinsamer Nenner) → Einheit lesen → Brüche größer als 1. Tippen setzt den Punkt auf den nächsten Strich, ◀ ▶ und die Pfeiltasten gehen einen Strich weiter. Ab 13 Abschnitten erscheint eine **Lupe** (oben die Übersicht mit Rahmen, darunter das vergrößerte Fenster), bis 24 Abschnitte je Strahl. Typische Fehler werden benannt (Striche statt Abschnitte, ganzer Strahl statt ein Ganzes, Einteilung passt nicht); der Bruchstreifen über dem Strahl erscheint mit dem zweiten Tipp
 - **Bruchlabor**: Erweitern und Kürzen ausprobieren – Streifen oder Kreis, Ausgang und Jetzt untereinander mit Maßlinien, ×2…×5 und ÷2…÷5 (nur wenn es aufgeht), dazu ein kurzer Entdeckerauftrag („Was bleibt gleich?“)
 - **Bruch-Tresor**: Der Code ist ein Bruch. Jedes Schloss (nur Erweitern und Kürzen) gibt eine Ziffer frei – leicht 3 Schlösser (Code `a/bc`), knifflig 4 (Code `ab/cd`). Sind alle offen, muss der Code-Bruch so weit wie möglich gekürzt werden; erst der gekürzte Bruch öffnet die Tür. Jeder geknackte Tresor bringt einen Bauplan für die Sammlung (12 Stück)
 - **Eingangstest** (auch Abschlusscheck): 15 Blitzfragen zum Antippen (je Fähigkeit 3; Ja/Nein, A–D), sofortige Rückmeldung, keine Zeitmessung. Je Fähigkeit steht am Ende „sitzt“ (3 von 3), „fast“ (2 von 3) oder „üben“. Höchstens 4 von 15 richtig = es geht direkt in den Pfad ohne Wahl, ab 5 folgt die Wahl „Pfad oder Selbst aussuchen“; ab 12 richtig gilt man als fit (wie die 80 %-Hürde des Abschlusschecks). Im Lernpfad zeigt „Eingangstest wiederholen“ einen neuen Durchgang, bereits als beherrscht Gemerktes bleibt erhalten
@@ -12,7 +13,7 @@ Interaktive Übungsumgebung ohne Build: `index.html` im Browser öffnen (kein Se
 - Teilbarkeit mit 2, 3, 4, 5, 6, 9 und 10 – jeweils mit Regel und Rechnung
 - Brüche werden immer mit Bruchstrich dargestellt; Zahlenbereich der Brüche: leicht bis 60, knifflig bis 300; Teilbarkeit: leicht bis 500, knifflig bis 1000
 - Bruchbilder (Kreis, Streifen, Raster) zeigen die gefärbten Teile oft verstreut oder verschoben statt immer ab „oben/links“ zusammenhängend – so erkennt man gleiche Anteile nicht mehr am Umriss, sondern muss zählen oder rechnen (Gleiche Anteile erkennen, Bruchbilder verändern, Bruch-Memory; im Bruchlabor bleibt es beim klassischen Bild)
-- Merkkästen M1–M7 (Bruchstreifen exakt gleich groß und bündig untereinander), zweistufige und einklappbare Tipps (Kürzen-Tipps nennen immer: *Die 2 geht IMMER, wenn Zähler und Nenner gerade sind*; ebenso 5 und 10)
+- Merkkästen M1–M10 (Bruchstreifen exakt gleich groß und bündig untereinander), zweistufige und einklappbare Tipps (Kürzen-Tipps nennen immer: *Die 2 geht IMMER, wenn Zähler und Nenner gerade sind*; ebenso 5 und 10)
 - 12 Ränge (Praktikant … Legende); die Legende gibt es nur, wenn wirklich alles perfekt ist (perfekte Runden und 3 Sterne überall, Lernpfad, Labor, Spiele, Serien). Ein Tipp auf die Rang-Anzeige oben rechts öffnet die Optionen – dort ist auch das Bruchlabor jederzeit erreichbar
 - Passt sich dem Display an: Schrift und Elemente wachsen stufenlos mit der Bildschirmbreite (kleines Handy bis Großbildschirm, hoch und quer); in den Optionen gibt es die Textgröße in vier Stufen (Klein, Normal, Groß, Sehr groß); das Bedienpult bricht bei wenig Platz in zwei Reihen um, damit nichts abgeschnitten wird
 - Fortschritt (Punkte, Ränge, Serien, Sterne) wird lokal im Browser gespeichert
@@ -29,11 +30,12 @@ Blaupausen-Look: Aufgaben sind Zeichenblätter mit Schriftfeld, Erweitern (orang
 
 | Datei | Inhalt |
 | --- | --- |
-| `math.js` | Zufall, Bruch-Mathematik (gcd, kgV, +, −, ·, :, Vergleich, Ordnen, gemischte Zahl), Zahlen-Parser (ohne DOM) |
-| `dom.js`, `viz.js` | DOM/SVG-Helfer, Bruchbilder (Streifen, Kreis, Raster), Zahlengerade (`drawNumberLine`, noch nicht eingebunden) |
+| `math.js` | Zufall, Bruch-Mathematik (gcd, kgV, +, −, ·, :, Vergleich, Ordnen, gemischte Zahl), Einteilung am Zahlenstrahl (`fitsDivision`, `tickOf`, `commonDenominator`), Zahlen-Parser (ohne DOM) |
+| `dom.js`, `viz.js` | DOM/SVG-Helfer, Bruchbilder (Streifen, Kreis, Raster), Zahlengerade (`numberLineGeometry` rechnet, `drawNumberLine` zeichnet: Striche, Marken, Streifen, Abschnitte, Lupe-Ausschnitt) |
 | `store.js` | Speicher (localStorage) |
 | `notes.js`, `help.js`, `intro.js` | Merkkästen und Tipps, Hilfe bei Problemen, Erklärkarten |
 | `tasks.js` | Aufgabentypen (`TASKS`: Generator, Darstellung, Prüfung, Musterlösung, Tipps) |
+| `linewidget.js`, `zahlenstrahl.js` | Zahlenstrahl-Werkzeug (Punkte setzen, Pfeile, Lupe) und die Aufgaben Z01–Z08 |
 | `quickcheck.js`, `lab.js`, `path.js` | Eingangstest, Bruchlabor, Lernpfad (Pfad und Selbst aussuchen) |
 | `modules.js` | Themen-Registry: Gruppen, Lernpfad und Reihenfolgen je Thema, geplante Themen |
 | `rank.js`, `exercise.js` | Ränge/Optionen, gemeinsame Übungsoberfläche, Navigation |
@@ -47,7 +49,7 @@ Blaupausen-Look: Aufgaben sind Zeichenblätter mit Schriftfeld, Erweitern (orang
 3. Symbol und Kennfarbe in `ICON` und `ACC` (`js/exercise.js`) ergänzen, Merkkästen in `js/notes.js`.
 4. Neue Datei in `index.html` eintragen und Tests in `js/selftest.js` ergänzen.
 
-Die Funktionen für Zahlenstrahl, Vergleichen und Rechnen (`math.js`, `viz.js`) sind schon vorhanden und getestet, aber noch in keiner Aufgabe verwendet; die Themen selbst sind noch nicht umgesetzt.
+Das Thema Zahlenstrahl ist das Muster dafür (`js/zahlenstrahl.js`, `js/linewidget.js`, Eintrag in `js/modules.js`). Vergleichen und Rechnen sind noch nicht umgesetzt; ihre Mathematik (`compareFrac`, `addFrac` …) ist in `math.js` vorhanden und getestet. Ein Thema ohne Eingangstest (`quickcheck:false`) startet gleich im Pfad; Pfad und Urkunde rechnen je Thema (`pathState(mod)`, `eingestuft(mod)`).
 
 ## Tests
 
@@ -56,4 +58,4 @@ Die Funktionen für Zahlenstrahl, Vergleichen und Rechnen (`math.js`, `viz.js`) 
 
 ## Veröffentlichen
 
-GitHub Pages liefert die Dateien mit zehn Minuten Zwischenspeicher aus. Damit niemand eine neue `index.html` mit alten Skripten mischt (leere Seite), tragen alle Skript- und CSS-Verweise in `index.html` `?v=N`. **Bei jeder Änderung an `js/` oder `css/` die Zahl überall hochzählen** (Suchen und Ersetzen von `?v=4`).
+GitHub Pages liefert die Dateien mit zehn Minuten Zwischenspeicher aus. Damit niemand eine neue `index.html` mit alten Skripten mischt (leere Seite), tragen alle Skript- und CSS-Verweise in `index.html` `?v=N`. **Bei jeder Änderung an `js/` oder `css/` die Zahl überall hochzählen** (Suchen und Ersetzen von `?v=5`).

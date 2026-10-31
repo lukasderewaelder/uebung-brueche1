@@ -401,7 +401,7 @@ function runSelfTests(){
     }));
     t('Erklärungen: alle '+calcs+' Rechnungen stimmen (gleiche Brüche, Lücken lösbar, Teilbarkeit); falsche Rechnung ist wirklich falsch',calcs>=25&&calcBad===0&&wrongBad===0);
     t('Erklärungen: Bilder gültig (Teile, Färbung als gültige Indexliste, Farbe), höchstens ein Bild oder Ausprobieren je Schritt',steps.every(s=>{
-      if([s.fig,s.lab,s.tryit].filter(Boolean).length>1)return false;
+      if([s.fig,s.lab,s.tryit,s.nline,s.nltry].filter(Boolean).length>1)return false;
       const f=s.fig&&(Array.isArray(s.fig)?{mode:'strip',rows:s.fig}:s.fig);
       return !f||(['strip','circle'].includes(f.mode)&&f.rows.length>=1&&f.rows.length<=3&&f.rows.every(r=>r.n>=1&&r.d>r.n&&(!r.fill||validFill(r.fill,r.n,r.d))&&[undefined,'erw','kue'].includes(r.acc)));
     }));
@@ -549,6 +549,32 @@ function runSelfTests(){
       }catch(e){drawBad.push(id+'-L'+lvl+': '+e.message);}
     }
     t('Zahlenstrahl: '+drawn+' Ansichten (Aufgabe, Tipps, Musterlösung) bauen ohne Fehler auf',drawBad.length===0||(console.log(drawBad.slice(0,3)),false));
+  }
+  /* Thema Zahlenstrahl im Lernpfad (zwei Themen): eigener Pfad ohne Eingangstest, Pfad und Urkunde der Brüche-Werkstatt bleiben unabhängig */
+  {
+    const zs=moduleById('zahlenstrahl'),vm=moduleById('veraendern');
+    const snap={passed:S.passed,checked:S.checked,final:S.final,placed:S.placed,days:S.days,lab:S.lab,einstufung:S.einstufung,modus:S.modus,perfect:S.perfect};
+    const fresh=()=>{S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;S.einstufung=null;S.modus={};S.perfect={};};
+    fresh();
+    t('Thema Zahlenstrahl: aktiv, ohne Eingangstest, nicht im Rang, acht Pflicht-Bauteile Z01–Z08, Pfad ohne Wahl',zs.status==='aktiv'&&!zs.quickcheck&&!zs.rank&&zs.path.length===8&&zs.path.every(p=>p.must&&p.id===('Z0'+(zs.path.indexOf(p)+1)))&&lernenZustand(zs)==='pfad'&&PRACTICE_ORDER.includes('Z08')&&!rankPractice().includes('Z01')&&!rankPath().some(p=>p.id==='Z01')&&moduleOf('Z05').id==='zahlenstrahl'&&moduleOf('Eintragen').id==='zahlenstrahl');
+    const rows=()=>pathState(zs);
+    t('Pfad Zahlenstrahl: Start bei Z01, Z02 gesperrt (wartet auf Z01), alles andere gesperrt',rows().find(r=>r.next).id==='Z01'&&rows().find(r=>r.id==='Z02').locked&&rows().find(r=>r.id==='Z02').blocker==='Z01'&&rows().find(r=>r.id==='Z08').locked);
+    onRoundEnd('Z01',1,{results:['f','f','f','l','x'],size:5});
+    t('Pfad Zahlenstrahl: Z01 mit 4 von 5 bestanden ⇒ gespeichert, Z02 nächstes',S.passed['Z01-L1']===true&&rows().find(r=>r.next).id==='Z02'&&stationDone('Z01'));
+    t('Eingangstest von „Brüche verändern“ bleibt Pflicht, auch wenn Zahlenstrahl-Bauteile bestanden sind; erst Bauteile dieses Themas zählen als Einstieg',lernenZustand(vm)==='gate'&&(S.passed['G01-L1']=true,lernenZustand(vm)==='wahl'));
+    fresh();
+    ['Z01','Z02','Z03','Z04','Z05','Z06','Z07','Z08'].forEach(x=>{S.passed[x+'-L1']=true;});
+    t('Pfad Zahlenstrahl: alle acht bestanden ⇒ kein nächstes Bauteil, ohne Urkunde (S.final unberührt)',!rows().some(r=>r.next)&&rows().every(r=>r.done)&&!S.final);
+    t('Pfad Brüche verändern: bestandene Zahlenstrahl-Bauteile ändern dort nichts (Start weiter bei G01, nichts fertig)',pathState(vm).find(r=>r.next).id==='G01'&&!pathState(vm).some(r=>r.done));
+    /* Erklärungen der Zahlenstrahl-Bauteile: Strahlen und Ausprobieren gültig */
+    const zsSteps=[].concat(...['Z01','Z02','Z03','Z04','Z05','Z06','Z07','Z08'].map(id=>INTRO[id].steps));
+    t('Erklärungen Zahlenstrahl: jeder Strahl und jedes Ausprobieren ist gültig (Teile, Marken im Strahl, Strichzahl, passende und unpassende Einteilung)',zsSteps.every(s=>{
+      const lines=s.nline?[].concat(s.nline):[];
+      const ok=lines.every(l=>l.to>(l.from||0)&&Number.isInteger(l.parts)&&l.parts>=1&&(l.to-(l.from||0))*l.parts<=12&&(l.marks||[]).every(m=>m.i!=null?m.i>=0&&m.i<=(l.to-(l.from||0))*l.parts:m.n/m.d<=l.to)&&(!l.strip||(l.strip.d>=1&&l.strip.n<=l.strip.d)));
+      const y=s.nltry,tryOK=!y||(y.ks.length>=2&&y.ks.length<=4&&y.ks.every(k=>k>=1&&y.to*k<=12)&&(!y.mark||(y.ks.some(k=>fitsDivision(y.mark.d,k))&&y.ks.some(k=>!fitsDivision(y.mark.d,k)))));
+      return ok&&tryOK;
+    })&&zsSteps.filter(s=>s.nltry).length===3);
+    Object.assign(S,snap);
   }
   /* Themen-Registry */
   t('Registry: jede Aufgabe, Gruppe und jedes Bauteil eines aktiven Themas gibt es',activeModules().every(m=>(m.practice||[]).every(id=>TASKS[id])&&Object.values(m.groups||{}).every(g=>g.ids.every(id=>id==='LAB'||TASKS[id]))&&(m.path||[]).every(p=>p.id==='LAB'||TASKS[p.id])));
