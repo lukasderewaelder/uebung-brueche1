@@ -454,6 +454,28 @@ function runSelfTests(){
   t('Zahlengerade: Beschriftung „n/d“ standardmäßig, leer = ohne',ng.marks[0].text==='3/4'&&ng.marks[1].text==='');
   const nlSvg=drawNumberLine({from:0,to:1,parts:3,marks:[{n:2,d:3}]});
   t('Zahlengerade: SVG hat Achse, 4 Teilstriche, 2 Zahlen (0, 1) und eine Marke',nlSvg.querySelectorAll('.nl-axis').length===1&&nlSvg.querySelectorAll('.nl-tick').length===4&&nlSvg.querySelectorAll('.nl-num').length===2&&nlSvg.querySelectorAll('.nl-mark').length===1&&nlSvg.querySelector('.nl-lab').textContent==='2/3');
+  /* Zahlenstrahl: Einteilung, Striche, Ausschnitt (Lupe) */
+  t('Einteilung: Nenner geht auf (3 in 12, 5 in 10), geht nicht auf (4 in 10, 3 in 8); gemeinsamer Nenner 3, 8 → 24 und 4, 6, 12 → 12',fitsDivision(3,12)&&fitsDivision(5,10)&&!fitsDivision(4,10)&&!fitsDivision(3,8)&&commonDenominator([3,8])===24&&commonDenominator([4,6,12])===12&&commonDenominator([5])===5);
+  t('Strichnummer: 3/5 bei 10 Teilen ist Strich 6, 1/2 bei 8 Teilen Strich 4, 1/3 bei 10 Teilen keiner',tickOf(3,5,10)===6&&tickOf(1,2,8)===4&&tickOf(1,3,10)===null&&tickOf(7,4,4)===7);
+  {
+    const wg=numberLineGeometry(0,1,24,[{i:6,text:'A'},{i:20},{n:1,d:4,text:''},{n:1,d:3}],{win:[4,12]});
+    t('Zahlengerade-Ausschnitt: Striche 4 bis 12 über die ganze Breite, nur Marken im Ausschnitt',wg.ticks.length===9&&Math.abs(wg.ticks[0].x-wg.pad)<1e-9&&Math.abs(wg.ticks[8].x-(wg.W-wg.pad))<1e-9&&wg.marks.length===3&&wg.marks[0].i===6&&wg.marks[1].i===6&&wg.marks[2].i===8&&wg.marks[0].text==='A'&&!wg.marks.some(m=>m.i===20));
+    const og=numberLineGeometry(0,2,6,[],{});
+    t('Strich zur x-Stelle: nächster Strich, begrenzt auf den Strahl',og.idxAt(og.pad)===0&&og.idxAt(og.W-og.pad)===12&&og.idxAt(og.W/2)===6&&og.idxAt(-50)===0&&og.idxAt(9999)===12&&Math.abs(og.sp-og.len/12)<1e-9);
+    const sg=numberLineGeometry(0,1,4,[],{strip:true});
+    t('Zahlengerade mit Streifen: mehr Höhe, Achse tiefer',sg.H>og.H&&sg.y>og.y&&sg.top===34);
+  }
+  {
+    let picked=null,sec=null;
+    const sv=drawNumberLine({from:0,to:1,parts:5,strip:{n:2,d:5},secs:{on:new Set([1]),onTap:i=>{sec=i;}},onPick:i=>{picked=i;},labels:'ends'});
+    t('Zahlengerade: Streifen mit 5 Zellen (2 gefärbt), 5 Abschnitte (1 gezählt), Tippfläche, nur Enden beschriftet',sv.querySelectorAll('.nl-cell').length===5&&sv.querySelectorAll('.nl-cell.on').length===2&&sv.querySelectorAll('.nl-sec').length===5&&sv.querySelectorAll('.nl-sec.on').length===1&&!!sv.querySelector('.nl-cap')&&sv.querySelectorAll('.nl-num').length===2);
+    sv.querySelectorAll('.nl-sec')[3].dispatchEvent(new Event('click'));
+    t('Zahlengerade: Tippen auf einen Abschnitt meldet seine Nummer',sec===3&&picked===null);
+    const lupe=drawNumberLine({from:0,to:1,parts:24,win:[8,16],frame:null,labels:'none'});
+    t('Zahlengerade: Lupe zeigt 9 Striche, ohne Beschriftung',lupe.querySelectorAll('.nl-tick').length===9&&lupe.querySelectorAll('.nl-num').length===0);
+    const ov=drawNumberLine({from:0,to:1,parts:24,frame:[8,16]});
+    t('Zahlengerade: Übersicht hat 25 Striche und einen Rahmen um das Fenster',ov.querySelectorAll('.nl-tick').length===25&&ov.querySelectorAll('.nl-frame').length===1);
+  }
   /* Themen-Registry */
   t('Registry: jede Aufgabe, Gruppe und jedes Bauteil eines aktiven Themas gibt es',activeModules().every(m=>(m.practice||[]).every(id=>TASKS[id])&&Object.values(m.groups||{}).every(g=>g.ids.every(id=>id==='LAB'||TASKS[id]))&&(m.path||[]).every(p=>p.id==='LAB'||TASKS[p.id])));
   t('Registry: geplante Themen haben keine Aufgaben, keine Gruppen, keinen Lernpfad',plannedModules().length>0&&plannedModules().every(m=>!m.practice&&!m.groups&&!m.path));

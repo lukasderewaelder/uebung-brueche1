@@ -63,3 +63,11 @@ const compareFrac=(a,b,c,d)=>Math.sign(a*d-c*b);
 const sortFracs=(list)=>list.slice().sort((x,y)=>compareFrac(x[0],x[1],y[0],y[1]));
 const isImproper=(a,b)=>a>=b;
 const toMixed=(a,b)=>({w:Math.floor(a/b),n:a%b,d:b});
+
+/* ---------- Zahlenstrahl ----------
+   Ein Bruch mit dem Nenner d liegt genau auf einem Strich, wenn die Einteilung (m Teile je Ganzem) ein Vielfaches von d ist:
+   der Nenner „geht in die Einteilung auf“. Strich i (von 0 gezählt) bei m Teilen je Ganzem liegt bei i/m. */
+const fitsDivision=(d,m)=>d>0&&m>0&&m%d===0;
+const commonDenominator=(ds)=>ds.reduce((a,d)=>lcm(a,d),1);
+/* Nummer des Strichs für n/d bei m Teilen je Ganzem (ab dem Strich 0 der Zahl 0); null, wenn der Bruch zwischen zwei Strichen liegt */
+const tickOf=(n,d,m)=>fitsDivision(d,m)?n*(m/d):null;
