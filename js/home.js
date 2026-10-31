@@ -39,8 +39,8 @@ function moduleCard(m){
   const head=el('div',{class:'tc-head'},el('span',{class:'ico','aria-hidden':'true'},icon(m.icon)),el('div',null,el('h2',null,m.name),el('p',null,m.desc)));
   const btn=(label,fn,primary,ic)=>el('button',{type:'button',class:'btn'+(primary?' primary':''),onclick:fn},ic?icon(ic):null,label);
   if(z==='gate')return el('section',{class:'tcard'},head,
-    el('p',{class:'tc-note'},TASKS.Q00.size+' kurze Fragen zeigen zuerst, was du schon kannst.'),
-    el('div',{class:'rowbtns'},btn('Eingangstest starten',()=>startEingang(),true,'play')));
+    el('p',{class:'tc-note'},TASKS[m.qid].size+' kurze Fragen zeigen zuerst, was du schon kannst.'),
+    el('div',{class:'rowbtns'},btn('Eingangstest starten',()=>startEingang(m),true,'play')));
   if(z==='wahl')return el('section',{class:'tcard'},head,
     el('div',{class:'rowbtns'},btn('Wie möchtest du lernen?',openThema,true)));
   const {must,doneN,go1,rows}=pfadInfo(m,z);

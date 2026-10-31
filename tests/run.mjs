@@ -15,7 +15,7 @@ const store={};
 const win={
   document:stub(),history:{replaceState(){},pushState(){}},
   localStorage:{getItem:k=>k in store?store[k]:null,setItem:(k,v)=>{store[k]=String(v);},removeItem:k=>{delete store[k];}},
-  addEventListener(){},matchMedia:()=>({matches:false,addEventListener(){}}),scrollTo(){},
+  innerWidth:1024,innerHeight:768,addEventListener(){},matchMedia:()=>({matches:false,addEventListener(){}}),scrollTo(){},
   setTimeout,clearTimeout,Math,Date,JSON,Number,Object,Array,String,Set,Map,Promise,console
 };
 win.window=win;

@@ -162,6 +162,17 @@ const INTRO={
     {h:'Der Abschlusscheck',
       say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat auch '+TASKS.Q00.size+' Fragen.','Ab '+needOf(TASKS.Q00.size)+' richtigen Antworten gibt es die Urkunde.']}
   ]},
+  ZQ:{title:'Eingangstest',steps:[
+    {h:'Blitzfragen zum Zahlenstrahl',
+      say:[TASKS.ZQ.size+' Fragen warten auf dich.','Du tippst nur die Antwort an.','Manchmal siehst du einen Zahlenstrahl.'],
+      nline:{from:0,to:1,parts:5,marks:[{n:3,d:5,text:'A'}],labels:'wholes'}},
+    {h:'Sofort eine Rückmeldung',
+      say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Es gibt keine Zeitmessung.']},
+    {h:'Danach siehst du, was fehlt',
+      say:['Am Ende siehst du, was du schon kannst.','Danach wählst du: dem Pfad folgen oder selbst aussuchen.','Weißt du etwas nicht, rate bitte nicht wild.']},
+    {h:'Der Abschlusscheck',
+      say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat auch '+TASKS.ZQ.size+' Fragen.','Ab '+needOf(TASKS.ZQ.size)+' richtigen Antworten gibt es die Urkunde.']}
+  ]},
   /* Zahlenstrahl: nline = ein Strahl oder eine Liste von Strahlen {from,to,parts,marks,labels,strip,secs}; nltry = Einteilung ausprobieren {to,ks,mark} */
   Z01:{title:'Einteilung erkennen',steps:[
     {h:'Striche und Abschnitte',

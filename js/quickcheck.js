@@ -17,18 +17,24 @@ const Q_HINT={
   div:[]
 };
 const Q_SKILL_NAME={gleich:'Gleiche Brüche erkennen',teilbar:'Teilbarkeit',erweitern:'Erweitern',kuerzen:'Kürzen',vollstaendig:'Vollständig kürzen'};
-/* Zu welcher Übung gehört die Fähigkeit? */
-const Q_STATION={gleich:'G01',teilbar:'T01',erweitern:'G02',kuerzen:'G03',vollstaendig:'G04'};
 const Q_PER_SKILL=3;                        /* Fragen je Fähigkeit im Schnellcheck */
 const Q_COUNT=Q_SKILLS.length*Q_PER_SKILL;  /* 15 */
 const Q_START_SHARE=0.3;                    /* höchstens dieser Anteil richtig = „fast alles falsch“ (bei 15 Fragen: 4) */
-/* Fragenplan: Q_PER_SKILL Blöcke mit allen Fähigkeiten in zufälliger Reihenfolge, nie zweimal dieselbe hintereinander */
-function qPlan(R){
-  R=R||RNG;
+/* Eingangstests je Thema (Schlüssel = Aufgaben-ID des Tests, steht im Thema als qid):
+   skills: Fähigkeiten (je 3 Fragen), names: Anzeigenamen, stations: zu welchen Lernpfad-Bauteilen eine Fähigkeit gehört
+   (3 von 3 richtig ⇒ diese Bauteile sind im Modus „Selbst aussuchen“ offen), allSure: Bauteile, die erst aufgehen, wenn alles sitzt,
+   startText: Satz bei „fast alles falsch“. Der Test ist zugleich der Abschlusscheck des Themas (Urkunde). */
+const QCHK={
+  Q00:{skills:Q_SKILLS,names:Q_SKILL_NAME,stations:{gleich:['G01'],teilbar:['T01'],erweitern:['G02'],kuerzen:['G03'],vollstaendig:['G04']},allSure:['G05'],
+    startText:'Im Lernpfad lernst du alles Schritt für Schritt. Das Bruchlabor hilft dir beim Start.'}
+};
+/* Fragenplan: je Fähigkeit per Blöcke (Standard 3) mit allen Fähigkeiten in zufälliger Reihenfolge, nie zweimal dieselbe hintereinander */
+function qPlan(R,skills,per){
+  R=R||RNG;skills=skills||Q_SKILLS;per=per||Q_PER_SKILL;
   const out=[];
-  for(let b=0;b<Q_PER_SKILL;b++){
+  for(let b=0;b<per;b++){
     let blk;
-    do{blk=R.shuffle(Q_SKILLS);}while(out.length&&blk[0]===out[out.length-1]);
+    do{blk=R.shuffle(skills);}while(out.length&&blk[0]===out[out.length-1]);
     out.push(...blk);
   }
   return out;
@@ -263,6 +269,32 @@ function qPick(view,id,node,group){
   if(view.submit)view.submit();
 }
 
+/* Antworten zum Antippen: vier Karten A–D (Text txt, Bruch f=[n,d] oder gemischte Zahl mx=[w,n,d]) oder Ja/Nein */
+function qOptions(view,host,t){
+  const d=view.draft;
+  if(t.opts){
+    const grid=el('div',{class:'tiles tiles-'+t.opts.length,role:'group','aria-label':'Antworten'});
+    t.opts.forEach((o,i)=>{
+      const shown=o.f?frac(o.f[0],o.f[1]):o.mx?mixed(o.mx[0],o.mx[1],o.mx[2]):el('span',{class:'tv'},o.txt);
+      const b=el('button',{type:'button',class:'tile'+(o.ic?' tile-ic':''),'aria-pressed':String(d.ans===o.id),'aria-label':'Antwort '+Q_LETTERS[i]+': '+o.txt},
+        el('span',{class:'ltr','aria-hidden':'true'},Q_LETTERS[i]),o.ic?icon(o.ic):null,shown);
+      b.disabled=view.locked();qMark(b,o.id,view,t);
+      b.addEventListener('click',()=>qPick(view,o.id,b,grid));
+      view.inputs['t'+o.id]=b;grid.append(b);
+    });
+    host.append(grid);
+  }else{
+    const row=el('div',{class:'yesno'});
+    [['ja','haken','Ja'],['nein','kreuz','Nein']].forEach(([v,ic,label])=>{
+      const b=el('button',{type:'button',class:'btn yn','aria-pressed':String(d.ans===v),'aria-label':label},icon(ic),label);
+      b.disabled=view.locked();qMark(b,v,view,t);
+      b.addEventListener('click',()=>qPick(view,v,b,row));
+      view.inputs['yn'+v]=b;row.append(b);
+    });
+    host.append(row);
+  }
+}
+
 const QUICK={
   quick:true,
   notes:['M1','M2','M3','M7'],
@@ -289,26 +321,7 @@ const QUICK={
       host.append(eq(f(t.from),'=',el('span',{class:'frac',role:'math','aria-label':(t.blank==='n'?'gesuchte Zahl':t.to[0])+' durch '+(t.blank==='d'?'gesuchte Zahl':t.to[1])},el('span',{class:'num'},tn),el('span',{class:'den'},td))));
     }else if(t.kind==='full')host.append(eq(f(t.from),'=',f(t.to)));
     else if(t.kind==='kind')host.append(eq(f(t.from),'→',f(t.to)));
-    if(t.opts){
-      const grid=el('div',{class:'tiles tiles-'+t.opts.length,role:'group','aria-label':'Antworten'});
-      t.opts.forEach((o,i)=>{
-        const b=el('button',{type:'button',class:'tile'+(o.ic?' tile-ic':''),'aria-pressed':String(d.ans===o.id),'aria-label':'Antwort '+Q_LETTERS[i]+': '+o.txt},
-          el('span',{class:'ltr','aria-hidden':'true'},Q_LETTERS[i]),o.ic?icon(o.ic):null,el('span',{class:'tv'},o.txt));
-        b.disabled=view.locked();qMark(b,o.id,view,t);
-        b.addEventListener('click',()=>qPick(view,o.id,b,grid));
-        view.inputs['t'+o.id]=b;grid.append(b);
-      });
-      host.append(grid);
-    }else{
-      const row=el('div',{class:'yesno'});
-      [['ja','haken','Ja'],['nein','kreuz','Nein']].forEach(([v,ic,label])=>{
-        const b=el('button',{type:'button',class:'btn yn','aria-pressed':String(d.ans===v),'aria-label':label},icon(ic),label);
-        b.disabled=view.locked();qMark(b,v,view,t);
-        b.addEventListener('click',()=>qPick(view,v,b,row));
-        view.inputs['yn'+v]=b;row.append(b);
-      });
-      host.append(row);
-    }
+    qOptions(view,host,t);
   },
   validate(t,d){
     if(!d.ans)return invalid('Tippe eine Antwort an.');

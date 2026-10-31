@@ -261,7 +261,7 @@ const openEntry=(id)=>{if(!isGame(id))S.last=id;go({kind:isGame(id)?'game':'prac
 function setLevel(id,l){S.levelByType[id]=l;persist();renderAll();}
 
 /* Symbole und Kennfarbe je Übung (erw = Erweitern/Orange, kue = Kürzen/Petrol) */
-const ICON={Z01:'lineal',Z02:'lupe',Z03:'lineal',Z04:'aus',Z05:'wechsel',Z06:'zahnrad',Z07:'lineal',Z08:'wechsel',Q00:'blitz',G01:'lineal',T01:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'zahnrad',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor'};
+const ICON={ZQ:'blitz',Z01:'lineal',Z02:'lupe',Z03:'lineal',Z04:'aus',Z05:'wechsel',Z06:'zahnrad',Z07:'lineal',Z08:'wechsel',Q00:'blitz',G01:'lineal',T01:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'zahnrad',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor'};
 const ACC={G02:'erw',O01:'erw',G03:'kue',G04:'kue',T01:'kue',O02:'kue',G05:'mix'};
 function backTarget(){
   const v=S.view;
@@ -446,16 +446,16 @@ function renderSummary(main,id,lvl,key,round){
     el('div',{class:'rowbtns'},...btns)));
 }
 
-/* Ergebnis des Eingangstests und Abschlusschecks (Q00) */
+/* Ergebnis des Eingangstests und Abschlusschecks eines Themas (QCHK[id]) */
 function renderQuickSummary(main,id,lvl,key,round){
-  const info=round.info||{};
+  const qc=QCHK[id],info=round.info||{};
   const right=round.results.filter(r=>r==='f'||r==='l').length,share=right/round.size;
   const again=()=>{S.rounds[key]={results:[],cur:null,size:TASKS[id].size};persist();renderAll();};
   const btn=(label,fn,primary)=>el('button',{type:'button',class:'btn'+(primary?' primary':''),onclick:fn},label);
   const toPfad=()=>go(pfadView(id));
   const stars=bigStars(share>=0.9?3:share>=0.7?2:share>=0.4?1:0);
   /* Schnellcheck (Q00): Ergebnis je nach Stufe – von vorn beginnen, Themenliste oder fit */
-  const ev=info.ev||qEvaluate(round.results,round.sk,round.size,true); /* Runden ohne info.ev: aus den Antworten rechnen */
+  const ev=info.ev||qEvaluate(round.results,round.sk,round.size,true,qc.skills); /* Runden ohne info.ev: aus den Antworten rechnen */
   const per={};
   round.results.forEach((r,i)=>{const sk=(round.sk||[])[i];if(sk)(per[sk]=per[sk]||[]).push(r==='f'||r==='l');});
   if(ev.stufe==='start'){
@@ -463,22 +463,22 @@ function renderQuickSummary(main,id,lvl,key,round){
       el('div',{class:'stampbox'},'Check fertig'),el('p',null),
       el('p',null,`${right} von ${round.size} richtig`),
       el('p',null,'Das war noch schwer. Das ist ganz normal.'),
-      el('p',null,'Im Lernpfad lernst du alles Schritt für Schritt. Das Bruchlabor hilft dir beim Start.'),
+      el('p',null,qc.startText),
       el('div',{class:'rowbtns'},btn('Zum Lernpfad',toPfad,true),btn('Nochmal',again))));
     return;
   }
   /* Fähigkeiten in Lernpfad-Reihenfolge */
-  const pathIx=(sk)=>PATH.findIndex(m=>m.id===Q_STATION[sk]);
-  const order=Q_SKILLS.filter(sk=>per[sk]).sort((a,b)=>pathIx(a)-pathIx(b));
+  const pathIx=(sk)=>PATH.findIndex(m=>m.id===(qc.stations[sk]||[])[0]);
+  const order=qc.skills.filter(sk=>per[sk]).sort((a,b)=>pathIx(a)-pathIx(b));
   const rows=order.map(sk=>{
     const x=ev.skills[sk];
     return el('tr',null,
       el('td',null,per[sk].map(ok=>el('span',{class:'qm '+(ok?'ok':'bad'),role:'img','aria-label':ok?'richtig':'falsch'},icon(ok?'haken':'kreuz')))),
-      el('td',null,Q_SKILL_NAME[sk]),
+      el('td',null,qc.names[sk]),
       el('td',{class:x.status==='sitzt'?'sits':'ueben'},el('b',null,x.status==='sitzt'?'sitzt':x.status==='fast'?'fast':'üben')));
   });
-  const sitzt=order.filter(sk=>ev.skills[sk].status==='sitzt').map(sk=>Q_SKILL_NAME[sk]);
-  const ueben=order.filter(sk=>ev.skills[sk].status!=='sitzt').map(sk=>Q_SKILL_NAME[sk]);
+  const sitzt=order.filter(sk=>ev.skills[sk].status==='sitzt').map(sk=>qc.names[sk]);
+  const ueben=order.filter(sk=>ev.skills[sk].status!=='sitzt').map(sk=>qc.names[sk]);
   const lines=[];
   if(info.final)lines.push('Urkunde! Du hast den Lernpfad geschafft.');
   else{
