@@ -95,8 +95,8 @@ const INTRO={
       say:['Kürze, bis keine Zahl mehr in beide passt.','Dann ist der Bruch so weit wie möglich gekürzt.','Bei {2|3} geht nichts mehr.']},
     {h:'Manchmal geht es nicht',
       say:['Bei {5|7} passt keine Zahl in beide.','Dieser Bruch lässt sich nicht kürzen.','Dann tippe auf **Geht nicht mehr**.']},
-    {h:'Die 2 geht IMMER',
-      say:['**Die 2 geht IMMER, wenn Zähler und Nenner gerade sind.**','Enden beide auf 0 oder 5, geht auch die 5.','Enden beide auf 0, geht auch die 10.']}
+    {h:'Schnelle Tipps',
+      say:['**Sind beide Zahlen gerade, kannst du durch 2 kürzen.**','Enden beide auf 0 oder 5, geht auch die 5.','Enden beide auf 0, geht auch die 10.']}
   ]},
   G05:{title:'Erweitern und Kürzen gemischt',steps:[
     {h:'Erweitern oder kürzen?',
@@ -146,7 +146,7 @@ const INTRO={
       say:['Tippe auf eine Zahl, zum Beispiel **÷ 2**.','Der Bruch wird sofort gekürzt.','Es geht nur, wenn beide Zahlen teilbar sind.'],
       calc:[[[12,18],'=',[6,9]]]},
     {h:'Bis nichts mehr geht',
-      say:['Kürze weiter, bis der Bruch fertig ist.','Dann hast du einen Weg geschafft.','Die 2 geht IMMER, wenn beide gerade sind.'],
+      say:['Kürze weiter, bis der Bruch fertig ist.','Dann hast du einen Weg geschafft.','Sind beide Zahlen gerade, kannst du durch 2 kürzen.'],
       calc:[[[6,9],'=',[6,9,'d',3],'=',[2,3]]]},
     {h:'Zwei verschiedene Wege',
       say:['Du brauchst zwei Wege mit verschiedenen Zahlen.','Weg 1 kann ein großer Schritt sein.','Weg 2 besteht aus kleinen Schritten.','Mit **Weg neu starten** beginnst du noch einmal.'],

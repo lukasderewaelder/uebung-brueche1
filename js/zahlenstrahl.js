@@ -1,7 +1,7 @@
 'use strict';
 /* =====================================================================
    Zahlenstrahl-Aufgaben Z01–Z08 (Thema „Brüche am Zahlenstrahl“)
-   Gleicher Vertrag wie in tasks.js: gen, prompt, render, validate, solution, hints; Antworten liegen im Entwurf (draft).
+   Gleicher Vertrag wie in tasks.js: gen, prompt, render, validate, solution (Tipps: js/tips.js); Antworten liegen im Entwurf (draft).
    Strichnummern zählen ab dem Strich 0; „Teile je Ganzem“ = Zahl der Abschnitte eines Ganzen (m).
    Fehlercodes (im Feedback benannt): ticks (Striche statt Abschnitte), whole (ganzen Strahl statt ein Ganzes),
    einteilung (Nenner geht nicht in die Einteilung auf), uneven (ungleiche Abschnitte), form (Wert stimmt, Nenner nicht), pos.
@@ -122,11 +122,6 @@ TASKS.Z01={area:'Zahlenstrahl',name:'Einteilung erkennen',desc:'Abschnitte zähl
     }
     if(t.kind==='pick')return [line(`Gesucht: ${t.m} Abschnitte. Ein Strahl mit ${t.m} Abschnitten hat ${t.m+1} Striche.`),drawNumberLine({from:0,to:t.u,parts:t.m,labels:'wholes'})];
     return [line(t.equal?'Alle Abschnitte sind gleich breit.':'Ein Strich ist verschoben: Die Abschnitte daneben sind verschieden breit.'),t.equal?drawNumberLine({from:0,to:1,parts:t.m,labels:'wholes'}):nlDrawUneven(t.m,t.k,t.shift)];
-  },
-  hints(t){
-    if(t.kind==='count')return [['Die Striche begrenzen die Abschnitte. Zähle die Zwischenräume, nicht die Striche.'],['Fange bei 0 an und zähle jeden Abschnitt bis zur 1.'+(t.level===1?' Du kannst die Abschnitte antippen: Sie werden gefärbt und mitgezählt.':'')]];
-    if(t.kind==='pick')return [['Zähle bei jedem Strahl die Abschnitte zwischen 0 und 1.'],[`Ein Strahl mit ${t.m} Strichen hat nur ${t.m-1} Abschnitte.`]];
-    return [['Vergleiche die Abstände zwischen je zwei Strichen.'],['Alle Abschnitte müssen gleich breit sein, sonst ist die Einteilung ungleichmäßig.']];
   }
 };
 
@@ -165,8 +160,7 @@ TASKS.Z02={area:'Zahlenstrahl',name:'Brüche ablesen',desc:'Lies zu Punkten am Z
     return [line(`Ein Ganzes ist in ${t.m} Abschnitte geteilt, also ist der Nenner ${t.m}.`),
       ...t.idx.map((n,k)=>line(`${NL_LET[k]}: ${n} Abschnitte von 0 aus. `,frac(n,t.m))),
       nlSol(0,t.u,t.m,t.idx,t.idx.map((n,k)=>NL_LET[k]+' = '+ft(n,t.m)))];
-  },
-  hints(t){return [['Der Nenner sagt, in wie viele gleich große Abschnitte ein Ganzes geteilt ist.'],['Der Zähler sagt, wie viele Abschnitte du von 0 aus bis zum Punkt zählst.']];}
+  }
 };
 
 /* ---------- Z03 Eintragen (Einteilung vorgegeben) ---------- */
@@ -200,12 +194,6 @@ TASKS.Z03={area:'Zahlenstrahl',name:'Brüche eintragen',desc:'Trage Brüche auf 
     return [line(`Ein Ganzes hat ${t.m} Abschnitte. Zähle den Zähler als Abschnitte von 0 aus.`),
       ...t.idx.map((n,k)=>line(`${NL_LET[k]} = `,frac(n,t.m),`: ${n} Abschnitte von 0 aus.`)),
       nlSol(0,t.u,t.m,t.idx,t.idx.length>1?NL_LET.slice(0,t.idx.length):t.idx.map(n=>ft(n,t.m)))];
-  },
-  hints(t){
-    const h=[['Der Nenner sagt, wie viele Abschnitte ein Ganzes hat. Der Strahl ist schon passend eingeteilt.']];
-    if(t.idx.length===1&&t.idx[0]<=t.m)h.push(['Jetzt liegt ein Bruchstreifen über dem Strahl. Der gefärbte Teil reicht bis zum Punkt.']);
-    h.push(['Zähle vom Strich 0 aus so viele Abschnitte, wie der Zähler sagt.']);
-    return h;
   }
 };
 
@@ -247,12 +235,6 @@ TASKS.Z04={area:'Zahlenstrahl',name:'Einteilung anpassen',desc:'Teile den Strahl
     return [line(`Teile jedes Ganze in ${t.d} gleich große Abschnitte (der Nenner ${t.d} sagt es). Zähle dann den Zähler ab 0.`),
       ...t.fr.map((n,k)=>line(`${t.fr.length>1?NL_LET[k]+' = ':''}`,frac(n,t.d),`: ${n} Abschnitte von 0 aus.`)),
       nlSol(0,t.u,t.d,t.fr,t.fr.length>1?NL_LET.slice(0,t.fr.length):t.fr.map(n=>ft(n,t.d)))];
-  },
-  hints(t){
-    const h=[['Der Nenner sagt, in wie viele gleich große Abschnitte jedes Ganze geteilt wird.']];
-    if(t.fr.length===1&&t.fr[0]<=t.d)h.push([`Jetzt liegt ein Bruchstreifen über dem Strahl. Er ist in ${t.d} gleiche Teile geteilt: So soll auch der Strahl eingeteilt werden.`]);
-    h.push(['Stelle zuerst die Teile je Ganzem ein. Zähle dann den Zähler vom Strich 0 aus ab.']);
-    return h;
   }
 };
 
@@ -278,7 +260,6 @@ TASKS.Z05={area:'Zahlenstrahl',name:'Bruch anpassen',desc:'Bringe den Bruch auf 
   },
   prompt(t,h){
     h.append(el('p',{class:'q'},'Trage ',frac(t.a,t.b),' ein. Der Strahl ist in ',strong(t.m),' Abschnitte je Ganzem geteilt.'));
-    if(t.level===1)h.append(el('p',{class:'q sm'},'Schreibe den Bruch zuerst mit dem Nenner ',strong(t.m),'.'));
   },
   render(view,host){
     const t=view.task,d=view.draft;
@@ -332,14 +313,6 @@ TASKS.Z05={area:'Zahlenstrahl',name:'Bruch anpassen',desc:'Bringe den Bruch auf 
     return [line(e?`Der Nenner ${t.b} wird mit ${t.k} multipliziert, um ${t.m} zu erhalten: erweitern mit ${t.k}.`:`Der Nenner ${t.b} wird durch ${t.k} geteilt, um ${t.m} zu erhalten: kürzen mit ${t.k}.`),
       eq(frac(t.a,t.b),'=',frac(t.a+(e?' · ':' : ')+t.k,t.b+(e?' · ':' : ')+t.k),'=',frac(t.a*t.m/t.b,t.m)),
       line(`Zähle ${t.a*t.m/t.b} Abschnitte von 0 aus.`),nlSol(0,t.u||1,t.m,[t.a*t.m/t.b],[ft(t.a,t.b)])];
-  },
-  hints(t){
-    const h=[t.kind==='nofit'?['Prüfe: Geht der Nenner des Bruchs in die Zahl der Teile je Ganzem auf?']:['Vergleiche den Nenner des Bruchs mit der Zahl der Abschnitte je Ganzem auf dem Strahl.']];
-    if(t.a<t.b)h.push(['Jetzt liegt ein Bruchstreifen über dem Strahl. Er zeigt den Bruch in seinem Nenner, der Strahl hat eine andere Einteilung.']);
-    h.push(t.kind==='expand'?[`Womit musst du ${t.b} multiplizieren, um ${t.m} zu erhalten? Dieselbe Zahl gilt für den Zähler.`]
-      :t.kind==='reduce'?[`Wodurch musst du ${t.b} teilen, um ${t.m} zu erhalten? Dieselbe Zahl gilt für den Zähler.`]
-      :['Wenn die Einteilung nicht passt, teile den Strahl feiner. Der Nenner des Bruchs muss in die Teile aufgehen.']);
-    return h;
   }
 };
 
@@ -388,8 +361,7 @@ TASKS.Z06={area:'Zahlenstrahl',name:'Mehrere Brüche eintragen',desc:'Finde eine
     return [line(`Alle Nenner (${ds.join(', ')}) müssen in die Zahl der Teile aufgehen. Die kleinste solche Zahl ist ${t.l}.`),
       ...t.fr.map((f,k)=>line(`${NL_LET[k]} = `,frac(f[0],f[1]),'= ',frac(f[0]*t.l/f[1],t.l))),
       nlSol(0,t.u,t.l,t.fr.map(f=>f[0]*t.l/f[1]),NL_LET.slice(0,t.fr.length))];
-  },
-  hints(t){return [['Die Einteilung muss für jeden Nenner passen: Jeder Nenner muss in die Zahl der Teile aufgehen.'],['Suche die kleinste Zahl, in die alle Nenner aufgehen.']];}
+  }
 };
 
 /* ---------- Z07 Einheit lesen ---------- */
@@ -440,11 +412,6 @@ TASKS.Z07={area:'Zahlenstrahl',name:'Einheit lesen',desc:'Ein Ganzes geht von ei
     return [line(f?`Der Strahl beginnt bei ${f}. Von ${f} bis ${f+1} ist ein Ganzes in ${t.q} Abschnitte geteilt. Ziehe ${f} Ganze, also ${f*t.q} Abschnitte, vom Zähler ab.`:`Von 0 bis 1 ist ein Ganzes in ${t.q} Abschnitte geteilt. Der Zähler sagt, wie viele Abschnitte du von 0 aus zählst.`),
       ...t.ps.map((p,k)=>line(`${NL_LET[k]} = `,frac(p,t.q),f?`: ${p} − ${f*t.q} = ${p-f*t.q} Abschnitte ab ${f}.`:`: ${p} Abschnitte von 0 aus.`)),
       nlSol(f,f+t.ns[0],t.q,t.ps.map(p=>p-f*t.q),NL_LET.slice(0,t.ps.length),{labels:[f,f+1]})];
-  },
-  hints(t){
-    const f=t.from||0;
-    return [[f?'Ein Ganzes ist der Abstand zwischen zwei ganzen Zahlen, hier von '+f+' bis '+(f+1)+'. Der Strahl muss nicht bei 0 beginnen.':'Ein Ganzes ist immer die Strecke von 0 bis 1, nicht der ganze Strahl.'],
-      [f?`Zähle ab ${f}: Wie viele Abschnitte sind es bis zum Bruch? Von ${f} bis ${f+1} sind es ${t.q}.`:`Finde die 1 auf dem Strahl. Von 0 bis 1 ist ein Ganzes in ${t.q} Abschnitte geteilt.`]];
   }
 };
 
@@ -529,9 +496,5 @@ TASKS.Z08={area:'Zahlenstrahl',name:'Größer als 1',desc:'Zwischen welchen ganz
     const w=Math.floor(t.n/t.d),rest=t.n%t.d;
     if(t.kind==='between')return [line(`${t.n} : ${t.d} = ${w} Rest ${rest}. Also liegt ${ft(t.n,t.d)} zwischen ${w} und ${w+1}.`),nlSol(0,t.u,t.level===1?t.d:1,t.level===1?[t.n]:[],t.level===1?[ft(t.n,t.d)]:[])];
     return [line(`${t.n} : ${t.d} = ${w} Rest ${rest}.`),eq(frac(t.n,t.d),'=',mixed(w,rest,t.d))];
-  },
-  hints(t){
-    if(t.kind==='nat')return [['Ein Bruch ist eine natürliche Zahl, wenn der Zähler ein Vielfaches des Nenners ist.'],['Teile Zähler : Nenner. Bleibt kein Rest, ist es eine natürliche Zahl.']];
-    return [[`Wie viele Ganze passen in ${t.n}/${t.d}? Teile ${t.n} durch ${t.d}.`],[t.kind==='between'?'Der Rest zeigt, wie weit der Punkt hinter der letzten ganzen Zahl liegt.':'Der Rest wird der Zähler des Bruchs, der Nenner bleibt gleich.']];
   }
 };

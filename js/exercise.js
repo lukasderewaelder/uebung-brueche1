@@ -166,7 +166,7 @@ function hintBox(title,lines,open,onToggle){
   return el('div',{class:'hint'},
     el('div',{class:'hint-head'},el('b',{class:'lab'},icon('hinweis'),title),
       el('button',{type:'button',class:'hint-toggle','aria-expanded':'true','aria-label':title+' einklappen',onclick:()=>onToggle(false)},'Einklappen',icon('auf'))),
-    lines.map(x=>el('p',null,x)));
+    lines.map(x=>el('p',null,...(typeof x==='string'?introRich(x):[x])))); /* Text mit {n|d} und **fett** (wie in den Erklärungen) */
 }
 function buildDock(main,{hintBtn,noteBtn,primary,pad,msg}){
   const bar=el('div',{class:'actionbar'},msg||null,pad?pad.el:null,el('div',{class:'primaryrow'},hintBtn,noteBtn,primary));

@@ -10,9 +10,9 @@ const Q_NOTES={eqYN:['M1'],missing:['M2','M3'],reducible:['M7','M3'],which:['M7'
 const Q_HINT={
   eqYN:['Vergleiche beide Brüche: Wurde bei Zähler und Nenner dasselbe gerechnet?'],
   missing:['Was ist mit dem bekannten Zähler oder Nenner passiert? Dasselbe gilt für die gesuchte Zahl.'],
-  reducible:['Gibt es eine Zahl größer als 1, durch die beide Zahlen teilbar sind?',RULE2],
-  which:['Teste: Teilt die Zahl sowohl den Zähler als auch den Nenner?',RULE2],
-  full:['Prüfe, ob du noch einmal kürzen kannst.',RULE2],
+  reducible:['Gibt es eine Zahl größer als 1, durch die beide Zahlen teilbar sind?'],
+  which:['Teste: Teilt die Zahl sowohl den Zähler als auch den Nenner?'],
+  full:['Prüfe, ob du noch einmal kürzen kannst.'],
   kind:['Vergleiche die Zahlen vorher und nachher: Wurde bei beiden dasselbe gerechnet?'],
   div:[]
 };

@@ -253,11 +253,9 @@ function renderVault(id){
     persist();fillStats();drawPuzzle();toTop();
     award(40,'Tresor geknackt!'); /* erst nach dem Umbau, damit die Einblendung über dem endgültigen Bedienpult liegt */
   };
-  /* Erster Tipp: allgemeiner Hinweis; bei Kürzen-Aufgaben (und an der Tür) nennt er auch die 2-Regel */
+  /* Erster Tipp: allgemeiner Hinweis zum Tresor (die Tipps der Aufgabe selbst nennen die passende Teilbarkeitsregel) */
   const prefixFor=()=>{
-    if(onDoor())return [[HINT.vault[1],RULE2]];
-    const l=cur(),own=TASKS[l.task.type].hints(l.task);
-    return [own.length&&own.every(h=>h.some(x=>/2 geht IMMER/i.test(x)))?[HINT.vault[0],RULE2]:[HINT.vault[0]]];
+    return [[HINT.vault[onDoor()?1:0]]];
   };
   const cbFor=()=>({
     save:()=>persist(),

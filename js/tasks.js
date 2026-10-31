@@ -1,6 +1,6 @@
 'use strict';
 /* =====================================================================
-   6 Aufgabentypen: Generator, Darstellung, Prüfung, Musterlösung, Tipps
+   6 Aufgabentypen: Generator, Darstellung, Prüfung, Musterlösung (die Tipps stehen in js/tips.js)
    Antworten liegen als einfaches Objekt (draft) vor und sind serialisierbar.
    ===================================================================== */
 const MSG_FRAC_INVALID='Trage in beide Felder eine ganze Zahl ein (Nenner größer als 0).';
@@ -151,8 +151,7 @@ TASKS.G01={area:'Grundlagen',name:'Gleiche Anteile erkennen',desc:'Finde die Bil
     });
     box.push(line('Alle anderen Karten zeigen einen anderen Anteil, auch wenn der Nenner oder der Zähler gleich sein kann.'));
     return box;
-  },
-  hints(t){return HINT.equal.map(x=>[x]);}
+  }
 };
 function relationText(a,b,c,d){
   if(c%a===0&&d%b===0&&c/a===d/b&&c/a>1)return `erweitert mit ${c/a}`;
@@ -187,8 +186,7 @@ TASKS.G02={area:'Grundlagen',name:'Erweitern',desc:'Erweitere Brüche mit einer 
   },
   solution(t){
     return [line('Zähler und Nenner werden mit '+t.k+' multipliziert:'),eq(frac(t.a,t.b),'=',frac(t.a+' · '+t.k,t.b+' · '+t.k),'=',frac(t.a*t.k,t.b*t.k)),line('Der Wert des Bruchs ändert sich nicht.')];
-  },
-  hints(t){return HINT.expand.map(x=>[x]);}
+  }
 };
 
 /* ---------- G03 Kürzen ---------- */
@@ -234,8 +232,7 @@ TASKS.G03={area:'Grundlagen',name:'Kürzen',desc:'Kürze Brüche mit einer Zahl 
     const g=gcd(t.a,t.b),out=[line('Zähler und Nenner lassen sich beide durch '+g+' teilen:'),eq(frac(t.a,t.b),'=',frac(t.a+' : '+g,t.b+' : '+g),'=',frac(t.p,t.q))];
     out.push(line('Der Bruch ',frac(t.p,t.q),' lässt sich nicht weiter kürzen. (Man kann auch in mehreren kleinen Schritten kürzen.)'));
     return out;
-  },
-  hints(t){return withRules(t.mode==='factor'?HINT.reduceGiven:HINT.reduce);}
+  }
 };
 
 /* ---------- U01 Bruch-Lücken ---------- */
@@ -290,10 +287,6 @@ TASKS.U01={area:'Umkehraufgaben',name:'Bruch-Lücken',desc:'Ergänze die fehlend
       out.push(line(frac(ref.n,ref.d),' → ',frac(x.n,x.d),': ',relationText(ref.n,ref.d,x.n,x.d),'. Gesuchte Zahl: ',strong(x.blank==='n'?x.n:x.d),'.'));
     });
     return out;
-  },
-  hints(t){
-    const red=t.terms.some(x=>!x.blank&&t.terms.some(y=>y.blank&&y.d<x.d));
-    return red?withRules(HINT.gaps):HINT.gaps.map(x=>[x]);
   }
 };
 
@@ -343,8 +336,7 @@ TASKS.U02={area:'Umkehraufgaben',name:'Erweiterungs- oder Kürzungszahl finden',
       out.push(line('Kürzungszahl: ',strong(t.k)));
     }
     return out;
-  },
-  hints(t){return t.mode==='reduce'?withRules(HINT.factor):HINT.factor.map(x=>[x]);}
+  }
 };
 
 /* ---------- U03 Fehler finden und berichtigen ---------- */
@@ -442,8 +434,7 @@ TASKS.U03={area:'Umkehraufgaben',name:'Fehler finden und berichtigen',desc:'Find
     else out.push(eq(frac(t.a,t.b),'=',frac(t.a+' : '+t.k,t.b+' : '+t.k),'=',frac(t.a/t.k,t.b/t.k)));
     out.push(line('Beim Erweitern und Kürzen muss mit Zähler und Nenner dieselbe Rechnung gemacht werden, dann bleibt der Wert gleich.'));
     return out;
-  },
-  hints(t){return (t.kind==='reduce'||t.fix==='full')?withRules(HINT.error):HINT.error.map(x=>[x]);}
+  }
 };
 
 /* ---------- B01 Bruchbilder verändern ---------- */
@@ -535,8 +526,7 @@ TASKS.B01={area:'Grundlagen',name:'Bruchbilder verändern',desc:'Teile ein Bild 
     const k=n/t.b;
     return [line('Aus jedem alten Teil entstehen '+k+' neue Teile. Auch die gefärbten Teile werden mit '+k+' vervielfacht:'),
       eq(frac(t.a,t.b),'=',frac(t.a+' · '+k,t.b+' · '+k),'=',frac(m,n)),svg];
-  },
-  hints(t){return HINT.picture.map(x=>[x]);}
+  }
 };
 
 /* ---------- O01 Bruchfamilien ---------- */
@@ -605,8 +595,7 @@ TASKS.O01={area:'Offene Aufgaben',name:'Bruchfamilien',desc:'Gib mehrere verschi
     if(t.den){const k=t.den/t.q;out.push(line('Mit Nenner '+t.den+': ',frac(t.p*k,t.den),' (Erweiterungszahl '+k+')'));}
     if(t.numMin){const k=Math.floor(t.numMin/t.p)+1;out.push(line('Mit Zähler größer als '+t.numMin+': ',frac(t.p*k,t.q*k),' (Erweiterungszahl '+k+')'));}
     return out;
-  },
-  hints(t){return HINT.family.map(x=>[x]);}
+  }
 };
 
 /* ---------- O02 Kürzen-Maschine (verschiedene Rechenwege) ---------- */
@@ -681,10 +670,8 @@ TASKS.O02={area:'Offene Aufgaben',name:'Kürzen-Maschine',desc:'Kürze auf zwei 
   solution(t){
     const g=gcd(t.a,t.b),f=smallestPrimeFactor(g);
     return [line('Weg 1: in einem Schritt mit '+g+':'),eq(frac(t.a,t.b),'=',frac(t.a+' : '+g,t.b+' : '+g),'=',frac(t.p,t.q)),
-      line('Weg 2: erst mit '+f+', dann mit '+(g/f)+':'),eq(frac(t.a,t.b),'=',frac(t.a/f,t.b/f),'=',frac(t.p,t.q)),
-      line('Die 2 geht immer, wenn Zähler und Nenner gerade sind.')];
-  },
-  hints(t){return withRules(HINT.ways);}
+      line('Weg 2: erst mit '+f+', dann mit '+(g/f)+':'),eq(frac(t.a,t.b),'=',frac(t.a/f,t.b/f),'=',frac(t.p,t.q))];
+  }
 };
 
 /* ---------- D01 Dezimalbruch -> Dezimalzahl ---------- */
@@ -715,8 +702,7 @@ TASKS.D01={area:'Darstellungen umwandeln',name:'Dezimalbruch → Dezimalzahl',de
   solution(t){
     const places=Math.round(Math.log10(t.den));
     return [line(`Der Nenner ${t.den} bedeutet: ${places} Stelle${places>1?'n':''} nach dem Komma.`),eq(frac(t.n,t.den),'=',el('span',null,decOf(t.n,places)))];
-  },
-  hints(t){return HINT.d1.map(x=>[x]);}
+  }
 };
 
 /* ---------- D02 Dezimalzahl -> Dezimalbruch ---------- */
@@ -742,8 +728,7 @@ TASKS.D02={area:'Darstellungen umwandeln',name:'Dezimalzahl → Dezimalbruch',de
   },
   solution(t){
     return [line(`${t.places} Stelle${t.places>1?'n':''} nach dem Komma → Nenner ${t.den}. Der Zähler ist die Zahl ohne Komma.`),eq(el('span',null,t.s),'=',frac(t.n,t.den))];
-  },
-  hints(t){return HINT.d2.map(x=>[x]);}
+  }
 };
 
 /* ---------- D03 Gemischte Zahl -> Bruch ---------- */
@@ -777,8 +762,7 @@ TASKS.D03={area:'Darstellungen umwandeln',name:'Gemischte Zahl → Bruch',desc:'
   solution(t){
     return [line(`${t.w} Ganze sind ${t.w} · ${t.d} = ${t.w*t.d} Bruchteile (Teile mit Nenner ${t.d}).`),
       eq(mixed(t.w,t.n,t.d),'=',frac(`${t.w} · ${t.d} + ${t.n}`,t.d),'=',frac(t.w*t.d+t.n,t.d))];
-  },
-  hints(t){return HINT.mixed.map(x=>[x]);}
+  }
 };
 
 
@@ -796,7 +780,7 @@ TASKS.G04=Object.assign({},TASKS.G03,{name:'Kürzen so weit wie möglich',desc:'
     }else g=R.int(6,24);
     return {type:'G04',level,mode:'full',a:p*g,b:q*g,p,q,avoid:[redKey(p,q)]};
   },
-  prompt(t,h){h.append(el('p',{class:'q'},'Kürze ',frac(t.a,t.b),' so weit wie möglich. ',el('small',null,'(Manchmal geht es nicht mehr.)')));},
+  prompt(t,h){h.append(el('p',{class:'q'},'Kürze ',frac(t.a,t.b),' so weit wie möglich.'));},
   render(view,host){
     const t=view.task,d=view.draft;
     const none=el('button',{type:'button',class:'btn none','aria-pressed':String(!!d.none)},icon('stopp'),
@@ -829,11 +813,6 @@ TASKS.G04=Object.assign({},TASKS.G03,{name:'Kürzen so weit wie möglich',desc:'
   solution(t){
     if(t.irreducible)return [line('Zähler und Nenner haben keinen gemeinsamen Teiler außer 1:'),eq(frac(t.a,t.b),'  →  nicht kürzbar')];
     return TASKS.G03.solution(t);
-  },
-  hints(t){
-    const h=withRules(HINT.reduce);
-    h[1]=h[1].concat(['Achtung: Manchmal geht es nicht mehr. Dann tippe „Geht nicht mehr“.']);
-    return h;
   }
 });
 
@@ -859,9 +838,9 @@ TASKS.V01=Object.assign({},TASKS.G03,{area:'Spiele',name:'Tresortür',desc:'Kür
 function digitSum(n){return String(n).split('').reduce((s,c)=>s+Number(c),0);}
 function divisible(n,k){return n%k===0;}
 const DIV_RULE={
-  2:'Durch 2 teilbar: Die letzte Ziffer ist 0, 2, 4, 6 oder 8 (gerade Zahlen gehen IMMER).',
+  2:'Durch 2 teilbar: Die letzte Ziffer ist gerade (0, 2, 4, 6 oder 8).',
   3:'Durch 3 teilbar: Die Quersumme (alle Ziffern addieren) ist durch 3 teilbar.',
-  4:'Durch 4 teilbar: Die letzten zwei Ziffern bilden eine Zahl, die durch 4 teilbar ist.',
+  4:'Durch 4 teilbar: Die letzten zwei Ziffern sind durch 4 teilbar.',
   5:'Durch 5 teilbar: Die letzte Ziffer ist 0 oder 5.',
   6:'Durch 6 teilbar: Die Zahl ist durch 2 und durch 3 teilbar.',
   9:'Durch 9 teilbar: Die Quersumme ist durch 9 teilbar.',
@@ -915,8 +894,7 @@ TASKS.T01={area:'Grundlagen',name:'Teilbarkeit',desc:'Blitzcheck: Geht das Kürz
   },
   solution(t){
     return [line(strong('Regel: '),DIV_RULE[t.k]),...divExplain(t.n,t.k).map(x=>line(x)),line(strong(t.n+(divisible(t.n,t.k)?' ist durch ':' ist nicht durch ')+t.k+' teilbar.'))];
-  },
-  hints(t){return [['Schau dir die Ziffern an.'],[DIV_RULE[t.k]]];}
+  }
 };
 
 /* ---------- G05 Erweitern und Kürzen gemischt ---------- */
@@ -972,9 +950,6 @@ TASKS.G05={area:'Grundlagen',name:'Erweitern und Kürzen gemischt',desc:'Mal erw
     }
     const e1=[t.a*t.k,t.b*t.k];
     return [line('Erst mit '+t.k+' erweitern, dann mit '+t.m+' kürzen:'),eq(frac(t.a,t.b),'=',frac(t.a+' · '+t.k,t.b+' · '+t.k),'=',frac(e1[0],e1[1]),'=',frac(e1[0]+' : '+t.m,e1[1]+' : '+t.m),'=',frac(e1[0]/t.m,e1[1]/t.m))];
-  },
-  hints(t){
-    return withRules(t.mode==='denom'?['Vergleiche den alten und den neuen Nenner: Wird er größer oder kleiner? Dann musst du erweitern oder kürzen.','Finde heraus, womit sich der Nenner verändert hat. Dieselbe Rechnung gilt für den Zähler.']:['Rechne die beiden Schritte nacheinander: zuerst erweitern, dann kürzen.','Beim Erweitern multiplizierst du Zähler und Nenner, beim Kürzen teilst du beide.']);
   }
 };
 

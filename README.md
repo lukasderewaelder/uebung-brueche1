@@ -17,7 +17,7 @@ Interaktive Übungsumgebung ohne Build: `index.html` im Browser öffnen (kein Se
 - **Abwechslung**: Innerhalb einer Runde (5 Aufgaben) wählt `generateUnique` aus bis zu 30 Kandidaten die Aufgabe, die den bisherigen am wenigsten ähnelt (gleiche Nenner zählen dreifach, Faktoren zweifach, Arten einfach; `round.vk` merkt die Kennzeichen). Ergebnis in Leicht: in allen Runden mindestens 4 verschiedene Nenner. Die Auswahllisten (Nenner, Faktoren, Strahlteilungen) sind dafür etwas größer geworden
 - **Bauteil zurücksetzen**: Im Lernpfad erscheint an jedem Bauteil mit angefangener Runde oder gesehener Erklärung ein Knopf (↻). Nach einer Rückfrage werden die angefangenen Runden (Leicht und Knifflig) verworfen und die Erklärung erscheint wieder. Fertig-Status, Sterne und Punkte bleiben
 - Bruchbilder (Kreis, Streifen, Raster) zeigen die gefärbten Teile oft verstreut oder verschoben statt immer ab „oben/links“ zusammenhängend – so erkennt man gleiche Anteile nicht mehr am Umriss, sondern muss zählen oder rechnen (Gleiche Anteile erkennen, Bruchbilder verändern, Bruch-Memory; im Bruchlabor bleibt es beim klassischen Bild)
-- Merkkästen M1–M10 (Bruchstreifen exakt gleich groß und bündig untereinander), zweistufige und einklappbare Tipps (Kürzen-Tipps nennen immer: *Die 2 geht IMMER, wenn Zähler und Nenner gerade sind*; ebenso 5 und 10)
+- Merkkästen M1–M10 (Bruchstreifen exakt gleich groß und bündig untereinander), dreistufige und einklappbare Tipps (1 Frage zur Aufgabe, 2 erster Schritt vorgemacht, 3 Teillösung; Kürzen-Tipps nennen die Teilbarkeitsregel nur, wenn sie zu Zähler und Nenner passt: beide gerade ⇒ ÷2, beide auf 0/5 ⇒ ÷5, Quersummen durch 3 ⇒ ÷3)
 - 12 Ränge (Praktikant … Legende); die Legende gibt es nur, wenn wirklich alles perfekt ist (perfekte Runden und 3 Sterne überall, Lernpfad, Labor, Spiele, Serien). Ein Tipp auf die Rang-Anzeige oben rechts öffnet die Optionen – dort ist auch das Bruchlabor jederzeit erreichbar
 - Passt sich dem Display an: Schrift und Elemente wachsen stufenlos mit der Bildschirmbreite (kleines Handy bis Großbildschirm, hoch und quer); in den Optionen gibt es die Textgröße in vier Stufen (Klein, Normal, Groß, Sehr groß); das Bedienpult bricht bei wenig Platz in zwei Reihen um, damit nichts abgeschnitten wird
 - Fortschritt (Punkte, Ränge, Serien, Sterne) wird lokal im Browser gespeichert
@@ -37,8 +37,9 @@ Blaupausen-Look: Aufgaben sind Zeichenblätter mit Schriftfeld, Erweitern (orang
 | `math.js` | Zufall, Bruch-Mathematik (gcd, kgV, +, −, ·, :, Vergleich, Ordnen, gemischte Zahl), Einteilung am Zahlenstrahl (`fitsDivision`, `tickOf`, `commonDenominator`), Zahlen-Parser (ohne DOM) |
 | `dom.js`, `viz.js` | DOM/SVG-Helfer, Bruchbilder (Streifen, Kreis, Raster), Zahlengerade (`numberLineGeometry` rechnet, `drawNumberLine` zeichnet: Striche, Marken, Streifen, Abschnitte, Lupe-Ausschnitt) |
 | `store.js` | Speicher (localStorage) |
-| `notes.js`, `help.js`, `intro.js` | Merkkästen und Tipps, Hilfe bei Problemen, Erklärkarten |
+| `notes.js`, `help.js`, `intro.js` | Merkkästen, Hilfe bei Problemen, Erklärkarten |
 | `tasks.js` | Aufgabentypen (`TASKS`: Generator, Darstellung, Prüfung, Musterlösung, Tipps) |
+| `tips.js` | Tipps: drei Stufen je Aufgabe (Frage, erster Schritt, Teillösung) mit den Zahlen der Aufgabe; Teilbarkeitsregeln nur, wenn sie passen (`divRules`) |
 | `linewidget.js`, `zahlenstrahl.js`, `zahlenstrahl-check.js` | Zahlenstrahl-Werkzeug (Punkte setzen, Pfeile, Lupe), die Aufgaben Z01–Z08 und der Eingangstest ZQ |
 | `quickcheck.js`, `lab.js`, `path.js` | Eingangstest, Bruchlabor, Lernpfad (Pfad und Selbst aussuchen) |
 | `modules.js` | Themen-Registry: Gruppen, Lernpfad und Reihenfolgen je Thema, geplante Themen |
@@ -48,7 +49,7 @@ Blaupausen-Look: Aufgaben sind Zeichenblätter mit Schriftfeld, Erweitern (orang
 
 ## Neues Thema hinzufügen
 
-1. Aufgabentypen als `TASKS.XYZ={area,name,desc,notes,size,gen,prompt,render,validate,solution,hints}` in einer neuen Datei vor `modules.js` anlegen (Antwort = einfaches Objekt `draft`; `validate` liefert `right`, `wrong`, `soft` oder `invalid`).
+1. Aufgabentypen als `TASKS.XYZ={area,name,desc,notes,size,gen,prompt,render,validate,solution}` in einer neuen Datei vor `modules.js` anlegen; die drei Tipps (Frage, erster Schritt, Teillösung, bezogen auf die Zahlen der Aufgabe) kommen als `TIPS.XYZ` in `js/tips.js` (Antwort = einfaches Objekt `draft`; `validate` liefert `right`, `wrong`, `soft` oder `invalid`).
 2. In `js/modules.js` den Eintrag des Themas von `status:'geplant'` auf `'aktiv'` setzen und `groups`, `practice`, `path` (und bei Bedarf `pathSkills`) ausfüllen. `rank:true` lässt das Thema für „alles perfekt“ zählen.
 3. Symbol und Kennfarbe in `ICON` und `ACC` (`js/exercise.js`) ergänzen, Merkkästen in `js/notes.js`.
 4. Neue Datei in `index.html` eintragen und Tests in `js/selftest.js` ergänzen.
@@ -62,4 +63,4 @@ Das Thema Zahlenstrahl ist das Muster dafür (`js/zahlenstrahl.js`, `js/linewidg
 
 ## Veröffentlichen
 
-GitHub Pages liefert die Dateien mit zehn Minuten Zwischenspeicher aus. Damit niemand eine neue `index.html` mit alten Skripten mischt (leere Seite), tragen alle Skript- und CSS-Verweise in `index.html` `?v=N`. **Bei jeder Änderung an `js/` oder `css/` die Zahl überall hochzählen** (Suchen und Ersetzen von `?v=10`).
+GitHub Pages liefert die Dateien mit zehn Minuten Zwischenspeicher aus. Damit niemand eine neue `index.html` mit alten Skripten mischt (leere Seite), tragen alle Skript- und CSS-Verweise in `index.html` `?v=N`. **Bei jeder Änderung an `js/` oder `css/` die Zahl überall hochzählen** (Suchen und Ersetzen von `?v=11`).

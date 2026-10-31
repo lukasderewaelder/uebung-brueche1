@@ -2,8 +2,6 @@
 /* =====================================================================
    5 Merkkästen M1–M6 und Hilfetexte
    ===================================================================== */
-const RULE2='Beide Zahlen gerade? Dann geht ÷2 – die 2 geht IMMER!';
-const RULE510='Endet beides auf 0 oder 5: ÷5. Endet beides auf 0: ÷10. Und die 2 geht IMMER, wenn beide gerade sind.';
 
 function figStrip(n,d){return el('div',{class:'fig'},frac(n,d),drawFractionStrip(n,d,{maxW:300}));}
 
@@ -43,7 +41,7 @@ const NOTES={
       el('p',null,strong('Der Wert des Bruchs ändert sich dabei nicht.')),
       el('div',{class:'ex'},strong('Beispiel: '),eq(frac(e.a,e.b),'=',frac(e.a+' : '+e.k,e.b+' : '+e.k),'=',frac(e.a/e.k,e.b/e.k))),
       el('p',null,strong('So weit wie möglich gekürzt: '),'Zähler und Nenner können nicht mehr beide durch dieselbe natürliche Zahl größer als 1 geteilt werden.'),
-      el('div',{class:'rule'},strong('Schnelle Teilbarkeits-Tipps: '),RULE2,' ',el('br'),'Enden Zähler und Nenner beide auf 0 oder 5, geht auch die 5. Enden beide auf 0, geht auch die 10.')
+      el('div',{class:'rule'},strong('Schnelle Tipps: '),'Sind beide Zahlen gerade, kannst du durch 2 kürzen. ',el('br'),'Enden beide auf 0 oder 5, geht ÷5. Enden beide auf 0, geht auch ÷10.')
     ];}},
   M7:{title:'Teilbarkeitsregeln',build(avoid){
     return [el('p',null,'So erkennst du schnell, ob du kürzen kannst:'),
@@ -140,6 +138,4 @@ const HINT={
   memory:['Vielleicht sehen zwei Karten anders aus, zeigen aber den gleichen Anteil.','Vergleiche den Wert der Brüche, nicht nur ihre Zahlen.'],
   vault:['Lies zuerst genau, ob du erweitern oder kürzen sollst.','Der Tresor nimmt nur einen Bruch, der sich nicht weiter kürzen lässt.']
 };
-/* Kürzen-Hinweise nennen immer die 2-Regel */
-function withRules(h){return [[h[0],RULE2],[h[1],RULE510]];}
 

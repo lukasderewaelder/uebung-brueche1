@@ -147,7 +147,7 @@ function runSelfTests(){
   S.lab={mode:'strip',base:[2,3],cur:[4,6],hist:[{cur:[2,3],last:null}],last:{op:'x',k:2},did:{x:true,d:false},skip:false,done:false};
   t('Labor: gültiger Zustand bleibt erhalten',labState().cur[1]===6&&labState().hist.length===1);
   S.lab=keepLab;persist();
-  t('Labor: Erklärungen nennen Rechnung und 2-Regel',labTell([2,3],[6,9],'x',3).includes('2 · 3 = 6 und 3 · 3 = 9')&&labTell([6,9],[2,3],'d',3).includes('nicht mehr')&&labWhy([6,9],'d',2).includes('IMMER'));
+  t('Labor: Erklärungen nennen Rechnung, keine Pauschalregel zur 2',labTell([2,3],[6,9],'x',3).includes('2 · 3 = 6 und 3 · 3 = 9')&&labTell([6,9],[2,3],'d',3).includes('nicht mehr')&&labWhy([6,9],'d',2).includes('nicht beide durch 2')&&!labWhy([6,9],'d',2).includes('IMMER'));
   t('Labor: Frage hat genau eine richtige Antwort',LAB_QUIZ.filter(o=>o.id==='wert').length===1&&LAB_QUIZ.every(o=>o.id==='wert'||LAB_WRONG[o.id]));
   /* G01: Zahl richtiger Karten wechselt; Streifen/Kreis nur bei kleinen Nennern, große Nenner nur als Raster */
   for(const lvl of [1,2]){
@@ -342,7 +342,7 @@ function runSelfTests(){
     t('Tresor: Zahlenbereich leicht a ≤ 9, b ≤ 60; knifflig zweistellig, Teiler ab 6 (nicht 10, 20)',okRange);
     t('Tresor: Tür akzeptiert nur den gekürzten Code-Bruch',okDoor);
     const dv=newVault(2).door.task,h=TASKS.V01.hints(dv);
-    t('Tresor: Tür-Tipps nennen „Die 2 geht IMMER“',h.every(x=>x.some(l=>/2 geht IMMER/i.test(l))));
+    t('Tresor: Tür-Tipps sind drei Stufen zum Code-Bruch, der erste Tipp der Aufgabe nennt keine Pauschalregel',h.length===3&&h.every(x=>x.length>0)&&!h.flat().some(l=>/IMMER/.test(l)));
     const half=validateTask({type:'V01',level:2,mode:'full',a:48,b:72,p:2,q:3},{'r.n':'24','r.d':'36'});
     t('Tresor: Tür 48/72 → 24/36 ist „fast“ (noch kürzbar)',!half.correct&&half.soft&&half.errorCode==='notFull');
     t('Tresor: alte Tresor-Zustände ohne ver:2 werden verworfen',!vaultOk({level:1,code:[1,2,3],locks:[{},{},{}],active:0,opened:false},1)&&vaultOk(newVault(1),1)&&!vaultOk(newVault(1),2));
@@ -417,7 +417,7 @@ function runSelfTests(){
         &&ty.ks.some(k=>labCan(ty.base,ty.op,k))&&(ty.op==='x'||ty.ks.some(k=>!labCan(ty.base,ty.op,k)));
     })&&steps.filter(s=>s.tryit).length===4);
     t('Erklärungen: Schnellcheck nennt die Zahlen aus den Einstellungen (Fragen, Urkunden-Hürde)',(()=>{const x=INTRO.Q00.steps.map(s=>s.say.join(' ')).join(' ');return x.includes(TASKS.Q00.size+' Fragen')&&x.includes('Ab '+needOf(TASKS.Q00.size)+' richtigen');})());
-    t('Erklärungen: Wörter und Knöpfe stimmen mit den Namen auf dem Bildschirm überein',[['G02','Erweiterungszahl'],['G03','Kürzungszahl'],['G04','Geht nicht mehr'],['G04','Die 2 geht IMMER'],['G01','Prüfen'],['LAB','Rückgängig'],['O02','Weg neu starten'],['T01','Merkkasten']].every(([id,w])=>INTRO[id].steps.some(s=>s.say.some(x=>x.includes('**'+w)))));
+    t('Erklärungen: Wörter und Knöpfe stimmen mit den Namen auf dem Bildschirm überein',[['G02','Erweiterungszahl'],['G03','Kürzungszahl'],['G04','Geht nicht mehr'],['G04','Sind beide Zahlen gerade'],['G01','Prüfen'],['LAB','Rückgängig'],['O02','Weg neu starten'],['T01','Merkkasten']].every(([id,w])=>INTRO[id].steps.some(s=>s.say.some(x=>x.includes('**'+w)))));
     let built=true;
     try{steps.forEach(s=>{introRich(s.h);s.say.forEach(introRich);if(s.fig)introFigNode(s.fig);if(s.calc)introCalcNode(s.calc);if(s.tryit)introTry(s.tryit);if(s.lab)labFigure({mode:'strip',base:s.lab.base,cur:s.lab.cur,last:{op:s.lab.op,k:s.lab.k}});});}catch(e){built=false;}
     t('Erklärungen: alle Schritte lassen sich aufbauen',built);
@@ -695,6 +695,43 @@ function runSelfTests(){
     t('Navigation: Zurück aus einem Bauteil des Lernpfads führt in den Lernpfad dieses Themas',bt({kind:'practice',id:'G02',from:'pfad'}).thema==='veraendern'&&bt({kind:'lab',from:'pfad'}).thema==='veraendern');
     t('Navigation: Zurück aus Üben führt in die Gruppe, aus der Gruppe in die Übersicht',bt({kind:'practice',id:'G02'}).group==='Entdecken'&&bt({kind:'home',tab:'ueben',group:'Entdecken'}).tab==='ueben'&&!bt({kind:'home',tab:'ueben',group:'Entdecken'}).group);
     S.view=keepV;
+  }
+  /* Paket 3: Tipps – drei Stufen je Aufgabe, bezogen auf die Zahlen, Sätze kurz, Regeln nur wenn sie passen */
+  {
+    const ids=Object.keys(TASKS).filter(id=>!TASKS[id].quick);
+    const sents=(s)=>s.replace(/\*\*/g,'').replace(/\{\d+\|\d+\}/g,'x').split(/[.!?]\s+/);
+    const words=(s)=>s.split(/\s+/).filter(Boolean).length;
+    const bad=[];let n=0,longest=0;
+    ids.forEach(id=>[1,2].forEach(lvl=>{
+      for(let i=0;i<40;i++){
+        const task=generateTask(id,lvl),tips=TASKS[id].hints(task);n++;
+        const txt=tips.flat().join(' ');
+        if(tips.length!==3||tips.some(x=>!Array.isArray(x)||!x.length||x.some(l=>typeof l!=='string'||!l.trim())))bad.push(id+' Aufbau');
+        else if(/undefined|NaN|null|Infinity/.test(txt))bad.push(id+' Zahl fehlt: '+txt.slice(0,80));
+        else if(/IMMER|Lies die Frage genau|Kontrolliere den Wert/.test(txt))bad.push(id+' leerer/alter Tipp');
+        longest=Math.max(longest,...sents(txt).map(words));
+      }
+    }));
+    t('Tipps: alle '+ids.length+' Aufgabentypen liefern drei Stufen mit Text, ohne fehlende Zahlen und ohne alten Pauschalsatz ('+n+' Aufgaben)',bad.length===0||(console.log(bad.slice(0,5)),false));
+    t('Tipps: Sätze höchstens 14 Wörter (längster: '+longest+')',longest<=14);
+    /* Regeln nur, wenn sie zu den beiden Zahlen passen */
+    let ruleBad=0,chk=0;
+    for(let i=0;i<200;i++){
+      const task=generateTask(i%2?'G04':'G03',i%4<2?1:2);if(task.mode==='factor'||task.irreducible)continue;
+      chk++;
+      const r1=TASKS[task.type].hints(task)[0].join(' '),a=task.a,b=task.b;
+      const e2=a%2===0&&b%2===0,e5=a%5===0&&b%5===0&&!(a%10===0&&b%10===0),e10=a%10===0&&b%10===0,e3=digitSum(a)%3===0&&digitSum(b)%3===0;
+      if(r1.includes('durch 2 kürzen')!==e2||r1.includes('durch 5 kürzen')!==e5||r1.includes('durch 10 kürzen')!==e10||r1.includes('durch 3 kürzen')!==e3)ruleBad++;
+    }
+    t('Tipps Kürzen: Teilbarkeitsregel nur, wenn sie passt (beide gerade ⇒ 2, beide auf 0/5 ⇒ 5, beide auf 0 ⇒ 10, Quersummen ⇒ 3) – '+chk+' Aufgaben',chk>50&&ruleBad===0);
+    const rules=divRules(36,48);
+    t('Regeln: 36 und 48 sind gerade und haben Quersummen 9 und 12 ⇒ 2 und 3; 35 und 45 ⇒ 5; 7 und 11 ⇒ keine',rules.length===2&&rules[0].includes('durch 2')&&rules[1].includes('durch 3')&&divRules(35,45).join(' ').includes('durch 5 kürzen')&&divRules(7,11).length===0);
+    const g4=generateTask('G04',1);g4.irreducible=true;g4.mode='full';
+    t('Tipps G04: „Manchmal geht es nicht mehr“ steht im ersten Tipp (nicht mehr im Aufgabentext)',TASKS.G04.hints(generateTask('G04',2))[0].join(' ').includes('Geht nicht mehr')&&!(()=>{const h=el('div');TASKS.G04.prompt(generateTask('G04',1),h);return h.textContent.includes('Manchmal');})());
+    t('Tipps Z05: der Hinweis „zuerst mit dem Nenner“ steht im ersten Tipp, nicht im Aufgabentext (Leicht)',(()=>{const z=generateTask('Z05',1),h=el('div');TASKS.Z05.prompt(z,h);return TASKS.Z05.hints(z)[0].join(' ').includes('zuerst mit dem Nenner')&&!h.textContent.includes('zuerst mit dem Nenner');})());
+    t('Tipps U03: Tipp 1 vergleicht Zähler und Nenner der Aufgabe („Was wurde mit dem Zähler gemacht, was mit dem Nenner?“)',(()=>{const u={type:'U03',level:1,kind:'expand',errType:'onlyNum',fix:'op',a:2,b:3,k:3,shown:[6,3],pre:null};const h=TASKS.U03.hints(u);return h[0][0].includes('Vergleiche 2 und 6 oben, 3 und 3 unten')&&h[0][0].includes('Was wurde mit dem Zähler gemacht, was mit dem Nenner?')&&h[2].join(' ').includes('Nur der Zähler wurde verändert');})());
+    t('Tipps: Brüche im Tipp-Kasten stehen mit Bruchstrich ({n|d}), **fett** wird hervorgehoben',(()=>{const b=hintBox('Tipp 1 von 3',['Aus {4|6} wird {2|3}. Tippe **Geht nicht mehr**.'],true,()=>{});return b.querySelectorAll('.frac').length===2&&b.querySelector('strong').textContent==='Geht nicht mehr'&&!b.textContent.includes('{');})());
+    t('Tipps: G03 mit Zahl nennt zuerst den neuen Nenner, dann den Zähler; G02 mit Zielnenner nennt die Erweiterungszahl',TIPS.G03({mode:'factor',a:12,b:18,k:3})[1][0].includes('18 geteilt durch 3 ergibt 6')&&TIPS.G03({mode:'factor',a:12,b:18,k:3})[2][0].includes('12 geteilt durch 3')&&TIPS.G02({mode:'target',a:2,b:5,k:3})[1][0].includes('15 geteilt durch 5 ergibt 3'));
   }
   /* Paket 2: Rückmeldung und Bedienung der Aufgabe */
   {
