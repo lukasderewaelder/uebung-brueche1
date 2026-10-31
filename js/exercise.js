@@ -143,7 +143,7 @@ function makeKeypad(host,onSubmit){
   const pad=el('div',{class:'keypad hidden',role:'group','aria-label':'Zahlentastatur'});
   '1234567890'.split('').forEach(d=>pad.append(key(d,'',i=>{if(i.value.length<(i.maxLength>0?i.maxLength:99)){i.value+=d;fire(i);}})));
   pad.append(key(icon('loeschen'),'fn',i=>{i.value=i.value.slice(0,-1);fire(i);},'Löschen'));
-  const alt=el('button',{type:'button',class:'key fn','aria-label':'Nächstes Feld'},icon('tab'));
+  const alt=el('button',{type:'button',class:'key fn','aria-label':'Nächstes Feld'},'Weiter ▸');
   alt.addEventListener('pointerdown',e=>e.preventDefault());
   alt.addEventListener('click',()=>{
     const i=ensure();if(!i)return;
@@ -154,7 +154,7 @@ function makeKeypad(host,onSubmit){
   return {el:pad,refresh(){
     const l=list();
     pad.classList.toggle('hidden',!l.length||!matchMedia('(pointer:coarse)').matches);
-    const dec=!!host.querySelector('.decin');alt.replaceChildren(dec?',':icon('tab'));alt.setAttribute('aria-label',dec?'Komma':'Nächstes Feld');alt.style.visibility=(dec||l.length>1)?'visible':'hidden';
+    const dec=!!host.querySelector('.decin');alt.replaceChildren(dec?',':'Weiter ▸');alt.classList.toggle('next',!dec);alt.setAttribute('aria-label',dec?'Komma':'Nächstes Feld');alt.style.visibility=(dec||l.length>1)?'visible':'hidden';
     if(l.length)ensure();
   }};
 }
@@ -172,6 +172,21 @@ function buildDock(main,{hintBtn,noteBtn,primary,pad,msg}){
   const bar=el('div',{class:'actionbar'},msg||null,pad?pad.el:null,el('div',{class:'primaryrow'},hintBtn,noteBtn,primary));
   main.append(bar);
   return bar;
+}
+
+/* Erster Satz eines Textes (Begründung bei richtigen Antworten im Check: ein Satz) */
+const firstSentence=(s)=>(s||'').split(/(?<=[.!?])\s+/)[0];
+/* Rückfrage mit Abbrechen (Lösung ansehen, Aufgabe überspringen): Escape und Tippen neben die Karte schließen, Fokus auf „Abbrechen“ */
+function confirmModal(title,text,okLabel,onOk){
+  const close=()=>{m.remove();window.removeEventListener('keydown',onKey);};
+  const onKey=(e)=>{if(e.key==='Escape')close();};
+  const cancel=el('button',{type:'button',class:'btn alt',onclick:close},'Abbrechen');
+  const m=modal([el('h2',null,title),el('p',null,text),
+    el('div',{class:'rowbtns'},cancel,el('button',{type:'button',class:'btn',onclick:()=>{close();onOk();}},okLabel))]);
+  m.addEventListener('click',e=>{if(e.target===m)close();});
+  window.addEventListener('keydown',onKey);
+  cancel.focus();
+  return m;
 }
 
 /* mountTask: baut Aufgabe, Rückmeldung, Tipps und (auf Wunsch) Lösung in host auf */
@@ -213,9 +228,15 @@ function mountTask(host,st,cb){
       const res=validateTask(st.task,st.draft);
       if(res.invalid){showFb('info',res.feedback);return 'invalid';}
       const quick=!!T.quick;
+      if(res.unsure){ /* „Weiß ich nicht“: nichts falsch, Antwort und Begründung zeigen, keine Serie verlieren */
+        st.status='shown';showFb('info',res.feedback);
+        recordSkill(st.task.skill,false);
+        cb.done('unsure');return 'unsure';
+      }
       if(res.correct){
         st.status='correct';
-        showFb('ok',quick?praise():praise()+' '+res.feedback.replace(/^Richtig!\s*/,''));
+        const why=res.feedback.replace(/^Richtig!\s*/,'');
+        showFb('ok',quick?(praise()+' '+firstSentence(why)).trim():praise()+' '+why);
         awardCorrect(st.attempts===0&&st.hint===0,quick);
         if(quick)recordSkill(st.task.skill,true);
         cb.done('correct');return 'correct';
@@ -311,7 +332,16 @@ function statsBlock(key,extra){
 }
 
 /* ---------- Übungsrunde ---------- */
+/* Enter geht weiter, wenn die Aufgabe beantwortet ist (setzt renderPractice; nicht in Eingabefeldern, auf Knöpfen und hinter Fenstern) */
+let practiceEnter=null;
+window.addEventListener('keydown',e=>{
+  if(e.key!=='Enter'||!practiceEnter||S.view.kind!=='practice'||document.querySelector('.modal'))return;
+  const tag=e.target&&e.target.tagName;
+  if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||tag==='BUTTON'||tag==='A')return;
+  if(practiceEnter())e.preventDefault();
+});
 function renderPractice(id){
+  practiceEnter=null;
   const T=TASKS[id],lvl=levelOf(id),key=keyOf(id,lvl);
   const round=S.rounds[key]||(S.rounds[key]={results:[],cur:null,size:T.size});
   const root=el('div',{class:'page'});
@@ -341,7 +371,7 @@ function renderPractice(id){
     const ticks=[];
     for(let i=0;i<round.size;i++){
       const r=round.results[i];
-      const cls=r==='f'?'f':r==='l'?'l':r?'x':(i===round.results.length&&st.status==='open'?'cur':'');
+      const cls=r==='f'?'f':r==='l'?'l':r==='u'?'u':r?'x':(i===round.results.length&&st.status==='open'?'cur':'');
       ticks.push(el('i',{class:'tk '+cls}));
     }
     const x=Math.min(round.size,round.results.length+(st.status==='open'?1:0));
@@ -358,8 +388,8 @@ function renderPractice(id){
   const hintBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('hinweis')),'Tipp');
   const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkkasten');
   const primary=el('button',{type:'button',class:'btn primary'},'Prüfen');
-  const solBtn=el('button',{type:'button',class:'linkbtn'},icon('auge'),'Lösung ansehen');
-  const skipBtn=el('button',{type:'button',class:'linkbtn'},icon('skip'),'Überspringen');
+  const solBtn=el('button',{type:'button',class:'btn small'},icon('auge'),'Lösung ansehen');
+  const skipBtn=el('button',{type:'button',class:'btn small'},icon('skip'),'Aufgabe überspringen (zählt nicht)');
   const pad=makeKeypad(host,()=>onPrimary());
   const links=el('div',{class:'linkrow hidden'},solBtn,skipBtn);
   main.insertBefore(links,null);
@@ -379,19 +409,22 @@ function renderPractice(id){
     afterCheck:()=>refresh(),
     done(kind){
       if(kind==='correct'){const first=st.attempts===0&&st.hint===0;round.results.push(first?'f':'l');P[first?'first':'later']++;}
+      else if(kind==='unsure')round.results.push('u'); /* „Weiß ich nicht“: weder richtig noch falsch */
       else{round.results.push('x');P.shown++;}
       if(quick)(round.sk=round.sk||[]).push(st.task.skill);
       P.done++;persist();
       ctrl=mountTask(host,st,cb);refresh();updProgress();fillStats();roundBonus();
-      if(kind==='correct')setTimeout(()=>{if(round.cur===st&&S.view.kind==='practice'&&S.view.id===id&&st.status==='correct')next();},quick?700:1500);
+      /* Übung: kein Auto-Weiter, die Begründung bleibt stehen. Check: richtige Antworten gehen nach 2,5 s weiter (Weiter geht jederzeit) */
+      if(kind==='correct'&&quick)setTimeout(()=>{if(round.cur===st&&S.view.kind==='practice'&&S.view.id===id&&st.status==='correct'&&!document.querySelector('.modal'))next();},2500);
     }
   };
   let ctrl=mountTask(host,st,cb);
   const refresh=()=>{
     const open=st.status==='open';
     const last=round.results.length>=round.size;
-    if(quick){ /* Antippen ist die Antwort; „Weiter“ erst danach */
-      primary.textContent=last?'Ergebnis':'Weiter';primary.disabled=open;
+    primary.classList.toggle('ready',!open); /* beantwortet: „Weiter“ leuchtet auf */
+    if(quick){ /* Antwort antippen, mit „Prüfen“ werten; danach „Weiter“ */
+      primary.textContent=open?'Prüfen':(last?'Ergebnis':'Weiter');primary.disabled=false;
       hintBtn.classList.add('hidden');links.classList.add('hidden');pad.refresh();return;
     }
     primary.textContent=open?'Prüfen':(last?'Runde abschließen':'Weiter');
@@ -406,14 +439,25 @@ function renderPractice(id){
   primary.addEventListener('click',onPrimary);
   hintBtn.addEventListener('click',()=>{ctrl.hint();refresh();});
   noteBtn.addEventListener('click',()=>setHelp(!helpOpen));
-  solBtn.addEventListener('click',()=>{ctrl.solution();refresh();});
+  solBtn.addEventListener('click',()=>{
+    if(st.status!=='open')return;
+    confirmModal('Lösung ansehen?','Die Aufgabe zählt dann nicht als richtig.','Lösung ansehen',()=>{ctrl.solution();refresh();});
+  });
   skipBtn.addEventListener('click',()=>{
     if(st.status!=='open')return;
-    round.results.push('s');P.skipped++;P.done++;round.cur=null;roundBonus();persist();renderAll();
+    confirmModal('Aufgabe überspringen?','Die Aufgabe zählt dann nicht als richtig.','Überspringen',()=>{
+      if(st.status!=='open')return;
+      round.results.push('s');P.skipped++;P.done++;round.cur=null;roundBonus();persist();renderAll();
+    });
   });
   main.addEventListener('keydown',e=>{
-    if(e.key==='Enter'&&e.target.tagName==='INPUT'&&e.target.type!=='radio'){e.preventDefault();onPrimary();}
+    if(e.key!=='Enter')return;
+    const tg=e.target;
+    if(tg.tagName==='INPUT'&&tg.type!=='radio'){e.preventDefault();onPrimary();return;}
+    /* Enter auf der markierten Antwort (Kachel, Ja/Nein, Weiß ich nicht) wertet wie „Prüfen“ */
+    if(st.status==='open'&&tg.tagName==='BUTTON'&&tg.getAttribute('aria-pressed')==='true'&&host.contains(tg)){e.preventDefault();onPrimary();}
   });
+  practiceEnter=()=>{if(st.status==='open')return false;onPrimary();return true;};
   updProgress();refresh();
 }
 function renderSummary(main,id,lvl,key,round){
@@ -431,7 +475,9 @@ function renderSummary(main,id,lvl,key,round){
       msg=info.firstPass?'Bauteil fertig!'+(nx?' Als Nächstes: '+stationTitle(nx.id)+'.':''):'Wieder geschafft – stark!';
       btns=[btn('Weiter im Lernpfad',toPfad,true),btn('Nochmal',again),lvlBtn];
     }else{
-      msg='Du hast '+info.right+' von '+round.size+' richtig. Für das Bauteil brauchst du '+info.need+'. Noch einmal?';
+      /* Punkte: ohne Tipp ganz, mit Tipp oder zweitem Versuch halb (Altdaten ohne info.points: nur die Treffer) */
+      const fmt=(x)=>String(x).replace('.',','),pts=info.points!=null?info.points:info.right;
+      msg='Du hast '+info.right+' von '+round.size+' richtig.'+(pts<info.right?' Aufgaben mit Tipp zählen nur halb.':'')+' Du brauchst '+fmt(info.need)+' Punkte, du hast '+fmt(pts)+'. Noch einmal?';
       btns=[btn('Nochmal',again,true),btn('Zum Lernpfad',toPfad),lvlBtn];
     }
   }else btns=[btn(`Neue Runde (${TASKS[id].size} Aufgaben)`,again,true),lvlBtn];
@@ -457,7 +503,7 @@ function renderQuickSummary(main,id,lvl,key,round){
   /* Schnellcheck (Q00): Ergebnis je nach Stufe – von vorn beginnen, Themenliste oder fit */
   const ev=info.ev||qEvaluate(round.results,round.sk,round.size,true,qc.skills); /* Runden ohne info.ev: aus den Antworten rechnen */
   const per={};
-  round.results.forEach((r,i)=>{const sk=(round.sk||[])[i];if(sk)(per[sk]=per[sk]||[]).push(r==='f'||r==='l');});
+  round.results.forEach((r,i)=>{const sk=(round.sk||[])[i];if(sk)(per[sk]=per[sk]||[]).push(r==='u'?null:(r==='f'||r==='l'));}); /* null = „Weiß ich nicht“ */
   if(ev.stufe==='start'){
     main.append(el('div',{class:'card summary'},
       el('div',{class:'stampbox'},'Check fertig'),el('p',null),
@@ -473,7 +519,9 @@ function renderQuickSummary(main,id,lvl,key,round){
   const rows=order.map(sk=>{
     const x=ev.skills[sk];
     return el('tr',null,
-      el('td',null,per[sk].map(ok=>el('span',{class:'qm '+(ok?'ok':'bad'),role:'img','aria-label':ok?'richtig':'falsch'},icon(ok?'haken':'kreuz')))),
+      el('td',null,per[sk].map(ok=>ok===null
+        ?el('span',{class:'qm',role:'img','aria-label':'weiß ich nicht'},icon('frage'))
+        :el('span',{class:'qm '+(ok?'ok':'bad'),role:'img','aria-label':ok?'richtig':'falsch'},icon(ok?'haken':'kreuz')))),
       el('td',null,qc.names[sk]),
       el('td',{class:x.status==='sitzt'?'sits':'ueben'},el('b',null,x.status==='sitzt'?'sitzt':x.status==='fast'?'fast':'üben')));
   });
@@ -486,6 +534,7 @@ function renderQuickSummary(main,id,lvl,key,round){
     if(sitzt.length)lines.push('Das sitzt schon: '+sitzt.join(', ')+'.');
     if(ueben.length)lines.push('Das solltest du noch üben: '+ueben.join(', ')+'.');
     else lines.push('Alles sitzt – stark!');
+    if(ev.unsure)lines.push('Bei „Weiß ich nicht“ steht die Fähigkeit auf „üben“.');
     if(info.ready&&!info.passed)lines.push('Für die Urkunde brauchst du '+needOf(round.size)+' von '+round.size+' richtig.');
   }
   const btns=[btn('Weiter',toPfad,true)];

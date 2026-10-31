@@ -16,8 +16,8 @@ function nlIdxs(R,k,steps,m){
 /* Strahl mit Punkten für Musterlösungen: Beschriftung Buchstabe oder Bruch */
 const nlSol=(from,to,parts,idxs,letters,extra)=>drawNumberLine(Object.assign({from,to,parts,labels:'wholes',marks:idxs.map((i,k)=>({i,text:letters?letters[k]:''}))},extra));
 const nlOffBy=(a,b)=>Math.abs(a-b)===1;
-/* Ja/Nein-Knöpfe (auto: gleich prüfen wie bei T01) */
-function nlYesNo(view,host,key,auto){
+/* Ja/Nein-Knöpfe: Antippen markiert nur, gewertet wird mit „Prüfen“ */
+function nlYesNo(view,host,key){
   const d=view.draft,row=el('div',{class:'yesno'});
   [['ja','haken','Ja'],['nein','kreuz','Nein']].forEach(([v,ic,label])=>{
     const b=el('button',{type:'button',class:'btn yn','aria-pressed':String(d[key]===v)},icon(ic),label);
@@ -26,7 +26,6 @@ function nlYesNo(view,host,key,auto){
       if(view.locked())return;
       d[key]=v;view.save();
       row.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
-      if(auto&&view.submit)view.submit();
     });
     view.inputs[key+v]=b;row.append(b);
   });
@@ -91,7 +90,7 @@ TASKS.Z01={area:'Zahlenstrahl',name:'Einteilung erkennen',desc:'Abschnitte zähl
       nlPickList(view,host,t.opts.map((p,j)=>drawNumberLine({from:0,to:t.u,parts:p,labels:'wholes',label:'Strahl '+(j+1),maxW:460})),'sel');
     }else{
       host.append(t.equal?drawNumberLine({from:0,to:1,parts:t.m,labels:'wholes',label:'Zahlenstrahl von 0 bis 1'}):nlDrawUneven(t.m,t.k,t.shift));
-      nlYesNo(view,host,'ans',true);
+      nlYesNo(view,host,'ans');
     }
   },
   validate(t,d){
@@ -285,7 +284,7 @@ TASKS.Z05={area:'Zahlenstrahl',name:'Bruch anpassen',desc:'Bringe den Bruch auf 
     const t=view.task,d=view.draft;
     if(t.level===2){
       host.append(el('p',{class:'q sm'},'Passt die Einteilung genau zu diesem Bruch?'));
-      nlYesNo(view,host,'fit',false);
+      nlYesNo(view,host,'fit');
     }
     if(t.kind!=='nofit'){
       const num=el('span',{class:'num'},intInput(view,'x','Neuer Zähler'));

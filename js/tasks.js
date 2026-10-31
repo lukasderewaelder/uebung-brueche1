@@ -15,6 +15,8 @@ const wrong=(code,msg,marks)=>({correct:false,errorCode:code,feedback:msg,marks}
 /* „Fast“: Der Wert stimmt, aber die verlangte Form noch nicht (wird freundlicher angezeigt als ein Fehler) */
 const soft=(code,msg,marks)=>({correct:false,soft:true,errorCode:code,feedback:msg,marks});
 const right=(msg,norm)=>({correct:true,errorCode:null,feedback:msg,normalizedAnswer:norm});
+/* „Weiß ich nicht“ (nur Eingangstest und Abschlusscheck): weder richtig noch falsch, die Antwort wird trotzdem erklärt */
+const unsure=(msg)=>({correct:false,unsure:true,errorCode:'unsure',feedback:msg});
 
 /* ---- Eingabe-Bausteine ---- */
 function digitsOnly(i){i.value=i.value.replace(/\D/g,'');}
@@ -556,7 +558,7 @@ TASKS.O01={area:'Offene Aufgaben',name:'Bruchfamilien',desc:'Gib mehrere verschi
   },
   render(view,host){
     const t=view.task,d=view.draft;
-    if(d.rows==null)d.rows=t.need;
+    if(d.rows==null)d.rows=2; /* zwei Zeilen zum Start, weitere über „+ Bruch“ */
     const list=el('div'),btns=el('div',{class:'rowbtns'});
     const draw=()=>{
       list.replaceChildren();
@@ -565,13 +567,13 @@ TASKS.O01={area:'Offene Aufgaben',name:'Bruchfamilien',desc:'Gib mehrere verschi
         list.append(row);
       }
     };
-    const add=el('button',{type:'button',class:'btn small'},'Bruch hinzufügen');
+    const add=el('button',{type:'button',class:'btn small'},'+ Bruch');
     const rem=el('button',{type:'button',class:'btn small'},'Letzten Bruch entfernen');
     add.addEventListener('click',()=>{if(view.locked()||d.rows>=10)return;d.rows++;view.save();draw();updB();});
     rem.addEventListener('click',()=>{if(view.locked()||d.rows<=1)return;const i=d.rows-1;delete d['x'+i+'.n'];delete d['x'+i+'.d'];d.rows--;view.save();draw();updB();});
     const updB=()=>{add.disabled=view.locked()||d.rows>=10;rem.disabled=view.locked()||d.rows<=1;};
     view.inputs.add=add;view.inputs.rem=rem;
-    btns.append(add,rem);host.append(list,btns);draw();updB();
+    btns.append(add,rem);host.append(list,btns,el('p',{class:'famnote'},'Brauchst du mehr Zeilen? Tippe auf „+ Bruch“.'));draw();updB();
   },
   validate(t,d){
     const rows=d.rows==null?t.need:d.rows,seen=new Set(),marks={},issues=[];
@@ -797,9 +799,10 @@ TASKS.G04=Object.assign({},TASKS.G03,{name:'Kürzen so weit wie möglich',desc:'
   prompt(t,h){h.append(el('p',{class:'q'},'Kürze ',frac(t.a,t.b),' so weit wie möglich. ',el('small',null,'(Manchmal geht es nicht mehr.)')));},
   render(view,host){
     const t=view.task,d=view.draft;
-    const none=el('button',{type:'button',class:'btn none','aria-pressed':String(!!d.none)},icon('stopp'),'Nicht kürzbar');
+    const none=el('button',{type:'button',class:'btn none','aria-pressed':String(!!d.none)},icon('stopp'),
+      el('span',{class:'nonetx'},el('b',null,'Geht nicht mehr'),el('small',null,'Bruch ist schon fertig gekürzt')));
     none.disabled=view.locked();
-    /* Entweder einen Bruch eintippen oder „Nicht kürzbar“ wählen – beides zugleich gibt es nicht */
+    /* Entweder einen Bruch eintippen oder „Geht nicht mehr“ wählen – beides zugleich gibt es nicht */
     none.addEventListener('click',()=>{
       if(view.locked())return;
       d.none=!d.none;
@@ -819,7 +822,7 @@ TASKS.G04=Object.assign({},TASKS.G03,{name:'Kürzen so weit wie möglich',desc:'
       if(t.irreducible)return right('Richtig! Zähler und Nenner haben keine gemeinsame Zahl außer 1. Der Bruch ist schon so weit wie möglich gekürzt.');
       return wrong('stillReducible','Doch, hier geht noch etwas: Suche eine Zahl, durch die Zähler und Nenner teilbar sind.');
     }
-    const f=f0;if(!f)return invalid('Trage zwei Zahlen ein – oder tippe „Nicht kürzbar“.');
+    const f=f0;if(!f)return invalid('Trage zwei Zahlen ein – oder tippe „Geht nicht mehr“.');
     if(t.irreducible&&f.n===t.a&&f.d===t.b)return right('Richtig! Dieser Bruch lässt sich nicht weiter kürzen.');
     return TASKS.G03.validate(t,d);
   },
@@ -829,7 +832,7 @@ TASKS.G04=Object.assign({},TASKS.G03,{name:'Kürzen so weit wie möglich',desc:'
   },
   hints(t){
     const h=withRules(HINT.reduce);
-    h[1]=h[1].concat(['Achtung: Manchmal geht es nicht mehr. Dann tippe „Nicht kürzbar“.']);
+    h[1]=h[1].concat(['Achtung: Manchmal geht es nicht mehr. Dann tippe „Geht nicht mehr“.']);
     return h;
   }
 });
@@ -895,11 +898,10 @@ TASKS.T01={area:'Grundlagen',name:'Teilbarkeit',desc:'Blitzcheck: Geht das Kürz
     [['ja','haken','Ja'],['nein','kreuz','Nein']].forEach(([v,ic,label])=>{
       const b=el('button',{type:'button',class:'btn yn','aria-pressed':String(d.ans===v)},icon(ic),label);
       b.disabled=view.locked();
-      b.addEventListener('click',()=>{
+      b.addEventListener('click',()=>{ /* Antippen markiert nur, gewertet wird mit „Prüfen“ */
         if(view.locked())return;
         d.ans=v;view.save();
         row.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
-        if(view.submit)view.submit();
       });
       view.inputs['yn'+v]=b;row.append(b);
     });

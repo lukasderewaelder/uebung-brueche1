@@ -225,8 +225,8 @@ function runSelfTests(){
   t('Pfad: 80 %-Regel (5→4, 8→7, 10→8)',needOf(5)===4&&needOf(8)===7&&needOf(10)===8&&needOf(15)===12);
   const rnd=(res,sk)=>({results:res.slice(),size:res.length,sk});
   freshP();
-  let inf=onRoundEnd('G03',1,rnd(['f','f','l','x','f']));
-  t('Rundenende: 4 von 5 ⇒ bestanden, erstes Mal, Tagesziel',inf.passed&&inf.firstPass&&S.passed['G03-L1']&&inf.daily);
+  let inf=onRoundEnd('G03',1,rnd(['f','f','f','x','f']));
+  t('Rundenende: 4 von 5 ohne Tipp ⇒ bestanden, erstes Mal, Tagesziel',inf.passed&&inf.firstPass&&S.passed['G03-L1']&&inf.daily);
   inf=onRoundEnd('G03',1,rnd(['f','f','f','f','f']));
   t('Rundenende: zweites Mal kein firstPass, Tagesziel nur einmal',inf.passed&&!inf.firstPass&&!inf.daily);
   inf=onRoundEnd('G04',1,rnd(['f','x','x','l','s']));
@@ -417,7 +417,7 @@ function runSelfTests(){
         &&ty.ks.some(k=>labCan(ty.base,ty.op,k))&&(ty.op==='x'||ty.ks.some(k=>!labCan(ty.base,ty.op,k)));
     })&&steps.filter(s=>s.tryit).length===4);
     t('Erklärungen: Schnellcheck nennt die Zahlen aus den Einstellungen (Fragen, Urkunden-Hürde)',(()=>{const x=INTRO.Q00.steps.map(s=>s.say.join(' ')).join(' ');return x.includes(TASKS.Q00.size+' Fragen')&&x.includes('Ab '+needOf(TASKS.Q00.size)+' richtigen');})());
-    t('Erklärungen: Wörter und Knöpfe stimmen mit den Namen auf dem Bildschirm überein',[['G02','Erweiterungszahl'],['G03','Kürzungszahl'],['G04','Nicht kürzbar'],['G04','Die 2 geht IMMER'],['G01','Prüfen'],['LAB','Rückgängig'],['O02','Weg neu starten'],['T01','Merkkasten']].every(([id,w])=>INTRO[id].steps.some(s=>s.say.some(x=>x.includes('**'+w)))));
+    t('Erklärungen: Wörter und Knöpfe stimmen mit den Namen auf dem Bildschirm überein',[['G02','Erweiterungszahl'],['G03','Kürzungszahl'],['G04','Geht nicht mehr'],['G04','Die 2 geht IMMER'],['G01','Prüfen'],['LAB','Rückgängig'],['O02','Weg neu starten'],['T01','Merkkasten']].every(([id,w])=>INTRO[id].steps.some(s=>s.say.some(x=>x.includes('**'+w)))));
     let built=true;
     try{steps.forEach(s=>{introRich(s.h);s.say.forEach(introRich);if(s.fig)introFigNode(s.fig);if(s.calc)introCalcNode(s.calc);if(s.tryit)introTry(s.tryit);if(s.lab)labFigure({mode:'strip',base:s.lab.base,cur:s.lab.cur,last:{op:s.lab.op,k:s.lab.k}});});}catch(e){built=false;}
     t('Erklärungen: alle Schritte lassen sich aufbauen',built);
@@ -607,7 +607,7 @@ function runSelfTests(){
     t('Thema Zahlenstrahl: aktiv, mit Eingangstest ZQ, nicht im Rang, acht Pflicht-Bauteile Z01–Z08 und der Abschlusscheck ZQ, Pfad erst nach dem Eingangstest',zs.status==='aktiv'&&zs.quickcheck&&zs.qid==='ZQ'&&!zs.rank&&zs.path.length===9&&zs.path.slice(0,8).every((p,i)=>p.must&&p.id===('Z0'+(i+1)))&&zs.path[8].id==='ZQ'&&zs.path[8].final&&lernenZustand(zs)==='gate'&&PRACTICE_ORDER.includes('Z08')&&PRACTICE_ORDER.includes('ZQ')&&!rankPractice().includes('Z01')&&!rankPath().some(p=>p.id==='Z01')&&moduleOf('Z05').id==='zahlenstrahl'&&moduleOf('Eintragen').id==='zahlenstrahl'&&moduleOf('ZQ').id==='zahlenstrahl');
     const rows=()=>pathState(zs);
     t('Pfad Zahlenstrahl: Start bei Z01, Z02 gesperrt (wartet auf Z01), alles andere gesperrt',rows().find(r=>r.next).id==='Z01'&&rows().find(r=>r.id==='Z02').locked&&rows().find(r=>r.id==='Z02').blocker==='Z01'&&rows().find(r=>r.id==='Z08').locked);
-    onRoundEnd('Z01',1,{results:['f','f','f','l','x'],size:5});
+    onRoundEnd('Z01',1,{results:['f','f','f','f','x'],size:5});
     t('Pfad Zahlenstrahl: Z01 mit 4 von 5 bestanden ⇒ gespeichert, Z02 nächstes',S.passed['Z01-L1']===true&&rows().find(r=>r.next).id==='Z02'&&stationDone('Z01'));
     t('Eingangstest von „Brüche verändern“ bleibt Pflicht, auch wenn Zahlenstrahl-Bauteile bestanden sind; erst Bauteile dieses Themas zählen als Einstieg',lernenZustand(vm)==='gate'&&(S.passed['G01-L1']=true,lernenZustand(vm)==='wahl'));
     fresh();
@@ -695,6 +695,77 @@ function runSelfTests(){
     t('Navigation: Zurück aus einem Bauteil des Lernpfads führt in den Lernpfad dieses Themas',bt({kind:'practice',id:'G02',from:'pfad'}).thema==='veraendern'&&bt({kind:'lab',from:'pfad'}).thema==='veraendern');
     t('Navigation: Zurück aus Üben führt in die Gruppe, aus der Gruppe in die Übersicht',bt({kind:'practice',id:'G02'}).group==='Entdecken'&&bt({kind:'home',tab:'ueben',group:'Entdecken'}).tab==='ueben'&&!bt({kind:'home',tab:'ueben',group:'Entdecken'}).group);
     S.view=keepV;
+  }
+  /* Paket 2: Rückmeldung und Bedienung der Aufgabe */
+  {
+    const rs=(r,size)=>roundScore(r,size||r.length);
+    t('Bestehen: 5 Aufgaben brauchen 4 Punkte (ohne Tipp = 1, mit Tipp = ½) und mindestens 3 ohne Tipp',rs(['f','f','f','f','f']).passed&&rs(['f','f','f','f','x']).passed&&rs(['f','f','f','l','l']).passed&&!rs(['f','f','l','l','l']).passed&&!rs(['l','l','l','l','l']).passed&&!rs(['f','f','f','l','x']).passed);
+    t('Bestehen: Punkte werden gemeldet (3 ohne Tipp + 2 mit Tipp = 4 Punkte, 2 + 3 = 3,5)',rs(['f','f','f','l','l']).points===4&&rs(['f','f','l','l','l']).points===3.5&&rs(['f','f','l','l','l']).right===5);
+    t('Bestehen: Check-Fragen (nur ohne Tipp) wie bisher 12 von 15; T01 braucht 7 Punkte von 8 (6 ohne Tipp + 2 mit Tipp reichen, 5 + 3 nicht)',rs(qplan.map((_,i)=>i<12?'f':'x')).passed&&!rs(qplan.map((_,i)=>i<11?'f':'x')).passed&&rs(['f','f','f','f','f','f','f','x'],8).passed&&rs(['f','f','f','f','f','f','l','l'],8).passed&&!rs(['f','f','f','f','f','l','l','l'],8).passed);
+    const kp2={passed:S.passed,days:S.days,perfect:S.perfect};S.passed={};S.days={};S.perfect={};
+    const inf2=onRoundEnd('G03',1,rnd(['f','f','l','l','l']));
+    t('Rundenende: 5 richtig, aber 3 mit Tipp ⇒ nicht bestanden (zählt halb), Treffer und Punkte stehen in der Auswertung',!inf2.passed&&inf2.right===5&&inf2.points===3.5&&!S.passed['G03-L1']);
+    Object.assign(S,kp2);persist();
+    /* Weiß ich nicht */
+    const qq=generateTask('Q00',1);
+    const uns=validateTask(qq,{ans:Q_UNSURE});
+    t('Weiß ich nicht: weder richtig noch falsch, die richtige Antwort wird genannt',uns.unsure===true&&!uns.correct&&!uns.invalid&&uns.feedback.includes('Richtig wäre')&&validateTask(qq,{ans:qq.answer}).correct&&!validateTask(qq,{ans:Q_UNSURE}).soft);
+    const ur=['u','f','f','f','f','f','f','f','f','f','f','f','f','f','f'];
+    const ue=qEvaluate(ur,qplan,15,false);
+    t('Weiß ich nicht: die Fähigkeit steht auf „üben“, die übrigen Treffer zählen; ein „u“ ist kein Treffer',ue.skills[qplan[0]].status==='ueben'&&ue.right===14&&ue.unsure===1&&ue.trust&&Q_SKILLS.filter(s=>s!==qplan[0]).every(s=>ue.skills[s].status==='sitzt'));
+    const ue8=qEvaluate(qplan.map((_,i)=>i<8?'u':'f'),qplan,15,false);
+    t('Weiß ich nicht: ab 8 von 15 geht es direkt in den Pfad („von vorn“, nichts „sitzt“); mit Fortschritt Plan; 7 mal nicht',ue8.stufe==='start'&&Q_SKILLS.every(s=>ue8.skills[s].status==='ueben')&&qEvaluate(qplan.map((_,i)=>i<8?'u':'f'),qplan,15,true).stufe==='plan'&&qEvaluate(qplan.map((_,i)=>i<7?'u':'f'),qplan,15,false).trust);
+    /* Antippen markiert nur, gewertet wird mit Prüfen */
+    {
+      const host=el('div'),draftV={ans:null};let subs=0;
+      const view={task:qq,draft:draftV,inputs:{},st:{},save(){},locked:()=>false,submit(){subs++;}};
+      qOptions(view,host,Object.assign({},qq,{opts:[{id:'A',txt:'1'},{id:'B',txt:'2'},{id:'C',txt:'3'},{id:'D',txt:'4'}]}));
+      host.querySelector('.tile').click();
+      const un=host.querySelector('.btn.unsure');
+      t('Antippen: markiert nur (keine sofortige Wertung), die fünfte Antwort „Weiß ich nicht“ steht unter den Kacheln',subs===0&&draftV.ans==='A'&&!!un&&un.textContent.includes('Weiß ich nicht')&&host.querySelectorAll('.tile').length===4);
+      un.click();
+      const unOk=draftV.ans===Q_UNSURE&&un.getAttribute('aria-pressed')==='true'&&host.querySelector('.tile').getAttribute('aria-pressed')==='false'&&subs===0;
+      host.querySelectorAll('.tile')[1].click();
+      t('Antippen: „Weiß ich nicht“ markiert die Antwort ? und löst die Kachel; danach wieder eine Kachel löst „Weiß ich nicht“',unOk&&draftV.ans==='B'&&un.getAttribute('aria-pressed')==='false'&&host.querySelectorAll('.tile')[1].getAttribute('aria-pressed')==='true');
+      const h2=el('div'),v2={task:qq,draft:{ans:null},inputs:{},st:{},save(){},locked:()=>false,submit(){subs++;}};
+      qOptions(v2,h2,{kind:'eqYN',answer:'ja',why:'x'});
+      h2.querySelector('.yn').click();
+      t('Antippen: Ja/Nein markieren nur, auch mit „Weiß ich nicht“',subs===0&&v2.draft.ans==='ja'&&!!h2.querySelector('.btn.unsure'));
+    }
+    /* T01: Antippen markiert nur, geprüft wird mit „Prüfen“ */
+    {
+      const host=el('div');let subs=0;
+      const v={task:{type:'T01',n:124,k:2},draft:{},inputs:{},save(){},locked:()=>false,submit(){subs++;}};
+      TASKS.T01.render(v,host);host.querySelector('.yn').click();
+      t('T01: Ja/Nein markiert nur und wertet nicht sofort',subs===0&&v.draft.ans==='ja');
+      const hz=el('div'),vz={task:{},draft:{},inputs:{},save(){},locked:()=>false,submit(){subs++;}};
+      nlYesNo(vz,hz,'ans');hz.querySelector('.yn').click();
+      t('Zahlenstrahl Ja/Nein: markiert nur und wertet nicht sofort',subs===0&&vz.draft.ans==='ja');
+    }
+    /* Tastatur, Knöpfe, O01, G04 */
+    {
+      const pad=makeKeypad(el('div'),()=>{});
+      t('Tastatur: die Taste für das nächste Feld heißt „Weiter ▸“',[...pad.el.querySelectorAll('button')].some(b=>b.textContent==='Weiter ▸'&&b.getAttribute('aria-label')==='Nächstes Feld'));
+      const hO=el('div'),vO={task:{type:'O01',level:1,p:2,q:3,need:4},draft:{},inputs:{},save(){},locked:()=>false};
+      TASKS.O01.render(vO,hO);
+      const add=hO.querySelectorAll('.btn.small')[0];
+      t('O01: startet mit 2 Zeilen, „+ Bruch“ fügt eine dazu, Hinweis zu weiteren Zeilen',hO.querySelectorAll('.famrow').length===2&&add.textContent==='+ Bruch'&&(add.click(),hO.querySelectorAll('.famrow').length===3)&&hO.textContent.includes('„+ Bruch“'));
+      const hG=el('div'),vG={task:{type:'G04',level:1,mode:'full',a:6,b:9,p:2,q:3},draft:{},inputs:{},save(){},locked:()=>false};
+      TASKS.G04.render(vG,hG);
+      const nb=hG.querySelector('.btn.none');
+      t('G04: Knopf „Geht nicht mehr“ mit Stopp-Symbol und Unterzeile „Bruch ist schon fertig gekürzt“',!!nb&&nb.textContent.includes('Geht nicht mehr')&&nb.textContent.includes('Bruch ist schon fertig gekürzt')&&!!nb.querySelector('.ic')&&!/Nicht kürzbar/.test(nb.textContent));
+    }
+    /* Rückfrage vor Lösung und Überspringen */
+    {
+      let did=0;const m=confirmModal('Lösung ansehen?','Die Aufgabe zählt dann nicht als richtig.','Lösung ansehen',()=>{did++;});
+      t('Rückfrage: Fenster mit Hinweis „zählt dann nicht als richtig“, Abbrechen tut nichts',!!m.parentNode&&m.textContent.includes('zählt dann nicht als richtig')&&(m.querySelector('.btn.alt').click(),!m.parentNode&&did===0));
+      const m2=confirmModal('Aufgabe überspringen?','Die Aufgabe zählt dann nicht als richtig.','Überspringen',()=>{did++;});
+      [...m2.querySelectorAll('button')].find(b=>b.textContent==='Überspringen').click();
+      t('Rückfrage: Bestätigen führt die Aktion aus und schließt das Fenster',did===1&&!m2.parentNode);
+      const m3=confirmModal('x','y','OK',()=>{did++;});window.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'}));
+      t('Rückfrage: Escape schließt ohne Aktion',!m3.parentNode&&did===1);
+    }
+    t('Erster Satz: Begründung im Check hat bei richtigen Antworten einen Satz',firstSentence('Kreuzprobe: 2 · 6 = 12 und 4 · 3 = 12. Beide Brüche sind gleich viel.')==='Kreuzprobe: 2 · 6 = 12 und 4 · 3 = 12.'&&firstSentence('')===''&&firstSentence('Nur ein Satz.')==='Nur ein Satz.');
   }
   /* Paket 1: Fehler und Begriffe */
   {

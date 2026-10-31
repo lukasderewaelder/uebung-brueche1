@@ -94,7 +94,7 @@ const INTRO={
     {h:'Wann ist Schluss?',
       say:['Kürze, bis keine Zahl mehr in beide passt.','Dann ist der Bruch so weit wie möglich gekürzt.','Bei {2|3} geht nichts mehr.']},
     {h:'Manchmal geht es nicht',
-      say:['Bei {5|7} passt keine Zahl in beide.','Dieser Bruch lässt sich nicht kürzen.','Dann tippe auf **Nicht kürzbar**.']},
+      say:['Bei {5|7} passt keine Zahl in beide.','Dieser Bruch lässt sich nicht kürzen.','Dann tippe auf **Geht nicht mehr**.']},
     {h:'Die 2 geht IMMER',
       say:['**Die 2 geht IMMER, wenn Zähler und Nenner gerade sind.**','Enden beide auf 0 oder 5, geht auch die 5.','Enden beide auf 0, geht auch die 10.']}
   ]},
@@ -154,22 +154,22 @@ const INTRO={
   ]},
   Q00:{title:'Eingangstest',steps:[
     {h:'Blitzfragen',
-      say:[TASKS.Q00.size+' Fragen warten auf dich.','Du tippst nur die Antwort an.','Es gibt keine Zeitmessung.']},
+      say:[TASKS.Q00.size+' Fragen warten auf dich.','Du tippst eine Antwort an. Dann tippst du auf **Prüfen**.','Es gibt keine Zeitmessung.']},
     {h:'Sofort eine Rückmeldung',
       say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Dann geht es mit der nächsten Frage weiter.']},
     {h:'Danach siehst du, was fehlt',
-      say:['Am Ende siehst du, was du schon kannst.','Danach wählst du: dem Pfad folgen oder selbst aussuchen.','Weißt du etwas nicht, rate bitte nicht wild.']},
+      say:['Am Ende siehst du, was du schon kannst.','Danach wählst du: dem Pfad folgen oder selbst aussuchen.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
     {h:'Der Abschlusscheck',
       say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat auch '+TASKS.Q00.size+' Fragen.','Ab '+needOf(TASKS.Q00.size)+' richtigen Antworten gibt es die Urkunde.']}
   ]},
   ZQ:{title:'Eingangstest',steps:[
     {h:'Blitzfragen zum Zahlenstrahl',
-      say:[TASKS.ZQ.size+' Fragen warten auf dich.','Du tippst nur die Antwort an.','Manchmal siehst du einen Zahlenstrahl.'],
+      say:[TASKS.ZQ.size+' Fragen warten auf dich.','Du tippst eine Antwort an. Dann tippst du auf **Prüfen**.','Manchmal siehst du einen Zahlenstrahl.'],
       nline:{from:0,to:1,parts:5,marks:[{n:3,d:5,text:'A'}],labels:'wholes'}},
     {h:'Sofort eine Rückmeldung',
       say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Es gibt keine Zeitmessung.']},
     {h:'Danach siehst du, was fehlt',
-      say:['Am Ende siehst du, was du schon kannst.','Danach wählst du: dem Pfad folgen oder selbst aussuchen.','Weißt du etwas nicht, rate bitte nicht wild.']},
+      say:['Am Ende siehst du, was du schon kannst.','Danach wählst du: dem Pfad folgen oder selbst aussuchen.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
     {h:'Der Abschlusscheck',
       say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat auch '+TASKS.ZQ.size+' Fragen.','Ab '+needOf(TASKS.ZQ.size)+' richtigen Antworten gibt es die Urkunde.']}
   ]},

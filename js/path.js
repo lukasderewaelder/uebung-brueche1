@@ -97,19 +97,27 @@ function dayStreak(){
    hadProgress: ist schon ein Pflicht-Bauteil fertig? Dann gibt es nie „von vorn“. Rechnet auch mit Runden à 2 Fragen je Fähigkeit. */
 function qEvaluate(results,sk,size,hadProgress,skillList){
   const per={};
-  results.forEach((r,i)=>{const s=(sk||[])[i];if(s){const x=per[s]||(per[s]={ok:0,n:0});x.n++;if(r==='f'||r==='l')x.ok++;}});
+  results.forEach((r,i)=>{const s=(sk||[])[i];if(s){const x=per[s]||(per[s]={ok:0,n:0,u:0});x.n++;if(r==='f'||r==='l')x.ok++;if(r==='u')x.u++;}});
   const right=results.filter(r=>r==='f'||r==='l').length;
-  const trust=right>Math.floor(size*Q_START_SHARE);
+  /* „Weiß ich nicht“ (u): kein Raten, aber die Fähigkeit gilt als „üben“; bei der Hälfte und mehr und bei höchstens 30 % Treffern direkt in den Pfad */
+  const unsure=results.filter(r=>r==='u').length;
+  const trust=right>Math.floor(size*Q_START_SHARE)&&unsure<Math.ceil(size*Q_UNSURE_START);
   const skills={};
   (skillList||Q_SKILLS).forEach(s=>{
-    const x=per[s]||{ok:0,n:0};
-    skills[s]={ok:x.ok,n:x.n,status:trust&&x.n>=2&&x.ok===x.n?'sitzt':trust&&x.n>=3&&x.ok===x.n-1?'fast':'ueben'};
+    const x=per[s]||{ok:0,n:0,u:0};
+    skills[s]={ok:x.ok,n:x.n,status:x.u?'ueben':trust&&x.n>=2&&x.ok===x.n?'sitzt':trust&&x.n>=3&&x.ok===x.n-1?'fast':'ueben'};
   });
-  return {right,size,trust,skills,stufe:!trust?(hadProgress?'plan':'start'):right>=needOf(size)?'fit':'plan'};
+  return {right,unsure,size,trust,skills,stufe:!trust?(hadProgress?'plan':'start'):right>=needOf(size)?'fit':'plan'};
+}
+/* Bestanden: mindestens 80 % der Punkte (ohne Tipp = 1, mit Tipp oder zweitem Versuch = ½) und mindestens 3 Treffer ohne Tipp */
+function roundScore(results,size){
+  const n=(ch)=>results.filter(r=>r===ch).length,f=n('f'),l=n('l'),need=needOf(size);
+  const points=f+l/2;
+  return {right:f+l,f,l,points,need,passed:points>=need&&f>=Math.min(3,need)};
 }
 function onRoundEnd(id,lvl,round){
-  const right=round.results.filter(r=>r==='f'||r==='l').length,need=needOf(round.size);
-  const info={right,need,passed:right>=need,firstPass:false,placed:[],final:false,daily:false,quiz:null};
+  const sc=roundScore(round.results,round.size),right=sc.right,need=sc.need;
+  const info={right,points:sc.points,need,passed:sc.passed,firstPass:false,placed:[],final:false,daily:false,quiz:null};
   if(QCHK[id]){
     /* Einstufung: nur „sitzt“ (alle Fragen einer Fähigkeit richtig) schaltet die Bauteile der Fähigkeit per Check frei – und nur,
        wenn nicht fast alles falsch war */

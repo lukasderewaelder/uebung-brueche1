@@ -20,6 +20,7 @@ const Q_SKILL_NAME={gleich:'Gleiche Brüche erkennen',teilbar:'Teilbarkeit',erwe
 const Q_PER_SKILL=3;                        /* Fragen je Fähigkeit im Schnellcheck */
 const Q_COUNT=Q_SKILLS.length*Q_PER_SKILL;  /* 15 */
 const Q_START_SHARE=0.3;                    /* höchstens dieser Anteil richtig = „fast alles falsch“ (bei 15 Fragen: 4) */
+const Q_UNSURE_START=0.5;                   /* mindestens dieser Anteil „Weiß ich nicht“ = ebenfalls direkt in den Pfad (bei 15 Fragen: 8) */
 /* Eingangstests je Thema (Schlüssel = Aufgaben-ID des Tests, steht im Thema als qid):
    skills: Fähigkeiten (je 3 Fragen), names: Anzeigenamen, stations: zu welchen Lernpfad-Bauteilen eine Fähigkeit gehört
    (3 von 3 richtig ⇒ diese Bauteile sind im Modus „Selbst aussuchen“ offen), allSure: Bauteile, die erst aufgehen, wenn alles sitzt,
@@ -264,16 +265,26 @@ function qMark(node,id,view,t){
   node.append(el('span',{class:'mk','aria-hidden':'true'},icon(right?'haken':'kreuz'),right?'richtig':'falsch'));
   node.setAttribute('aria-label',(node.getAttribute('aria-label')||'')+(right?' – richtig':' – deine Antwort, falsch'));
 }
+/* Antippen markiert nur; gewertet wird mit „Prüfen“ (oder Enter auf der markierten Antwort) */
 function qPick(view,id,node,group){
   if(view.locked())return;
   view.draft.ans=id;view.save();
   group.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===node)));
-  if(view.submit)view.submit();
+}
+/* „Weiß ich nicht“: weder richtig noch falsch (Antwort-ID „?“) */
+const Q_UNSURE='?';
+function qUnsureBtn(view,group){
+  const b=el('button',{type:'button',class:'btn unsure','aria-pressed':String(view.draft.ans===Q_UNSURE)},icon('frage'),'Weiß ich nicht');
+  b.disabled=view.locked();
+  b.addEventListener('click',()=>qPick(view,Q_UNSURE,b,group));
+  view.inputs['t'+Q_UNSURE]=b;
+  return b;
 }
 
 /* Antworten zum Antippen: vier Karten A–D (Text txt, Bruch f=[n,d] oder gemischte Zahl mx=[w,n,d]) oder Ja/Nein */
 function qOptions(view,host,t){
   const d=view.draft;
+  const wrap=el('div',{class:'qopts'}); /* alle Antworten samt „Weiß ich nicht“: nur eine ist markiert */
   if(t.opts){
     const grid=el('div',{class:'tiles tiles-'+t.opts.length,role:'group','aria-label':'Antworten'});
     t.opts.forEach((o,i)=>{
@@ -281,19 +292,21 @@ function qOptions(view,host,t){
       const b=el('button',{type:'button',class:'tile'+(o.ic?' tile-ic':''),'aria-pressed':String(d.ans===o.id),'aria-label':'Antwort '+Q_LETTERS[i]+': '+o.txt},
         el('span',{class:'ltr','aria-hidden':'true'},Q_LETTERS[i]),o.ic?icon(o.ic):null,shown);
       b.disabled=view.locked();qMark(b,o.id,view,t);
-      b.addEventListener('click',()=>qPick(view,o.id,b,grid));
+      b.addEventListener('click',()=>qPick(view,o.id,b,wrap));
       view.inputs['t'+o.id]=b;grid.append(b);
     });
-    host.append(grid);
+    wrap.append(grid,qUnsureBtn(view,wrap));
+    host.append(wrap);
   }else{
     const row=el('div',{class:'yesno'});
     [['ja','haken','Ja'],['nein','kreuz','Nein']].forEach(([v,ic,label])=>{
       const b=el('button',{type:'button',class:'btn yn','aria-pressed':String(d.ans===v),'aria-label':label},icon(ic),label);
       b.disabled=view.locked();qMark(b,v,view,t);
-      b.addEventListener('click',()=>qPick(view,v,b,row));
+      b.addEventListener('click',()=>qPick(view,v,b,wrap));
       view.inputs['yn'+v]=b;row.append(b);
     });
-    host.append(row);
+    wrap.append(row,qUnsureBtn(view,wrap));
+    host.append(wrap);
   }
 }
 
@@ -327,6 +340,7 @@ const QUICK={
   },
   validate(t,d){
     if(!d.ans)return invalid('Tippe eine Antwort an.');
+    if(d.ans===Q_UNSURE)return unsure('Das ist in Ordnung. '+qAnswerText(t)+' '+t.why);
     if(d.ans===t.answer)return right('Richtig! '+t.why);
     return wrong('quick',qAnswerText(t)+' '+t.why);
   },
