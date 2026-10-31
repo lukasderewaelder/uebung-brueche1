@@ -35,18 +35,20 @@ function bomList(ids){
 }
 /* Reiter „Lernen“: ein Thema wählen. Geplante Themen sind nur ein Hinweis, kein Link. */
 function moduleCard(m){
-  const z=lernenZustand(m),openThema=()=>go({kind:'home',tab:'pfad',thema:m.id});
+  const z=lernenZustand(m),rec0=recommendNote(m),openThema=()=>go({kind:'home',tab:'pfad',thema:m.id});
   const head=el('div',{class:'tc-head'},el('span',{class:'ico','aria-hidden':'true'},icon(m.icon)),el('div',null,el('h2',null,m.name),el('p',null,m.desc)));
   const btn=(label,fn,primary,ic)=>el('button',{type:'button',class:'btn'+(primary?' primary':''),onclick:fn},ic?icon(ic):null,label);
   if(z==='gate')return el('section',{class:'tcard'},head,
+    rec0?el('p',{class:'tc-note'},'Empfohlen: erst '+rec0.name+'.'):null,
     el('p',{class:'tc-note'},'Willst du testen, was du schon kannst? Das dauert etwa 5 Minuten.'),
     el('div',{class:'rowbtns gatebtns'},btn('Eingangstest starten',()=>startEingang(m),true,'play'),btn('Ohne Test starten',()=>startOhneTest(m))));
   if(z==='wahl')return el('section',{class:'tcard'},head,
     el('div',{class:'rowbtns'},btn('Wie möchtest du lernen?',openThema,true)));
-  const {must,doneN,go1,rows}=pfadInfo(m,z);
+  const {must,doneN,go1,rows}=pfadInfo(m,z),rec=recommendNote(m);
   const seg=el('span',{class:'segn',role:'img','aria-label':doneN+' von '+must.length+' Pflicht-Stationen fertig'});
   must.forEach((r,i)=>seg.append(el('i',{class:i<doneN?'on':''})));
   return el('section',{class:'tcard'},head,
+    rec?el('p',{class:'tc-note'},'Empfohlen: erst '+rec.name+'.'):null,
     el('div',{class:'tc-prog'},seg,el('b',null,doneN+' von '+must.length)),
     el('div',{class:'rowbtns'},
       z==='pfad'&&go1?btn(startWord(rows,go1)+': '+stationTitle(go1.id),()=>openStation(go1.id),true,'play'):null,

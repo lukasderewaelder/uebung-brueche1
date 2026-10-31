@@ -52,7 +52,7 @@ function runSelfTests(){
   let gen=0;
   for(const id of PRACTICE_ORDER)for(const lvl of [1,2])for(let i=0;i<150;i++){
     const task=generateTask(id,lvl);gen++;
-    if(!task||task.type!==id)t('Generator '+id,false);
+    if(!task||(task.type!==id&&!finalModOf(id)))t('Generator '+id,false); /* QA und ZA liefern Aufgaben der echten Typen */
     if(TASKS[id].hints(task).length<2)t('Tipps '+id,false);
     if(!Array.isArray(task.avoid))t('avoid '+id,false);
   }
@@ -211,7 +211,7 @@ function runSelfTests(){
   const freshP=()=>{S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;S.einstufung=null;S.modus={};S.perfect={};};
   const R_=(id)=>pathState(moduleById("veraendern")).find(r=>r.id===id);
   freshP();
-  t('Pfad: Start – nächstes Bauteil G01, Labor offen, G02/B01/Abschluss gesperrt',pathState(moduleById("veraendern")).find(r=>r.next).id==='G01'&&R_('LAB').open&&R_('G02').locked&&R_('G02').blocker==='G01'&&R_('B01').locked&&R_('Q00').locked);
+  t('Pfad: Start – nächstes Bauteil G01, Labor offen, G02/B01/Abschluss gesperrt',pathState(moduleById("veraendern")).find(r=>r.next).id==='G01'&&R_('LAB').open&&R_('G02').locked&&R_('G02').blocker==='G01'&&R_('B01').locked&&R_('QA').locked);
   S.passed['G01-L1']=true;
   t('Pfad: G01 fertig ⇒ G02 nächstes, freiwilliges B01 offen',R_('G02').next&&R_('B01').open&&!R_('B01').must);
   S.checked.G03=true;
@@ -219,7 +219,7 @@ function runSelfTests(){
   S.passed['G02-L2']=true;S.passed['T01-L1']=true;S.passed['G03-L1']=true;
   t('Pfad: knifflig bestanden zählt, nächstes ist G04',R_('G02').done&&R_('G04').next);
   ['G04','G05'].forEach(x=>{S.passed[x+'-L1']=true;});
-  t('Pfad: nach G05 sind Knobel-Bauteile und Abschluss offen',['U01','U02','U03','O02','Q00'].every(x=>R_(x).open)&&R_('Q00').next);
+  t('Pfad: nach G05 sind Knobel-Bauteile und Abschluss (QA) offen',['U01','U02','U03','O02','QA'].every(x=>R_(x).open)&&R_('QA').next);
   S.final=true;
   t('Pfad: alles fertig ⇒ kein nächstes Bauteil',!pathState(moduleById("veraendern")).some(r=>r.next));
   t('Pfad: 80 %-Regel (5→4, 8→7, 10→8)',needOf(5)===4&&needOf(8)===7&&needOf(10)===8&&needOf(15)===12);
@@ -236,7 +236,7 @@ function runSelfTests(){
   const qres=(bad)=>qplan.map((_,i)=>bad.includes(i)?'x':'f');
   const pos=(sk)=>qplan.map((x,i)=>x===sk?i:-1).filter(i=>i>=0);
   const qev=(res,prog)=>qEvaluate(res,qplan,15,!!prog);
-  t('Schnellcheck: 15 Fragen, Hürde 12 von 15, Texte nennen diese Zahlen',TASKS.Q00.size===15&&needOf(15)===12&&PATH.find(m=>m.id==='Q00').desc.includes('15 Fragen')&&PATH.find(m=>m.id==='Q00').desc.includes('Ab 12')&&TASKS.Q00.desc.includes('15'));
+  t('Schnellcheck: 15 Fragen, Hürde 12 von 15, Texte nennen diese Zahlen',TASKS.Q00.size===15&&needOf(15)===12&&TASKS.QA.size===15&&PATH.find(m=>m.id==='QA').desc.includes('15 Aufgaben')&&PATH.find(m=>m.id==='QA').desc.includes('Ab 12')&&TASKS.Q00.desc.includes('15')&&!PATH.some(m=>m.id==='Q00'));
   t('Auswertung: 0 und 4 von 15 = von vorn (nichts „sitzt“), 4 mit Fortschritt = Plan',qev(qres(qplan.map((_,i)=>i))).stufe==='start'&&qev(qres(qplan.map((_,i)=>i).filter(i=>i>=4))).stufe==='start'&&Q_SKILLS.every(sk=>qev(qres(qplan.map((_,i)=>i).filter(i=>i>=4))).skills[sk].status==='ueben')&&qev(qres(qplan.map((_,i)=>i).filter(i=>i>=4)),true).stufe==='plan');
   t('Auswertung: 5 und 11 = Themenliste, 12 und 15 = fit',qev(qres(qplan.map((_,i)=>i).filter(i=>i>=5))).stufe==='plan'&&qev(qres(qplan.map((_,i)=>i).filter(i=>i>=11))).stufe==='plan'&&qev(qres(qplan.map((_,i)=>i).filter(i=>i>=12))).stufe==='fit'&&qev(qres([])).stufe==='fit');
   const mix=qev(qres([].concat(pos('teilbar').slice(0,1),pos('erweitern').slice(0,2),pos('kuerzen'))));
@@ -265,12 +265,12 @@ function runSelfTests(){
   inf=onRoundEnd('Q00',1,rnd(qres(pos('vollstaendig')),qplan));
   t('3+3+3+3+0 ist „fit“, aber nicht fertig: keine Urkunde, G03 beherrscht, G04 und G05 nicht',inf.ev.stufe==='fit'&&!inf.final&&!S.final&&S.checked.G03&&!S.checked.G04&&!S.checked.G05);
   freshP();['G01','G02','T01','G03','G04','G05'].forEach(x=>{S.passed[x+'-L1']=true;});
-  inf=onRoundEnd('Q00',1,rnd(qres(qplan.map((_,i)=>i).filter(i=>i>=11)),qplan));
+  inf=onRoundEnd('QA',1,rnd(qres(qplan.map((_,i)=>i).filter(i=>i>=11)),qplan));
   t('Abschlusscheck: alles fertig, aber nur 11 von 15 ⇒ keine Urkunde (ready, nicht passed)',inf.ready&&!inf.passed&&!inf.final&&!S.final);
-  inf=onRoundEnd('Q00',1,rnd(qres(qplan.map((_,i)=>i).filter(i=>i>=12)),qplan));
+  inf=onRoundEnd('QA',1,rnd(qres(qplan.map((_,i)=>i).filter(i=>i>=12)),qplan));
   t('Abschlusscheck: alles fertig und 12 von 15 ⇒ Urkunde',inf.ready&&inf.passed&&inf.final&&S.final);
   freshP();S.passed['G01-L1']=true;
-  inf=onRoundEnd('Q00',1,rnd(['f','f','f','f','f','f','x','x','f','f'],oldPlan));
+  inf=onRoundEnd('QA',1,rnd(['f','f','f','f','f','f','x','x','f','f'],oldPlan));
   t('Abschluss: ohne alle Pflicht-Bauteile keine Urkunde',inf.passed&&!inf.final&&!S.final);
   t('Migration 6: alte Schnellcheck-Runden (10 Fragen) werden verworfen, Rest bleibt',(()=>{const o={rounds:{'Q00-L1':{size:10,results:[]},'Q00-L2':{size:15,results:[]},'G02-L1':{size:5,results:[]}}};migrate6(o);return !o.rounds['Q00-L1']&&!!o.rounds['Q00-L2']&&!!o.rounds['G02-L1'];})());
   freshP();
@@ -307,7 +307,7 @@ function runSelfTests(){
     const rP=(id)=>P.find(r=>r.id===id),rF=(id)=>F.find(r=>r.id===id);
     t('Pfad-Modus: der Check überspringt nichts – Gleiche Anteile als Nächstes, Erweitern noch gesperrt',rP('G01').next&&!rP('G01').done&&rP('G01').checked&&rP('G02').locked);
     t('Selbst aussuchen: Beherrschtes offen (G01, G02), dazu Labor und Bruchbilder vor der Lücke',rF('G01').open&&rF('G02').open&&rF('LAB').open&&rF('B01').open&&!rF('G01').done);
-    t('Selbst aussuchen: die Lücke (Teilbarkeit) und alles danach gesperrt, auch Knobeln, Mischen, Abschluss',['T01','G03','G04','G05','U01','U02','U03','O02','Q00'].every(id=>rF(id).locked)&&!F.some(r=>r.next));
+    t('Selbst aussuchen: die Lücke (Teilbarkeit) und alles danach gesperrt, auch Knobeln, Mischen, Abschluss',['T01','G03','G04','G05','U01','U02','U03','O02','QA'].every(id=>rF(id).locked)&&!F.some(r=>r.next));
     S.passed['G01-L1']=true;
     t('Fortschritt gilt in beiden Modi: G01 fertig, im Pfad ist Erweitern dran',pathState(mod,'frei').find(r=>r.id==='G01').done&&pathState(mod,'pfad').find(r=>r.id==='G01').done&&pathState(mod,'pfad').find(r=>r.next).id==='G02');
     beispiel();S.modus.veraendern='pfad';
@@ -371,7 +371,7 @@ function runSelfTests(){
     const texts=[],steps=[];
     ids.forEach(id=>{const I=INTRO[id];if(!I)return;texts.push(I.title);I.steps.forEach(s=>{steps.push(s);texts.push(s.h,...(s.say||[]));});});
     const longest=Math.max(...[].concat(...texts.map(sentences)).map(words));
-    t('Erklärungen: jedes der '+ids.length+' Lernpfad-Bauteile hat eine mit 3–4 Schritten, Überschrift und 2–5 Sätzen',ids.every(id=>INTRO[id]&&INTRO[id].title&&INTRO[id].steps.length>=3&&INTRO[id].steps.length<=4&&INTRO[id].steps.every(s=>s.h&&Array.isArray(s.say)&&s.say.length>=2&&s.say.length<=5))&&Object.keys(INTRO).length===ids.length);
+    t('Erklärungen: jedes der '+ids.length+' Lernpfad-Bauteile hat eine mit 3–4 Schritten, Überschrift und 2–5 Sätzen',ids.every(id=>INTRO[id]&&INTRO[id].title&&INTRO[id].steps.length>=3&&INTRO[id].steps.length<=4&&INTRO[id].steps.every(s=>s.h&&Array.isArray(s.say)&&s.say.length>=2&&s.say.length<=5))&&Object.keys(INTRO).length===ids.length+Object.keys(QCHK).length);
     t('Erklärungen: kurze Sätze, höchstens 14 Wörter (längster: '+longest+')',longest<=14);
     t('Erklärungen: keine Rechnung im Text (Zahlen, Rechenzeichen, Brüche stehen als Daten), kein Emoji, kein ✓/★/✗',texts.every(x=>!/\d\s*[·×÷+−=]\s*\d|\d\s*:\s*\d|[☀-➿\u{1F000}-\u{1FFFF}]/u.test(x)));
     /* Rechnungen: alle Brüche einer Zeile gleich (Lücke „?“ muss ganzzahlig lösbar sein), Erweitern/Kürzen mit Zahl ≥ 2 passend, Rechenketten stimmen */
@@ -434,7 +434,7 @@ function runSelfTests(){
     t('Migration 7: bearbeitete Bauteile gelten als gesehen (Zähler, bestanden, Antwort in einer Runde, Labor, Schnellcheck)',m1.G02===true&&m1.U01===true&&m1.G03===true&&m1.T01===true&&m1.LAB===true&&m1.Q00===true&&!m1.G01&&!m1.G04&&!m1.G05&&!m1.B01&&!m1.U02);
     t('Migration 7: bloßes Öffnen, leere Runde und „per Check frei“ zählen nicht; Neuling bleibt leer',Object.keys(mi({progress:{'G01-L1':{done:0,first:0,later:0,skipped:0,shown:0}},rounds:{'G05-L1':{results:[],cur:{},size:5}},checked:{G02:true},lab:{did:{x:false,d:false},done:false}})).length===0&&Object.keys(mi({})).length===0);
     const o7={intro:{G01:true},final:true,progress:{}};migrateIntro(o7);const once=JSON.stringify(o7);migrateIntro(o7);
-    t('Migration 7: idempotent, lässt Vorhandenes stehen, Urkunde zählt für den Schnellcheck',JSON.stringify(o7)===once&&o7.intro.G01===true&&o7.intro.Q00===true&&Object.keys(o7.intro).length===2);
+    t('Migration 7: idempotent, lässt Vorhandenes stehen, Urkunde zählt für den Schnellcheck',JSON.stringify(o7)===once&&o7.intro.G01===true&&o7.intro.Q00===true&&o7.intro.QA===true&&Object.keys(o7.intro).length===3);
     t('Migration 7: kaputtes intro (Liste, Text, null) wird zu einem leeren Objekt',[[1,2],'x',null].every(v=>{const o={intro:v,progress:{'G02-L1':{done:1}}};migrateIntro(o);return !Array.isArray(o.intro)&&typeof o.intro==='object'&&o.intro.G02===true&&Object.keys(o.intro).length===1;}));
     t('Zustand: neuer Spielstand hat intro:{} (Erklärungen ungesehen)',typeof defaultState().intro==='object'&&Object.keys(defaultState().intro).length===0);
   }
@@ -604,7 +604,7 @@ function runSelfTests(){
     const snap={passed:S.passed,checked:S.checked,final:S.final,placed:S.placed,days:S.days,lab:S.lab,einstufung:S.einstufung,modus:S.modus,perfect:S.perfect,mq:S.mq};
     const fresh=()=>{S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;S.einstufung=null;S.modus={};S.perfect={};S.mq={};};
     fresh();
-    t('Thema Zahlenstrahl: aktiv, mit Eingangstest ZQ, nicht im Rang, acht Pflicht-Bauteile Z01–Z08 und der Abschlusscheck ZQ, Pfad erst nach dem Eingangstest',zs.status==='aktiv'&&zs.quickcheck&&zs.qid==='ZQ'&&!zs.rank&&zs.path.length===9&&zs.path.slice(0,8).every((p,i)=>p.must&&p.id===('Z0'+(i+1)))&&zs.path[8].id==='ZQ'&&zs.path[8].final&&lernenZustand(zs)==='gate'&&PRACTICE_ORDER.includes('Z08')&&PRACTICE_ORDER.includes('ZQ')&&!rankPractice().includes('Z01')&&!rankPath().some(p=>p.id==='Z01')&&moduleOf('Z05').id==='zahlenstrahl'&&moduleOf('Eintragen').id==='zahlenstrahl'&&moduleOf('ZQ').id==='zahlenstrahl');
+    t('Thema Zahlenstrahl: aktiv, mit Eingangstest ZQ, nicht im Rang, acht Pflicht-Bauteile Z01–Z08 und der Abschlusscheck ZQ, Pfad erst nach dem Eingangstest',zs.status==='aktiv'&&zs.quickcheck&&zs.qid==='ZQ'&&!zs.rank&&zs.path.length===9&&zs.path.slice(0,8).every((p,i)=>p.must&&p.id===('Z0'+(i+1)))&&zs.path[8].id==='ZA'&&zs.path[8].final&&lernenZustand(zs)==='gate'&&PRACTICE_ORDER.includes('Z08')&&PRACTICE_ORDER.includes('ZQ')&&PRACTICE_ORDER.includes('ZA')&&!rankPractice().includes('Z01')&&!rankPath().some(p=>p.id==='Z01')&&moduleOf('Z05').id==='zahlenstrahl'&&moduleOf('Eintragen').id==='zahlenstrahl'&&moduleOf('ZQ').id==='zahlenstrahl');
     const rows=()=>pathState(zs);
     t('Pfad Zahlenstrahl: Start bei Z01, Z02 gesperrt (wartet auf Z01), alles andere gesperrt',rows().find(r=>r.next).id==='Z01'&&rows().find(r=>r.id==='Z02').locked&&rows().find(r=>r.id==='Z02').blocker==='Z01'&&rows().find(r=>r.id==='Z08').locked);
     onRoundEnd('Z01',1,{results:['f','f','f','f','x'],size:5});
@@ -612,7 +612,7 @@ function runSelfTests(){
     t('Eingangstest von „Brüche verändern“ bleibt Pflicht, auch wenn Zahlenstrahl-Bauteile bestanden sind; erst Bauteile dieses Themas zählen als Einstieg',lernenZustand(vm)==='gate'&&(S.passed['G01-L1']=true,lernenZustand(vm)==='wahl'));
     fresh();
     ['Z01','Z02','Z03','Z04','Z05','Z06','Z07','Z08'].forEach(x=>{S.passed[x+'-L1']=true;});
-    t('Pfad Zahlenstrahl: alle acht bestanden ⇒ nächstes ist der Abschlusscheck ZQ, noch keine Urkunde (S.final unberührt)',rows().find(r=>r.next).id==='ZQ'&&rows().filter(r=>r.id!=='ZQ').every(r=>r.done)&&!stationDone('ZQ')&&!S.final);
+    t('Pfad Zahlenstrahl: alle acht bestanden ⇒ nächstes ist der Abschlusscheck ZA, noch keine Urkunde (S.final unberührt)',rows().find(r=>r.next).id==='ZA'&&rows().filter(r=>r.id!=='ZA').every(r=>r.done)&&!stationDone('ZA')&&!S.final);
     t('Pfad Brüche verändern: bestandene Zahlenstrahl-Bauteile ändern dort nichts (Start weiter bei G01, nichts fertig)',pathState(vm).find(r=>r.next).id==='G01'&&!pathState(vm).some(r=>r.done));
     /* Eingangstest zum Zahlenstrahl (ZQ): Auswertung, Freischalten (3 von 3 = sitzt), Urkunde – getrennt vom Test der Brüche-Werkstatt */
     const zr=(res,plan)=>({results:res.slice(),size:res.length,sk:plan}),zplan=[].concat(ZQ_SKILLS,ZQ_SKILLS,ZQ_SKILLS);
@@ -625,17 +625,17 @@ function runSelfTests(){
     onRoundEnd('ZQ',1,zr(zplan.map((s,i)=>i===ip?'x':'f'),zplan));
     const F=pathState(zs,'frei'),P=pathState(zs,'pfad'),fr=(id)=>F.find(r=>r.id===id),pf=(id)=>P.find(r=>r.id===id);
     t('Eingangstest Zahlenstrahl: Fähigkeit „Ablesen und Eintragen“ 2 von 3 ⇒ Z02 und Z03 nicht offen (Check „fast“), alle anderen Bauteile sitzen',!S.checked.Z02&&!S.checked.Z03&&['Z01','Z04','Z05','Z06','Z07','Z08'].every(x=>S.checked[x])&&checkMark('Z02')==='fast'&&checkMark('Z03')==='fast'&&checkMark('Z04')==='sitzt');
-    t('Selbst aussuchen: Bauteile mit 3 von 3 sind offen und überspringen die Lücke (Z04 offen trotz Z02), Z02 bleibt gesperrt, der Abschlusscheck erst nach allen',fr('Z01').open&&fr('Z02').locked&&fr('Z03').locked&&fr('Z04').open&&fr('Z08').open&&fr('ZQ').locked);
+    t('Selbst aussuchen: Bauteile mit 3 von 3 sind offen und überspringen die Lücke (Z04 offen trotz Z02), Z02 bleibt gesperrt, der Abschlusscheck erst nach allen',fr('Z01').open&&fr('Z02').locked&&fr('Z03').locked&&fr('Z04').open&&fr('Z08').open&&fr('ZA').locked);
     t('Dem Pfad folgen: der Check überspringt nichts – alles wartet auf Z01, Z04 bleibt gesperrt, Z01 ist als Nächstes dran',pf('Z01').next&&pf('Z04').locked&&pf('Z04').blocker==='Z01');
     fresh();
     onRoundEnd('ZQ',1,zr(zplan.map((s,i)=>i<4?'f':'x'),zplan));
     t('Eingangstest Zahlenstrahl: höchstens 4 von 15 richtig ⇒ nichts als beherrscht gemerkt, direkt in den Pfad ohne Wahl',Object.keys(S.checked).length===0&&S.modus.zahlenstrahl==='pfad'&&lernenZustand(zs)==='pfad'&&qstate(zs).einstufung.stufe==='start');
     fresh();
     ['Z01','Z02','Z03','Z04','Z05','Z06','Z07','Z08'].forEach(x=>{S.passed[x+'-L1']=true;});
-    zi=onRoundEnd('ZQ',1,zr(zplan.map((s,i)=>i<11?'f':'x'),zplan));
-    t('Abschlusscheck Zahlenstrahl: alles bestanden, aber nur 11 von 15 ⇒ keine Urkunde (ready, nicht passed)',zi.ready&&!zi.passed&&!zi.final&&!stationDone('ZQ'));
-    zi=onRoundEnd('ZQ',1,zr(zplan.map((s,i)=>i<12?'f':'x'),zplan));
-    t('Abschlusscheck Zahlenstrahl: alles bestanden und 12 von 15 ⇒ Urkunde nur für dieses Thema (S.final der Brüche-Werkstatt bleibt)',zi.final&&stationDone('ZQ')&&qstate(zs).final&&!S.final&&!stationDone('Q00')&&zi.qmod==='zahlenstrahl'&&rows().every(r=>r.done));
+    zi=onRoundEnd('ZA',1,zr(zplan.map((s,i)=>i<11?'f':'x'),zplan));
+    t('Abschlusscheck Zahlenstrahl: alles bestanden, aber nur 11 von 15 ⇒ keine Urkunde (ready, nicht passed)',zi.ready&&!zi.passed&&!zi.final&&!stationDone('ZA'));
+    zi=onRoundEnd('ZA',1,zr(zplan.map((s,i)=>i<12?'f':'x'),zplan));
+    t('Abschlusscheck Zahlenstrahl: alles bestanden und 12 von 15 ⇒ Urkunde nur für dieses Thema (S.final der Brüche-Werkstatt bleibt)',zi.final&&stationDone('ZA')&&qstate(zs).final&&!S.final&&!stationDone('QA')&&zi.qmod==='zahlenstrahl'&&rows().every(r=>r.done));
     /* Fragen: je Art genau eine richtige Antwort, Bild und Antwort stimmen mathematisch, Prüfung und Ansicht arbeiten */
     const zqProblems=(k)=>{
       if(!ZQ_KINDS[k.skill]||!ZQ_KINDS[k.skill].includes(k.kind))return 'skill/kind';
@@ -685,7 +685,7 @@ function runSelfTests(){
   t('Registry: jede Aufgabe, Gruppe und jedes Bauteil eines aktiven Themas gibt es',activeModules().every(m=>(m.practice||[]).every(id=>TASKS[id])&&Object.values(m.groups||{}).every(g=>g.ids.every(id=>id==='LAB'||TASKS[id]))&&(m.path||[]).every(p=>p.id==='LAB'||TASKS[p.id])));
   t('Registry: geplante Themen haben keine Aufgaben, keine Gruppen, keinen Lernpfad',plannedModules().length>0&&plannedModules().every(m=>!m.practice&&!m.groups&&!m.path));
   t('Registry: Themen-IDs und Aufgaben-IDs sind eindeutig',new Set(MODULES.map(m=>m.id)).size===MODULES.length&&new Set(PRACTICE_ORDER).size===PRACTICE_ORDER.length&&new Set(PATH.map(p=>p.id)).size===PATH.length);
-  t('Registry: Rang zählt „Brüche verändern“ (16 Übungen, 13 Bauteile)',rankPractice().length===16&&rankPath().length===13&&moduleOf('G02').id==='veraendern'&&moduleOf('Entdecken').id==='veraendern');
+  t('Registry: Rang zählt „Erweitern und Kürzen“ (18 Übungen, 13 Stationen)',rankPractice().length===18&&rankPath().length===13&&moduleOf('G02').id==='veraendern'&&moduleOf('Entdecken').id==='veraendern');
   /* Navigation: Lernen (Themen) → Lernpfad des Themas → Bauteil, und zurück */
   {
     const keepV=S.view;
@@ -697,6 +697,109 @@ function runSelfTests(){
     S.view=keepV;
   }
 
+  /* Paket 6: Abschlusschecks QA und ZA, gemischte Runden, „Stimmt das?“, Transfer, Hinweis „Erst Erweitern und Kürzen“ */
+  {
+    const vm6=moduleById('veraendern'),zs6=moduleById('zahlenstrahl');
+    const play=(id,level)=>{ /* eine ganze Runde so erzeugen, wie renderPractice es tut */
+      const round={results:[],cur:null,size:TASKS[id].size},tasks=[];
+      for(let i=0;i<round.size;i++){const task=generateUnique(id,level,TASKS[id].ctx?TASKS[id].ctx(round,level):null,round);tasks.push(task);round.results.push('f');}
+      return {round,tasks};
+    };
+    const {round:qr,tasks:qt}=play('QA',1);
+    const qSkills=qt.slice(0,10).map(x=>x.skill);
+    t('QA: Abschlusscheck „Erweitern und Kürzen“ hat 15 Aufgaben: 10 zum Antippen (je Fähigkeit 2) und 5 zum Rechnen (2× Erweitern, 2× Kürzen so weit wie möglich, 1× Lücke)',qt.length===15&&qt.slice(0,10).every(x=>x.type==='Q00')&&Q_SKILLS.every(s=>qSkills.filter(x=>x===s).length===2)&&qt.slice(10).map(x=>x.type).join()==='G02,G02,G04,G04,U01');
+    const {tasks:zt}=play('ZA',2);
+    const zSk=zt.slice(0,10).map(x=>x.skill);
+    t('ZA: Abschlusscheck Zahlenstrahl hat 15 Aufgaben: 10 zum Antippen (je Fähigkeit 2) und 5 am Strahl (ablesen, eintragen, Einteilung anpassen, Bruch anpassen, Einheit lesen)',zt.length===15&&zt.slice(0,10).every(x=>x.type==='ZQ')&&ZQ_SKILLS.every(s=>zSk.filter(x=>x===s).length===2)&&zt.slice(10).map(x=>x.type).join()==='Z02,Z03,Z04,Z05,Z07');
+    let okAns=0;
+    [].concat(qt,zt).forEach(x=>{const T=TASKS[x.type];if(T.quick?validateTask(x,{ans:x.answer}).correct:T.solution(x).length>0)okAns++;});
+    t('QA und ZA: jede Aufgabe ist lösbar (Antippen: richtige Antwort wird erkannt, Rechnen: Musterlösung)',okAns===30);
+    t('QA und ZA: der Stellvertreter reicht Prüfung, Lösung und Tipps an den Typ der Aufgabe weiter, ohne eigene Tipp-Liste',TASKS.QA.hints(qt[12]).length===3&&TASKS.QA.validate(qt[0],{ans:qt[0].answer}).correct&&TASKS.ZA.hints(zt[11]).length>=2&&!TIPS.QA&&!TIPS.ZA);
+    t('Pfad: der Abschlusscheck ist die letzte Station (QA, ZA); die Eingangstests Q00 und ZQ stehen nicht mehr im Pfad, aber in Üben',PATH.at(-1).id==='ZA'&&PATH.some(m=>m.id==='QA'&&m.final)&&!PATH.some(m=>m.id==='Q00'||m.id==='ZQ')&&vm6.practice.includes('Q00')&&vm6.practice.includes('QA')&&zs6.practice.includes('ZQ')&&zs6.practice.includes('ZA')&&INTRO.QA&&INTRO.ZA&&INTRO.Q00&&INTRO.ZQ);
+    /* Urkunde nur über den Abschlusscheck */
+    const keep6={passed:S.passed,checked:S.checked,final:S.final,placed:S.placed,days:S.days,lab:S.lab,mq:S.mq,perfect:S.perfect,einstufung:S.einstufung,modus:S.modus,unlocked:S.unlocked};
+    try{
+      S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;S.mq={};S.perfect={};S.einstufung=null;S.modus={};S.unlocked={};
+      ['G01','G02','T01','G03','G04','G05'].forEach(x=>{S.passed[x+'-L1']=true;});
+      let r=onRoundEnd('Q00',1,{results:Array(15).fill('f'),size:15,sk:[].concat(Q_SKILLS,Q_SKILLS,Q_SKILLS)});
+      t('Urkunde: der Eingangstest Q00 gibt auch bei 15 von 15 und allen Stationen keine Urkunde mehr',!r.final&&!S.final&&!stationDone('QA'));
+      r=onRoundEnd('QA',1,{results:Array(15).fill('f').fill('x',11),size:15});
+      t('Urkunde: QA mit 11 von 15 ⇒ bestanden nicht, keine Urkunde',!r.passed&&!r.final&&!S.final);
+      r=onRoundEnd('QA',1,{results:['f','f','f','f','f','f','f','f','f','f','l','l','x','x','x'],size:15});
+      t('Urkunde: QA mit 11 Punkten (10 ohne Tipp, 2 mit Tipp zählen halb) ⇒ nicht bestanden, keine Urkunde',!r.passed&&!r.final&&r.points===11);
+      r=onRoundEnd('QA',1,{results:['f','f','f','f','f','f','f','f','f','f','f','f','l','l','x'],size:15});
+      t('Urkunde: QA mit 13 Punkten (12 ohne Tipp, 2 mit Tipp) ⇒ Urkunde, Thema Erweitern und Kürzen, Zahlenstrahl unberührt',r.passed&&r.ready&&r.final&&r.qmod==='veraendern'&&S.final&&stationDone('QA')&&!stationDone('ZA'));
+      S.passed={};S.final=false;
+      r=onRoundEnd('QA',1,{results:Array(15).fill('f'),size:15});
+      t('Urkunde: ohne alle Pflicht-Stationen auch bei 15 von 15 keine Urkunde (ready = false)',r.passed&&!r.ready&&!r.final&&!S.final);
+      /* Hinweis „Erst Erweitern und Kürzen“ */
+      S.mq={};
+      const note=recommendNote(zs6);
+      t('Zahlenstrahl: Hinweis „Erst Erweitern und Kürzen“ auf der Themenkarte und bei Z04/Z05, solange Erweitern und Kürzen nicht abgeschlossen ist – keine Sperre',!!note&&note.id==='veraendern'&&/Empfohlen: erst Erweitern und Kürzen/.test(moduleCard(zs6).textContent)&&!pathState(zs6,'pfad').find(r=>r.id==='Z04').done&&pathState(zs6,'pfad').find(r=>r.id==='Z01').next&&PATH.find(m=>m.id==='Z04').note&&PATH.find(m=>m.id==='Z05').note&&!PATH.find(m=>m.id==='Z03').note);
+      S.final=true;
+      t('Zahlenstrahl: nach der Urkunde in Erweitern und Kürzen verschwindet der Hinweis',recommendNote(zs6)===null&&!/Empfohlen: erst/.test(moduleCard(zs6).textContent));
+    }finally{Object.assign(S,keep6);persist();}
+    /* Abschluss-Auswertung */
+    const sm=el('div');renderFinalSummary(sm,'QA',1,'QA-L1',{results:['f','f','f','f','f','f','f','f','f','f','f','f','f','x','x'],size:15,info:{passed:true,ready:false,final:false}});
+    t('Auswertung Abschlusscheck: Punkte, Antippen und Rechnen getrennt; Bestanden ohne Urkunde sagt, was fehlt',/13 von 15 richtig/.test(sm.textContent)&&/Zum Antippen richtig10 von 10/.test(sm.textContent)&&/Zum Rechnen richtig3 von 5/.test(sm.textContent)&&/Pflicht-Stationen/.test(sm.textContent));
+    /* Gemischte Runden */
+    const mixOK=[];
+    const count=(slots,x)=>slots.filter(s=>s===x).length;
+    ['G02','G03','G04','G05','U01','U02','U03'].forEach(id=>[1,2].forEach(lvl=>{
+      for(let i=0;i<60;i++){
+        const round={results:[],size:5},slots=mixSlots(round,lvl,id,RNG),u4=count(slots,'U04'),tr=count(slots,'U05')+count(slots,'U06');
+        const stands=['G02','G03','G04','G05'].includes(id),transfer=lvl===2&&['G03','G04','U01','U02','U03'].includes(id);
+        const wantU4=stands?(transfer&&['G03','G04'].includes(id)?[1]:[1,2]):[0],wantTr=transfer?1:0;
+        if(slots.length!==5||slots[0]!==null||!wantU4.includes(u4)||tr!==wantTr)mixOK.push(id+'-L'+lvl+' '+JSON.stringify(slots));
+      }
+    }));
+    t('Gemischte Runden: G02–G05 haben 1–2 mal „Stimmt das?“ (nie als erste Aufgabe), Knifflig bei G03/G04 genau 1 und dazu 1 Transfer, Knifflig bei U01–U03 genau 1 Transfer, Leicht bei U01–U03 keine',mixOK.length===0||(console.log(mixOK.slice(0,3)),false));
+    const rm={results:[],size:5},typesSeen=new Set();
+    for(let i=0;i<5;i++){const c=TASKS.G03.ctx(rm,2);typesSeen.add(generateTask('G03',2,null,c).type);rm.results.push('f');}
+    t('Gemischte Runden: eine Runde G03 Knifflig enthält Aufgaben von drei Arten (Kürzen, Stimmt das?, Transfer), jede Aufgabe trägt ihren echten Typ',typesSeen.has('G03')&&typesSeen.has('U04')&&(typesSeen.has('U05')||typesSeen.has('U06')));
+    t('Gemischte Runden: ohne ctx erzeugen G02–G05 weiter nur ihren eigenen Typ',['G02','G03','G04','G05','U01','U02','U03'].every(id=>[1,2].every(l=>{for(let i=0;i<30;i++)if(generateTask(id,l).type!==id)return false;return true;})));
+    /* U04 Stimmt das? */
+    let u4bad=[];
+    [1,2].forEach(lvl=>{for(let i=0;i<300;i++){
+      const k=generateTask('U04',lvl),opts=k.opts;
+      const ok=[k.truth===(k.kind==='full'?(gcd(k.a,k.b)===1):equivalent(k.a,k.b,k.c,k.d)),opts.length===3&&new Set(opts.map(o=>o.txt)).size===3,opts.some(o=>o.id===k.answerR),
+        validateTask(k,{j:k.truth?'ja':'nein',r:k.answerR}).correct,
+        !validateTask(k,{j:k.truth?'nein':'ja',r:k.answerR}).correct&&validateTask(k,{j:k.truth?'nein':'ja',r:k.answerR}).errorCode==='judge',
+        !validateTask(k,{j:k.truth?'ja':'nein',r:opts.find(o=>o.id!==k.answerR).id}).correct&&validateTask(k,{j:k.truth?'ja':'nein',r:opts.find(o=>o.id!==k.answerR).id}).errorCode==='reason',
+        validateTask(k,{}).invalid&&validateTask(k,{j:'ja'}).invalid,
+        TASKS.U04.solution(k).length>=1,Math.max(...numsOf(k))<=300,Array.isArray(k.avoid)];
+      if(ok.includes(false))u4bad.push('L'+lvl+' '+k.kind+' '+ok.map(x=>x?1:0).join(''));
+    }});
+    t('Stimmt das? (U04): 600 Aufgaben – Urteil stimmt zur Rechnung, drei verschiedene Begründungen mit genau einer richtigen, richtig/„Urteil falsch“/„Begründung falsch“/unvollständig werden unterschieden, Zahlen bis 300',u4bad.length===0||(console.log(u4bad.slice(0,5)),false));
+    t('Stimmt das?: Arten Leicht (add, mul, numOnly, red, sub) und Knifflig zusätzlich „so weit wie möglich gekürzt“',(()=>{const s1=new Set(),s2=new Set();for(let i=0;i<500;i++){s1.add(generateTask('U04',1).kind);s2.add(generateTask('U04',2).kind);}return s1.size===5&&!s1.has('full')&&s2.size===6&&s2.has('full');})());
+    /* U05 Anteil im Text */
+    let u5bad=0;
+    [1,2].forEach(lvl=>{for(let i=0;i<300;i++){
+      const k=generateTask('U05',lvl),f=(n,d)=>validateTask(k,{'r.n':String(n),'r.d':String(d)});
+      if(!(gcd(k.p,k.q)===1&&k.part*k.q===k.total*k.p&&f(k.p,k.q).correct&&f(k.part,k.total).soft&&f(k.total,k.part).errorCode==='swap'&&!f(k.p+1,k.q).correct&&validateTask(k,{}).invalid&&k.total<=300))u5bad++;
+    }});
+    t('Anteil im Text (U05): Anteil Teil/Ganzes, gekürzt richtig, ungekürzt „fast“, vertauscht erkannt, Zahlen bis 300',u5bad===0);
+    /* U06 Zwei Schritte prüfen */
+    let u6bad=[];
+    [1,2].forEach(lvl=>{for(let i=0;i<400;i++){
+      const k=generateTask('U06',lvl),ap=(n,d)=>k.op==='x'?[n*k.m,d*k.m]:[n/k.m,d/k.m];
+      const want=k.err===1?k.right1:k.right2,otherStep=k.err===1?2:1;
+      const lineOne=equivalent(k.a,k.b,k.c,k.d),lineTwo=(k.e*ap(k.c,k.d)[1]===ap(k.c,k.d)[0]*k.f)&&k.e===ap(k.c,k.d)[0]&&k.f===ap(k.c,k.d)[1];
+      const ok=[k.err===1?(!lineOne&&lineTwo):(lineOne&&!lineTwo),Number.isInteger(k.m)&&k.m>=2,k.right1[0]===k.a*k.k&&k.right1[1]===k.b*k.k,
+        validateTask(k,{s:k.err,'r.n':String(want[0]),'r.d':String(want[1])}).correct,
+        validateTask(k,{s:otherStep,'r.n':String(want[0]),'r.d':String(want[1])}).errorCode==='step',
+        validateTask(k,{s:k.err,'r.n':String(want[0]+1),'r.d':String(want[1])}).errorCode==='fix',
+        validateTask(k,{}).invalid,TASKS.U06.solution(k).length===2,Math.max(k.a,k.b,k.c,k.d,k.e,k.f)<=300];
+      if(ok.includes(false))u6bad.push('L'+lvl+' err'+k.err+' '+ok.map(x=>x?1:0).join(''));
+    }});
+    t('Zwei Schritte prüfen (U06): genau eine Zeile ist falsch (Fehler in Zeile 1 läuft weiter), richtige Zeile und richtiger Wert werden unterschieden',u6bad.length===0||(console.log(u6bad.slice(0,5)),false));
+    t('U04, U05, U06: Tipps in drei Stufen, Üben-Gruppe Knobeln enthält U04, U05/U06 nur in Runden',TASKS.U04.hints(generateTask('U04',1)).length===3&&TASKS.U05.hints(generateTask('U05',2)).length===3&&TASKS.U06.hints(generateTask('U06',1)).length===3&&vm6.groups.Knobeln.ids.includes('U04')&&!vm6.practice.includes('U05')&&!vm6.practice.includes('U06'));
+    const fbU=(task,draft)=>{const st=newState(task);st.draft=draft;const host=el('div');const m=mountTask(host,st,{save(){},done(){}});m.check();return host.textContent;};
+    const keepX={xp:S.xp,streak:S.streak,bestStreak:S.bestStreak,skills:S.skills};
+    const u5=generateTask('U05',2),txt5=fbU(u5,{'r.n':String(u5.p),'r.d':String(u5.q)});
+    Object.assign(S,keepX);persist();
+    t('Anteil im Text: Rückmeldung mit Rechnung („Richtig: … : … = …“)',/Richtig: \d+ : \d+ = \d+ und \d+ : \d+ = \d+\./.test(txt5));
+  }
   /* Paket 5: Eingangstest überspringen, Gruppen, Meine Übersicht, Einstellungen im Reiter „Ich“ */
   {
     const vm5=moduleById('veraendern'),zs5=moduleById('zahlenstrahl');
@@ -723,12 +826,12 @@ function runSelfTests(){
         if(new Set(inGroups).size!==inGroups.length||m.practice.some(id=>!inGroups.includes(id)))bad.push(m.id+' Aufgaben nicht in genau einer Gruppe');
       });
       t('Gruppen: jede Station des Pfads steht im Üben in derselben Gruppe, jede Aufgabe in genau einer Gruppe, Gruppennamen sind eindeutig',(bad.length===0&&Object.keys(GROUPS).length===activeModules().reduce((n,m)=>n+Object.keys(m.groups).length,0))||(console.log(bad),false));
-      t('Gruppen Erweitern und Kürzen: Entdecken, Erweitern, Kürzen, Mischen, Knobeln, Umwandeln, Abschluss; Teilbarkeit (T01) bei Kürzen, Eingangstest (Q00) bei Abschluss',Object.keys(vm5.groups).join()==='Entdecken,Erweitern,Kürzen,Mischen,Knobeln,Umwandeln,Abschluss'&&vm5.groups['Kürzen'].ids.join()==='T01,G03,G04'&&vm5.groups.Abschluss.ids.join()==='Q00'&&!vm5.groups.Entdecken.ids.includes('T01')&&!vm5.groups.Entdecken.ids.includes('Q00'));
-      t('Gruppen Zahlenstrahl: Einteilung, Eintragen, Zwei Wege, Weiter, Abschlusscheck wie im Lernpfad',Object.keys(zs5.groups).join()==='Einteilung,Eintragen,Zwei Wege,Weiter,Abschlusscheck'&&zs5.groups['Zwei Wege'].ids.join()==='Z04,Z05,Z06'&&zs5.groups.Abschlusscheck.ids.join()==='ZQ');
+      t('Gruppen Erweitern und Kürzen: Entdecken, Erweitern, Kürzen, Mischen, Knobeln, Umwandeln, Abschluss; Teilbarkeit (T01) bei Kürzen, Eingangstest (Q00) und Abschlusscheck (QA) bei Abschluss',Object.keys(vm5.groups).join()==='Entdecken,Erweitern,Kürzen,Mischen,Knobeln,Umwandeln,Abschluss'&&vm5.groups['Kürzen'].ids.join()==='T01,G03,G04'&&vm5.groups.Abschluss.ids.join()==='Q00,QA'&&!vm5.groups.Entdecken.ids.includes('T01')&&!vm5.groups.Entdecken.ids.includes('Q00'));
+      t('Gruppen Zahlenstrahl: Einteilung, Eintragen, Zwei Wege, Weiter, Abschlusscheck wie im Lernpfad',Object.keys(zs5.groups).join()==='Einteilung,Eintragen,Zwei Wege,Weiter,Abschlusscheck'&&zs5.groups['Zwei Wege'].ids.join()==='Z04,Z05,Z06'&&zs5.groups.Abschlusscheck.ids.join()==='ZQ,ZA');
       /* Meine Übersicht, Alles freischalten */
       S.modus={veraendern:'frei'};S.checked={G01:true};S.unlocked={};
       const row5=(id)=>pathState(vm5,'frei').find(r=>r.id===id);
-      t('Meine Übersicht: ohne Freischaltung bleibt gesperrt, was gesperrt ist (G03, Abschluss)',row5('G03').locked&&row5('Q00').locked&&row5('G01').open);
+      t('Meine Übersicht: ohne Freischaltung bleibt gesperrt, was gesperrt ist (G03, Abschluss)',row5('G03').locked&&row5('QA').locked&&row5('G01').open);
       S.view={kind:'home',tab:'pfad',thema:'veraendern'};renderAll();
       const body=app.textContent;
       t('Meine Übersicht: heißt so (nicht mehr „Selbst aussuchen“), erklärt „Grün = schon gekonnt, grau = noch gesperrt“ und bietet „Alles freischalten“',/Meine Übersicht/.test(body)&&!/Selbst aussuchen/.test(body)&&/Grün = schon gekonnt, grau = noch gesperrt/.test(body)&&[...app.querySelectorAll('button')].some(b=>b.textContent.includes('Alles freischalten')));
@@ -737,8 +840,8 @@ function runSelfTests(){
       t('Alles freischalten: fragt vorher nach und erklärt, dass die Urkunde trotzdem alle Pflicht-Stationen braucht',!!dlg&&dlg.textContent.includes('Alles freischalten?')&&dlg.textContent.includes('Urkunde')&&!S.unlocked.veraendern);
       [...dlg.querySelectorAll('button')].find(b=>b.textContent==='Alles freischalten').click();
       t('Alles freischalten: danach ist alles offen, nur dieses Thema, die Anzeige sagt es',S.unlocked.veraendern===true&&!S.unlocked.zahlenstrahl&&pathState(vm5,'frei').every(r=>r.open)&&pathState(vm5,'pfad').every(r=>r.open)&&/Alles ist freigeschaltet/.test(app.textContent));
-      const info5=onRoundEnd('Q00',1,{results:Array(15).fill('f'),size:15,sk:[].concat(Q_SKILLS,Q_SKILLS,Q_SKILLS)});
-      t('Alles freischalten: der Abschlusscheck ist offen, die Urkunde gibt es trotzdem nur nach allen Pflicht-Stationen',pathState(vm5,'frei').find(r=>r.id==='Q00').open&&info5.passed&&!info5.ready&&!info5.final&&!S.final);
+      const info5=onRoundEnd('QA',1,{results:Array(15).fill('f'),size:15});
+      t('Alles freischalten: der Abschlusscheck ist offen, die Urkunde gibt es trotzdem nur nach allen Pflicht-Stationen',pathState(vm5,'frei').find(r=>r.id==='QA').open&&info5.passed&&!info5.ready&&!info5.final&&!S.final);
       /* Einstellungen im Reiter Ich */
       const chip=chipNode();
       t('Rang-Chip: führt zur Seite „Ich“ (kein Dialog mehr)',!chip.hasAttribute('aria-haspopup')&&/Zur Seite Ich/.test(chip.getAttribute('aria-label')));
@@ -764,8 +867,8 @@ function runSelfTests(){
     t('Symbole: kein Blitz mehr (Eingangstest, Abschluss, Testkarte), der Haken ersetzt ihn',ICON.Q00==='haken'&&ICON.ZQ==='haken'&&!document.getElementById('i-blitz')&&!Object.values(ICON).includes('blitz'));
     const keepV=S.view,keepR=S.rounds,keepI=S.intro,seen=[];
     try{
-      S.rounds={};S.intro={G02:true,Q00:true,ZQ:true,G04:true};
-      [{kind:'home',tab:'pfad'},{kind:'home',tab:'pfad',thema:'veraendern'},{kind:'home',tab:'ueben'},{kind:'home',tab:'spiele'},{kind:'home',tab:'rang'},{kind:'practice',id:'G02'},{kind:'practice',id:'Q00'},{kind:'game',id:'S02'}].forEach(v=>{
+      S.rounds={};S.intro={G02:true,Q00:true,QA:true,ZQ:true,G04:true};
+      [{kind:'home',tab:'pfad'},{kind:'home',tab:'pfad',thema:'veraendern'},{kind:'home',tab:'ueben'},{kind:'home',tab:'spiele'},{kind:'home',tab:'rang'},{kind:'practice',id:'G02'},{kind:'practice',id:'Q00'},{kind:'practice',id:'QA'},{kind:'game',id:'S02'}].forEach(v=>{
         S.view=v;renderAll();
         if(jargon.test(app.textContent))seen.push((v.tab||v.id)+': '+(app.textContent.match(jargon)||[''])[0]);
       });
@@ -804,7 +907,7 @@ function runSelfTests(){
   }
   /* Paket 3: Tipps – drei Stufen je Aufgabe, bezogen auf die Zahlen, Sätze kurz, Regeln nur wenn sie passen */
   {
-    const ids=Object.keys(TASKS).filter(id=>!TASKS[id].quick);
+    const ids=Object.keys(TASKS).filter(id=>!TASKS[id].quick&&!finalModOf(id)); /* QA und ZA reichen an die Typen ihrer Aufgaben weiter */
     const sents=(s)=>s.replace(/\*\*/g,'').replace(/\{\d+\|\d+\}/g,'x').split(/[.!?]\s+/);
     const words=(s)=>s.split(/\s+/).filter(Boolean).length;
     const bad=[];let n=0,longest=0;

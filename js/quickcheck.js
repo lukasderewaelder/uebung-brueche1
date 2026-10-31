@@ -357,3 +357,27 @@ TASKS.Q00=Object.assign({area:'Grundlagen',name:'Eingangstest',desc:Q_COUNT+' Ku
   }},QUICK);
 wrapRange('Q00');
 
+/* ---------- Abschlusscheck „Erweitern und Kürzen“ (QA) ----------
+   15 Aufgaben: 10 zum Antippen (2 je Fähigkeit, wie im Eingangstest) und 5 zum Rechnen (2× Erweitern G02, 2× Kürzen so weit wie möglich G04,
+   1× Lücke U01). Eine Runde mit Aufgaben mehrerer Arten: gen() liefert Aufgaben der echten Typen, QA reicht prompt/render/validate/solution/hints
+   an den Typ der Aufgabe weiter. Urkunde ab 12 Punkten (ohne Tipp 1, mit Tipp ½) und nach allen Pflicht-Stationen. */
+const proxyOf=(extra)=>Object.assign({
+  prompt(t,h){TASKS[t.type].prompt(t,h);},
+  render(v,h){TASKS[v.task.type].render(v,h);},
+  validate(t,d){return TASKS[t.type].validate(t,d);},
+  solution(t){return TASKS[t.type].solution(t);},
+  hints(t){return TASKS[t.type].hints(t);}
+},extra);
+const QA_TAP=10,QA_CALC=['G02','G02','G04','G04','U01'];
+TASKS.QA=proxyOf({area:'Grundlagen',name:'Abschlusscheck',desc:QA_TAP+' Aufgaben zum Antippen und '+QA_CALC.length+' zum Rechnen – am Ende des Lernpfads.',notes:['M1','M2','M3','M7'],size:QA_TAP+QA_CALC.length,
+  ctx(round){
+    if(!round.plan)round.plan=qPlan(null,Q_SKILLS,2);
+    const i=round.results.length;
+    return i<QA_TAP?{skill:round.plan[i],slot:i}:{slot:i};
+  },
+  gen(level,R,ctx){
+    const i=ctx&&ctx.slot!=null?ctx.slot:0;
+    if(i<QA_TAP)return TASKS.Q00.gen(level,R,{skill:(ctx&&ctx.skill)||R.pick(Q_SKILLS)});
+    return TASKS[QA_CALC[i-QA_TAP]].gen(level,R,null);
+  }
+});

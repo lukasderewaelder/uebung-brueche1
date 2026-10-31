@@ -283,7 +283,7 @@ const openEntry=(id)=>{if(!isGame(id))S.last=id;go({kind:isGame(id)?'game':'prac
 function setLevel(id,l){S.levelByType[id]=l;persist();renderAll();}
 
 /* Symbole und Kennfarbe je Übung (erw = Erweitern/Orange, kue = Kürzen/Petrol) */
-const ICON={ZQ:'haken',Z01:'lineal',Z02:'lupe',Z03:'lineal',Z04:'aus',Z05:'wechsel',Z06:'zahnrad',Z07:'lineal',Z08:'wechsel',Q00:'haken',G01:'lineal',T01:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'zahnrad',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor'};
+const ICON={QA:'plakette',ZA:'plakette',ZQ:'haken',Z01:'lineal',Z02:'lupe',Z03:'lineal',Z04:'aus',Z05:'wechsel',Z06:'zahnrad',Z07:'lineal',Z08:'wechsel',Q00:'haken',G01:'lineal',T01:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'zahnrad',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor'};
 const ACC={G02:'erw',O01:'erw',G03:'kue',G04:'kue',T01:'kue',O02:'kue',G05:'mix'};
 function backTarget(){
   const v=S.view;
@@ -357,12 +357,12 @@ function renderPractice(id){
   const fillStats=()=>help.setStats(statsBlock(key,el('p',null,el('button',{type:'button',class:'btn small danger',onclick:()=>{S.rounds[key]={results:[],cur:null,size:T.size};persist();renderAll();}},'Runde neu beginnen'))));
   if(round.results.length>=round.size&&!round.cur){
     help.setNotes(noteFor(id,null));fillStats();
-    (T.quick?renderQuickSummary:renderSummary)(main,id,lvl,key,round);
+    (finalModOf(id)?renderFinalSummary:T.quick?renderQuickSummary:renderSummary)(main,id,lvl,key,round);
     return;
   }
-  if(!round.cur)round.cur=newState(generateUnique(id,lvl,T.ctx?T.ctx(round):null,round));
-  const st=round.cur,quick=!!T.quick;
-  help.setNotes(noteFor(id,st.task));fillStats();
+  if(!round.cur)round.cur=newState(generateUnique(id,lvl,T.ctx?T.ctx(round,lvl):null,round));
+  const st=round.cur,quick=!!TASKS[st.task?st.task.type:id].quick; /* je Aufgabe, denn eine Runde darf Aufgaben verschiedener Arten mischen */
+  help.setNotes(noteFor(st.task.type,st.task));fillStats();
 
   main.dataset.acc=ACC[id]||'';
   const ruler=el('div',{class:'ruler',role:'img'});
@@ -493,7 +493,27 @@ function renderSummary(main,id,lvl,key,round){
     el('div',{class:'rowbtns'},...btns)));
 }
 
-/* Ergebnis des Eingangstests und Abschlusschecks eines Themas (QCHK[id]) */
+/* Ergebnis des Abschlusschecks (QA, ZA): Punkte, Antippfragen und Rechenaufgaben getrennt, Urkunde */
+function renderFinalSummary(main,id,lvl,key,round){
+  const info=round.info||{},fm=finalModOf(id),sc=roundScore(round.results,round.size);
+  const tapN=id==='ZA'?ZA_TAP:QA_TAP,tap=round.results.slice(0,tapN),calc=round.results.slice(tapN);
+  const good=(r)=>r.filter(x=>x==='f'||x==='l').length,fmt=(x)=>String(x).replace('.',',');
+  const again=()=>{S.rounds[key]={results:[],cur:null,size:TASKS[id].size};persist();renderAll();};
+  const btn=(label,fn,primary)=>el('button',{type:'button',class:'btn'+(primary?' primary':''),onclick:fn},label);
+  const lines=[];
+  if(info.final)lines.push('Urkunde! Du hast den Lernpfad geschafft.');
+  else if(sc.passed&&info.ready===false)lines.push('Bestanden! Für die Urkunde fehlen noch Pflicht-Stationen.');
+  else if(!sc.passed)lines.push('Du brauchst '+fmt(sc.need)+' Punkte, du hast '+fmt(sc.points)+'.'+(sc.points<sc.right?' Aufgaben mit Tipp zählen nur halb.':'')+' Noch einmal?');
+  main.append(el('div',{class:'card summary'},el('div',{class:'stampbox'},info.final?'Urkunde':sc.passed?'Bestanden':'Check fertig'),el('p',null),bigStars(sc.passed?3:sc.points>=sc.need*0.6?2:1),
+    el('p',null,`${sc.right} von ${round.size} richtig · ${LEVEL_LABEL[lvl]}`),
+    el('table',null,
+      el('tr',null,el('td',null,'Zum Antippen richtig'),el('td',null,el('b',null,good(tap)+' von '+tap.length))),
+      el('tr',null,el('td',null,id==='ZA'?'Am Zahlenstrahl richtig':'Zum Rechnen richtig'),el('td',null,el('b',null,good(calc)+' von '+calc.length)))),
+    ...lines.map(x=>el('p',null,x)),
+    el('div',{class:'rowbtns'},btn('Zum Lernpfad',()=>go(pfadView(id)),true),btn('Nochmal',again))));
+}
+
+/* Ergebnis des Eingangstests eines Themas (QCHK[id]) */
 function renderQuickSummary(main,id,lvl,key,round){
   const qc=QCHK[id],info=round.info||{};
   const right=round.results.filter(r=>r==='f'||r==='l').length,share=right/round.size;
@@ -529,14 +549,12 @@ function renderQuickSummary(main,id,lvl,key,round){
   const sitzt=order.filter(sk=>ev.skills[sk].status==='sitzt').map(sk=>qc.names[sk]);
   const ueben=order.filter(sk=>ev.skills[sk].status!=='sitzt').map(sk=>qc.names[sk]);
   const lines=[];
-  if(info.final)lines.push('Urkunde! Du hast den Lernpfad geschafft.');
-  else{
+  {
     if(ev.stufe==='fit')lines.push('Du bist fit!');
     if(sitzt.length)lines.push('Das sitzt schon: '+sitzt.join(', ')+'.');
     if(ueben.length)lines.push('Das solltest du noch üben: '+ueben.join(', ')+'.');
     else lines.push('Alles sitzt – stark!');
     if(ev.unsure)lines.push('Bei „Weiß ich nicht“ steht die Fähigkeit auf „üben“.');
-    if(info.ready&&!info.passed)lines.push('Für die Urkunde brauchst du '+needOf(round.size)+' von '+round.size+' richtig.');
   }
   const btns=[btn('Weiter',toPfad,true)];
   if(order.every(sk=>ev.skills[sk].status==='sitzt')&&lvl===1)btns.push(btn('Knifflig probieren',()=>setLevel(id,2)));

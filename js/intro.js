@@ -160,7 +160,15 @@ const INTRO={
     {h:'Danach siehst du, was fehlt',
       say:['Am Ende siehst du, was du schon kannst.','Danach wählst du: dem Pfad folgen oder Meine Übersicht.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
     {h:'Der Abschlusscheck',
-      say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat auch '+TASKS.Q00.size+' Fragen.','Ab '+needOf(TASKS.Q00.size)+' richtigen Antworten gibt es die Urkunde.']}
+      say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat '+TASKS.QA.size+' Aufgaben: '+QA_TAP+' zum Antippen und '+QA_CALC.length+' zum Rechnen.','Ab '+needOf(TASKS.Q00.size)+' richtigen Antworten gibt es die Urkunde.']}
+  ]},
+  QA:{title:'Abschlusscheck',steps:[
+    {h:'Wie viele Aufgaben?',
+      say:['Der Abschlusscheck hat '+TASKS.QA.size+' Aufgaben.',QA_TAP+' davon tippst du nur an.','Bei '+QA_CALC.length+' Aufgaben rechnest du selbst.']},
+    {h:'So geht es',
+      say:['Tippe eine Antwort an. Dann tippe auf **Prüfen**.','Bei den Rechenaufgaben tippst du die Zahlen ein.','Tipps und Lösung gibt es nur bei den Rechenaufgaben.']},
+    {h:'Die Urkunde',
+      say:['Ab '+needOf(TASKS.QA.size)+' richtigen Antworten gibt es die Urkunde.','Aufgaben mit Tipp zählen nur halb.','Alle Pflicht-Stationen müssen vorher fertig sein.']}
   ]},
   ZQ:{title:'Eingangstest',steps:[
     {h:'Kurzfragen zum Zahlenstrahl',
@@ -171,7 +179,7 @@ const INTRO={
     {h:'Danach siehst du, was fehlt',
       say:['Am Ende siehst du, was du schon kannst.','Danach wählst du: dem Pfad folgen oder Meine Übersicht.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
     {h:'Der Abschlusscheck',
-      say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat auch '+TASKS.ZQ.size+' Fragen.','Ab '+needOf(TASKS.ZQ.size)+' richtigen Antworten gibt es die Urkunde.']}
+      say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat '+TASKS.ZA.size+' Aufgaben: '+ZA_TAP+' zum Antippen und '+ZA_LINE.length+' am Zahlenstrahl.','Ab '+needOf(TASKS.ZQ.size)+' richtigen Antworten gibt es die Urkunde.']}
   ]},
   /* Zahlenstrahl: nline = ein Strahl oder eine Liste von Strahlen {from,to,parts,marks,labels,strip,secs}; nltry = Einteilung ausprobieren {to,ks,mark} */
   Z01:{title:'Einteilung erkennen',steps:[
@@ -267,6 +275,14 @@ const INTRO={
       say:['Ein Strahl muss nicht bei 0 beginnen.','Manchmal sind nur 1 und 2 beschriftet.','Der Abstand zwischen ihnen ist ein Ganzes.'],
       nline:{from:1,to:3,parts:2,labels:[1,2]}}
   ]},
+  ZA:{title:'Abschlusscheck',steps:[
+    {h:'Wie viele Aufgaben?',
+      say:['Der Abschlusscheck hat '+TASKS.ZA.size+' Aufgaben.',ZA_TAP+' davon tippst du nur an.','Bei '+ZA_LINE.length+' Aufgaben arbeitest du am Zahlenstrahl.']},
+    {h:'So geht es',
+      say:['Tippe eine Antwort an. Dann tippe auf **Prüfen**.','Am Zahlenstrahl setzt du Punkte oder stellst die Teile ein.','Tipps und Lösung gibt es nur bei den Strahl-Aufgaben.']},
+    {h:'Die Urkunde',
+      say:['Ab '+needOf(TASKS.ZA.size)+' richtigen Antworten gibt es die Urkunde.','Aufgaben mit Tipp zählen nur halb.','Alle Pflicht-Stationen müssen vorher fertig sein.']}
+  ]},
   Z08:{title:'Größer als 1',steps:[
     {h:'Hinter der 1',
       say:['Brüche können größer als 1 sein.','Hier liegt {7|4} hinter der 1.'],
@@ -310,9 +326,12 @@ function migrateIntro(st){
   PATH.forEach(m=>{
     let seen;
     if(m.id==='LAB')seen=!!(st.lab&&(st.lab.done||(st.lab.did&&(st.lab.did.x||st.lab.did.d))));
-    else seen=worked(m.id)||(m.id==='Q00'&&!!(st.placed||st.final));
+    else seen=worked(m.id)||(m.id==='QA'&&!!st.final)||(m.id==='ZA'&&!!(st.mq&&st.mq.zahlenstrahl&&st.mq.zahlenstrahl.final));
     if(seen)st.intro[m.id]=true;
   });
+  /* Eingangstests sind keine Stationen des Pfads: ihre Erklärung gilt als gesehen, wenn der Test gemacht wurde */
+  if(st.placed||st.final)st.intro.Q00=true;
+  const zq=st.mq&&st.mq.zahlenstrahl;if(zq&&(zq.placed||zq.final))st.intro.ZQ=true;
 }
 
 /* ---------- Bausteine der Erklärkarten ---------- */

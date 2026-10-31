@@ -159,6 +159,29 @@ TIPS.O02=(t)=>{
     [`Ein anderer Weg: gleich durch ${g}. Dann steht da ${tf(t.p,t.q)}.`]];
 };
 
+/* ---------- Gemischte Runden (js/mix.js) ---------- */
+TIPS.U04=(t)=>{
+  if(t.kind==='full'){
+    const rules=divRules(t.a,t.b);
+    return [
+      [`${t.who} sagt, ${tf(t.a,t.b)} sei schon fertig gekürzt. Teilt eine Zahl größer als 1 beide Zahlen?`],
+      ['Teste die kleinen Zahlen 2, 3, 5 und 7. Teilt eine davon beide Zahlen?',...rules],
+      [t.truth?'Keine dieser Zahlen teilt beide. Suche die Begründung, die das sagt.':`Beide Zahlen sind durch ${gcd(t.a,t.b)} teilbar. Suche die Begründung, die das sagt.`]];
+  }
+  return [
+    [`Wurde oben und unten dasselbe gemacht? Vergleiche ${t.a} mit ${t.c} und ${t.b} mit ${t.d}.`],
+    [qCross(t.a,t.b,t.c,t.d)+' Sind beide Ergebnisse gleich?'],
+    [t.truth?'Die Brüche sind gleich. Suche die Begründung, die erklärt, warum.':'Die Brüche sind nicht gleich. Suche die Begründung, die den Fehler nennt.']];
+};
+TIPS.U05=(t)=>[
+  ['Wie groß ist der Teil, wie groß ist das Ganze? Der Teil steht oben im Bruch.'],
+  [`Der Teil ist ${t.part}, das Ganze ist ${t.total}. Das ergibt ${tf(t.part,t.total)}.`],
+  [`Kürze mit ${t.g}: ${t.part} : ${t.g} und ${t.total} : ${t.g}.`]];
+TIPS.U06=(t)=>[
+  ['Rechne beide Zeilen nach. In welcher Zeile stimmt Zähler oder Nenner nicht?'],
+  [`Zeile 1: ${t.a} mal ${t.k} und ${t.b} mal ${t.k}. Stimmt das Ergebnis ${tf(t.c,t.d)}?`],
+  [t.err===1?`Zeile 1 ist falsch. Rechne ${t.a} mal ${t.k} und ${t.b} mal ${t.k} noch einmal.`:`Zeile 1 stimmt. Prüfe Zeile 2: ${t.c} ${t.op==='x'?'mal':'geteilt durch'} ${t.m} und ${t.d} ${t.op==='x'?'mal':'geteilt durch'} ${t.m}.`]];
+
 /* ---------- Darstellungen umwandeln ---------- */
 const decPlaces=(den)=>String(den).length-1;
 TIPS.D01=(t)=>{
@@ -274,7 +297,8 @@ const PROOF={
     const e=t.mode==='expand',op=e?' · ':' : ';
     return `${t.from[0]}${op}${t.k} = ${t.to[0]} und ${t.from[1]}${op}${t.k} = ${t.to[1]}.`;
   },
-  D03:(t)=>`${t.w} · ${t.d} + ${t.n} = ${t.w*t.d+t.n}. Der Nenner bleibt ${t.d}.`
+  D03:(t)=>`${t.w} · ${t.d} + ${t.n} = ${t.w*t.d+t.n}. Der Nenner bleibt ${t.d}.`,
+  U05:(t)=>`${t.part} : ${t.g} = ${t.p} und ${t.total} : ${t.g} = ${t.q}. Der Bruch ist fertig gekürzt.`
 };
 PROOF.G04=PROOF.G03;PROOF.V01=PROOF.G03;
 function proofText(task){const f=PROOF[task.type];return f?f(task):null;}

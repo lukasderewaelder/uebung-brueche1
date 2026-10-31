@@ -7,7 +7,11 @@
    · Meine Übersicht (früher „Selbst aussuchen“): alles ist sichtbar, offen ist nur Bestandenes und im Check Beherrschtes
      (dazu Freiwilliges vor der ersten Lücke); die erste Lücke und alles dahinter bleibt gesperrt.
    ===================================================================== */
-const PATH_ACC={LAB:'mix',Q00:'ok',ZQ:'ok'};
+const PATH_ACC={LAB:'mix',Q00:'ok',ZQ:'ok',QA:'ok',ZA:'ok'};
+/* Thema, zu dem ein Abschlusscheck (finalId) gehört */
+const finalModOf=(id)=>activeModules().find(m=>m.finalId===id)||null;
+/* Hinweis „Erst …“ (modules.js recommends): nur solange das empfohlene Thema nicht abgeschlossen ist, keine Sperre */
+function recommendNote(mod){const r=mod&&mod.recommends&&moduleById(mod.recommends);return r&&!qstate(r).final?r:null;}
 const stationTitle=(id)=>{const m=PATH.find(x=>x.id===id);return (m&&m.title)||(TASKS[id]&&TASKS[id].name)||id;};
 
 /* ---------- Zustand ---------- */
@@ -22,7 +26,8 @@ function qstate(mod){
 const qmodOf=(id)=>activeModules().find(m=>m.qid===id)||null; /* Thema, zu dem ein Eingangstest gehört */
 function stationDone(id){
   if(id==='LAB')return !!(S.lab&&S.lab.done);
-  if(QCHK[id])return !!qstate(qmodOf(id)).final; /* der Test ist zugleich der Abschlusscheck: fertig = Urkunde */
+  const fm=finalModOf(id);
+  if(fm)return !!qstate(fm).final; /* der Abschlusscheck: fertig = Urkunde */
   return stationPassed(id);
 }
 /* im Eingangstest beherrscht, aber noch nicht selbst bestanden */
@@ -138,10 +143,12 @@ function onRoundEnd(id,lvl,round){
     if(sure.length===qc.skills.length)(qc.allSure||[]).forEach(open);
     /* Ergebnis des Eingangstests merken (Marken im Lernpfad); wenige Treffer mitten im Pfad überschreiben einen vorhandenen nicht */
     if(ev.trust||!qs.einstufung)qs.einstufung={at:Date.now(),right:ev.right,size:ev.size,stufe:ev.stufe,skills:ev.skills};
-    /* Abschluss: alle Pflicht-Bauteile davor fertig und mindestens 80 % richtig */
-    const ready=pathState(qm).filter(r=>r.must&&!r.m.final).every(r=>r.done);
-    info.ready=ready;
-    if(ready&&info.passed&&!qs.final){qs.final=true;info.final=true;}
+  }else if(finalModOf(id)){
+    /* Abschlusscheck: alle Pflicht-Stationen davor fertig und mindestens 80 % der Punkte ⇒ Urkunde */
+    const fm=finalModOf(id),qs=qstate(fm);
+    info.qmod=fm.id;
+    info.ready=pathState(fm).filter(r=>r.must&&!r.m.final).every(r=>r.done);
+    if(info.ready&&info.passed&&!qs.final){qs.final=true;info.final=true;}
   }else if(info.passed&&PATH.some(m=>m.id===id)){
     info.firstPass=!stationDone(id);
     S.passed[keyOf(id,lvl)]=true;
@@ -238,12 +245,12 @@ function modNode(r,pos,modus){
   const state=r.done?'done':next?'next':r.locked?'locked':'open';
   const tag=r.done?'Fertig':next?'Als Nächstes':r.locked?'Gesperrt':r.must?'Offen':'Freiwillig';
   const chk=checkMark(id);
-  const stars=(id==='LAB'||QCHK[id])?null:starNodes((S.passed[id+'-L1']?1:0)+(S.passed[id+'-L2']?1:0),2);
+  const stars=(id==='LAB'||m.final)?null:starNodes((S.passed[id+'-L1']?1:0)+(S.passed[id+'-L2']?1:0),2);
   const li=el('li',{class:'mod '+state+(r.must?'':' frei'),'data-acc':ACC[id]||PATH_ACC[id]||null});
   li.append(el('span',{class:'lamp','aria-hidden':'true'},r.done?icon('haken'):r.locked?icon('schloss'):null),
     el('button',{type:'button',class:'modbtn','aria-label':title+': '+tag.toLowerCase()+(chk?', Eingangstest: '+CHECK_TEXT[chk]:'')+(r.must||tag==='Freiwillig'?'':', freiwillig'),onclick:()=>r.locked?lockSheet(r,modus):openStation(id)},
       el('span',{class:'mpos'},String(pos+1).padStart(2,'0')),
-      el('span',{class:'mnm'},el('b',null,title),el('small',null,desc)),
+      el('span',{class:'mnm'},el('b',null,title),el('small',null,desc+(m.note&&recommendNote(moduleOf(id))?' '+m.note:''))),
       el('span',{class:'mside'},chk?el('span',{class:'mchk '+chk},'Check: '+CHECK_TEXT[chk]):null,el('span',{class:'mtag'},tag),stars)));
   if(stationResettable(id))li.append(el('button',{type:'button',class:'modreset','aria-label':title+' zurücksetzen',title:'Zurücksetzen',onclick:()=>resetSheet(id)},icon('neu')));
   return li;
@@ -311,11 +318,11 @@ function pfadTab(home,mod){
   home.append(el('h1',null,'Lernpfad'));
   if(z==='gate'){home.append(gateCard(mod));return;}
   if(z==='wahl'){home.append(wahlCards(mod));return;}
-  const info=pfadInfo(mod,z);
-  home.append(...(mod.quickcheck?[modusSwitch(mod,z)]:[]),pfadLine(info.doneN,info.must.length)); /* Pfad oder Selbst aussuchen gibt es nur mit Eingangstest */
+  const info=pfadInfo(mod,z),rec=recommendNote(mod);
+  home.append(...(mod.quickcheck?[modusSwitch(mod,z)]:[]),pfadLine(info.doneN,info.must.length),rec?el('p',{class:'modushint'},'Empfohlen: erst '+rec.name+'. Du kannst aber auch gleich anfangen.'):null); /* Pfad oder Selbst aussuchen gibt es nur mit Eingangstest */
   if(z==='pfad'){
     const go1=info.go1;
-    if(go1)home.append(bigBtn('play',()=>openStation(go1.id),startWord(info.rows,go1)+': '+stationTitle(go1.id),QCHK[go1.id]||go1.id==='LAB'?null:LEVEL_LABEL[levelOf(go1.id)],null,'go'));
+    if(go1)home.append(bigBtn('play',()=>openStation(go1.id),startWord(info.rows,go1)+': '+stationTitle(go1.id),go1.m.final||go1.id==='LAB'?null:LEVEL_LABEL[levelOf(go1.id)],null,'go'));
     else home.append(el('div',{class:'msg ok'},'Alle Pflicht-Stationen sind fertig – stark! '+(info.rows.some(r=>!r.must)?'Probiere die freiwilligen Stationen oder ein Spiel.':'Probiere ein Spiel oder ein anderes Thema.')));
     home.append(fold('Alle Stationen',pfadMap(info.rows,z)));
   }else{

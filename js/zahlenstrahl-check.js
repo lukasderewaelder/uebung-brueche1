@@ -258,3 +258,19 @@ TASKS.ZQ=Object.assign({area:'Zahlenstrahl',name:'Eingangstest',desc:ZQ_SKILLS.l
     if(!round.plan)round.plan=qPlan(null,ZQ_SKILLS,Q_PER_SKILL);
     return {skill:round.plan[round.results.length%round.plan.length]};
   }},ZQUICK);
+
+/* ---------- Abschlusscheck Zahlenstrahl (ZA): 10 Antippfragen (2 je Fähigkeit) + 5 Aufgaben am Strahl (Ablesen, Eintragen, Einteilung anpassen,
+   Bruch anpassen, Einheit lesen); Urkunde ab 12 Punkten und nach allen Pflicht-Stationen ---------- */
+const ZA_TAP=10,ZA_LINE=['Z02','Z03','Z04','Z05','Z07'];
+TASKS.ZA=proxyOf({area:'Zahlenstrahl',name:'Abschlusscheck',desc:ZA_TAP+' Aufgaben zum Antippen und '+ZA_LINE.length+' am Zahlenstrahl – am Ende des Lernpfads.',notes:['M8','M9','M10'],size:ZA_TAP+ZA_LINE.length,
+  ctx(round){
+    if(!round.plan)round.plan=qPlan(null,ZQ_SKILLS,2);
+    const i=round.results.length;
+    return i<ZA_TAP?{skill:round.plan[i],slot:i}:{slot:i};
+  },
+  gen(level,R,ctx){
+    const i=ctx&&ctx.slot!=null?ctx.slot:0;
+    if(i<ZA_TAP)return TASKS.ZQ.gen(level,R,{skill:(ctx&&ctx.skill)||R.pick(ZQ_SKILLS)});
+    return TASKS[ZA_LINE[i-ZA_TAP]].gen(level,R,null);
+  }
+});
