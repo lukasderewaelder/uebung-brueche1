@@ -88,6 +88,13 @@ TIPS.B01=(t)=>{
     [`Die Zahl der Felder muss ein Vielfaches von ${step} sein.`],
     [`Mit ${n} Feldern passt es. Dann sind ${n*t.a/t.b} Felder gefärbt.`]];
 };
+TIPS.T02=(t)=>{
+  const ok=t.opts.filter(x=>t.a%x===0&&t.b%x===0),x0=t.opts[0];
+  return [
+    [`Beide Zahlen müssen passen. Prüfe jede Zahl für ${t.a} und ${t.b}.`],
+    [`Teste die ${x0}: Bei ${t.a} ${t.a%x0===0?'geht es auf':'bleibt ein Rest'}, bei ${t.b} ${t.b%x0===0?'geht es auf':'bleibt ein Rest'}.`],
+    [`Die ${ok[0]} teilt ${t.a} und ${t.b}.${ok.length>1?' Es gibt noch mehr.':''}`]];
+};
 TIPS.T01=(t)=>[
   [`Welche Regel gilt für die ${t.k}? Schau dir die Ziffern von ${t.n} an.`],
   [DIV_RULE[t.k]],

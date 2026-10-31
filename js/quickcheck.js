@@ -26,7 +26,7 @@ const Q_UNSURE_START=0.5;                   /* mindestens dieser Anteil „Weiß
    (3 von 3 richtig ⇒ diese Bauteile sind in „Meine Übersicht“ offen), allSure: Bauteile, die erst aufgehen, wenn alles sitzt,
    startText: Satz bei „fast alles falsch“. Der Test ist zugleich der Abschlusscheck des Themas (Urkunde). */
 const QCHK={
-  Q00:{skills:Q_SKILLS,names:Q_SKILL_NAME,stations:{gleich:['G01'],teilbar:['T01'],erweitern:['G02'],kuerzen:['G03'],vollstaendig:['G04']},allSure:['G05'],
+  Q00:{skills:Q_SKILLS,names:Q_SKILL_NAME,stations:{gleich:['G01'],teilbar:['T01','T02'],erweitern:['G02'],kuerzen:['G03'],vollstaendig:['G04']},allSure:['G05'],
     startText:'Im Lernpfad lernst du alles Schritt für Schritt. Das Bruchlabor hilft dir beim Start.'}
 };
 /* Fragenplan: je Fähigkeit per Blöcke (Standard 3) mit allen Fähigkeiten in zufälliger Reihenfolge, nie zweimal dieselbe hintereinander */

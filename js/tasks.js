@@ -166,7 +166,7 @@ TASKS.G02={area:'Grundlagen',name:'Erweitern',desc:'Erweitere Brüche mit einer 
     if(level===1){
       if(ctx&&ctx.big){do{b=R.int(7,16);k=R.int(5,9);}while(b*k<45||b*k>100);} /* Leicht, kleiner Anteil: größere Zahlen bis 100 */
       else{b=R.pick([2,3,4,5,6,7,8,9,10,12]);k=R.pick([2,3,4,5,6]);}
-      a=R.chance(0.2)?R.int(b+1,2*b-1):R.int(1,b-1); /* auch unechte Brüche (z. B. 7/5) */
+      a=(!(ctx&&ctx.big)&&R.chance(0.2))?R.int(b+1,2*b-1):R.int(1,b-1); /* auch unechte Brüche (z. B. 7/5), nicht bei den großen Zahlen */
     }
     else{b=R.int(5,25);a=R.chance(0.2)?R.int(b+1,2*b):R.int(2,b-1);k=R.pick([6,7,8,9,10,11,12,13]);if(R.chance(0.3))mode='target';}
     return {type:'G02',level,mode,a,b,k,avoid:[redKey(a,b),redKey(a*k,b*k)]};
@@ -193,7 +193,7 @@ TASKS.G02={area:'Grundlagen',name:'Erweitern',desc:'Erweitere Brüche mit einer 
 TASKS.G03={area:'Grundlagen',name:'Kürzen',desc:'Kürze Brüche mit einer Zahl oder so weit wie möglich.',notes:['M3'],size:5,
   gen(level,R,ctx){
     const big=level===1&&!!(ctx&&ctx.big); /* Leicht, kleiner Anteil: größere Zahlen bis 100, auch unechte Brüche (z. B. 54/45) */
-    const imp=R.chance(big?0.4:0.2); /* unechte Brüche (z. B. 12/9) kommen in jedem Niveau vor */
+    const imp=!big&&R.chance(0.2); /* unechte Brüche (z. B. 12/9) kommen in jedem Niveau vor, nur nicht bei den großen Zahlen */
     const pq=(qmin,qmax,imp)=>{let p,q;do{q=R.int(qmin,qmax);p=imp?R.int(q+1,2*q-1):R.int(1,q-1);}while(gcd(p,q)!==1);return [p,q];};
     const top=(p,q)=>Math.max(p,q),bigOK=(p,q,s)=>top(p,q)*s>=45&&top(p,q)*s<=100;
     if(R.chance(level===1?0.5:0.35)){
@@ -770,7 +770,7 @@ TASKS.D03={area:'Darstellungen umwandeln',name:'Gemischte Zahl → Bruch',desc:'
 TASKS.G04=Object.assign({},TASKS.G03,{name:'Kürzen so weit wie möglich',desc:'Kürze so weit wie möglich – manchmal geht es nicht mehr!',size:5,
   gen(level,R,ctx){
     const big=level===1&&!!(ctx&&ctx.big); /* Leicht, kleiner Anteil: Zahlen bis 100 */
-    const improper=R.chance(big?0.4:level===1?0.2:0.25); /* auch unechte Brüche */
+    const improper=!big&&R.chance(level===1?0.2:0.25); /* auch unechte Brüche, nicht bei den großen Zahlen */
     let p,q,g;
     do{q=level===1?R.int(big?4:2,11):R.int(3,19);p=improper?R.int(q+1,2*q):R.int(1,q-1);}while(gcd(p,q)!==1);
     if(R.chance(0.2))return {type:'G04',level,mode:'full',a:p,b:q,p,q,irreducible:true,avoid:[redKey(p,q)]};
@@ -897,11 +897,65 @@ TASKS.T01={area:'Grundlagen',name:'Teilbarkeit',desc:'Kurzcheck: Geht das Kürze
   }
 };
 
+/* ---------- T02 Gemeinsame Teiler von Zähler und Nenner ---------- */
+/* Gesucht sind alle Zahlen, die Zähler UND Nenner teilen (Vorbereitung auf das Kürzen). Genau dann teilt d beide Zahlen, wenn d den ggT teilt. */
+const T02_CAND=[2,3,4,5,6,7,8,9,10,12];
+TASKS.T02={area:'Grundlagen',name:'Gemeinsame Teiler',desc:'Durch welche Zahlen sind Zähler und Nenner beide teilbar?',notes:['M7','M3'],size:5,
+  gen(level,R){
+    const lim=level===1?60:100,gs=level===1?[2,3,4,5,6,8,9,10,12]:[2,3,4,5,6,8,9,10,12,14,15,16,18,20];
+    for(let tries=0;tries<500;tries++){
+      const g=R.pick(gs),p=R.int(2,9),q=R.int(2,9);
+      if(p===q||gcd(p,q)!==1||g*p>lim||g*q>lim)continue;
+      const a=g*p,b=g*q,correct=T02_CAND.filter(d=>g%d===0),traps=T02_CAND.filter(d=>(a%d===0)!==(b%d===0)),rest=T02_CAND.filter(d=>a%d!==0&&b%d!==0);
+      if(correct.length<1||correct.length>3||traps.length<2)continue;
+      const others=R.shuffle(traps).concat(R.shuffle(rest));
+      const opts=correct.concat(others.slice(0,6-correct.length)).sort((x,y)=>x-y);
+      return {type:'T02',level,a,b,opts,avoid:[]};
+    }
+    return {type:'T02',level,a:36,b:48,opts:[2,3,4,5,6,9],avoid:[]};
+  },
+  prompt(t,h){h.append(el('p',{class:'q'},'Durch welche Zahlen sind ',strong(t.a),' und ',strong(t.b),' teilbar? Tippe alle an, die in beide Zahlen passen.'));},
+  render(view,host){
+    const t=view.task,d=view.draft;d.sel=d.sel||[];
+    const cards=el('div',{class:'cards',role:'group','aria-label':'Zahlen'});
+    t.opts.forEach(x=>{
+      const b=el('button',{type:'button',class:'pick numpick','aria-pressed':String(d.sel.includes(x)),'aria-label':'Zahl '+x},String(x));
+      b.disabled=view.locked();
+      b.addEventListener('click',()=>{
+        if(view.locked())return;
+        const j=d.sel.indexOf(x);if(j>=0)d.sel.splice(j,1);else d.sel.push(x);
+        b.setAttribute('aria-pressed',String(d.sel.includes(x)));view.save();
+      });
+      view.inputs['n'+x]=b;cards.append(b);
+    });
+    host.append(cards);
+  },
+  validate(t,d){
+    const sel=d.sel||[];
+    if(!sel.length)return invalid('Tippe mindestens eine Zahl an.');
+    const ok=t.opts.filter(x=>t.a%x===0&&t.b%x===0),wr=sel.filter(x=>!ok.includes(x)),miss=ok.filter(x=>!sel.includes(x));
+    if(!wr.length&&!miss.length)return right('Richtig! '+ok.join(', ')+' teilt '+t.a+' und '+t.b+'.');
+    if(wr.length){
+      const x=wr[0],one=t.a%x===0?t.a:t.b%x===0?t.b:null;
+      return wrong('wrong',one?'Die '+x+' teilt nur '+one+', aber nicht beide Zahlen.':'Die '+x+' teilt keine der beiden Zahlen.');
+    }
+    return soft('missing','Das stimmt bisher – aber es gibt noch mehr Zahlen, die beide teilen.');
+  },
+  solution(t){
+    return [line('Beide Zahlen müssen sich ohne Rest teilen lassen:'),
+      ...t.opts.map(x=>{
+        const both=t.a%x===0&&t.b%x===0;
+        return line(strong(x),both?': '+t.a+' : '+x+' = '+t.a/x+' und '+t.b+' : '+x+' = '+t.b/x+'. Passt.'
+          :': '+(t.a%x!==0?t.a:t.b)+' : '+x+' geht nicht auf. Passt nicht.');
+      })];
+  }
+};
+
 /* ---------- G05 Erweitern und Kürzen gemischt ---------- */
 TASKS.G05={area:'Grundlagen',name:'Erweitern und Kürzen gemischt',desc:'Mal erweitern, mal kürzen – entscheide selbst.',notes:['M2','M3'],size:5,
   gen(level,R,ctx){
     const big=level===1&&!!(ctx&&ctx.big); /* Leicht, kleiner Anteil: größere Zahlen bis 100 */
-    const two=R.chance(level===1?0.3:0.5),imp=R.chance(0.2); /* auch unechte Brüche (z. B. 7/4) */
+    const two=R.chance(level===1?0.3:0.5),imp=!big&&R.chance(0.2); /* auch unechte Brüche (z. B. 7/4), nicht bei den großen Zahlen */
     if(two){
       let p,q;do{q=R.int(2,level===1?7:11);p=imp?R.int(q+1,2*q-1):R.int(1,q-1);}while(gcd(p,q)!==1);
       const m=R.pick(level===1?(big?[3,4,5]:[2,3,4]):[2,3,4,5,6]);

@@ -33,7 +33,10 @@ const INTRO={
       say:['Die gefärbten Teile müssen nicht beieinander liegen.','Auch der Anfang ist egal.','Zähle und vergleiche den Anteil.'],
       fig:{mode:'circle',rows:[{n:1,d:3,fill:[1]},{n:2,d:6,fill:[1,4]}]}},
     {h:'So antwortest du',
-      say:['Tippe alle Karten an, die denselben Anteil zeigen.','Oft gibt es mehr als eine richtige Karte.','Dann tippe auf **Prüfen**.']}
+      say:['Tippe alle Karten an, die denselben Anteil zeigen.','Oft gibt es mehr als eine richtige Karte.','Dann tippe auf **Prüfen**.']},
+    {h:'Mehr als ein Ganzes',
+      say:['Manchmal ist der Zähler größer als der Nenner.','Bei {4|3} sind das mehr als 3 Drittel.','Drei Drittel sind ein Ganzes, dazu kommt noch ein Drittel.'],
+      fig:[{n:3,d:3},{n:1,d:3}]}
   ]},
   B01:{title:'Bruchbilder verändern',steps:[
     {h:'Das Vorgabebild',
@@ -74,6 +77,15 @@ const INTRO={
     {h:'Vier und sechs',
       say:['**4**: Die letzten zwei Ziffern sind durch 4 teilbar.','**6**: Die Zahl ist durch 2 und durch 3 teilbar.','Alle Regeln findest du im **Merkkasten**.']}
   ]},
+  T02:{title:'Gemeinsame Teiler',steps:[
+    {h:'Zwei Zahlen, ein Teiler',
+      say:['Eine Zahl teilt eine andere, wenn kein Rest bleibt.','Gesucht sind Zahlen, die zwei Zahlen zugleich teilen.','Beide Zahlen müssen passen.'],
+      calc:[[12,':',6,'=',2],[18,':',6,'=',3]]},
+    {h:'Prüfe jede Zahl',
+      say:['Probiere eine Zahl nach der anderen.','Eine Zahl, die nur eine von beiden teilt, zählt nicht.','Die Regeln dazu stehen im **Merkkasten**.']},
+    {h:'So antwortest du',
+      say:['Tippe alle Zahlen an, die beide Zahlen teilen.','Oft passt mehr als eine Zahl.','Dann tippe auf **Prüfen**.']}
+  ]},
   G03:{title:'Kürzen',steps:[
     {h:'Kürzen heißt: gröber teilen',
       say:['Beim Kürzen fasst du kleine Teile zu großen Teilen zusammen.','Hier gehören immer 2 Teile zusammen.','Aus {4|6} wird {2|3}.'],
@@ -88,8 +100,8 @@ const INTRO={
       say:['Du kannst nur durch eine Zahl kürzen, die in beide Zahlen passt.','Prüfe vorher: Bleibt oben und unten kein Rest?','Die Regeln dazu stehen im **Merkkasten**.']}
   ]},
   G04:{title:'Kürzen so weit wie möglich',steps:[
-    {h:'Mehrmals kürzen',
-      say:['Oft kannst du mehr als einmal kürzen.','Hier erst durch 2, dann durch 3.'],
+    {h:'Kürzen in Schritten',
+      say:['Teile erst durch die kleinste Zahl, die passt.','Prüfe dann noch einmal, ob du weiter kürzen kannst.','Hier erst durch 2, dann durch 3.'],
       calc:[[[12,18],'=',[12,18,'d',2],'=',[6,9]],[[6,9],'=',[6,9,'d',3],'=',[2,3]]]},
     {h:'Wann ist Schluss?',
       say:['Kürze, bis keine Zahl mehr in beide passt.','Dann ist der Bruch so weit wie möglich gekürzt.','Bei {2|3} geht nichts mehr.']},
@@ -460,18 +472,50 @@ function introLineTry(spec){
   return el('div',{class:'introtry'},el('div',{class:'nlcap'},'Teile je Ganzem'),chips,stage,say);
 }
 
+/* ---------- Probeaufgabe auf der ersten Karte ---------- */
+/* Eine kleine Aufgabe (Leicht) der Station selbst: zählt nicht für Sterne, Punkte und Serie (cb.probe). Danach kommt die Erklärung. */
+const introHasProbe=(id)=>!!(TASKS[id]&&!TASKS[id].quick&&!finalModOf(id)&&id!=='LAB');
+const PROBE_STEP={h:'Probiere es aus',say:['Löse zuerst eine kleine Aufgabe.','Ein Fehler ist nicht schlimm.','Danach kommt die Erklärung.'],probe:true};
+function buildProbe(id){
+  const st=newState(generateTask(id,1)),host=el('div',{class:'probetask'}),fbHost=el('div',{class:'probefb','aria-live':'polite'});
+  const box=el('div',{class:'introprobe'});
+  let api;
+  const checkB=el('button',{type:'button',class:'btn primary small'},'Prüfen');
+  const hintB=el('button',{type:'button',class:'btn small'},icon('hinweis'),' Tipp');
+  const solB=el('button',{type:'button',class:'btn small'},icon('auge'),' Lösung ansehen');
+  const pad=makeKeypad(host,()=>check());
+  const upd=()=>{
+    const open=st.status==='open',all=api.hintCount();
+    checkB.disabled=!open;hintB.disabled=!open||st.hint>=all;solB.classList.toggle('hidden',!(open&&(st.attempts>0||st.hint>0)));
+    setHintLabel(hintB,st.hint>=all?'Alle Tipps':(st.hint?'Tipp '+(st.hint+1):'Tipp'));
+    pad.refresh();
+  };
+  const cb={probe:true,save(){},msgHost:fbHost,done(){api=mountTask(host,st,cb);upd();}};
+  api=mountTask(host,st,cb);
+  const check=()=>{if(st.status==='open'){api.check();upd();}};
+  checkB.addEventListener('click',check);
+  hintB.addEventListener('click',()=>{api.hint();upd();});
+  solB.addEventListener('click',()=>{api.solution();upd();});
+  box.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();check();}});
+  box.append(host,fbHost,el('div',{class:'rowbtns probebtns'},checkB,hintB,solB),pad.el);
+  upd();
+  return box;
+}
+
 /* ---------- Ansicht: Erklärung ---------- */
 function renderIntro(id){
-  const I=INTRO[id],steps=I.steps,total=steps.length,again=!!(S.view&&S.view.intro);
+  const I=INTRO[id],steps=introHasProbe(id)?[PROBE_STEP].concat(I.steps):I.steps,total=steps.length,again=!!(S.view&&S.view.intro);
+  let probeEl=null; /* die Probeaufgabe bleibt beim Blättern erhalten */
   let i=0;
   const root=el('div',{class:'page'});root.append(topbar(I.title));
   const shell=el('div',{class:'shell'}),main=el('main',{class:'work introwork'});
   main.dataset.acc=ACC[id]||PATH_ACC[id]||'';
   shell.append(main);root.append(shell);app.append(root);
-  const card=el('div',{class:'card'}),links=el('div',{class:'linkrow'});
+  const card=el('div',{class:'card'});
   const backB=el('button',{type:'button',class:'btn introback','aria-label':'Zurück zum vorigen Schritt'},icon('zurueck'),'Zurück');
+  const skipB=el('button',{type:'button',class:'btn introskip'},again?'Schließen':'Kenne ich schon');
   const nextB=el('button',{type:'button',class:'btn primary intronext'});
-  main.append(card,links,el('div',{class:'actionbar'},el('div',{class:'primaryrow'},backB,nextB)));
+  main.append(card,el('div',{class:'actionbar'},el('div',{class:'primaryrow'},backB,skipB,nextB)));
   /* „Los geht’s“ und „Kenne ich schon“: Erklärung gilt als gesehen, es geht zur eigentlichen Ansicht.
      Ausdrücklich geöffnet (Merkkasten): das Kennzeichen view.intro verschwindet, der Verlaufseintrag wird ersetzt. */
   const finish=()=>{
@@ -497,10 +541,11 @@ function renderIntro(id){
       s.nltry?introLineTry(s.nltry):null,
       s.calc?introCalcNode(s.calc):null,
       s.tryit?introTry(s.tryit):null,
+      s.probe?(probeEl=probeEl||buildProbe(id)):null,
       el('div',{class:'titleblock'},el('span',{class:'tb-id'},icon('gluehbirne'),el('span',{class:'tb-name'},I.title)),el('span',{class:'tb-c'},'Erklärung'))].filter(Boolean));
     backB.disabled=i===0;
     nextB.replaceChildren(...(last?[again?'Zur Übung':'Los geht’s',icon('play')]:['Weiter',icon('weiter')]));
-    links.replaceChildren(el('button',{type:'button',class:'linkbtn introskip',onclick:finish},again?'Schließen':'Kenne ich schon'));
+    skipB.onclick=finish;
     if(move){window.scrollTo(0,0);h.focus({preventScroll:true});}
   };
   backB.addEventListener('click',()=>{if(i>0){i--;draw(true);}});

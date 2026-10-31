@@ -216,7 +216,7 @@ function runSelfTests(){
   t('Pfad: G01 fertig ⇒ G02 nächstes, freiwilliges B01 offen',R_('G02').next&&R_('B01').open&&!R_('B01').must);
   S.checked.G03=true;
   t('Pfad: im Check beherrscht ist nicht fertig – bleibt gesperrt hinter dem Nächsten',R_('G03').checked&&!R_('G03').done&&R_('G03').locked&&R_('G03').blocker==='G02'&&R_('G04').blocker==='G02');
-  S.passed['G02-L2']=true;S.passed['T01-L1']=true;S.passed['G03-L1']=true;
+  S.passed['G02-L2']=true;S.passed['T01-L1']=true;S.passed['T02-L1']=true;S.passed['G03-L1']=true;
   t('Pfad: knifflig bestanden zählt, nächstes ist G04',R_('G02').done&&R_('G04').next);
   ['G04','G05'].forEach(x=>{S.passed[x+'-L1']=true;});
   t('Pfad: nach G05 sind Knobel-Bauteile und Abschluss (QA) offen',['U01','U02','U03','O02','QA'].every(x=>R_(x).open)&&R_('QA').next);
@@ -251,7 +251,7 @@ function runSelfTests(){
   t('Einstufung: nur 3 von 3 ist per Check frei (G01, G02, G04), „fast“ und „üben“ nicht',S.checked.G01&&S.checked.G02&&S.checked.G04&&!S.checked.T01&&!S.checked.G03&&!S.checked.G05&&S.placed&&!inf.final&&inf.ev.stufe==='fit');
   freshP();
   inf=onRoundEnd('Q00',1,rnd(qres([]),qplan));
-  t('Einstufung: 15 von 15 merkt alles als beherrscht, aber ohne echten Pfad keine Urkunde und nichts fertig',['G01','G02','T01','G03','G04','G05'].every(x=>S.checked[x])&&!inf.ready&&!inf.final&&!S.final&&!pathState(moduleById("veraendern")).some(r=>r.must&&r.done));
+  t('Einstufung: 15 von 15 merkt alles als beherrscht, aber ohne echten Pfad keine Urkunde und nichts fertig',['G01','G02','T01','T02','G03','G04','G05'].every(x=>S.checked[x])&&!inf.ready&&!inf.final&&!S.final&&!pathState(moduleById("veraendern")).some(r=>r.must&&r.done));
   freshP();
   inf=onRoundEnd('Q00',1,rnd(qres(qplan.map((_,i)=>i).filter(i=>i>=4)),qplan));
   t('Von vorn: höchstens 4 richtig ohne Fortschritt – nichts als beherrscht gemerkt, Pfad ohne Wahl',inf.ev.stufe==='start'&&Object.keys(S.checked).length===0&&S.placed&&!S.final&&lernenZustand(moduleById('veraendern'))==='pfad');
@@ -264,7 +264,7 @@ function runSelfTests(){
   freshP();
   inf=onRoundEnd('Q00',1,rnd(qres(pos('vollstaendig')),qplan));
   t('3+3+3+3+0 ist „fit“, aber nicht fertig: keine Urkunde, G03 beherrscht, G04 und G05 nicht',inf.ev.stufe==='fit'&&!inf.final&&!S.final&&S.checked.G03&&!S.checked.G04&&!S.checked.G05);
-  freshP();['G01','G02','T01','G03','G04','G05'].forEach(x=>{S.passed[x+'-L1']=true;});
+  freshP();['G01','G02','T01','T02','G03','G04','G05'].forEach(x=>{S.passed[x+'-L1']=true;});
   inf=onRoundEnd('QA',1,rnd(qres(qplan.map((_,i)=>i).filter(i=>i>=11)),qplan));
   t('Abschlusscheck: alles fertig, aber nur 11 von 15 ⇒ keine Urkunde (ready, nicht passed)',inf.ready&&!inf.passed&&!inf.final&&!S.final);
   inf=onRoundEnd('QA',1,rnd(qres(qplan.map((_,i)=>i).filter(i=>i>=12)),qplan));
@@ -312,7 +312,7 @@ function runSelfTests(){
     t('Fortschritt gilt in beiden Modi: G01 fertig, im Pfad ist Erweitern dran',pathState(mod,'frei').find(r=>r.id==='G01').done&&pathState(mod,'pfad').find(r=>r.id==='G01').done&&pathState(mod,'pfad').find(r=>r.next).id==='G02');
     beispiel();S.modus.veraendern='pfad';
     const pv=view();
-    t('Pfad-Ansicht: Schalter, Fortschrittszeile, „Start: Gleiche Anteile erkennen“, Liste eingeklappt, Check-Marken',!!pv.querySelector('.seg')&&!!pv.querySelector('.pfadline')&&/^Start: Gleiche Anteile erkennen/.test(pv.querySelector('.bigbtn').textContent)&&!!pv.querySelector('details.fold:not([open]) .rail')&&pv.querySelectorAll('.mchk.sitzt').length===2&&pv.querySelectorAll('.mchk.fast').length===1&&/Als Nächstes/.test(pv.textContent)&&!/Weiter geht/.test(pv.textContent)&&/Eingangstest wiederholen/.test(pv.textContent));
+    t('Pfad-Ansicht: Schalter, Fortschrittszeile, „Start: Gleiche Anteile erkennen“, Liste eingeklappt, Check-Marken',!!pv.querySelector('.seg')&&!!pv.querySelector('.pfadline')&&/^Start: Gleiche Anteile erkennen/.test(pv.querySelector('.bigbtn').textContent)&&!!pv.querySelector('details.fold:not([open]) .rail')&&pv.querySelectorAll('.mchk.sitzt').length===2&&pv.querySelectorAll('.mchk.fast').length===2&&/Als Nächstes/.test(pv.textContent)&&!/Weiter geht/.test(pv.textContent)&&/Eingangstest wiederholen/.test(pv.textContent));
     S.passed['G01-L1']=true;
     t('Pfad-Ansicht: nach dem ersten bestandenen Bauteil heißt der Knopf „Weiter“',/^Weiter: Gleiche Anteile erkennen|^Weiter: Erweitern/.test(view().querySelector('.bigbtn').textContent));
     S.modus.veraendern='frei';
@@ -371,7 +371,7 @@ function runSelfTests(){
     const texts=[],steps=[];
     ids.forEach(id=>{const I=INTRO[id];if(!I)return;texts.push(I.title);I.steps.forEach(s=>{steps.push(s);texts.push(s.h,...(s.say||[]));});});
     const longest=Math.max(...[].concat(...texts.map(sentences)).map(words));
-    t('Erklärungen: jedes der '+ids.length+' Lernpfad-Bauteile hat eine mit 3–4 Schritten, Überschrift und 2–5 Sätzen',ids.every(id=>INTRO[id]&&INTRO[id].title&&INTRO[id].steps.length>=3&&INTRO[id].steps.length<=4&&INTRO[id].steps.every(s=>s.h&&Array.isArray(s.say)&&s.say.length>=2&&s.say.length<=5))&&Object.keys(INTRO).length===ids.length+Object.keys(QCHK).length);
+    t('Erklärungen: jedes der '+ids.length+' Lernpfad-Bauteile hat eine mit 3–5 Schritten, Überschrift und 2–5 Sätzen',ids.every(id=>INTRO[id]&&INTRO[id].title&&INTRO[id].steps.length>=3&&INTRO[id].steps.length<=5&&INTRO[id].steps.every(s=>s.h&&Array.isArray(s.say)&&s.say.length>=2&&s.say.length<=5))&&Object.keys(INTRO).length===ids.length+Object.keys(QCHK).length);
     t('Erklärungen: kurze Sätze, höchstens 14 Wörter (längster: '+longest+')',longest<=14);
     t('Erklärungen: keine Rechnung im Text (Zahlen, Rechenzeichen, Brüche stehen als Daten), kein Emoji, kein ✓/★/✗',texts.every(x=>!/\d\s*[·×÷+−=]\s*\d|\d\s*:\s*\d|[☀-➿\u{1F000}-\u{1FFFF}]/u.test(x)));
     /* Rechnungen: alle Brüche einer Zeile gleich (Lücke „?“ muss ganzzahlig lösbar sein), Erweitern/Kürzen mit Zahl ≥ 2 passend, Rechenketten stimmen */
@@ -407,7 +407,7 @@ function runSelfTests(){
     t('Erklärungen: Bilder gültig (Teile, Färbung als gültige Indexliste, Farbe), höchstens ein Bild oder Ausprobieren je Schritt',steps.every(s=>{
       if([s.fig,s.lab,s.tryit,s.nline,s.nltry].filter(Boolean).length>1)return false;
       const f=s.fig&&(Array.isArray(s.fig)?{mode:'strip',rows:s.fig}:s.fig);
-      return !f||(['strip','circle'].includes(f.mode)&&f.rows.length>=1&&f.rows.length<=3&&f.rows.every(r=>r.n>=1&&r.d>r.n&&(!r.fill||validFill(r.fill,r.n,r.d))&&[undefined,'erw','kue'].includes(r.acc)));
+      return !f||(['strip','circle'].includes(f.mode)&&f.rows.length>=1&&f.rows.length<=3&&f.rows.every(r=>r.n>=1&&r.d>=r.n&&(!r.fill||validFill(r.fill,r.n,r.d))&&[undefined,'erw','kue'].includes(r.acc)));
     }));
     t('Erklärungen: Ausprobieren und Labor-Bild gültig; ein Schritt geht, bei Kürzen zeigt ein anderer die Absage',steps.every(s=>{
       const ty=s.tryit,lb=s.lab;
@@ -685,7 +685,7 @@ function runSelfTests(){
   t('Registry: jede Aufgabe, Gruppe und jedes Bauteil eines aktiven Themas gibt es',activeModules().every(m=>(m.practice||[]).every(id=>TASKS[id])&&Object.values(m.groups||{}).every(g=>g.ids.every(id=>id==='LAB'||TASKS[id]))&&(m.path||[]).every(p=>p.id==='LAB'||TASKS[p.id])));
   t('Registry: geplante Themen haben keine Aufgaben, keine Gruppen, keinen Lernpfad',plannedModules().length>0&&plannedModules().every(m=>!m.practice&&!m.groups&&!m.path));
   t('Registry: Themen-IDs und Aufgaben-IDs sind eindeutig',new Set(MODULES.map(m=>m.id)).size===MODULES.length&&new Set(PRACTICE_ORDER).size===PRACTICE_ORDER.length&&new Set(PATH.map(p=>p.id)).size===PATH.length);
-  t('Registry: Rang zählt „Erweitern und Kürzen“ (18 Übungen, 13 Stationen)',rankPractice().length===18&&rankPath().length===13&&moduleOf('G02').id==='veraendern'&&moduleOf('Entdecken').id==='veraendern');
+  t('Registry: Rang zählt „Erweitern und Kürzen“ (19 Übungen, 14 Stationen)',rankPractice().length===19&&rankPath().length===14&&moduleOf('G02').id==='veraendern'&&moduleOf('Entdecken').id==='veraendern');
   /* Navigation: Lernen (Themen) → Lernpfad des Themas → Bauteil, und zurück */
   {
     const keepV=S.view;
@@ -697,6 +697,60 @@ function runSelfTests(){
     S.view=keepV;
   }
 
+  /* Paket 7: Probeaufgabe in der Erklärung, „Kenne ich schon“, Gemeinsame Teiler (T02), Einführung unechter Brüche, Kürzen in Schritten */
+  {
+    const vm7=moduleById('veraendern');
+    /* T02 */
+    let t02bad=[];
+    [1,2].forEach(lvl=>{for(let i=0;i<400;i++){
+      const k=generateTask('T02',lvl),lim=lvl===1?60:100,ok=k.opts.filter(x=>k.a%x===0&&k.b%x===0),traps=k.opts.filter(x=>(k.a%x===0)!==(k.b%x===0));
+      const right=(sel)=>validateTask(k,{sel});
+      const checks=[k.opts.length===6&&new Set(k.opts).size===6&&k.opts.every((x,j)=>!j||x>k.opts[j-1]),ok.length>=1&&ok.length<=3,traps.length>=1,Math.max(k.a,k.b)<=lim,
+        right(ok).correct,right(ok.concat(traps[0])).errorCode==='wrong',ok.length>1?right(ok.slice(1)).soft===true:true,validateTask(k,{}).invalid===true,
+        TASKS.T02.solution(k).length===7,TASKS.T02.hints(k).length===3,Array.isArray(k.avoid)];
+      if(checks.includes(false))t02bad.push('L'+lvl+' '+k.a+'/'+k.b+' '+checks.map(x=>x?1:0).join(''));
+    }});
+    t('Gemeinsame Teiler (T02): 800 Aufgaben – 6 Zahlen, 1–3 passen zu beiden, Fallen teilen nur eine Zahl, Zähler und Nenner bis 60 bzw. 100, richtig/falsch/„fast“/leer werden unterschieden',t02bad.length===0||(console.log(t02bad.slice(0,5)),false));
+    const ids7=PATH.map(m=>m.id);
+    t('T02 steht als Pflicht-Station direkt nach T01 im Pfad, in Üben bei Kürzen, mit Erklärung; der Eingangstest schaltet T02 mit T01 frei',ids7.indexOf('T02')===ids7.indexOf('T01')+1&&PATH.find(m=>m.id==='T02').must&&vm7.groups['Kürzen'].ids.includes('T02')&&vm7.practice.includes('T02')&&!!INTRO.T02&&QCHK.Q00.stations.teilbar.join()==='T01,T02');
+    t('Erklärkarte „Mehr als ein Ganzes“ (G01): Zähler größer als Nenner, zwei Streifen; „Kürzen in Schritten“ (G04): erst die kleinste Zahl, dann noch einmal prüfen',INTRO.G01.steps.some(s=>s.h==='Mehr als ein Ganzes'&&s.say.join(' ').includes('Zähler größer als der Nenner')&&Array.isArray(s.fig)&&s.fig.length===2)&&INTRO.G04.steps[0].h==='Kürzen in Schritten'&&INTRO.G04.steps[0].say.join(' ').includes('kleinste Zahl, die passt'));
+    /* große Zahlen (bis 100) in Leicht: immer echte Brüche */
+    const bigBad=[];let bigN=0;
+    const Rbig={...RNG,chance:(p)=>p===BIG_SHARE?true:RNG.chance(p)}; /* erzwingt den kleinen Anteil großer Zahlen */
+    ['G02','G03','G04','G05'].forEach(id=>{for(let i=0;i<300;i++){
+      const k=TASKS[id].gen(1,Rbig,null),mx=Math.max(...numsOf(k));
+      if(mx>=45){bigN++;if(k.a>k.b)bigBad.push(id+' '+k.a+'/'+k.b);}
+    }});
+    t('Große Zahlen (45–100) in Leicht: nur echte Brüche (kein 54/45), '+bigN+' große Aufgaben geprüft',bigN>=1000&&bigBad.length===0||(console.log(bigBad.slice(0,4)),false));
+    /* Probeaufgabe und Kenne ich schon */
+    t('Probeaufgabe: für Stationen mit Aufgabe, nicht für Labor, Abschlusschecks und Eingangstests',['G01','B01','G02','T01','T02','G03','G04','G05','U01','U02','U03','O02','Z01','Z04','Z08'].every(introHasProbe)&&!['LAB','QA','ZA','Q00','ZQ'].some(introHasProbe));
+    const keep7={view:S.view,intro:S.intro,rounds:S.rounds,xp:S.xp,streak:S.streak,progress:S.progress,skills:S.skills,bestStreak:S.bestStreak};
+    try{
+      S.intro={};S.rounds={};S.progress={};S.xp=40;S.streak=3;
+      S.view={kind:'practice',id:'G02'};renderAll();
+      const btns=[...app.querySelectorAll('.primaryrow .btn')].map(b=>b.textContent.trim());
+      t('Erklärung: erste Karte „Probiere es aus“ mit Aufgabe (Eingabefelder, Prüfen, Tipp), 5 Schritte (4 + Probe); „Kenne ich schon“ steht gleich groß neben „Zurück“ und „Weiter“',/Probiere es aus/.test(app.querySelector('.introh').textContent)&&!!app.querySelector('.introprobe input')&&/Schritt 1 von 5/.test(app.textContent)&&btns.length===3&&btns[1]==='Kenne ich schon'&&btns[0].includes('Zurück')&&btns[2].includes('Weiter')&&!app.querySelector('.linkrow'));
+      const box=app.querySelector('.introprobe'),fr=box.querySelector('.frac'),ka=+box.querySelector('strong').textContent,a7=+fr.querySelector('.num').textContent,b7=+fr.querySelector('.den').textContent;
+      const ins=[...box.querySelectorAll('input[type=text]')],setI=(i,v)=>{i.value=String(v);i.dispatchEvent(new Event('input',{bubbles:true}));};
+      setI(ins[0],a7);setI(ins[1],b7);
+      [...box.querySelectorAll('button')].find(b=>b.textContent.trim()==='Prüfen').click();
+      t('Probeaufgabe: falsche Antwort zeigt Rückmeldung, bricht die Serie nicht ab und gibt keine Punkte',/Prüfe|Beim Erweitern|Der Bruch ist unverändert/.test(box.textContent)&&S.streak===3&&S.xp===40);
+      setI([...box.querySelectorAll('input[type=text]')][0],a7*ka);setI([...box.querySelectorAll('input[type=text]')][1],b7*ka);
+      [...box.querySelectorAll('button')].find(b=>b.textContent.trim()==='Prüfen').click();
+      t('Probeaufgabe: richtige Antwort zeigt die Rechnung; keine Punkte, keine Serie, kein Fortschritt (zählt nicht für Sterne)',/Richtig: /.test(box.textContent)&&S.xp===40&&S.streak===3&&Object.keys(S.progress).length===0&&Object.keys(S.rounds).length===0);
+      const bs=[...app.querySelectorAll('.primaryrow .btn')];
+      bs[2].click();
+      t('Erklärung: „Weiter“ führt zur ersten Erklärkarte der Station, die Probe bleibt davor',/Schritt 2 von 5/.test(app.textContent)&&/Erweitern heißt: feiner teilen/.test(app.querySelector('.introh').textContent));
+      [...app.querySelectorAll('.primaryrow .btn')][1].click();
+      t('„Kenne ich schon“: Erklärung gilt als gesehen, die Übung öffnet sich',S.intro.G02===true&&!app.querySelector('.introwork'));
+      S.intro={};S.view={kind:'lab'};renderAll();
+      t('Bruchlabor: keine Probeaufgabe, vier Schritte; „Kenne ich schon“ auch dort',!app.querySelector('.introprobe')&&/Schritt 1 von 4/.test(app.textContent)&&[...app.querySelectorAll('.primaryrow .btn')][1].textContent.trim()==='Kenne ich schon');
+      S.intro={};S.view={kind:'practice',id:'QA'};renderAll();
+      t('Abschlusscheck: keine Probeaufgabe vor der Erklärung',!app.querySelector('.introprobe')&&/Schritt 1 von 3/.test(app.textContent));
+      S.intro={G03:true};S.view={kind:'practice',id:'G03',intro:true};renderAll();
+      t('Erklärung aus dem Merkkasten (again): Knopf heißt „Schließen“',[...app.querySelectorAll('.primaryrow .btn')][1].textContent.trim()==='Schließen');
+    }finally{Object.assign(S,keep7);persist();renderAll();}
+  }
   /* Paket 6: Abschlusschecks QA und ZA, gemischte Runden, „Stimmt das?“, Transfer, Hinweis „Erst Erweitern und Kürzen“ */
   {
     const vm6=moduleById('veraendern'),zs6=moduleById('zahlenstrahl');
@@ -720,7 +774,7 @@ function runSelfTests(){
     const keep6={passed:S.passed,checked:S.checked,final:S.final,placed:S.placed,days:S.days,lab:S.lab,mq:S.mq,perfect:S.perfect,einstufung:S.einstufung,modus:S.modus,unlocked:S.unlocked};
     try{
       S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;S.mq={};S.perfect={};S.einstufung=null;S.modus={};S.unlocked={};
-      ['G01','G02','T01','G03','G04','G05'].forEach(x=>{S.passed[x+'-L1']=true;});
+      ['G01','G02','T01','T02','G03','G04','G05'].forEach(x=>{S.passed[x+'-L1']=true;});
       let r=onRoundEnd('Q00',1,{results:Array(15).fill('f'),size:15,sk:[].concat(Q_SKILLS,Q_SKILLS,Q_SKILLS)});
       t('Urkunde: der Eingangstest Q00 gibt auch bei 15 von 15 und allen Stationen keine Urkunde mehr',!r.final&&!S.final&&!stationDone('QA'));
       r=onRoundEnd('QA',1,{results:Array(15).fill('f').fill('x',11),size:15});
@@ -826,7 +880,7 @@ function runSelfTests(){
         if(new Set(inGroups).size!==inGroups.length||m.practice.some(id=>!inGroups.includes(id)))bad.push(m.id+' Aufgaben nicht in genau einer Gruppe');
       });
       t('Gruppen: jede Station des Pfads steht im Üben in derselben Gruppe, jede Aufgabe in genau einer Gruppe, Gruppennamen sind eindeutig',(bad.length===0&&Object.keys(GROUPS).length===activeModules().reduce((n,m)=>n+Object.keys(m.groups).length,0))||(console.log(bad),false));
-      t('Gruppen Erweitern und Kürzen: Entdecken, Erweitern, Kürzen, Mischen, Knobeln, Umwandeln, Abschluss; Teilbarkeit (T01) bei Kürzen, Eingangstest (Q00) und Abschlusscheck (QA) bei Abschluss',Object.keys(vm5.groups).join()==='Entdecken,Erweitern,Kürzen,Mischen,Knobeln,Umwandeln,Abschluss'&&vm5.groups['Kürzen'].ids.join()==='T01,G03,G04'&&vm5.groups.Abschluss.ids.join()==='Q00,QA'&&!vm5.groups.Entdecken.ids.includes('T01')&&!vm5.groups.Entdecken.ids.includes('Q00'));
+      t('Gruppen Erweitern und Kürzen: Entdecken, Erweitern, Kürzen, Mischen, Knobeln, Umwandeln, Abschluss; Teilbarkeit (T01) bei Kürzen, Eingangstest (Q00) und Abschlusscheck (QA) bei Abschluss',Object.keys(vm5.groups).join()==='Entdecken,Erweitern,Kürzen,Mischen,Knobeln,Umwandeln,Abschluss'&&vm5.groups['Kürzen'].ids.join()==='T01,T02,G03,G04'&&vm5.groups.Abschluss.ids.join()==='Q00,QA'&&!vm5.groups.Entdecken.ids.includes('T01')&&!vm5.groups.Entdecken.ids.includes('Q00'));
       t('Gruppen Zahlenstrahl: Einteilung, Eintragen, Zwei Wege, Weiter, Abschlusscheck wie im Lernpfad',Object.keys(zs5.groups).join()==='Einteilung,Eintragen,Zwei Wege,Weiter,Abschlusscheck'&&zs5.groups['Zwei Wege'].ids.join()==='Z04,Z05,Z06'&&zs5.groups.Abschlusscheck.ids.join()==='ZQ,ZA');
       /* Meine Übersicht, Alles freischalten */
       S.modus={veraendern:'frei'};S.checked={G01:true};S.unlocked={};

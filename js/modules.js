@@ -17,14 +17,14 @@ const MODULES=[
     groups:{
       'Entdecken':{pat:'dots',icon:'lupe',text:'Labor, gleiche Anteile und Bruchbilder',ids:['LAB','G01','B01']},
       'Erweitern':{pat:'dash',icon:'aus',text:'Brüche feiner einteilen',ids:['G02']},
-      'Kürzen':{pat:'hatch',icon:'ein',text:'Teilbarkeit und Kürzen, auch so weit wie möglich',ids:['T01','G03','G04']},
+      'Kürzen':{pat:'hatch',icon:'ein',text:'Teilbarkeit, gemeinsame Teiler und Kürzen',ids:['T01','T02','G03','G04']},
       'Mischen':{pat:'dots',icon:'zahnrad',text:'Mal erweitern, mal kürzen',ids:['G05']},
       'Knobeln':{pat:'dash',icon:'zirkel',text:'Lücken, Fehler, Begründen und mehrere Lösungen',ids:['U01','U02','U03','U04','O01','O02']},
       'Umwandeln':{pat:'hatch',icon:'wechsel',text:'Dezimalzahlen und gemischte Zahlen',ids:['D01','D02','D03']},
       'Abschluss':{pat:'dots',icon:'plakette',text:'Eingangstest und Abschlusscheck',ids:['Q00','QA']}
     },
     /* Reihenfolge der Sterne-Liste und der „alles perfekt“-Bedingungen */
-    practice:['Q00','QA','G01','T01','G02','G03','G04','G05','B01','U01','U02','U03','U04','O01','O02','D01','D02','D03'],
+    practice:['Q00','QA','G01','T01','T02','G02','G03','G04','G05','B01','U01','U02','U03','U04','O01','O02','D01','D02','D03'],
     /* Lernpfad: Pflicht-Bauteile (must) schalten das jeweils nächste frei */
     path:[
       {id:'LAB',grp:'Entdecken',title:'Bruchlabor',desc:'Erweitern und Kürzen ausprobieren.'},
@@ -32,6 +32,7 @@ const MODULES=[
       {id:'B01',grp:'Entdecken'},
       {id:'G02',grp:'Erweitern',must:true},
       {id:'T01',grp:'Kürzen',must:true},
+      {id:'T02',grp:'Kürzen',must:true},
       {id:'G03',grp:'Kürzen',must:true},
       {id:'G04',grp:'Kürzen',must:true},
       {id:'G05',grp:'Mischen',must:true},

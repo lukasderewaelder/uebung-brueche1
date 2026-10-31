@@ -878,3 +878,11 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 /* Paket 5: Eingangstest-Knöpfe gleich groß, Einstellungen im Reiter „Ich“ */
 .gatebtns .btn{flex:1 1 12rem}
 .settingsbtn{margin:0 0 .75rem}
+
+/* Paket 7: Probeaufgabe in der Erklärung, Zahlenkarten */
+.introprobe{margin:.5rem 0}
+.probefb{margin:.5rem 0}
+.probefb:empty{display:none}
+.probebtns{justify-content:center}
+.introprobe .keypad{margin-top:.75rem}
+.numpick{font:700 1.5rem var(--font-mono);min-height:4rem}
