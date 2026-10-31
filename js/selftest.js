@@ -209,9 +209,9 @@ function runSelfTests(){
   /* Lernpfad */
   const keepP={passed:S.passed,checked:S.checked,final:S.final,placed:S.placed,days:S.days,lab:S.lab,einstufung:S.einstufung,modus:S.modus,perfect:Object.assign({},S.perfect)};
   const freshP=()=>{S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;S.einstufung=null;S.modus={};S.perfect={};};
-  const R_=(id)=>pathState().find(r=>r.id===id);
+  const R_=(id)=>pathState(moduleById("veraendern")).find(r=>r.id===id);
   freshP();
-  t('Pfad: Start – nächstes Bauteil G01, Labor offen, G02/B01/Abschluss gesperrt',pathState().find(r=>r.next).id==='G01'&&R_('LAB').open&&R_('G02').locked&&R_('G02').blocker==='G01'&&R_('B01').locked&&R_('Q00').locked);
+  t('Pfad: Start – nächstes Bauteil G01, Labor offen, G02/B01/Abschluss gesperrt',pathState(moduleById("veraendern")).find(r=>r.next).id==='G01'&&R_('LAB').open&&R_('G02').locked&&R_('G02').blocker==='G01'&&R_('B01').locked&&R_('Q00').locked);
   S.passed['G01-L1']=true;
   t('Pfad: G01 fertig ⇒ G02 nächstes, freiwilliges B01 offen',R_('G02').next&&R_('B01').open&&!R_('B01').must);
   S.checked.G03=true;
@@ -221,7 +221,7 @@ function runSelfTests(){
   ['G04','G05'].forEach(x=>{S.passed[x+'-L1']=true;});
   t('Pfad: nach G05 sind Knobel-Bauteile und Abschluss offen',['U01','U02','U03','O02','Q00'].every(x=>R_(x).open)&&R_('Q00').next);
   S.final=true;
-  t('Pfad: alles fertig ⇒ kein nächstes Bauteil',!pathState().some(r=>r.next));
+  t('Pfad: alles fertig ⇒ kein nächstes Bauteil',!pathState(moduleById("veraendern")).some(r=>r.next));
   t('Pfad: 80 %-Regel (5→4, 8→7, 10→8)',needOf(5)===4&&needOf(8)===7&&needOf(10)===8&&needOf(15)===12);
   const rnd=(res,sk)=>({results:res.slice(),size:res.length,sk});
   freshP();
@@ -251,7 +251,7 @@ function runSelfTests(){
   t('Einstufung: nur 3 von 3 ist per Check frei (G01, G02, G04), „fast“ und „üben“ nicht',S.checked.G01&&S.checked.G02&&S.checked.G04&&!S.checked.T01&&!S.checked.G03&&!S.checked.G05&&S.placed&&!inf.final&&inf.ev.stufe==='fit');
   freshP();
   inf=onRoundEnd('Q00',1,rnd(qres([]),qplan));
-  t('Einstufung: 15 von 15 merkt alles als beherrscht, aber ohne echten Pfad keine Urkunde und nichts fertig',['G01','G02','T01','G03','G04','G05'].every(x=>S.checked[x])&&!inf.ready&&!inf.final&&!S.final&&!pathState().some(r=>r.must&&r.done));
+  t('Einstufung: 15 von 15 merkt alles als beherrscht, aber ohne echten Pfad keine Urkunde und nichts fertig',['G01','G02','T01','G03','G04','G05'].every(x=>S.checked[x])&&!inf.ready&&!inf.final&&!S.final&&!pathState(moduleById("veraendern")).some(r=>r.must&&r.done));
   freshP();
   inf=onRoundEnd('Q00',1,rnd(qres(qplan.map((_,i)=>i).filter(i=>i>=4)),qplan));
   t('Von vorn: höchstens 4 richtig ohne Fortschritt – nichts als beherrscht gemerkt, Pfad ohne Wahl',inf.ev.stufe==='start'&&Object.keys(S.checked).length===0&&S.placed&&!S.final&&lernenZustand(moduleById('veraendern'))==='pfad');
@@ -401,7 +401,7 @@ function runSelfTests(){
     }));
     t('Erklärungen: alle '+calcs+' Rechnungen stimmen (gleiche Brüche, Lücken lösbar, Teilbarkeit); falsche Rechnung ist wirklich falsch',calcs>=25&&calcBad===0&&wrongBad===0);
     t('Erklärungen: Bilder gültig (Teile, Färbung als gültige Indexliste, Farbe), höchstens ein Bild oder Ausprobieren je Schritt',steps.every(s=>{
-      if([s.fig,s.lab,s.tryit].filter(Boolean).length>1)return false;
+      if([s.fig,s.lab,s.tryit,s.nline,s.nltry].filter(Boolean).length>1)return false;
       const f=s.fig&&(Array.isArray(s.fig)?{mode:'strip',rows:s.fig}:s.fig);
       return !f||(['strip','circle'].includes(f.mode)&&f.rows.length>=1&&f.rows.length<=3&&f.rows.every(r=>r.n>=1&&r.d>r.n&&(!r.fill||validFill(r.fill,r.n,r.d))&&[undefined,'erw','kue'].includes(r.acc)));
     }));
@@ -454,6 +454,128 @@ function runSelfTests(){
   t('Zahlengerade: Beschriftung „n/d“ standardmäßig, leer = ohne',ng.marks[0].text==='3/4'&&ng.marks[1].text==='');
   const nlSvg=drawNumberLine({from:0,to:1,parts:3,marks:[{n:2,d:3}]});
   t('Zahlengerade: SVG hat Achse, 4 Teilstriche, 2 Zahlen (0, 1) und eine Marke',nlSvg.querySelectorAll('.nl-axis').length===1&&nlSvg.querySelectorAll('.nl-tick').length===4&&nlSvg.querySelectorAll('.nl-num').length===2&&nlSvg.querySelectorAll('.nl-mark').length===1&&nlSvg.querySelector('.nl-lab').textContent==='2/3');
+  /* Zahlenstrahl: Einteilung, Striche, Ausschnitt (Lupe) */
+  t('Einteilung: Nenner geht auf (3 in 12, 5 in 10), geht nicht auf (4 in 10, 3 in 8); gemeinsamer Nenner 3, 8 → 24 und 4, 6, 12 → 12',fitsDivision(3,12)&&fitsDivision(5,10)&&!fitsDivision(4,10)&&!fitsDivision(3,8)&&commonDenominator([3,8])===24&&commonDenominator([4,6,12])===12&&commonDenominator([5])===5);
+  t('Strichnummer: 3/5 bei 10 Teilen ist Strich 6, 1/2 bei 8 Teilen Strich 4, 1/3 bei 10 Teilen keiner',tickOf(3,5,10)===6&&tickOf(1,2,8)===4&&tickOf(1,3,10)===null&&tickOf(7,4,4)===7);
+  {
+    const wg=numberLineGeometry(0,1,24,[{i:6,text:'A'},{i:20},{n:1,d:4,text:''},{n:1,d:3}],{win:[4,12]});
+    t('Zahlengerade-Ausschnitt: Striche 4 bis 12 über die ganze Breite, nur Marken im Ausschnitt',wg.ticks.length===9&&Math.abs(wg.ticks[0].x-wg.pad)<1e-9&&Math.abs(wg.ticks[8].x-(wg.W-wg.pad))<1e-9&&wg.marks.length===3&&wg.marks[0].i===6&&wg.marks[1].i===6&&wg.marks[2].i===8&&wg.marks[0].text==='A'&&!wg.marks.some(m=>m.i===20));
+    const og=numberLineGeometry(0,2,6,[],{});
+    t('Strich zur x-Stelle: nächster Strich, begrenzt auf den Strahl',og.idxAt(og.pad)===0&&og.idxAt(og.W-og.pad)===12&&og.idxAt(og.W/2)===6&&og.idxAt(-50)===0&&og.idxAt(9999)===12&&Math.abs(og.sp-og.len/12)<1e-9);
+    const sg=numberLineGeometry(0,1,4,[],{strip:true});
+    t('Zahlengerade mit Streifen: mehr Höhe, Achse tiefer',sg.H>og.H&&sg.y>og.y&&sg.top===34);
+  }
+  {
+    let picked=null,sec=null;
+    const sv=drawNumberLine({from:0,to:1,parts:5,strip:{n:2,d:5},secs:{on:new Set([1]),onTap:i=>{sec=i;}},onPick:i=>{picked=i;},labels:'ends'});
+    t('Zahlengerade: Streifen mit 5 Zellen (2 gefärbt), 5 Abschnitte (1 gezählt), Tippfläche, nur Enden beschriftet',sv.querySelectorAll('.nl-cell').length===5&&sv.querySelectorAll('.nl-cell.on').length===2&&sv.querySelectorAll('.nl-sec').length===5&&sv.querySelectorAll('.nl-sec.on').length===1&&!!sv.querySelector('.nl-cap')&&sv.querySelectorAll('.nl-num').length===2);
+    sv.querySelectorAll('.nl-sec')[3].dispatchEvent(new Event('click'));
+    t('Zahlengerade: Tippen auf einen Abschnitt meldet seine Nummer',sec===3&&picked===null);
+    const lupe=drawNumberLine({from:0,to:1,parts:24,win:[8,16],frame:null,labels:'none'});
+    t('Zahlengerade: Lupe zeigt 9 Striche, ohne Beschriftung',lupe.querySelectorAll('.nl-tick').length===9&&lupe.querySelectorAll('.nl-num').length===0);
+    const ov=drawNumberLine({from:0,to:1,parts:24,frame:[8,16]});
+    t('Zahlengerade: Übersicht hat 25 Striche und einen Rahmen um das Fenster',ov.querySelectorAll('.nl-tick').length===25&&ov.querySelectorAll('.nl-frame').length===1);
+  }
+  /* Zahlenstrahl-Aufgaben Z01–Z08: Lösungsprobe, Fehlercodes, Zahlenraum, Zeichnen */
+  {
+    const nlOK=(t,d)=>validateTask(t,d).correct===true;
+    /* richtige Antwort (Entwurf) zu einer erzeugten Aufgabe */
+    const answer=(t)=>{
+      switch(t.type){
+        case 'Z01':return t.kind==='count'?{a:String(t.m)}:t.kind==='pick'?{sel:t.ans}:{ans:t.equal?'ja':'nein'};
+        case 'Z02':{const d={};t.idx.forEach((n,k)=>{d['r'+k+'.n']=String(n);d['r'+k+'.d']=String(t.m);});return d;}
+        case 'Z03':return {nl:{pts:t.idx.slice()}};
+        case 'Z04':return {nl:{parts:t.d,pts:t.fr.slice()}};
+        case 'Z05':{
+          const lands=nlLands(t.a,t.b,t.m),red=simplify(t.a,t.b)[1];
+          if(t.kind==='nofit')return {fit:'nein',nl:{parts:red,pts:[t.a*red/t.b]}};
+          return {fit:'ja',x:String(t.a*t.m/t.b),nl:{pts:[t.a*t.m/t.b]}};
+        }
+        case 'Z06':return {nl:{parts:t.l,pts:t.fr.map(f=>f[0]*t.l/f[1])}};
+        case 'Z07':{const d={};t.ns.forEach((n,j)=>{d['w'+j]={pts:t.level===1?[t.p]:t.ps.slice()};});return d;}
+        case 'Z08':
+          if(t.kind==='between')return {lo:String(Math.floor(t.n/t.d)),hi:String(Math.floor(t.n/t.d)+1)};
+          if(t.kind==='mixed')return {w:String(Math.floor(t.n/t.d)),'r.n':String(t.n%t.d),'r.d':String(t.d)};
+          return {sel:t.cards.map((c,i)=>c[0]%c[1]===0?i:-1).filter(i=>i>=0)};
+      }
+    };
+    let n=0,bad=[],range=[];
+    for(const id of ['Z01','Z02','Z03','Z04','Z05','Z06','Z07','Z08'])for(const lvl of [1,2])for(let i=0;i<120;i++){
+      const tk=generateTask(id,lvl);n++;
+      if(!nlOK(tk,answer(tk)))bad.push(id+'-L'+lvl+' '+JSON.stringify(tk));
+      const steps=(tk.u||1)*(tk.m||tk.d||tk.l||tk.q||1);
+      const lim=(id==='Z04'||id==='Z05'||id==='Z06')?NL_MAXSTEPS:12;
+      if(id!=='Z08'&&id!=='Z07'&&steps>lim)range.push(id+'-L'+lvl+' Striche '+steps);
+      if(id==='Z07'&&tk.ns.some(m=>m*tk.q>12))range.push('Z07 Striche');
+      if(id==='Z08'&&tk.kind!=='nat'&&tk.level===1&&tk.u*tk.d>12)range.push('Z08 Striche');
+      /* Beschreibung der Punkte: nie auf ganzen Zahlen, Werte im Strahl */
+      if(id==='Z02'||id==='Z03')if(tk.idx.some(x=>x%tk.m===0||x<=0||x>=tk.u*tk.m)||new Set(tk.idx).size!==tk.idx.length)range.push(id+' Punkte');
+      if(id==='Z06'&&(new Set(tk.fr.map(f=>redKey(f[0],f[1]))).size!==tk.fr.length||tk.fr.some(f=>f[0]%f[1]===0||f[0]>=tk.u*f[1])||tk.l>24))range.push('Z06 Brüche');
+    }
+    t('Zahlenstrahl: '+n+' erzeugte Aufgaben Z01–Z08 sind mit der richtigen Antwort lösbar',bad.length===0||(console.log(bad.slice(0,3)),false));
+    t('Zahlenstrahl: Zahlenraum (Z01–Z03 und Z07 höchstens 12 Striche, Z04–Z06 höchstens 24), Punkte nie auf ganzen Zahlen, Z06-Brüche verschieden',range.length===0||(console.log(range.slice(0,3)),false));
+    /* Fehlercodes mit Beispielaufgaben */
+    const v=(tk,d)=>validateTask(tk,d);
+    const z1={type:'Z01',level:1,kind:'count',u:1,m:5,avoid:[]},z1b={type:'Z01',level:2,kind:'count',u:2,m:3,avoid:[]};
+    t('Z01: Striche statt Abschnitte (6 statt 5) → ticks; ganzer Strahl (6 bei 0–2 mit 3 Teilen) → whole; leer ungültig',v(z1,{a:'6'}).errorCode==='ticks'&&v(z1b,{a:'6'}).errorCode==='whole'&&v(z1b,{a:'7'}).errorCode==='ticks'&&v(z1,{}).invalid===true&&v(z1,{a:'4'}).errorCode==='count');
+    const z1p={type:'Z01',level:1,kind:'pick',u:1,m:5,opts:[4,5,6],ans:1,trap:0,avoid:[]};
+    t('Z01: Strahl mit 5 Strichen (4 Abschnitte) → ticks, anderer Strahl → pick, richtiger → richtig',v(z1p,{sel:0}).errorCode==='ticks'&&v(z1p,{sel:2}).errorCode==='pick'&&v(z1p,{sel:1}).correct&&v(z1p,{}).invalid);
+    const z1e={type:'Z01',level:2,kind:'even',u:1,m:5,equal:false,k:2,shift:0.35,avoid:[]};
+    t('Z01: ungleiche Abschnitte: „Ja“ falsch (uneven), „Nein“ richtig',v(z1e,{ans:'ja'}).errorCode==='uneven'&&v(z1e,{ans:'nein'}).correct);
+    const z2={type:'Z02',level:2,u:2,m:4,idx:[3,5],avoid:[]};
+    t('Z02: richtig 3/4 und 5/4; 6/8 = Wert stimmt (form, weich); Nenner 5 → ticks; Nenner 8 bei 0–2 → whole',v(z2,{'r0.n':'3','r0.d':'4','r1.n':'5','r1.d':'4'}).correct&&v(z2,{'r0.n':'6','r0.d':'8','r1.n':'5','r1.d':'4'}).soft===true&&v(z2,{'r0.n':'3','r0.d':'5','r1.n':'5','r1.d':'4'}).errorCode==='ticks'&&v(z2,{'r0.n':'3','r0.d':'8','r1.n':'5','r1.d':'4'}).errorCode==='whole');
+    const z3={type:'Z03',level:1,u:1,m:5,idx:[3],avoid:[]};
+    t('Z03: Punkt 3 richtig, 4 oder 2 → ticks, 1 → pos, kein Punkt ungültig',v(z3,{nl:{pts:[3]}}).correct&&v(z3,{nl:{pts:[4]}}).errorCode==='ticks'&&v(z3,{nl:{pts:[2]}}).errorCode==='ticks'&&v(z3,{nl:{pts:[1]}}).errorCode==='pos'&&v(z3,{nl:{pts:[null]}}).invalid&&v(z3,{}).invalid);
+    const z4={type:'Z04',level:1,u:1,d:5,fr:[3],avoid:[]};
+    t('Z04: 5 Teile richtig, 10 Teile auch (Vielfaches), 4 Teile → ticks, 7 Teile → einteilung, 1 Teil ungültig, falscher Strich → pos',v(z4,{nl:{parts:5,pts:[3]}}).correct&&v(z4,{nl:{parts:10,pts:[6]}}).correct&&v(z4,{nl:{parts:4,pts:[3]}}).errorCode==='ticks'&&v(z4,{nl:{parts:7,pts:[3]}}).errorCode==='einteilung'&&v(z4,{nl:{parts:1,pts:[1]}}).invalid&&v(z4,{nl:{parts:5,pts:[1]}}).errorCode==='pos'&&v(z4,{nl:{parts:10,pts:[3]}}).errorCode==='pos');
+    const z5={type:'Z05',level:2,kind:'expand',a:3,b:5,m:10,k:2,avoid:[]},z5n={type:'Z05',level:2,kind:'nofit',a:1,b:3,m:10,avoid:[]},z5r={type:'Z05',level:2,kind:'reduce',a:6,b:8,m:4,k:2,avoid:[]};
+    t('Z05: Entscheidung (fit) zuerst; 3/5 = 6/10 und Punkt 6; Zähler unverändert → onlyDen; falsche Rechnung → calc; kürzen 6/8 = 3/4',v(z5,{x:'6',nl:{pts:[6]}}).invalid===true&&v(z5,{fit:'ja',x:'6',nl:{pts:[6]}}).correct&&v(z5,{fit:'nein',x:'6',nl:{pts:[6]}}).errorCode==='fit'&&v(z5,{fit:'ja',x:'3',nl:{pts:[6]}}).errorCode==='onlyDen'&&v(z5,{fit:'ja',x:'8',nl:{pts:[6]}}).errorCode==='calc'&&v(z5,{fit:'ja',x:'6',nl:{pts:[5]}}).errorCode==='ticks'&&v(z5r,{fit:'ja',x:'3',nl:{pts:[3]}}).correct);
+    t('Z05: 1/3 passt nicht auf Zehntel: „Ja“ falsch, Einteilung 10 bleibt falsch (einteilung), 12 oder 6 mit Punkt richtig',v(z5n,{fit:'ja',nl:{parts:10,pts:[3]}}).errorCode==='fit'&&v(z5n,{fit:'nein',nl:{parts:10,pts:[3]}}).errorCode==='einteilung'&&v(z5n,{fit:'nein',nl:{parts:12,pts:[4]}}).correct&&v(z5n,{fit:'nein',nl:{parts:6,pts:[2]}}).correct);
+    const z6={type:'Z06',level:1,u:1,fr:[[1,2],[3,4]],l:4,avoid:[]};
+    t('Z06: 4 und 8 Teile richtig, 6 Teile → einteilung (4 geht nicht auf), 3 Teile → einteilung',v(z6,{nl:{parts:4,pts:[2,3]}}).correct&&v(z6,{nl:{parts:8,pts:[4,6]}}).correct&&v(z6,{nl:{parts:6,pts:[3,4]}}).errorCode==='einteilung'&&v(z6,{nl:{parts:1,pts:[0,0]}}).invalid);
+    const z7={type:'Z07',level:1,q:2,p:1,ns:[1,2,4],avoid:[]};
+    t('Z07: 1/2 auf Strahlen bis 1, 2, 4 an Strich 1; Mitte des ganzen Strahls (Strich 2 bei Länge 2) → whole',v(z7,{w0:{pts:[1]},w1:{pts:[1]},w2:{pts:[1]}}).correct&&v(z7,{w0:{pts:[1]},w1:{pts:[2]},w2:{pts:[1]}}).errorCode==='whole'&&v(z7,{w0:{pts:[1]},w1:{pts:[1]}}).invalid);
+    const z8={type:'Z08',level:1,kind:'mixed',u:2,d:4,n:7,avoid:[]},z8b={type:'Z08',level:1,kind:'between',u:2,d:4,n:7,avoid:[]};
+    t('Z08: 7/4 = 1 3/4 richtig, falsche Ganze → whole, falscher Rest → rest; zwischen 1 und 2 richtig, 2 und 3 falsch',v(z8,{w:'1','r.n':'3','r.d':'4'}).correct&&v(z8,{w:'2','r.n':'3','r.d':'4'}).errorCode==='whole'&&v(z8,{w:'1','r.n':'3','r.d':'5'}).errorCode==='rest'&&v(z8b,{lo:'1',hi:'2'}).correct&&!v(z8b,{lo:'2',hi:'3'}).correct);
+    /* Zeichnen: jede Aufgabe baut ihre Ansicht ohne Fehler auf (auch mit Lösung) */
+    let drawn=0,drawBad=[];
+    for(const id of ['Z01','Z02','Z03','Z04','Z05','Z06','Z07','Z08'])for(const lvl of [1,2])for(let i=0;i<25;i++){
+      try{
+        const tk=generateTask(id,lvl),host=el('div'),st=newState(tk);
+        const c=mountTask(host,st,{save(){},done(){}});
+        tk&&TASKS[id].solution(tk).length;TASKS[id].hints(tk).length>=2||drawBad.push(id+' Tipps');
+        for(let h=0;h<3;h++)c.hint();
+        c.solution();drawn++;
+      }catch(e){drawBad.push(id+'-L'+lvl+': '+e.message);}
+    }
+    t('Zahlenstrahl: '+drawn+' Ansichten (Aufgabe, Tipps, Musterlösung) bauen ohne Fehler auf',drawBad.length===0||(console.log(drawBad.slice(0,3)),false));
+  }
+  /* Thema Zahlenstrahl im Lernpfad (zwei Themen): eigener Pfad ohne Eingangstest, Pfad und Urkunde der Brüche-Werkstatt bleiben unabhängig */
+  {
+    const zs=moduleById('zahlenstrahl'),vm=moduleById('veraendern');
+    const snap={passed:S.passed,checked:S.checked,final:S.final,placed:S.placed,days:S.days,lab:S.lab,einstufung:S.einstufung,modus:S.modus,perfect:S.perfect};
+    const fresh=()=>{S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;S.einstufung=null;S.modus={};S.perfect={};};
+    fresh();
+    t('Thema Zahlenstrahl: aktiv, ohne Eingangstest, nicht im Rang, acht Pflicht-Bauteile Z01–Z08, Pfad ohne Wahl',zs.status==='aktiv'&&!zs.quickcheck&&!zs.rank&&zs.path.length===8&&zs.path.every(p=>p.must&&p.id===('Z0'+(zs.path.indexOf(p)+1)))&&lernenZustand(zs)==='pfad'&&PRACTICE_ORDER.includes('Z08')&&!rankPractice().includes('Z01')&&!rankPath().some(p=>p.id==='Z01')&&moduleOf('Z05').id==='zahlenstrahl'&&moduleOf('Eintragen').id==='zahlenstrahl');
+    const rows=()=>pathState(zs);
+    t('Pfad Zahlenstrahl: Start bei Z01, Z02 gesperrt (wartet auf Z01), alles andere gesperrt',rows().find(r=>r.next).id==='Z01'&&rows().find(r=>r.id==='Z02').locked&&rows().find(r=>r.id==='Z02').blocker==='Z01'&&rows().find(r=>r.id==='Z08').locked);
+    onRoundEnd('Z01',1,{results:['f','f','f','l','x'],size:5});
+    t('Pfad Zahlenstrahl: Z01 mit 4 von 5 bestanden ⇒ gespeichert, Z02 nächstes',S.passed['Z01-L1']===true&&rows().find(r=>r.next).id==='Z02'&&stationDone('Z01'));
+    t('Eingangstest von „Brüche verändern“ bleibt Pflicht, auch wenn Zahlenstrahl-Bauteile bestanden sind; erst Bauteile dieses Themas zählen als Einstieg',lernenZustand(vm)==='gate'&&(S.passed['G01-L1']=true,lernenZustand(vm)==='wahl'));
+    fresh();
+    ['Z01','Z02','Z03','Z04','Z05','Z06','Z07','Z08'].forEach(x=>{S.passed[x+'-L1']=true;});
+    t('Pfad Zahlenstrahl: alle acht bestanden ⇒ kein nächstes Bauteil, ohne Urkunde (S.final unberührt)',!rows().some(r=>r.next)&&rows().every(r=>r.done)&&!S.final);
+    t('Pfad Brüche verändern: bestandene Zahlenstrahl-Bauteile ändern dort nichts (Start weiter bei G01, nichts fertig)',pathState(vm).find(r=>r.next).id==='G01'&&!pathState(vm).some(r=>r.done));
+    /* Erklärungen der Zahlenstrahl-Bauteile: Strahlen und Ausprobieren gültig */
+    const zsSteps=[].concat(...['Z01','Z02','Z03','Z04','Z05','Z06','Z07','Z08'].map(id=>INTRO[id].steps));
+    t('Erklärungen Zahlenstrahl: jeder Strahl und jedes Ausprobieren ist gültig (Teile, Marken im Strahl, Strichzahl, passende und unpassende Einteilung)',zsSteps.every(s=>{
+      const lines=s.nline?[].concat(s.nline):[];
+      const ok=lines.every(l=>l.to>(l.from||0)&&Number.isInteger(l.parts)&&l.parts>=1&&(l.to-(l.from||0))*l.parts<=12&&(l.marks||[]).every(m=>m.i!=null?m.i>=0&&m.i<=(l.to-(l.from||0))*l.parts:m.n/m.d<=l.to)&&(!l.strip||(l.strip.d>=1&&l.strip.n<=l.strip.d)));
+      const y=s.nltry,tryOK=!y||(y.ks.length>=2&&y.ks.length<=4&&y.ks.every(k=>k>=1&&y.to*k<=12)&&(!y.mark||(y.ks.some(k=>fitsDivision(y.mark.d,k))&&y.ks.some(k=>!fitsDivision(y.mark.d,k)))));
+      return ok&&tryOK;
+    })&&zsSteps.filter(s=>s.nltry).length===3);
+    Object.assign(S,snap);
+  }
   /* Themen-Registry */
   t('Registry: jede Aufgabe, Gruppe und jedes Bauteil eines aktiven Themas gibt es',activeModules().every(m=>(m.practice||[]).every(id=>TASKS[id])&&Object.values(m.groups||{}).every(g=>g.ids.every(id=>id==='LAB'||TASKS[id]))&&(m.path||[]).every(p=>p.id==='LAB'||TASKS[p.id])));
   t('Registry: geplante Themen haben keine Aufgaben, keine Gruppen, keinen Lernpfad',plannedModules().length>0&&plannedModules().every(m=>!m.practice&&!m.groups&&!m.path));

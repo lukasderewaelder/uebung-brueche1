@@ -108,31 +108,89 @@ function pickMode(d,R,max){
 }
 
 
-/* ---------- Zahlengerade (Grundlage für spätere Themen; noch in keiner Ansicht eingebunden) ----------
+/* ---------- Zahlengerade (Zahlenstrahl) ----------
+   Striche sind ganze Zahlen i = 0 … steps mit steps = (to − from) · parts; Strich i liegt bei from + i/parts.
    numberLineGeometry rechnet nur (ohne DOM, testbar); drawNumberLine zeichnet daraus eine SVG.
    from, to: ganze Zahlen (to > from); parts: Teile je Ganzem (Nenner der Teilstriche);
-   marks: [{n,d,text}] – Stelle n/d, text optional (Standard „n/d“, '' = ohne Beschriftung). */
-function numberLineGeometry(from,to,parts,marks){
+   marks: [{n,d,text,cls}] Stelle n/d (Beschriftung Standard „n/d“) oder [{i,text,cls}] Strich i (Beschriftung Standard leer);
+   text '' = ohne Beschriftung.
+   o.win=[i0,i1]: nur diesen Ausschnitt über die ganze Breite (Lupe); o.strip: Platz für einen Bruchstreifen darüber. */
+function numberLineGeometry(from,to,parts,marks,o={}){
   const W=362,pad=18,len=W-2*pad,steps=(to-from)*parts;
+  const i0=o.win?o.win[0]:0,i1=o.win?o.win[1]:steps,span=i1-i0,top=o.strip?34:0;
+  const xAt=(i)=>pad+(i-i0)/span*len;
   const ticks=[];
-  for(let i=0;i<=steps;i++)ticks.push({x:pad+i/steps*len,major:i%parts===0,whole:from+i/parts,n:from*parts+i,d:parts});
-  const pts=(marks||[]).filter(m=>m.d>0&&m.n>=from*m.d&&m.n<=to*m.d)
-    .map(m=>({x:pad+(m.n/m.d-from)/(to-from)*len,n:m.n,d:m.d,text:m.text==null?m.n+'/'+m.d:m.text}));
-  return {W,H:70,pad,y:44,ticks,marks:pts};
+  for(let i=i0;i<=i1;i++)ticks.push({i,x:xAt(i),major:i%parts===0,whole:from+i/parts,n:from*parts+i,d:parts});
+  const pts=(marks||[]).map(m=>{
+    if(m.i!=null)return m.i>=i0&&m.i<=i1?{i:m.i,x:xAt(m.i),n:from*parts+m.i,d:parts,text:m.text==null?'':m.text,cls:m.cls}:null;
+    if(!(m.d>0)||m.n<from*m.d||m.n>to*m.d)return null;
+    const p=(m.n/m.d-from)*parts;
+    return p>=i0&&p<=i1?{i:Number.isInteger(p)?p:null,x:xAt(p),n:m.n,d:m.d,text:m.text==null?m.n+'/'+m.d:m.text,cls:m.cls}:null;
+  }).filter(Boolean);
+  /* idxAt: nächster Strich (im Ausschnitt) zu einer x-Stelle der Zeichnung */
+  return {W,H:70+top,pad,len,y:44+top,top,steps,i0,i1,span,sp:len/span,xAt,idxAt:(x)=>Math.max(i0,Math.min(i1,Math.round(i0+(x-pad)/len*span))),ticks,marks:pts};
 }
+/* Zeichnung. Weitere Angaben:
+   labels: 'wholes' (Standard) | 'ends' (nur from und to) | 'none' | Liste ganzer Zahlen; wholes:false wie 'none'
+   strip: {n,d} Bruchstreifen (n von d gefärbt) über der Strecke von from bis from + 1
+   secs: {on:Set,onTap(i)} die Abschnitte als Flächen (antippbar, gefärbt = gezählt)
+   frame: [a,b] Rahmen um die Striche a bis b (Fenster der Lupe in der Übersicht)
+   onPick(i): Tippen auf den Strahl wählt den nächsten Strich; onNudge(±1): Pfeiltasten (Strahl ist dann fokussierbar)
+   halfLong: bei geraden Teilungen ist der Strich in der Mitte jedes Ganzen länger */
 function drawNumberLine(opts={}){
   const from=opts.from==null?0:opts.from,to=opts.to==null?1:opts.to,parts=opts.parts||2;
-  const g=numberLineGeometry(from,to,parts,opts.marks);
-  const svg=S_('svg',{viewBox:`0 0 ${g.W} ${g.H}`,class:'fracsvg nline',role:'img','aria-label':opts.label||`Zahlengerade von ${from} bis ${to}`});
+  const g=numberLineGeometry(from,to,parts,opts.marks,{win:opts.win,strip:opts.strip&&!opts.win});
+  const svg=S_('svg',{viewBox:`0 0 ${g.W} ${g.H}`,class:'fracsvg nline',role:opts.onPick?'group':'img','aria-label':opts.label||`Zahlengerade von ${from} bis ${to}`});
   svg.style.maxWidth=((opts.maxW||460)/16).toFixed(3)+'rem';
-  svg.append(S_('line',{class:'nl-axis',x1:g.pad,y1:g.y,x2:g.W-g.pad,y2:g.y}));
+  const y=g.y,lab=opts.wholes===false?'none':(opts.labels==null?'wholes':opts.labels);
+  const labelled=(t)=>t.major&&lab!=='none'&&(lab==='ends'?(t.whole===from||t.whole===to):Array.isArray(lab)?lab.includes(t.whole):true);
+  if(opts.strip&&!opts.win){
+    const s=opts.strip,x0=g.xAt(0),w=g.xAt(parts)-x0;
+    for(let k=0;k<s.d;k++)svg.append(S_('rect',{class:'nl-cell'+(k<s.n?' on':''),x:x0+w*k/s.d,y:4,width:w/s.d,height:24}));
+  }
+  if(opts.frame){
+    const a=g.xAt(opts.frame[0]),b=g.xAt(opts.frame[1]);
+    svg.append(S_('rect',{class:'nl-frame',x:a,y:y-16,width:b-a,height:34}));
+  }
+  if(opts.secs){
+    for(let i=g.i0;i<g.i1;i++){
+      const r=S_('rect',{class:'nl-sec'+(opts.secs.on&&opts.secs.on.has(i)?' on':''),x:g.xAt(i),y:y-30,width:g.sp,height:24});
+      if(opts.secs.onTap){
+        r.setAttribute('role','button');r.setAttribute('tabindex','0');r.setAttribute('aria-label','Abschnitt '+(i+1));
+        r.addEventListener('click',()=>opts.secs.onTap(i));
+        r.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();opts.secs.onTap(i);}});
+      }
+      svg.append(r);
+    }
+  }
+  svg.append(S_('line',{class:'nl-axis',x1:g.pad,y1:y,x2:g.W-g.pad,y2:y}));
   g.ticks.forEach(t=>{
-    svg.append(S_('line',{class:'nl-tick'+(t.major?' major':''),x1:t.x,x2:t.x,y1:g.y-(t.major?9:5),y2:g.y+(t.major?9:5)}));
-    if(t.major&&opts.wholes!==false){const tx=S_('text',{class:'nl-num',x:t.x,y:g.y+24,'text-anchor':'middle'});tx.textContent=String(t.whole);svg.append(tx);}
+    const half=opts.halfLong&&parts%2===0&&!t.major&&t.i%(parts/2)===0,h=t.major?9:half?7:5;
+    svg.append(S_('line',{class:'nl-tick'+(t.major?' major':''),x1:t.x,x2:t.x,y1:y-h,y2:y+h}));
+    if(labelled(t)){const tx=S_('text',{class:'nl-num',x:t.x,y:y+24,'text-anchor':'middle'});tx.textContent=String(t.whole);svg.append(tx);}
   });
   g.marks.forEach(m=>{
-    svg.append(S_('circle',{class:'nl-mark',cx:m.x,cy:g.y,r:5}));
-    if(m.text){const tx=S_('text',{class:'nl-lab',x:m.x,y:g.y-16,'text-anchor':'middle'});tx.textContent=m.text;svg.append(tx);}
+    svg.append(S_('circle',{class:'nl-mark'+(m.cls?' '+m.cls:''),cx:m.x,cy:y,r:6}));
+    if(m.text){const tx=S_('text',{class:'nl-lab',x:m.x,y:y-16,'text-anchor':'middle'});tx.textContent=m.text;svg.append(tx);}
   });
+  if(opts.onPick){
+    const cap=S_('rect',{class:'nl-cap',x:0,y:g.top,width:g.W,height:g.H-g.top});
+    cap.addEventListener('click',e=>{
+      const r=svg.getBoundingClientRect();if(!r.width)return;
+      opts.onPick(g.idxAt((e.clientX-r.left)/r.width*g.W));
+    });
+    svg.append(cap);
+    svg.classList.add('interactive');
+  }
+  if(opts.onNudge){
+    svg.setAttribute('tabindex','0');svg.setAttribute('role','slider');
+    svg.setAttribute('aria-valuemin',String(g.i0));svg.setAttribute('aria-valuemax',String(g.i1));
+    if(opts.cur!=null)svg.setAttribute('aria-valuenow',String(opts.cur));
+    svg.addEventListener('keydown',e=>{
+      if(e.key==='ArrowLeft'||e.key==='ArrowDown'){e.preventDefault();opts.onNudge(-1);}
+      else if(e.key==='ArrowRight'||e.key==='ArrowUp'){e.preventDefault();opts.onNudge(1);}
+    });
+  }
+  svg._g=g;
   return svg;
 }

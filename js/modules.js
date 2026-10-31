@@ -35,7 +35,22 @@ const MODULES=[
     ],
     pathGroups:{Entdecken:'lupe',Erweitern:'aus','Kürzen':'ein',Mischen:'zahnrad',Knobeln:'zirkel',Abschluss:'plakette'}
   },
-  {id:'zahlenstrahl',name:'Brüche am Zahlenstrahl',desc:'Brüche einordnen und ablesen.',icon:'lineal',status:'geplant'},
+  {id:'zahlenstrahl',name:'Brüche am Zahlenstrahl',desc:'Brüche ablesen, eintragen und passend einteilen.',icon:'lineal',status:'aktiv',rank:false,quickcheck:false,
+    groups:{
+      'Einteilung':{pat:'dots',icon:'lupe',text:'Abschnitte und Einteilungen erkennen',ids:['Z01']},
+      'Eintragen':{pat:'dash',icon:'lineal',text:'Ablesen, eintragen, Einteilung und Bruch anpassen',ids:['Z02','Z03','Z04','Z05','Z06']},
+      'Einheit':{pat:'hatch',icon:'wechsel',text:'Ein Ganzes erkennen und Brüche über 1',ids:['Z07','Z08']}
+    },
+    practice:['Z01','Z02','Z03','Z04','Z05','Z06','Z07','Z08'],
+    /* Lernpfad: alle Bauteile sind Pflicht (zwei Wege: Z04 Einteilung anpassen, Z05 Bruch anpassen) */
+    path:[
+      {id:'Z01',grp:'Einteilung',must:true},
+      {id:'Z02',grp:'Eintragen',must:true},{id:'Z03',grp:'Eintragen',must:true},
+      {id:'Z04',grp:'Zwei Wege',must:true},{id:'Z05',grp:'Zwei Wege',must:true},{id:'Z06',grp:'Zwei Wege',must:true},
+      {id:'Z07',grp:'Weiter',must:true},{id:'Z08',grp:'Weiter',must:true}
+    ],
+    pathGroups:{Einteilung:'lupe',Eintragen:'lineal','Zwei Wege':'wechsel',Weiter:'aus'}
+  },
   {id:'vergleichen',name:'Brüche vergleichen',desc:'Brüche vergleichen und ordnen.',icon:'wechsel',status:'geplant'},
   {id:'rechnen',name:'Mit Brüchen rechnen',desc:'Addieren, subtrahieren, multiplizieren, dividieren.',icon:'zahnrad',status:'geplant'}
 ];

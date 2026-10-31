@@ -82,6 +82,33 @@ const NOTES={
       el('div',{class:'ex'},strong('Beispiel: '),eq(mixed(w,n,d),'=',frac(`${w} · ${d} + ${n}`,d),'=',frac(w*d+n,d))),
       el('div',{class:'ex'},el('span',null,w+' + '),frac(n,d)),
       el('div',{class:'figrow'},figs)
+    ];}},
+  M8:{title:'Brüche am Zahlenstrahl',build(avoid){
+    return [
+      el('p',null,'Auf dem Zahlenstrahl ist ',strong('ein Ganzes die Strecke von 0 bis 1'),'. Jedes weitere Ganze ist genauso lang.'),
+      el('p',null,'Der ',strong('Nenner'),' sagt, in wie viele gleich große ',strong('Abschnitte'),' ein Ganzes geteilt ist. Der ',strong('Zähler'),' sagt, wie viele Abschnitte du von 0 aus bis zum Punkt zählst.'),
+      el('div',{class:'ex'},strong('Beispiel: '),frac(3,5),': ein Ganzes hat 5 Abschnitte, der Punkt liegt nach 3 Abschnitten.'),
+      el('div',{class:'figrow'},drawNumberLine({from:0,to:1,parts:5,marks:[{n:3,d:5}],strip:{n:3,d:5},maxW:360,label:'Drei Fünftel am Zahlenstrahl'})),
+      el('p',null,strong('Merke: '),'Zähle die Abschnitte, nicht die Striche. 5 Abschnitte haben 6 Striche.')
+    ];}},
+  M9:{title:'Zwei Wege zum Punkt',build(avoid){
+    return [
+      el('p',null,'So trägst du einen Bruch ein, wenn die Einteilung nicht zum Nenner passt. Es gibt zwei Wege, und beide führen zum selben Punkt.'),
+      el('p',null,strong('Weg B: Einteilung anpassen. '),'Teile den Strahl so ein, wie der Nenner sagt, und zähle dann den Zähler ab.'),
+      el('div',{class:'ex'},frac(3,5),': ein Ganzes in 5 Abschnitte teilen, 3 Abschnitte zählen.'),
+      el('div',{class:'figrow'},drawNumberLine({from:0,to:1,parts:5,marks:[{n:3,d:5}],maxW:360,label:'Drei Fünftel mit fünf Abschnitten'})),
+      el('p',null,strong('Weg A: Bruch anpassen. '),'Erweitere oder kürze den Bruch auf den Nenner der vorhandenen Einteilung.'),
+      el('div',{class:'ex'},eq(frac(3,5),'=',frac('3 · 2','5 · 2'),'=',frac(6,10))),
+      el('div',{class:'figrow'},drawNumberLine({from:0,to:1,parts:10,marks:[{n:6,d:10}],maxW:360,label:'Sechs Zehntel mit zehn Abschnitten'})),
+      el('p',null,strong('Merke: '),'Ein feineres Raster zeigt denselben Punkt: ',frac(3,5),' = ',frac(6,10),'. Erweitern heißt feiner teilen, Kürzen heißt gröber teilen.')
+    ];}},
+  M10:{title:'Die passende Einteilung',build(avoid){
+    return [
+      el('p',null,'Ein Bruch liegt ',strong('genau auf einem Strich'),', wenn sein Nenner in die Zahl der Teile je Ganzem ',strong('aufgeht'),'.'),
+      el('div',{class:'ex'},frac(1,3),' passt bei 3, 6, 9, 12 Teilen, aber nicht bei 10 Teilen.'),
+      el('p',null,'Für ',strong('mehrere Brüche'),' brauchst du eine Einteilung, in die alle Nenner aufgehen: ein gemeinsames Vielfaches. Das kleinste ist am einfachsten.'),
+      el('div',{class:'ex'},strong('Beispiel: '),frac(1,2),', ',frac(3,4),', ',frac(5,6),': 2, 4 und 6 gehen in 12 auf. Also 12 Teile je Ganzem.'),
+      el('div',{class:'figrow'},drawNumberLine({from:0,to:1,parts:12,marks:[{n:1,d:2,text:'A'},{n:3,d:4,text:'B'},{n:5,d:6,text:'C'}],maxW:360,label:'Brüche mit zwölf Abschnitten'}))
     ];}}
 };
 /* noteFor(task): Merkkästen zur Aufgabe, ohne die Aufgabe zu lösen */

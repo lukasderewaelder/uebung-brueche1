@@ -161,6 +161,114 @@ const INTRO={
       say:['Am Ende siehst du, was du schon kannst.','Danach wählst du: dem Pfad folgen oder selbst aussuchen.','Weißt du etwas nicht, rate bitte nicht wild.']},
     {h:'Der Abschlusscheck',
       say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat auch '+TASKS.Q00.size+' Fragen.','Ab '+needOf(TASKS.Q00.size)+' richtigen Antworten gibt es die Urkunde.']}
+  ]},
+  /* Zahlenstrahl: nline = ein Strahl oder eine Liste von Strahlen {from,to,parts,marks,labels,strip,secs}; nltry = Einteilung ausprobieren {to,ks,mark} */
+  Z01:{title:'Einteilung erkennen',steps:[
+    {h:'Striche und Abschnitte',
+      say:['Ein Zahlenstrahl hat Striche.','Zwischen zwei Strichen liegt ein **Abschnitt**.','Wir zählen immer die Abschnitte, nicht die Striche.'],
+      nline:{from:0,to:1,parts:5,strip:{n:0,d:5},secs:true,labels:'wholes'}},
+    {h:'Zähle selbst',
+      say:['Tippe auf eine Zahl.','Der Strahl wird anders eingeteilt.','Zähle die Abschnitte und die Striche.'],
+      nltry:{to:1,ks:[2,3,4,5]}},
+    {h:'Alle Abschnitte gleich breit',
+      say:['Auf einem Zahlenstrahl sind alle Abschnitte gleich breit.','Sonst kann man keinen Bruch ablesen.','Schau auch bei vielen Strichen genau hin.'],
+      nline:{from:0,to:1,parts:6,labels:'wholes'}},
+    {h:'Gezählt wird ein Ganzes',
+      say:['Ein Ganzes ist die Strecke von 0 bis 1.','Bei einem längeren Strahl zählst du nur ein Ganzes.','Das Ergebnis wird später der **Nenner**.'],
+      nline:{from:0,to:2,parts:3,labels:'wholes'}}
+  ]},
+  Z02:{title:'Brüche ablesen',steps:[
+    {h:'Der Nenner',
+      say:['Hier ist ein Ganzes in 4 Abschnitte geteilt.','Der **Nenner** ist also 4.'],
+      nline:{from:0,to:1,parts:4,marks:[{n:3,d:4,text:'A'}],labels:'wholes'}},
+    {h:'Der Zähler',
+      say:['Zähle von 0 aus bis zum Punkt A.','Es sind 3 Abschnitte.','Der **Zähler** ist also 3.'],
+      nline:{from:0,to:1,parts:4,marks:[{n:3,d:4,text:'A'}],strip:{n:3,d:4},labels:'wholes'},calc:[[[3,4]]]},
+    {h:'Hinter der 1',
+      say:['Der Punkt kann auch hinter der 1 liegen.','Zähle dann einfach ab 0 weiter.','Ein Ganzes hat weiterhin 4 Abschnitte.'],
+      nline:{from:0,to:2,parts:4,marks:[{n:5,d:4,text:'B'}],labels:'wholes'},calc:[[[5,4]]]},
+    {h:'So antwortest du',
+      say:['Schreibe Zähler und Nenner in die Felder.','Dann tippe auf **Prüfen**.']}
+  ]},
+  Z03:{title:'Brüche eintragen',steps:[
+    {h:'Der Strahl ist eingeteilt',
+      say:['Der Strahl hat schon Striche.','Ein Ganzes ist in gleich große Abschnitte geteilt.'],
+      nline:{from:0,to:1,parts:5,labels:'wholes'}},
+    {h:'Punkt setzen',
+      say:['Tippe auf den Strich, der zum Bruch gehört.','Oder nutze die Pfeile **◀** und **▶**.','Der Punkt springt von Strich zu Strich.'],
+      nline:{from:0,to:1,parts:5,marks:[{i:2}],labels:'wholes'}},
+    {h:'Abschnitte zählen',
+      say:['Für {3|5} zählst du 3 Abschnitte ab 0.','Der Nenner 5 sagt, wie viele Abschnitte ein Ganzes hat.'],
+      nline:{from:0,to:1,parts:5,marks:[{n:3,d:5,text:'3/5'}],strip:{n:3,d:5},labels:'wholes'}},
+    {h:'Mehrere Punkte',
+      say:['Manchmal gibt es mehrere Punkte: A, B und C.','Wähle zuerst den Buchstaben.','Tippe dann auf den Strahl und auf **Prüfen**.']}
+  ]},
+  Z04:{title:'Einteilung anpassen',steps:[
+    {h:'Der Strahl ist noch leer',
+      say:['Hier gibt es nur die Striche bei 0 und 1.','Du teilst den Strahl selbst ein.'],
+      nline:{from:0,to:1,parts:1,labels:'wholes'}},
+    {h:'Der Nenner sagt es',
+      say:['Für {3|5} brauchst du 5 Abschnitte.','Stelle bei **Teile je Ganzem** die Zahl 5 ein.','Probiere es hier aus.'],
+      nltry:{to:1,ks:[2,3,5,10],mark:{n:3,d:5}}},
+    {h:'Dann zählen',
+      say:['Zähle 3 Abschnitte von 0 aus.','Tippe auf den Strich oder nutze **◀** und **▶**.'],
+      nline:{from:0,to:1,parts:5,marks:[{n:3,d:5,text:'3/5'}],labels:'wholes'}},
+    {h:'Feiner geht auch',
+      say:['Mit 10 Teilen liegt {3|5} auch auf einem Strich.','Es ist der sechste Strich: {6|10}.','Jede Einteilung, in die der Nenner aufgeht, passt.'],
+      nline:{from:0,to:1,parts:10,marks:[{n:6,d:10,text:'6/10'}],labels:'wholes'}}
+  ]},
+  Z05:{title:'Bruch anpassen',steps:[
+    {h:'Der Strahl ist schon eingeteilt',
+      say:['Hier hat ein Ganzes 10 Abschnitte.','Du sollst {3|5} eintragen.','Der Nenner 5 passt nicht zur Einteilung.'],
+      nline:{from:0,to:1,parts:10,strip:{n:3,d:5},labels:'wholes'}},
+    {h:'Den Bruch umrechnen',
+      say:['Erweitere den Bruch auf den Nenner 10.','Multipliziere Zähler und Nenner mit 2.','Dann zählst du 6 Abschnitte von 0 aus.'],
+      calc:[[[3,5],'=',[3,5,'x',2],'=',[6,10]]]},
+    {h:'Kürzen geht auch',
+      say:['Manchmal musst du kürzen.','Teile Zähler und Nenner durch dieselbe Zahl.','Dann passt der Bruch zur Einteilung.'],
+      calc:[[[6,8],'=',[6,8,'d',2],'=',[3,4]]]},
+    {h:'Passt die Einteilung?',
+      say:['Nicht jeder Bruch passt zu jeder Einteilung.','{1|3} liegt nie genau auf einem Zehntel-Strich.','Dann teile den Strahl feiner. Probiere es aus.'],
+      nltry:{to:1,ks:[10,6,9,12],mark:{n:1,d:3}}}
+  ]},
+  Z06:{title:'Mehrere Brüche eintragen',steps:[
+    {h:'Mehrere Brüche, ein Strahl',
+      say:['Du trägst mehrere Brüche auf einem Strahl ein.','Dafür brauchst du eine Einteilung für alle.']},
+    {h:'Jeder Nenner muss aufgehen',
+      say:['Nimm {1|2}, {3|4} und {5|6}.','Die Nenner 2, 4 und 6 gehen alle in 12 auf.','Also teilst du ein Ganzes in 12 Abschnitte.'],
+      nline:{from:0,to:1,parts:12,marks:[{n:1,d:2,text:'A'},{n:3,d:4,text:'B'},{n:5,d:6,text:'C'}],labels:'wholes'}},
+    {h:'Das kleinste gemeinsame Vielfache',
+      say:['Je kleiner die Einteilung, desto einfacher.','Suche das kleinste Vielfache aller Nenner.','Bei 2, 4 und 6 ist es 12.']},
+    {h:'So gehst du vor',
+      say:['Stelle zuerst die Teile je Ganzem ein.','Wähle A, B oder C und tippe auf den Strahl.','Dann tippe auf **Prüfen**.']}
+  ]},
+  Z07:{title:'Einheit lesen',steps:[
+    {h:'Ein Ganzes',
+      say:['Ein Ganzes geht von 0 bis 1.','Das gilt auf jedem Strahl.'],
+      nline:{from:0,to:2,parts:2,labels:[0,1,2]}},
+    {h:'Gleich lange Ganze',
+      say:['Jedes weitere Ganze ist genauso lang.','Die langen Striche zeigen die ganzen Zahlen.'],
+      nline:{from:0,to:3,parts:2,labels:'ends'}},
+    {h:'Derselbe Bruch',
+      say:['{1|2} liegt immer in der Mitte zwischen 0 und 1.','Auf einem langen Strahl liegt es nicht in der Strahlmitte.'],
+      nline:[{from:0,to:1,parts:2,marks:[{n:1,d:2,text:'1/2'}],labels:'ends'},{from:0,to:2,parts:2,marks:[{n:1,d:2,text:'1/2'}],labels:'ends'}]},
+    {h:'Nur 0 und 1',
+      say:['Manchmal sind nur 0 und 1 beschriftet.','Die 1 zeigt dir, wie lang ein Ganzes ist.'],
+      nline:{from:0,to:3,parts:2,labels:[0,1]}}
+  ]},
+  Z08:{title:'Größer als 1',steps:[
+    {h:'Hinter der 1',
+      say:['Brüche können größer als 1 sein.','Hier liegt {7|4} hinter der 1.'],
+      nline:{from:0,to:2,parts:4,marks:[{n:7,d:4,text:'7/4'}],labels:'wholes'}},
+    {h:'Zwischen welchen Zahlen?',
+      say:['Frage: Wie viele Ganze passen hinein?','Es ist ein Ganzes und noch 3 Viertel.','Also liegt {7|4} zwischen 1 und 2.'],
+      calc:[[7,':',4,'=',1,'Rest',3]]},
+    {h:'Gemischte Schreibweise',
+      say:['Ein Ganzes und 3 Viertel schreibst du als gemischte Zahl.','Der Nenner bleibt gleich.'],
+      nline:{from:0,to:2,parts:4,marks:[{n:7,d:4,text:'7/4'}],labels:'wholes'}},
+    {h:'Natürliche Zahlen',
+      say:['Manche Brüche sind ganze Zahlen.','Bei {8|4} geht der Zähler ohne Rest durch den Nenner.','Es sind genau 2 Ganze.'],
+      calc:[[8,':',4,'=',2]]}
   ]}
 };
 const hasIntro=(id)=>Object.prototype.hasOwnProperty.call(INTRO,id);
@@ -284,6 +392,42 @@ function introTry(spec){
   return el('div',{class:'introtry'},chips,stage,say,reset);
 }
 
+/* Zahlenstrahl in einer Erklärung: ein Strahl oder mehrere untereinander */
+function introLineNode(spec){
+  const box=el('div',{class:'introfigs nlintro'});
+  (Array.isArray(spec)?spec:[spec]).forEach(s=>{
+    const from=s.from||0,to=s.to||1,o={from,to,parts:s.parts,marks:s.marks,labels:s.labels,strip:s.strip,maxW:460,label:'Zahlenstrahl von '+from+' bis '+to};
+    if(s.secs)o.secs={on:new Set(Array.from({length:(to-from)*s.parts},(_,i)=>i))};
+    box.append(drawNumberLine(o));
+  });
+  return box;
+}
+/* Einteilung ausprobieren: Zahl antippen, der Strahl wird neu eingeteilt. Ohne mark zählt der Satz Abschnitte und Striche,
+   mit mark bleibt ein Punkt am selben Wert: er liegt auf einem Strich, wenn der Nenner in die Einteilung aufgeht. Nichts wird gespeichert. */
+function introLineTry(spec){
+  const {to,ks,mark}=spec;
+  let cur=ks[0];
+  const stage=el('div',{class:'introstage'}),say=el('div',{class:'introsay','aria-live':'polite'});
+  const chips=el('div',{class:'introchips',role:'group','aria-label':'Teile je Ganzem',style:'--n:'+ks.length});
+  const btns=ks.map(k=>{
+    const b=el('button',{type:'button',class:'chip','aria-label':k+' Teile je Ganzem'},String(k));
+    b.addEventListener('click',()=>{cur=k;draw();});
+    chips.append(b);return b;
+  });
+  function draw(){
+    const fits=mark&&fitsDivision(mark.d,cur),o={from:0,to,parts:cur,labels:'wholes',maxW:460};
+    if(mark)o.marks=[{n:mark.n,d:mark.d,text:fits?mark.n*cur/mark.d+'/'+cur:mark.n+'/'+mark.d}];
+    else o.secs={on:new Set(Array.from({length:to*cur},(_,i)=>i))};
+    stage.replaceChildren(drawNumberLine(o));
+    btns.forEach((b,j)=>b.setAttribute('aria-pressed',String(ks[j]===cur)));
+    say.replaceChildren(el('div',{class:'labtext'},...(!mark?[cur+' Abschnitte, '+(cur+1)+' Striche.']
+      :fits?[eq(frac(mark.n,mark.d),'=',frac(mark.n*cur/mark.d,cur)),el('p',null,'Der Punkt liegt genau auf einem Strich.')]
+      :[el('p',null,'Der Punkt liegt zwischen zwei Strichen. Diese Einteilung passt nicht.')])));
+  }
+  draw();
+  return el('div',{class:'introtry'},el('div',{class:'nlcap'},'Teile je Ganzem'),chips,stage,say);
+}
+
 /* ---------- Ansicht: Erklärung ---------- */
 function renderIntro(id){
   const I=INTRO[id],steps=I.steps,total=steps.length,again=!!(S.view&&S.view.intro);
@@ -317,6 +461,8 @@ function renderIntro(id){
       el('div',{class:'introtxt'},s.say.map(t=>el('p',null,introRich(t)))),
       s.lab?el('div',{class:'introstage'},labFigure({mode:'strip',base:s.lab.base.slice(),cur:s.lab.cur.slice(),last:{op:s.lab.op,k:s.lab.k}})):null,
       s.fig?introFigNode(s.fig):null,
+      s.nline?introLineNode(s.nline):null,
+      s.nltry?introLineTry(s.nltry):null,
       s.calc?introCalcNode(s.calc):null,
       s.tryit?introTry(s.tryit):null,
       el('div',{class:'titleblock'},el('span',{class:'tb-id'},icon('gluehbirne'),el('span',{class:'tb-name'},I.title)),el('span',{class:'tb-c'},'Erklärung'))].filter(Boolean));

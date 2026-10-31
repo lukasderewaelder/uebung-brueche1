@@ -210,7 +210,7 @@ function mountTask(host,st,cb){
       host.classList.remove('shake');void host.offsetWidth;host.classList.add('shake');return 'wrong';
     },
     hint(){
-      if(st.hint<allHints().length){st.hint++;st.hintOpen=true;cb.save();renderHints();}
+      if(st.hint<allHints().length){st.hint++;st.hintOpen=true;cb.save();renderHints();if(view.onHint)view.onHint(st.hint);} /* z. B. der Bruchstreifen am Zahlenstrahl erscheint mit dem Tipp */
       return st.hint>=allHints().length;
     },
     solution(){
@@ -243,7 +243,7 @@ const openEntry=(id)=>{if(!isGame(id))S.last=id;go({kind:isGame(id)?'game':'prac
 function setLevel(id,l){S.levelByType[id]=l;persist();renderAll();}
 
 /* Symbole und Kennfarbe je Übung (erw = Erweitern/Orange, kue = Kürzen/Petrol) */
-const ICON={Q00:'blitz',G01:'lineal',T01:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'zahnrad',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor'};
+const ICON={Z01:'lineal',Z02:'lupe',Z03:'lineal',Z04:'aus',Z05:'wechsel',Z06:'zahnrad',Z07:'lineal',Z08:'wechsel',Q00:'blitz',G01:'lineal',T01:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'zahnrad',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor'};
 const ACC={G02:'erw',O01:'erw',G03:'kue',G04:'kue',T01:'kue',O02:'kue',G05:'mix'};
 function backTarget(){
   const v=S.view;
@@ -408,7 +408,7 @@ function renderSummary(main,id,lvl,key,round){
   const lvlBtn=btn(lvl===1?'Knifflig probieren':'Zurück zu Leicht',()=>setLevel(id,lvl===1?2:1));
   let msg=null,btns;
   if(inPath){
-    const nx=pathState().find(r=>r.next);
+    const nx=pathState(moduleOf(id)).find(r=>r.next);
     if(passed){
       msg=info.firstPass?'Bauteil fertig!'+(nx?' Als Nächstes: '+stationTitle(nx.id)+'.':''):'Wieder geschafft – stark!';
       btns=[btn('Weiter im Lernpfad',toPfad,true),btn('Nochmal',again),lvlBtn];
