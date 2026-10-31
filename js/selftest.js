@@ -345,7 +345,7 @@ function runSelfTests(){
     t('Tresor: Tür-Tipps sind drei Stufen zum Code-Bruch, der erste Tipp der Aufgabe nennt keine Pauschalregel',h.length===3&&h.every(x=>x.length>0)&&!h.flat().some(l=>/IMMER/.test(l)));
     const half=validateTask({type:'V01',level:2,mode:'full',a:48,b:72,p:2,q:3},{'r.n':'24','r.d':'36'});
     t('Tresor: Tür 48/72 → 24/36 ist „fast“ (noch kürzbar)',!half.correct&&half.soft&&half.errorCode==='notFull');
-    t('Tresor: alte Tresor-Zustände ohne ver:2 werden verworfen',!vaultOk({level:1,code:[1,2,3],locks:[{},{},{}],active:0,opened:false},1)&&vaultOk(newVault(1),1)&&!vaultOk(newVault(1),2));
+    t('Tresor: alte Tresor-Zustände ohne ver:3 werden verworfen',!vaultOk({level:1,code:[1,2,3],locks:[{},{},{}],active:0,opened:false},1)&&vaultOk(newVault(1),1)&&!vaultOk(newVault(1),2));
   }
   /* Hilfe bei Problemen: vollständig, kurze Sätze für Kinder von 11–12 Jahren, öffnet sich mit Thema */
   {
@@ -697,6 +697,47 @@ function runSelfTests(){
     S.view=keepV;
   }
 
+  /* Paket 8: Bruch-Tresor – Ziffer = letzte Ziffer der Lösung, Sammelkarten mit Bild */
+  {
+    let keyBad=[],solvedN=0,lockN=0;
+    const fullDraft=(k)=>{ /* richtige Antwort als Entwurf, soweit der Typ eine einzige Zahl abfragt; sonst null */
+      switch(k.type){
+        case 'G02':return {'r.n':String(k.a*k.k),'r.d':String(k.b*k.k)};
+        case 'G03':case 'G04':return k.mode==='factor'?{'r.n':String(k.a/k.k),'r.d':String(k.b/k.k)}:{'r.n':String(k.p),'r.d':String(k.q)};
+        case 'G05':return k.mode==='denom'?{'r.n':String(k.a*k.N/k.b)}:{'r1.n':String(k.a*k.k),'r1.d':String(k.b*k.k),'r2.n':String(k.a*k.k/k.m),'r2.d':String(k.b*k.k/k.m)};
+        case 'U02':return {k:String(k.k)};
+        case 'U01':{const d={};k.terms.forEach((x,i)=>{if(x.blank)d['g'+i]=String(x.blank==='n'?x.n:x.d);});return d;}
+      }
+      return null;
+    };
+    for(const lvl of [1,2])for(let i=0;i<150;i++){
+      const v=newVault(lvl);
+      v.locks.forEach((l,j)=>{
+        lockN++;
+        const key=vaultKey(l.task),dr=fullDraft(l.task);
+        if(!(Number.isInteger(key)&&key>=0&&key%10===v.digits[j]))keyBad.push('L'+lvl+' '+l.task.type+' Ziffer '+v.digits[j]+' Schlüssel '+key);
+        if(dr){solvedN++;if(!validateTask(l.task,dr).correct)keyBad.push(l.task.type+' Lösung nicht richtig');}
+      });
+    }
+    t('Tresor: die Ziffer jedes Schlosses ist die letzte Ziffer der Lösung seiner Aufgabe ('+lockN+' Schlösser, bei '+solvedN+' die Lösung per Prüfung bestätigt)',keyBad.length===0||(console.log(keyBad.slice(0,5)),false));
+    t('Tresor: zu jeder Ziffer 0–9 gibt es Aufgaben für Erweitern und Kürzen, die Aufgabe trägt den echten Typ',[0,1,2,3,4,5,6,7,8,9].every(d=>{const x=vaultTask('G02',1,d),y=vaultTask('G03',1,d);return x&&y&&x.type==='G02'&&vaultKey(x)%10===d&&vaultKey(y)%10===d;}));
+    t('Tresor: neuer Spielstand hat Version 3, alte (ohne Bezug der Ziffern zur Lösung) werden verworfen',newVault(1).ver===3&&!vaultOk({ver:2,level:1,digits:[1,2,3],locks:[{},{},{}],door:{}},1)&&vaultOk(newVault(2),2));
+    t('Tresor: nur Aufgaben mit einer Zahl als Lösung (keine Ja/Nein-, Bild- und offenen Aufgaben)',(()=>{const ty=new Set([].concat(...Object.values(VAULT_GROUPS).map(g=>[].concat(...g))));return ['T01','B01','O01','O02','D01','D02','D03'].every(x=>!ty.has(x))&&[...ty].every(x=>vaultKey(generateTask(x,1))!==null);})());
+    /* Sammelkarten mit Bild */
+    t('Sammelkarten: für alle zwölf gibt es ein Bild (Symbol), die Namen sind eindeutig',LOOT.length===12&&new Set(LOOT).size===12&&LOOT.every((n,i)=>{const sy=document.getElementById('i-loot'+i);return !!sy&&sy.children.length>0;}));
+    const keepL=S.loot;
+    try{
+      S.loot=['Windmühle','Uhrwerk'];
+      const g=lootGrid(),cells=[...g.querySelectorAll('.lootcell')];
+      t('Sammlung: zwölf Felder, gefundene mit Bild und Namen, die übrigen als Schloss mit „?“',cells.length===12&&cells.filter(c=>c.classList.contains('have')).length===2&&cells.find(c=>c.textContent==='Windmühle').classList.contains('have')&&cells.filter(c=>!c.classList.contains('have')).every(c=>c.textContent==='?')&&/2 von 12/.test(g.getAttribute('aria-label')));
+      t('Sammelkarte: Bild (zeigt auf das richtige Symbol) und Name',lootIcon('Uhrwerk').querySelector('use').getAttribute('href')==='#i-loot6'&&lootIcon('Seilbahn').querySelector('use').getAttribute('href')==='#i-loot11');
+    }finally{S.loot=keepL;persist();}
+    const keepV8={view:S.view,games:S.games,loot:S.loot};
+    try{
+      S.loot=[];S.games={};S.view={kind:'game',id:'S02'};renderAll();
+      t('Tresor-Ansicht: erklärt, dass die Ziffer die letzte Ziffer der Lösung ist, und zeigt die Sammlung',/letzte Ziffer seiner Lösung/.test(app.textContent)&&!!app.querySelector('.lootgrid')&&!/Bauplan/.test(app.textContent));
+    }finally{Object.assign(S,keepV8);persist();renderAll();}
+  }
   /* Paket 7: Probeaufgabe in der Erklärung, „Kenne ich schon“, Gemeinsame Teiler (T02), Einführung unechter Brüche, Kürzen in Schritten */
   {
     const vm7=moduleById('veraendern');
