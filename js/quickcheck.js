@@ -1,6 +1,6 @@
 'use strict';
 /* =====================================================================
-   Schnellcheck: Q00 (Mix, 15 Fragen: je Fähigkeit 3) und Q01 (Kurztest, 5 Fragen)
+   Eingangstest und Abschlusscheck: Q00 (Mix, 15 Fragen: je Fähigkeit 3)
    Alle Fragen sind Antipp-Fragen; jede trägt ein skill-Etikett.
    Zahlen der Bruchfragen: leicht ≤ 60, schwer ≤ 300 (Teilbarkeit wie T01).
    ===================================================================== */
@@ -320,17 +320,11 @@ const QUICK={
     return t.kind==='div'?[['Schau dir die Ziffern an.'],[DIV_RULE[t.k]]]:[['Lies die Frage genau.'],Q_HINT[t.kind]];
   }
 };
-TASKS.Q00=Object.assign({area:'Grundlagen',name:'Schnellcheck',desc:Q_COUNT+' Blitzfragen zum Antippen – ohne Zeitdruck.',size:Q_COUNT,
+TASKS.Q00=Object.assign({area:'Grundlagen',name:'Eingangstest',desc:Q_COUNT+' Blitzfragen zum Antippen – ohne Zeitdruck.',size:Q_COUNT,
   gen:makeQuickGen('Q00'),
   ctx(round){
     if(!round.plan)round.plan=qPlan();
     return {skill:round.plan[round.results.length%round.plan.length]};
   }},QUICK);
-TASKS.Q01=Object.assign({area:'Grundlagen',name:'Kurztest',desc:'5 Fragen, um eine Station freizuschalten.',size:5,
-  gen:makeQuickGen('Q01'),
-  ctx(round){
-    const sk=(S.quizSkills&&S.quizSkills.length)?S.quizSkills:['kuerzen'];
-    return {skill:sk[round.results.length%sk.length]};
-  }},QUICK);
-wrapRange('Q00');wrapRange('Q01');
+wrapRange('Q00');
 

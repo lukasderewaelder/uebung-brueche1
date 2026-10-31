@@ -105,7 +105,7 @@ function runSelfTests(){
     return bad;
   };
   const qBad=[];let qN=0;
-  for(const id of ['Q00','Q01'])for(const lvl of [1,2])for(const sk of Q_SKILLS)for(let i=0;i<150;i++){
+  for(const id of ['Q00'])for(const lvl of [1,2])for(const sk of Q_SKILLS)for(let i=0;i<150;i++){
     const k=generateTask(id,lvl,null,{skill:sk});qN++;
     const pr=qProblems(k,sk);if(pr.length)qBad.push(id+' L'+lvl+' '+sk+' '+k.kind+': '+pr.join(','));
   }
@@ -207,16 +207,16 @@ function runSelfTests(){
   t('G04: nur „Nicht kürzbar“ bei kürzbarem Bruch ist falsch',!validateTask({type:'G04',level:1,mode:'full',a:6,b:9,p:2,q:3},{none:true}).correct);
   t('„Fast“-Meldung: richtiger Wert, aber andere Form',validateTask({type:'G03',level:1,mode:'factor',a:12,b:18,k:3},{'r.n':'2','r.d':'3'}).soft===true&&!validateTask({type:'G03',level:1,mode:'factor',a:12,b:18,k:3},{'r.n':'3','r.d':'5'}).soft);
   /* Lernpfad */
-  const keepP={passed:S.passed,checked:S.checked,final:S.final,placed:S.placed,days:S.days,lab:S.lab,quizFor:S.quizFor,quizSkills:S.quizSkills,einstufung:S.einstufung,perfect:Object.assign({},S.perfect)};
-  const freshP=()=>{S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;S.einstufung=null;S.perfect={};};
+  const keepP={passed:S.passed,checked:S.checked,final:S.final,placed:S.placed,days:S.days,lab:S.lab,einstufung:S.einstufung,modus:S.modus,perfect:Object.assign({},S.perfect)};
+  const freshP=()=>{S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;S.einstufung=null;S.modus={};S.perfect={};};
   const R_=(id)=>pathState().find(r=>r.id===id);
   freshP();
   t('Pfad: Start – nächstes Bauteil G01, Labor offen, G02/B01/Abschluss gesperrt',pathState().find(r=>r.next).id==='G01'&&R_('LAB').open&&R_('G02').locked&&R_('G02').blocker==='G01'&&R_('B01').locked&&R_('Q00').locked);
   S.passed['G01-L1']=true;
   t('Pfad: G01 fertig ⇒ G02 nächstes, freiwilliges B01 offen',R_('G02').next&&R_('B01').open&&!R_('B01').must);
   S.checked.G03=true;
-  t('Pfad: per Check fertig, dahinter bleibt gesperrt bis alles davor fertig ist',R_('G03').done&&R_('G03').via&&!R_('G03').locked&&R_('G04').locked&&R_('G04').blocker==='G02');
-  S.passed['G02-L2']=true;S.passed['T01-L1']=true;
+  t('Pfad: im Check beherrscht ist nicht fertig – bleibt gesperrt hinter dem Nächsten',R_('G03').checked&&!R_('G03').done&&R_('G03').locked&&R_('G03').blocker==='G02'&&R_('G04').blocker==='G02');
+  S.passed['G02-L2']=true;S.passed['T01-L1']=true;S.passed['G03-L1']=true;
   t('Pfad: knifflig bestanden zählt, nächstes ist G04',R_('G02').done&&R_('G04').next);
   ['G04','G05'].forEach(x=>{S.passed[x+'-L1']=true;});
   t('Pfad: nach G05 sind Knobel-Bauteile und Abschluss offen',['U01','U02','U03','O02','Q00'].every(x=>R_(x).open)&&R_('Q00').next);
@@ -249,22 +249,12 @@ function runSelfTests(){
   freshP();
   inf=onRoundEnd('Q00',1,rnd(qres(badIx),qplan));
   t('Einstufung: nur 3 von 3 ist per Check frei (G01, G02, G04), „fast“ und „üben“ nicht',S.checked.G01&&S.checked.G02&&S.checked.G04&&!S.checked.T01&&!S.checked.G03&&!S.checked.G05&&S.placed&&!inf.final&&inf.ev.stufe==='fit');
-  const pl1=planOf();
-  t('Plan: Bauteile in Pfadreihenfolge, die nicht sitzen, dazu G05; „jetzt“ ist das erste (fast)',!!pl1&&pl1.items.map(x=>x.id).join()==='T01,G03,G05'&&pl1.now.id==='T01'&&pl1.now.status==='fast'&&pl1.items[1].status==='ueben');
-  t('Plan: Karte mit Kurztest-Knopf bei „fast“, Marke Empfohlen nur bei offenen Plan-Bauteilen',(()=>{const c=planCard(pl1);return c.querySelectorAll('li.plan-it').length===3&&c.querySelectorAll('li.now .pl-act button').length===2&&/Kurztest/.test(c.textContent);})());
-  S.passed['T01-L1']=true;
-  const pl2=planOf();
-  t('Plan: erledigtes Bauteil rückt vor, „jetzt“ wechselt',pl2.now.id==='G03'&&pl2.items[0].done);
-  S.passed['G03-L1']=true;S.passed['G05-L1']=true;
-  t('Plan: alles erledigt ⇒ Karte verschwindet',planOf()===null);
   freshP();
   inf=onRoundEnd('Q00',1,rnd(qres([]),qplan));
-  t('Einstufung: 15 von 15 schaltet alles frei, Urkunde, kein Plan',['G01','G02','T01','G03','G04','G05'].every(x=>S.checked[x])&&inf.final&&S.final&&planOf()===null);
+  t('Einstufung: 15 von 15 merkt alles als beherrscht, aber ohne echten Pfad keine Urkunde und nichts fertig',['G01','G02','T01','G03','G04','G05'].every(x=>S.checked[x])&&!inf.ready&&!inf.final&&!S.final&&!pathState().some(r=>r.must&&r.done));
   freshP();
   inf=onRoundEnd('Q00',1,rnd(qres(qplan.map((_,i)=>i).filter(i=>i>=4)),qplan));
-  t('Von vorn: höchstens 4 richtig ohne Fortschritt – nichts freigeschaltet, Plan = Bruchlabor + Gleiche Anteile',inf.ev.stufe==='start'&&Object.keys(S.checked).length===0&&S.placed&&!S.final&&(()=>{const p=planOf();return !!p&&p.items.map(x=>x.id).join()==='LAB,G01'&&p.now.id==='LAB'&&p.stufe==='start';})());
-  S.lab={done:true};
-  t('Von vorn: nach dem Labor ist Gleiche Anteile dran, danach verschwindet der Plan',planOf().now.id==='G01'&&(()=>{S.passed['G01-L1']=true;return planOf()===null;})());
+  t('Von vorn: höchstens 4 richtig ohne Fortschritt – nichts als beherrscht gemerkt, Pfad ohne Wahl',inf.ev.stufe==='start'&&Object.keys(S.checked).length===0&&S.placed&&!S.final&&lernenZustand(moduleById('veraendern'))==='pfad');
   freshP();S.passed['G01-L1']=true;
   inf=onRoundEnd('Q00',1,rnd(qres(qplan.map((_,i)=>i).filter(i=>i>=4)),qplan));
   t('Wenige Treffer mitten im Pfad: kein „von vorn“, nichts frei, Plan mit allem „üben“',inf.ev.stufe==='plan'&&Object.keys(S.checked).length===0&&S.einstufung.stufe==='plan'&&S.einstufung.skills.erweitern.status==='ueben');
@@ -273,7 +263,7 @@ function runSelfTests(){
   t('Wenige Treffer überschreiben einen vorhandenen Plan nicht',S.einstufung.at===1&&S.einstufung.stufe==='fit');
   freshP();
   inf=onRoundEnd('Q00',1,rnd(qres(pos('vollstaendig')),qplan));
-  t('3+3+3+3+0 ist „fit“, aber nicht fertig: keine Urkunde, Plan = G04 und G05',inf.ev.stufe==='fit'&&!inf.final&&!S.final&&planOf().items.map(x=>x.id).join()==='G04,G05'&&S.checked.G03&&!S.checked.G04);
+  t('3+3+3+3+0 ist „fit“, aber nicht fertig: keine Urkunde, G03 beherrscht, G04 und G05 nicht',inf.ev.stufe==='fit'&&!inf.final&&!S.final&&S.checked.G03&&!S.checked.G04&&!S.checked.G05);
   freshP();['G01','G02','T01','G03','G04','G05'].forEach(x=>{S.passed[x+'-L1']=true;});
   inf=onRoundEnd('Q00',1,rnd(qres(qplan.map((_,i)=>i).filter(i=>i>=11)),qplan));
   t('Abschlusscheck: alles fertig, aber nur 11 von 15 ⇒ keine Urkunde (ready, nicht passed)',inf.ready&&!inf.passed&&!inf.final&&!S.final);
@@ -282,13 +272,7 @@ function runSelfTests(){
   freshP();S.passed['G01-L1']=true;
   inf=onRoundEnd('Q00',1,rnd(['f','f','f','f','f','f','x','x','f','f'],oldPlan));
   t('Abschluss: ohne alle Pflicht-Bauteile keine Urkunde',inf.passed&&!inf.final&&!S.final);
-  t('Migration 6: alte Schnellcheck-Runden (10 Fragen) werden verworfen, Rest bleibt',(()=>{const o={rounds:{'Q00-L1':{size:10,results:[]},'Q00-L2':{size:15,results:[]},'G02-L1':{size:5,results:[]},'Q01-L1':{size:5,results:[]}}};migrate6(o);return !o.rounds['Q00-L1']&&!!o.rounds['Q00-L2']&&!!o.rounds['G02-L1']&&!!o.rounds['Q01-L1'];})());
-  freshP();S.quizFor='G02';
-  inf=onRoundEnd('Q01',1,rnd(['f','f','f','x','f']));
-  t('Kurztest: 4 von 5 ⇒ Bauteil per Check, kein Pfad-Eintrag Q01',inf.quiz.passed&&S.checked.G02&&!S.passed['Q01-L1']);
-  freshP();S.quizFor='G02';
-  inf=onRoundEnd('Q01',1,rnd(['f','x','f','x','f']));
-  t('Kurztest: 3 von 5 ⇒ nicht frei',!inf.quiz.passed&&!S.checked.G02);
+  t('Migration 6: alte Schnellcheck-Runden (10 Fragen) werden verworfen, Rest bleibt',(()=>{const o={rounds:{'Q00-L1':{size:10,results:[]},'Q00-L2':{size:15,results:[]},'G02-L1':{size:5,results:[]}}};migrate6(o);return !o.rounds['Q00-L1']&&!!o.rounds['Q00-L2']&&!!o.rounds['G02-L1'];})());
   freshP();
   const dk=(off)=>{const d=new Date();d.setDate(d.getDate()+off);return dayKey(d);};
   S.days[dk(0)]=1;S.days[dk(-1)]=2;S.days[dk(-2)]=1;
@@ -300,6 +284,43 @@ function runSelfTests(){
   const old={progress:{'G03-L1':{first:5},'G02-L2':{first:3},'D01-L1':{first:9},'G01-L1':{first:4}}};
   migrate4(old);
   t('Migration: mind. 4 Treffer ⇒ bestanden; Rest und Nicht-Pfad-Übungen nicht',old.passed['G03-L1']&&old.passed['G01-L1']&&!old.passed['G02-L2']&&!old.passed['D01-L1']&&!!old.checked&&!!old.days);
+  /* Lernen: Eingangstest, Wahl, Pfad und Selbst aussuchen */
+  {
+    const mod=moduleById('veraendern'),Z=()=>lernenZustand(mod);
+    const view=()=>{const d=el('div');pfadTab(d,mod);return d;};
+    const beispiel=()=>{freshP();return onRoundEnd('Q00',1,rnd(qres([].concat(pos('teilbar').slice(0,1),pos('kuerzen'),pos('vollstaendig'))),qplan));};
+    freshP();
+    t('Lernen: Neuling → erst der Eingangstest; Üben-Runden allein ändern das nicht',Z()==='gate'&&(()=>{S.progress['G02-L1']={done:3,first:2,later:1,skipped:0,shown:0};const z=Z();delete S.progress['G02-L1'];return z==='gate';})());
+    const gv=view();
+    t('Lernen: Eingangstest-Ansicht hat nur den Startknopf, keine Bauteil-Liste, keinen Schalter',/Eingangstest starten/.test(gv.textContent)&&!gv.querySelector('.rail')&&!gv.querySelector('.seg')&&/Üben/.test(gv.textContent));
+    onRoundEnd('Q00',1,rnd(qres([1,3,8]),qplan));
+    t('Lernen: nach dem Check (fit) kommt die Wahl mit zwei Karten, noch kein Modus gespeichert',Z()==='wahl'&&!S.modus.veraendern&&view().querySelectorAll('.wahl .bigbtn').length===2);
+    freshP();onRoundEnd('Q00',1,rnd(qres(qplan.map((_,i)=>i).filter(i=>i>=4)),qplan));
+    t('Lernen: höchstens 4 von 15 richtig → direkt der Pfad, keine Wahl',Z()==='pfad'&&S.modus.veraendern==='pfad');
+    freshP();S.passed['G02-L1']=true;
+    t('Lernen: Bestandsnutzer (schon Fortschritt, noch keine Wahl) → einmal die Wahl',Z()==='wahl');
+    S.modus.veraendern='irgendwas';
+    t('Lernen: unbekannter Modus gilt als „keine Wahl“',Z()==='wahl'&&lernenZustand({id:'x',path:[]})==='pfad');
+    beispiel();
+    t('Beispiel-Check: Gleiche Anteile und Erweitern beherrscht, Teilbarkeit „fast“, Kürzen „üben“',S.checked.G01&&S.checked.G02&&!S.checked.T01&&!S.checked.G03&&!S.checked.G04&&S.einstufung.skills.teilbar.status==='fast'&&S.einstufung.skills.kuerzen.status==='ueben');
+    const P=pathState(mod,'pfad'),F=pathState(mod,'frei');
+    const rP=(id)=>P.find(r=>r.id===id),rF=(id)=>F.find(r=>r.id===id);
+    t('Pfad-Modus: der Check überspringt nichts – Gleiche Anteile als Nächstes, Erweitern noch gesperrt',rP('G01').next&&!rP('G01').done&&rP('G01').checked&&rP('G02').locked);
+    t('Selbst aussuchen: Beherrschtes offen (G01, G02), dazu Labor und Bruchbilder vor der Lücke',rF('G01').open&&rF('G02').open&&rF('LAB').open&&rF('B01').open&&!rF('G01').done);
+    t('Selbst aussuchen: die Lücke (Teilbarkeit) und alles danach gesperrt, auch Knobeln, Mischen, Abschluss',['T01','G03','G04','G05','U01','U02','U03','O02','Q00'].every(id=>rF(id).locked)&&!F.some(r=>r.next));
+    S.passed['G01-L1']=true;
+    t('Fortschritt gilt in beiden Modi: G01 fertig, im Pfad ist Erweitern dran',pathState(mod,'frei').find(r=>r.id==='G01').done&&pathState(mod,'pfad').find(r=>r.id==='G01').done&&pathState(mod,'pfad').find(r=>r.next).id==='G02');
+    beispiel();S.modus.veraendern='pfad';
+    const pv=view();
+    t('Pfad-Ansicht: Schalter, Fortschrittszeile, „Start: Gleiche Anteile erkennen“, Liste eingeklappt, Check-Marken',!!pv.querySelector('.seg')&&!!pv.querySelector('.pfadline')&&/^Start: Gleiche Anteile erkennen/.test(pv.querySelector('.bigbtn').textContent)&&!!pv.querySelector('details.fold:not([open]) .rail')&&pv.querySelectorAll('.mchk.sitzt').length===2&&pv.querySelectorAll('.mchk.fast').length===1&&/Als Nächstes/.test(pv.textContent)&&!/Weiter geht/.test(pv.textContent)&&/Eingangstest wiederholen/.test(pv.textContent));
+    S.passed['G01-L1']=true;
+    t('Pfad-Ansicht: nach dem ersten bestandenen Bauteil heißt der Knopf „Weiter“',/^Weiter: Gleiche Anteile erkennen|^Weiter: Erweitern/.test(view().querySelector('.bigbtn').textContent));
+    S.modus.veraendern='frei';
+    const fv=view();
+    t('Selbst-aussuchen-Ansicht: Liste offen (nicht eingeklappt), Hinweis, keine Hauptkarte, offene und gesperrte Bauteile',!!fv.querySelector('.rail')&&!fv.querySelector('details')&&!!fv.querySelector('.modushint')&&!fv.querySelector('.bigbtn')&&fv.querySelectorAll('li.mod.locked').length>=8&&fv.querySelectorAll('li.mod.open, li.mod.done').length>=3);
+    t('Tagesziel und Serie stehen im Reiter Ich (dayCard), nicht mehr im Lernpfad',/Tagesziel/.test(dayCard().textContent)&&!/Tagesziel/.test(view().textContent));
+    freshP();
+  }
   /* Bruch-Tresor: Code-Bruch, Schlösser, Tür */
   {
     let okCode=true,okSlots=true,okTypes=true,okDoor=true,okRange=true;
@@ -397,10 +418,10 @@ function runSelfTests(){
     try{steps.forEach(s=>{introRich(s.h);s.say.forEach(introRich);if(s.fig)introFigNode(s.fig);if(s.calc)introCalcNode(s.calc);if(s.tryit)introTry(s.tryit);if(s.lab)labFigure({mode:'strip',base:s.lab.base,cur:s.lab.cur,last:{op:s.lab.op,k:s.lab.k}});});}catch(e){built=false;}
     t('Erklärungen: alle Schritte lassen sich aufbauen',built);
     t('Erklärungen: **fett** und {n|d} werden zu Text, Hervorhebung und Bruch',(()=>{const n=introRich('Tippe **Prüfen**. Aus {4|6} wird {2|3}.');return n.length===7&&n[1].tagName==='STRONG'&&n[1].textContent==='Prüfen'&&n[3].classList.contains('frac')&&n[3].textContent==='46'&&n[5].classList.contains('frac')&&n[5].textContent==='23';})());
-    /* Gate: ungesehen oder ausdrücklich geöffnet; nie für Kurztest, Spiele, Startseite */
+    /* Gate: ungesehen oder ausdrücklich geöffnet; nie für Spiele, Startseite */
     S.intro={};
     t('Gate: Bruchlabor und Übungen des Lernpfads zeigen die Erklärung, solange sie ungesehen ist',introWanted({kind:'lab'})==='LAB'&&introWanted({kind:'practice',id:'G02'})==='G02'&&introWanted({kind:'practice',id:'Q00'})==='Q00');
-    t('Gate: nie beim Kurztest, bei Spielen, auf der Startseite und bei unbekannten Kennungen',!introWanted({kind:'practice',id:'Q01'})&&!introWanted({kind:'practice',id:'O01'})&&!introWanted({kind:'game',id:'S01'})&&!introWanted({kind:'home'})&&!introWanted({kind:'practice',id:'ZZ'})&&!introWanted({kind:'practice',id:'constructor'})&&!introWanted(null));
+    t('Gate: nie bei Spielen, auf der Startseite und bei unbekannten Kennungen',!introWanted({kind:'practice',id:'O01'})&&!introWanted({kind:'game',id:'S01'})&&!introWanted({kind:'home'})&&!introWanted({kind:'practice',id:'ZZ'})&&!introWanted({kind:'practice',id:'constructor'})&&!introWanted(null));
     S.intro={G02:true,LAB:true};
     t('Gate: Gesehenes kommt nicht wieder – außer per Knopf im Merkkasten (view.intro)',!introWanted({kind:'practice',id:'G02'})&&!introWanted({kind:'lab'})&&introWanted({kind:'practice',id:'G02',intro:true})==='G02'&&introWanted({kind:'lab',intro:true})==='LAB'&&introWanted({kind:'practice',id:'G03'})==='G03');
     S.intro=keepI;
@@ -442,7 +463,7 @@ function runSelfTests(){
   {
     const keepV=S.view;
     const bt=(v)=>{S.view=v;return backTarget();};
-    t('Navigation: pfadView findet das Thema zu Bauteil, Labor und unbekannter ID',pfadView('G02').thema==='veraendern'&&pfadView('LAB').thema==='veraendern'&&pfadView('Q01').thema==='veraendern'&&pfadView().thema==='veraendern');
+    t('Navigation: pfadView findet das Thema zu Bauteil, Labor und unbekannter ID',pfadView('G02').thema==='veraendern'&&pfadView('LAB').thema==='veraendern'&&pfadView().thema==='veraendern');
     t('Navigation: Zurück aus dem Lernpfad führt zur Themenübersicht, aus der Übersicht nirgends hin',JSON.stringify(bt({kind:'home',tab:'pfad',thema:'veraendern'}))==='{"kind":"home","tab":"pfad"}'&&bt({kind:'home',tab:'pfad'})===null);
     t('Navigation: Zurück aus einem Bauteil des Lernpfads führt in den Lernpfad dieses Themas',bt({kind:'practice',id:'G02',from:'pfad'}).thema==='veraendern'&&bt({kind:'lab',from:'pfad'}).thema==='veraendern');
     t('Navigation: Zurück aus Üben führt in die Gruppe, aus der Gruppe in die Übersicht',bt({kind:'practice',id:'G02'}).group==='Entdecken'&&bt({kind:'home',tab:'ueben',group:'Entdecken'}).tab==='ueben'&&!bt({kind:'home',tab:'ueben',group:'Entdecken'}).group);
