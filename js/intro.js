@@ -158,7 +158,7 @@ const INTRO={
     {h:'Sofort eine Rückmeldung',
       say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Dann geht es mit der nächsten Frage weiter.']},
     {h:'Danach siehst du, was fehlt',
-      say:['Am Ende siehst du, was du schon kannst.','Danach wählst du: dem Pfad folgen oder selbst aussuchen.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
+      say:['Am Ende siehst du, was du schon kannst.','Danach wählst du: dem Pfad folgen oder Meine Übersicht.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
     {h:'Der Abschlusscheck',
       say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat auch '+TASKS.Q00.size+' Fragen.','Ab '+needOf(TASKS.Q00.size)+' richtigen Antworten gibt es die Urkunde.']}
   ]},
@@ -169,7 +169,7 @@ const INTRO={
     {h:'Sofort eine Rückmeldung',
       say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Es gibt keine Zeitmessung.']},
     {h:'Danach siehst du, was fehlt',
-      say:['Am Ende siehst du, was du schon kannst.','Danach wählst du: dem Pfad folgen oder selbst aussuchen.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
+      say:['Am Ende siehst du, was du schon kannst.','Danach wählst du: dem Pfad folgen oder Meine Übersicht.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
     {h:'Der Abschlusscheck',
       say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat auch '+TASKS.ZQ.size+' Fragen.','Ab '+needOf(TASKS.ZQ.size)+' richtigen Antworten gibt es die Urkunde.']}
   ]},

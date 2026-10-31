@@ -874,3 +874,7 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 .gname{font-size:max(16px,.64rem)}
 .gxp{font-size:max(16px,.9rem)}
 .gstreak{font-size:max(16px,.78rem)}
+
+/* Paket 5: Eingangstest-Knöpfe gleich groß, Einstellungen im Reiter „Ich“ */
+.gatebtns .btn{flex:1 1 12rem}
+.settingsbtn{margin:0 0 .75rem}

@@ -2,7 +2,7 @@
 /* =====================================================================
    Eingangstest und Abschlusscheck zum Zahlenstrahl: ZQ (15 Fragen: 5 Fähigkeiten à 3)
    Wie Q00 (quickcheck.js) nur Antipp-Fragen (A–D oder Ja/Nein), jetzt mit Zahlenstrahl-Bild; jede Frage trägt ein skill-Etikett.
-   3 von 3 richtig = „sitzt“: die Bauteile der Fähigkeit sind im Modus „Selbst aussuchen“ offen (stations).
+   3 von 3 richtig = „sitzt“: die Bauteile der Fähigkeit sind in „Meine Übersicht“ offen (stations).
    Bilder liegen als Daten in t.fig {from,to,parts,marks,labels} oder {uneven:{m,k,shift}}.
    ===================================================================== */
 const ZQ_SKILLS=['einteilung','ablesen','anpassen','mehrere','einheit'];

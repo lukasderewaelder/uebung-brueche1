@@ -39,8 +39,8 @@ function moduleCard(m){
   const head=el('div',{class:'tc-head'},el('span',{class:'ico','aria-hidden':'true'},icon(m.icon)),el('div',null,el('h2',null,m.name),el('p',null,m.desc)));
   const btn=(label,fn,primary,ic)=>el('button',{type:'button',class:'btn'+(primary?' primary':''),onclick:fn},ic?icon(ic):null,label);
   if(z==='gate')return el('section',{class:'tcard'},head,
-    el('p',{class:'tc-note'},TASKS[m.qid].size+' kurze Fragen zeigen zuerst, was du schon kannst.'),
-    el('div',{class:'rowbtns'},btn('Eingangstest starten',()=>startEingang(m),true,'play')));
+    el('p',{class:'tc-note'},'Willst du testen, was du schon kannst? Das dauert etwa 5 Minuten.'),
+    el('div',{class:'rowbtns gatebtns'},btn('Eingangstest starten',()=>startEingang(m),true,'play'),btn('Ohne Test starten',()=>startOhneTest(m))));
   if(z==='wahl')return el('section',{class:'tcard'},head,
     el('div',{class:'rowbtns'},btn('Wie möchtest du lernen?',openThema,true)));
   const {must,doneN,go1,rows}=pfadInfo(m,z);
@@ -75,13 +75,16 @@ function renderHome(){
       ...['S01','S02'].map(id=>{const r=S.games[keyOf(id,levelOf(id))];return bigBtn(ICON[id],()=>openEntry(id),GAMES[id].name,GAMES[id].desc,[r?`Runden: ${r.played}`:'',id==='S02'&&lootOf().length?`Sammelkarten: ${lootOf().length} von ${LOOT.length}`:''].filter(Boolean).join(' · '),'',null,id==='S01'?'dots':'hatch');})));
   }else if(tab==='rang'){
     const total=Object.values(S.progress).reduce((a,p)=>a+p.done,0);
-    home.append(el('h1',null,'Ich'),rankCard(),dayCard(),
+    home.append(el('h1',null,'Ich'),
+      el('button',{type:'button',class:'btn small settingsbtn',onclick:openOptions},icon('zahnrad'),' Einstellungen'),
+      rankCard(),dayCard(),
       el('p',{class:'stats'},`Aufgaben bearbeitet: ${total} · Längste Serie: ${S.bestStreak||0}`),
       fold('Alle Ränge',rankLadder()),
       fold('Alle Ziele',perfectionList()),
       fold('Deine Sterne',bomList(PRACTICE_ORDER)),
       el('div',{class:'rowbtns'},
-        el('button',{type:'button',class:'btn small',onclick:openOptions},icon('zahnrad'),' Optionen'),
+        el('button',{type:'button',class:'btn small',onclick:()=>{const prev=JSON.parse(JSON.stringify(S.view));go({kind:'lab',from:'opt',back:prev});}},icon('kolben'),' Bruchlabor'),
+        el('button',{type:'button',class:'btn small',onclick:()=>go(pfadView())},icon('pfad'),' Lernpfad'),
         el('button',{type:'button',class:'btn small',onclick:()=>openProblemHelp()},icon('schluessel'),' Hilfe bei Problemen')));
   }else if(!v.group||!GROUPS[v.group]){
     const last=S.last&&TASKS[S.last]?S.last:null;

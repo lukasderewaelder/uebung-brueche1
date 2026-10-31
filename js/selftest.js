@@ -693,10 +693,68 @@ function runSelfTests(){
     t('Navigation: pfadView findet das Thema zu Bauteil, Labor und unbekannter ID',pfadView('G02').thema==='veraendern'&&pfadView('LAB').thema==='veraendern'&&pfadView().thema==='veraendern');
     t('Navigation: Zurück aus dem Lernpfad führt zur Themenübersicht, aus der Übersicht nirgends hin',JSON.stringify(bt({kind:'home',tab:'pfad',thema:'veraendern'}))==='{"kind":"home","tab":"pfad"}'&&bt({kind:'home',tab:'pfad'})===null);
     t('Navigation: Zurück aus einem Bauteil des Lernpfads führt in den Lernpfad dieses Themas',bt({kind:'practice',id:'G02',from:'pfad'}).thema==='veraendern'&&bt({kind:'lab',from:'pfad'}).thema==='veraendern');
-    t('Navigation: Zurück aus Üben führt in die Gruppe, aus der Gruppe in die Übersicht',bt({kind:'practice',id:'G02'}).group==='Entdecken'&&bt({kind:'home',tab:'ueben',group:'Entdecken'}).tab==='ueben'&&!bt({kind:'home',tab:'ueben',group:'Entdecken'}).group);
+    t('Navigation: Zurück aus Üben führt in die Gruppe, aus der Gruppe in die Übersicht',bt({kind:'practice',id:'G02'}).group==='Erweitern'&&bt({kind:'home',tab:'ueben',group:'Erweitern'}).tab==='ueben'&&!bt({kind:'home',tab:'ueben',group:'Erweitern'}).group);
     S.view=keepV;
   }
 
+  /* Paket 5: Eingangstest überspringen, Gruppen, Meine Übersicht, Einstellungen im Reiter „Ich“ */
+  {
+    const vm5=moduleById('veraendern'),zs5=moduleById('zahlenstrahl');
+    const keep5={modus:S.modus,unlocked:S.unlocked,view:S.view,passed:S.passed,checked:S.checked,placed:S.placed,final:S.final,lab:S.lab,mq:S.mq,last:S.last,rounds:S.rounds,intro:S.intro,einstufung:S.einstufung,days:S.days,perfect:S.perfect};
+    try{
+      S.passed={};S.checked={};S.placed=false;S.final=false;S.lab=null;S.mq={};S.modus={};S.unlocked={};S.rounds={};S.einstufung=null;S.days={};S.perfect={};S.intro={G01:true,Z01:true};
+      t('Einstieg: ohne Fortschritt steht der Eingangstest vor dem Pfad (beide Themen)',lernenZustand(vm5)==='gate'&&lernenZustand(zs5)==='gate');
+      const gate=gateCard(vm5),btns=[...gate.querySelectorAll('button')].map(b=>b.textContent.trim());
+      t('Einstieg: Karte fragt „Willst du testen, was du schon kannst? Das dauert etwa 5 Minuten.“ und bietet „Eingangstest starten“ und „Ohne Test starten“ gleich groß nebeneinander',gate.textContent.includes('Willst du testen, was du schon kannst? Das dauert etwa 5 Minuten.')&&btns.includes('Eingangstest starten')&&btns.includes('Ohne Test starten')&&!!gate.querySelector('.gatebtns'));
+      const mc=moduleCard(vm5);
+      t('Einstieg: auch die Themenkarte im Reiter Lernen hat beide Knöpfe',[...mc.querySelectorAll('button')].some(b=>b.textContent.includes('Ohne Test starten'))&&[...mc.querySelectorAll('button')].some(b=>b.textContent.includes('Eingangstest starten')));
+      startOhneTest(vm5);
+      t('Ohne Test starten: Pfad ist gewählt, der Pfad ist sichtbar (kein Eingangstest davor) und die erste Station G01 öffnet sich',S.modus.veraendern==='pfad'&&lernenZustand(vm5)==='pfad'&&S.view.kind==='practice'&&S.view.id==='G01'&&!qstate(vm5).placed);
+      startOhneTest(zs5);
+      t('Ohne Test starten gilt auch für den Zahlenstrahl (Z01)',S.modus.zahlenstrahl==='pfad'&&lernenZustand(zs5)==='pfad'&&S.view.id==='Z01'&&lernenZustand(vm5)==='pfad');
+      S.view={kind:'home',tab:'pfad',thema:'veraendern'};renderAll();
+      t('Pfad ohne Test: der Eingangstest bleibt nachholbar („Eingangstest machen“)',/Eingangstest machen/.test(app.textContent)&&!/Eingangstest wiederholen/.test(app.textContent));
+      /* Gruppen in Üben = Gruppen im Lernpfad */
+      const bad=[];
+      activeModules().forEach(m=>{
+        m.path.forEach(p=>{if(!(GROUPS[p.grp]&&GROUPS[p.grp].ids.includes(p.id)))bad.push(m.id+' '+p.id+' ↛ '+p.grp);});
+        Object.keys(m.groups).forEach(g=>{if(m.groups[g].ids.some(id=>id!=='LAB'&&!m.practice.includes(id)))bad.push('Gruppe '+g+' hat fremde Aufgabe');});
+        const inGroups=[].concat(...Object.values(m.groups).map(g=>g.ids)).filter(id=>id!=='LAB');
+        if(new Set(inGroups).size!==inGroups.length||m.practice.some(id=>!inGroups.includes(id)))bad.push(m.id+' Aufgaben nicht in genau einer Gruppe');
+      });
+      t('Gruppen: jede Station des Pfads steht im Üben in derselben Gruppe, jede Aufgabe in genau einer Gruppe, Gruppennamen sind eindeutig',(bad.length===0&&Object.keys(GROUPS).length===activeModules().reduce((n,m)=>n+Object.keys(m.groups).length,0))||(console.log(bad),false));
+      t('Gruppen Erweitern und Kürzen: Entdecken, Erweitern, Kürzen, Mischen, Knobeln, Umwandeln, Abschluss; Teilbarkeit (T01) bei Kürzen, Eingangstest (Q00) bei Abschluss',Object.keys(vm5.groups).join()==='Entdecken,Erweitern,Kürzen,Mischen,Knobeln,Umwandeln,Abschluss'&&vm5.groups['Kürzen'].ids.join()==='T01,G03,G04'&&vm5.groups.Abschluss.ids.join()==='Q00'&&!vm5.groups.Entdecken.ids.includes('T01')&&!vm5.groups.Entdecken.ids.includes('Q00'));
+      t('Gruppen Zahlenstrahl: Einteilung, Eintragen, Zwei Wege, Weiter, Abschlusscheck wie im Lernpfad',Object.keys(zs5.groups).join()==='Einteilung,Eintragen,Zwei Wege,Weiter,Abschlusscheck'&&zs5.groups['Zwei Wege'].ids.join()==='Z04,Z05,Z06'&&zs5.groups.Abschlusscheck.ids.join()==='ZQ');
+      /* Meine Übersicht, Alles freischalten */
+      S.modus={veraendern:'frei'};S.checked={G01:true};S.unlocked={};
+      const row5=(id)=>pathState(vm5,'frei').find(r=>r.id===id);
+      t('Meine Übersicht: ohne Freischaltung bleibt gesperrt, was gesperrt ist (G03, Abschluss)',row5('G03').locked&&row5('Q00').locked&&row5('G01').open);
+      S.view={kind:'home',tab:'pfad',thema:'veraendern'};renderAll();
+      const body=app.textContent;
+      t('Meine Übersicht: heißt so (nicht mehr „Selbst aussuchen“), erklärt „Grün = schon gekonnt, grau = noch gesperrt“ und bietet „Alles freischalten“',/Meine Übersicht/.test(body)&&!/Selbst aussuchen/.test(body)&&/Grün = schon gekonnt, grau = noch gesperrt/.test(body)&&[...app.querySelectorAll('button')].some(b=>b.textContent.includes('Alles freischalten')));
+      [...app.querySelectorAll('button')].find(b=>b.textContent.includes('Alles freischalten')).click();
+      const dlg=document.querySelector('.modal');
+      t('Alles freischalten: fragt vorher nach und erklärt, dass die Urkunde trotzdem alle Pflicht-Stationen braucht',!!dlg&&dlg.textContent.includes('Alles freischalten?')&&dlg.textContent.includes('Urkunde')&&!S.unlocked.veraendern);
+      [...dlg.querySelectorAll('button')].find(b=>b.textContent==='Alles freischalten').click();
+      t('Alles freischalten: danach ist alles offen, nur dieses Thema, die Anzeige sagt es',S.unlocked.veraendern===true&&!S.unlocked.zahlenstrahl&&pathState(vm5,'frei').every(r=>r.open)&&pathState(vm5,'pfad').every(r=>r.open)&&/Alles ist freigeschaltet/.test(app.textContent));
+      const info5=onRoundEnd('Q00',1,{results:Array(15).fill('f'),size:15,sk:[].concat(Q_SKILLS,Q_SKILLS,Q_SKILLS)});
+      t('Alles freischalten: der Abschlusscheck ist offen, die Urkunde gibt es trotzdem nur nach allen Pflicht-Stationen',pathState(vm5,'frei').find(r=>r.id==='Q00').open&&info5.passed&&!info5.ready&&!info5.final&&!S.final);
+      /* Einstellungen im Reiter Ich */
+      const chip=chipNode();
+      t('Rang-Chip: führt zur Seite „Ich“ (kein Dialog mehr)',!chip.hasAttribute('aria-haspopup')&&/Zur Seite Ich/.test(chip.getAttribute('aria-label')));
+      chip.click();
+      t('Rang-Chip: ein Tipp öffnet den Reiter „Ich“',S.view.kind==='home'&&S.view.tab==='rang'&&!document.querySelector('.optmodal'));
+      const ich=[...app.querySelectorAll('button')].map(b=>b.textContent.trim());
+      t('Ich: oben „Einstellungen“, dazu Bruchlabor, Lernpfad und Hilfe bei Problemen im Reiter',ich.findIndex(x=>x.includes('Einstellungen'))>=0&&ich.findIndex(x=>x.includes('Einstellungen'))<ich.findIndex(x=>x.includes('Bruchlabor'))&&ich.some(x=>x.includes('Bruchlabor'))&&ich.some(x=>x.includes('Lernpfad'))&&ich.some(x=>x.includes('Hilfe bei Problemen')));
+      openOptions();
+      const om=document.querySelector('.optmodal');
+      t('Einstellungen: Textgröße, Hilfe bei Problemen und Fortschritt löschen; Bruchlabor und Lernpfad stehen nicht mehr im Dialog',!!om&&om.textContent.includes('Einstellungen')&&om.textContent.includes('Textgröße')&&om.textContent.includes('Hilfe bei Problemen')&&om.textContent.includes('Fortschritt löschen')&&!om.textContent.includes('Bruchlabor')&&!om.textContent.includes('Lernpfad'));
+      closeOptions();
+    }finally{
+      closeOptions();document.querySelectorAll('.modal').forEach(m=>m.remove());
+      Object.assign(S,keep5);persist();renderAll();
+    }
+  }
   /* Paket 4: Sprache für Kinder, Rechenprobe im Lob, Merkkästen, Schriftgröße */
   {
     const jargon=/Bauteil|Bauplan|Baupläne|Blatt \d|Blitz|Maßgenau|Millimeter|Legende: alles perfekt|\bPos\b/;

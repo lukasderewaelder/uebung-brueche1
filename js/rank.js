@@ -1,6 +1,6 @@
 'use strict';
 /* =====================================================================
-   Ränge, „alles perfekt“ und Optionen (Blatt hinter dem Rang-Chip)
+   Ränge, „alles perfekt“ und Einstellungen (Fenster hinter dem Knopf im Reiter „Ich“)
    Rang 1–11 hängen an den Punkten (XP); der höchste Rang (Legende) braucht
    zusätzlich, dass wirklich alles perfekt geschafft ist.
    ===================================================================== */
@@ -53,10 +53,10 @@ function checkRankUp(){
   if(i>S.rankSeen){S.rankSeen=i;persist();setTimeout(()=>rankUpCard(i),900);}
 }
 
-/* ---------- Rang-Chip oben rechts: öffnet die Optionen ---------- */
+/* ---------- Rang-Chip oben rechts: führt zur Seite „Ich“ (dort stehen Rang, Ziele und die Einstellungen) ---------- */
 function chipNode(){
   const st=rankState(),xp=st.xp;
-  return el('button',{type:'button',class:'gchip','aria-haspopup':'dialog','aria-label':'Rang '+st.cur[1]+', '+xp+' XP. Optionen öffnen',title:rankHint(st),onclick:openOptions},
+  return el('button',{type:'button',class:'gchip','aria-label':'Rang '+st.cur[1]+', '+xp+' XP. Zur Seite Ich',title:rankHint(st),onclick:()=>go({kind:'home',tab:'rang'})},
     el('span',{class:'gicon','aria-hidden':'true'},icon(st.cur[2])),
     el('span',{class:'gtext'},el('b',{class:'gname'},st.cur[1]),segBar(st.pct)),
     el('span',{class:'gxp'},xp+' XP'),
@@ -109,20 +109,14 @@ function resetProgress(){
 function optRow(ic,title,sub,fn){
   return el('button',{type:'button',class:'optbtn',onclick:fn},icon(ic),el('span',{class:'ot'},el('b',null,title),sub?el('small',null,sub):null),icon('weiter'));
 }
+/* Einstellungen (Textgröße, Hilfe, Fortschritt löschen): Knopf oben im Reiter „Ich“ */
 function openOptions(){
   closeOptions();
-  const st=rankState(),pf=perfection(),inLab=S.view.kind==='lab';
   const m=modal([
-    el('h2',null,'Optionen'),
-    el('div',{class:'optrank'},icon(st.cur[2],'big'),
-      el('div',{class:'orx'},el('b',null,st.cur[1]),segBar(st.pct,'big'),el('small',null,st.xp+' XP · '+rankHint(st)))),
-    el('div',{class:'optlist'},
-      optRow('plakette','Alle Ränge',pf.all?'Alles perfekt!':'Legende: '+pf.done+' von '+pf.items.length+' Bedingungen',()=>{closeOptions();go({kind:'home',tab:'rang'});}),
-      inLab?null:optRow('kolben','Bruchlabor','Erweitern und Kürzen ausprobieren',()=>{
-        closeOptions();const prev=JSON.parse(JSON.stringify(S.view));go({kind:'lab',from:'opt',back:prev});}),
-      optRow('pfad','Lernpfad','Weiter geht’s',()=>{closeOptions();go(pfadView());}),
-      optRow('schluessel','Hilfe bei Problemen','Wenn etwas nicht klappt',()=>{closeOptions();openProblemHelp();})),
+    el('h2',null,'Einstellungen'),
     optionsExtra(),
+    el('div',{class:'optlist'},
+      optRow('schluessel','Hilfe bei Problemen','Wenn etwas nicht klappt',()=>{closeOptions();openProblemHelp();})),
     el('div',{class:'optfoot'},
       el('button',{type:'button',class:'btn alt small danger',onclick:resetProgress},'Fortschritt löschen'),
       el('button',{type:'button',class:'btn',onclick:closeOptions},'Schließen'))]);

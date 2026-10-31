@@ -3,7 +3,7 @@
    Hilfe bei Problemen – technische Anleitung für Kinder von 11 bis 12 Jahren
    Kurze Sätze (runSelfTests prüft: höchstens 14 Wörter), „du“, Knöpfe genau so
    benannt wie auf dem Bildschirm; **fett** ist der Name eines Knopfes. Aufruf:
-   Optionen, Rang-Seite, „Ups“-Meldung und Speicher-Hinweis. Immer nur ein Eintrag offen.
+   Einstellungen, Rang-Seite, „Ups“-Meldung und Speicher-Hinweis. Immer nur ein Eintrag offen.
    ===================================================================== */
 const PROBLEMS=[
   {id:'haengt',q:'Die Seite hängt oder zeigt „Ups“',
@@ -11,12 +11,12 @@ const PROBLEMS=[
     acts:['reload','restart'],
     tip:'Deine Punkte, Ränge und Sterne bleiben erhalten. Nur angefangene Runden und Spiele beginnen von vorn.'},
   {id:'tastatur',q:'Ich kann keine Zahl eintippen',
-    steps:['Die Tastatur vom Handy kommt hier nicht hoch. Das ist richtig so.','Tippe auf ein Feld. Es leuchtet dann gelb.','Tippe die Zahlen unten im Bild. Der Knopf mit dem X löscht die letzte Ziffer.','Der Pfeil-Knopf springt ins nächste Feld. Bei Dezimalzahlen setzt er das Komma.'],
+    steps:['Die Tastatur vom Handy kommt hier nicht hoch. Das ist richtig so.','Tippe auf ein Feld. Es leuchtet dann gelb.','Tippe die Zahlen unten im Bild. Der Knopf mit dem X löscht die letzte Ziffer.','Der Knopf **Weiter ▸** springt ins nächste Feld. Bei Dezimalzahlen setzt er das Komma.'],
     tip:'Am Computer tippst du mit der normalen Tastatur. Nach **Lösung ansehen** sind die Felder gesperrt. Tippe dann auf **Weiter**.'},
   {id:'groesse',q:'Alles ist zu klein, zu groß oder abgeschnitten',
     steps:['Tippe auf **Textgröße ändern**.','Wähle Klein, Normal, Groß oder Sehr groß.','Drehe das Handy. Manchmal passt es dann besser.'],
     acts:['size'],
-    tip:'Später findest du sie oben rechts. Tippe auf deine Punkte, zum Beispiel „120 XP“. Am Computer geht auch: Strg gedrückt halten und + oder − drücken.'},
+    tip:'Später findest du sie unter **Ich**. Tippe dort oben auf **Einstellungen**. Am Computer geht auch: Strg gedrückt halten und + oder − drücken.'},
   {id:'speichern',q:'Mein Fortschritt ist weg',
     intro:'Dein Fortschritt wird im Browser auf deinem Gerät gespeichert. Der Browser ist das Programm, mit dem du Seiten öffnest. Zum Beispiel Chrome oder Safari.',
     steps:['Nutzt du dasselbe Gerät und denselben Browser wie sonst? Auf einem anderen Gerät fängst du neu an.','Ist dein Fenster privat (Inkognito)? Dort wird nichts gespeichert. Öffne die Seite dann normal.','Hast du **Fortschritt löschen** getippt oder Browser-Daten gelöscht? Dann ist alles weg. Das lässt sich nicht zurückholen.'],
