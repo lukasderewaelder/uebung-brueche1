@@ -105,7 +105,7 @@ function runSelfTests(){
     return bad;
   };
   const qBad=[];let qN=0;
-  for(const id of ['Q00','Q01'])for(const lvl of [1,2])for(const sk of Q_SKILLS)for(let i=0;i<150;i++){
+  for(const id of ['Q00'])for(const lvl of [1,2])for(const sk of Q_SKILLS)for(let i=0;i<150;i++){
     const k=generateTask(id,lvl,null,{skill:sk});qN++;
     const pr=qProblems(k,sk);if(pr.length)qBad.push(id+' L'+lvl+' '+sk+' '+k.kind+': '+pr.join(','));
   }
@@ -207,7 +207,7 @@ function runSelfTests(){
   t('G04: nur „Nicht kürzbar“ bei kürzbarem Bruch ist falsch',!validateTask({type:'G04',level:1,mode:'full',a:6,b:9,p:2,q:3},{none:true}).correct);
   t('„Fast“-Meldung: richtiger Wert, aber andere Form',validateTask({type:'G03',level:1,mode:'factor',a:12,b:18,k:3},{'r.n':'2','r.d':'3'}).soft===true&&!validateTask({type:'G03',level:1,mode:'factor',a:12,b:18,k:3},{'r.n':'3','r.d':'5'}).soft);
   /* Lernpfad */
-  const keepP={passed:S.passed,checked:S.checked,final:S.final,placed:S.placed,days:S.days,lab:S.lab,quizFor:S.quizFor,quizSkills:S.quizSkills,einstufung:S.einstufung,modus:S.modus,perfect:Object.assign({},S.perfect)};
+  const keepP={passed:S.passed,checked:S.checked,final:S.final,placed:S.placed,days:S.days,lab:S.lab,einstufung:S.einstufung,modus:S.modus,perfect:Object.assign({},S.perfect)};
   const freshP=()=>{S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;S.einstufung=null;S.modus={};S.perfect={};};
   const R_=(id)=>pathState().find(r=>r.id===id);
   freshP();
@@ -249,22 +249,12 @@ function runSelfTests(){
   freshP();
   inf=onRoundEnd('Q00',1,rnd(qres(badIx),qplan));
   t('Einstufung: nur 3 von 3 ist per Check frei (G01, G02, G04), „fast“ und „üben“ nicht',S.checked.G01&&S.checked.G02&&S.checked.G04&&!S.checked.T01&&!S.checked.G03&&!S.checked.G05&&S.placed&&!inf.final&&inf.ev.stufe==='fit');
-  const pl1=planOf();
-  t('Plan: Bauteile in Pfadreihenfolge, die nicht sitzen, dazu G05; „jetzt“ ist das erste (fast)',!!pl1&&pl1.items.map(x=>x.id).join()==='T01,G03,G05'&&pl1.now.id==='T01'&&pl1.now.status==='fast'&&pl1.items[1].status==='ueben');
-  t('Plan: Karte mit Kurztest-Knopf bei „fast“, Marke Empfohlen nur bei offenen Plan-Bauteilen',(()=>{const c=planCard(pl1);return c.querySelectorAll('li.plan-it').length===3&&c.querySelectorAll('li.now .pl-act button').length===2&&/Kurztest/.test(c.textContent);})());
-  S.passed['T01-L1']=true;
-  const pl2=planOf();
-  t('Plan: erledigtes Bauteil rückt vor, „jetzt“ wechselt',pl2.now.id==='G03'&&pl2.items[0].done);
-  S.passed['G03-L1']=true;S.passed['G05-L1']=true;
-  t('Plan: alles erledigt ⇒ Karte verschwindet',planOf()===null);
   freshP();
   inf=onRoundEnd('Q00',1,rnd(qres([]),qplan));
   t('Einstufung: 15 von 15 merkt alles als beherrscht, aber ohne echten Pfad keine Urkunde und nichts fertig',['G01','G02','T01','G03','G04','G05'].every(x=>S.checked[x])&&!inf.ready&&!inf.final&&!S.final&&!pathState().some(r=>r.must&&r.done));
   freshP();
   inf=onRoundEnd('Q00',1,rnd(qres(qplan.map((_,i)=>i).filter(i=>i>=4)),qplan));
-  t('Von vorn: höchstens 4 richtig ohne Fortschritt – nichts freigeschaltet, Plan = Bruchlabor + Gleiche Anteile',inf.ev.stufe==='start'&&Object.keys(S.checked).length===0&&S.placed&&!S.final&&(()=>{const p=planOf();return !!p&&p.items.map(x=>x.id).join()==='LAB,G01'&&p.now.id==='LAB'&&p.stufe==='start';})());
-  S.lab={done:true};
-  t('Von vorn: nach dem Labor ist Gleiche Anteile dran, danach verschwindet der Plan',planOf().now.id==='G01'&&(()=>{S.passed['G01-L1']=true;return planOf()===null;})());
+  t('Von vorn: höchstens 4 richtig ohne Fortschritt – nichts als beherrscht gemerkt, Pfad ohne Wahl',inf.ev.stufe==='start'&&Object.keys(S.checked).length===0&&S.placed&&!S.final&&lernenZustand(moduleById('veraendern'))==='pfad');
   freshP();S.passed['G01-L1']=true;
   inf=onRoundEnd('Q00',1,rnd(qres(qplan.map((_,i)=>i).filter(i=>i>=4)),qplan));
   t('Wenige Treffer mitten im Pfad: kein „von vorn“, nichts frei, Plan mit allem „üben“',inf.ev.stufe==='plan'&&Object.keys(S.checked).length===0&&S.einstufung.stufe==='plan'&&S.einstufung.skills.erweitern.status==='ueben');
@@ -273,7 +263,7 @@ function runSelfTests(){
   t('Wenige Treffer überschreiben einen vorhandenen Plan nicht',S.einstufung.at===1&&S.einstufung.stufe==='fit');
   freshP();
   inf=onRoundEnd('Q00',1,rnd(qres(pos('vollstaendig')),qplan));
-  t('3+3+3+3+0 ist „fit“, aber nicht fertig: keine Urkunde, Plan = G04 und G05',inf.ev.stufe==='fit'&&!inf.final&&!S.final&&planOf().items.map(x=>x.id).join()==='G04,G05'&&S.checked.G03&&!S.checked.G04);
+  t('3+3+3+3+0 ist „fit“, aber nicht fertig: keine Urkunde, G03 beherrscht, G04 und G05 nicht',inf.ev.stufe==='fit'&&!inf.final&&!S.final&&S.checked.G03&&!S.checked.G04&&!S.checked.G05);
   freshP();['G01','G02','T01','G03','G04','G05'].forEach(x=>{S.passed[x+'-L1']=true;});
   inf=onRoundEnd('Q00',1,rnd(qres(qplan.map((_,i)=>i).filter(i=>i>=11)),qplan));
   t('Abschlusscheck: alles fertig, aber nur 11 von 15 ⇒ keine Urkunde (ready, nicht passed)',inf.ready&&!inf.passed&&!inf.final&&!S.final);
@@ -282,13 +272,7 @@ function runSelfTests(){
   freshP();S.passed['G01-L1']=true;
   inf=onRoundEnd('Q00',1,rnd(['f','f','f','f','f','f','x','x','f','f'],oldPlan));
   t('Abschluss: ohne alle Pflicht-Bauteile keine Urkunde',inf.passed&&!inf.final&&!S.final);
-  t('Migration 6: alte Schnellcheck-Runden (10 Fragen) werden verworfen, Rest bleibt',(()=>{const o={rounds:{'Q00-L1':{size:10,results:[]},'Q00-L2':{size:15,results:[]},'G02-L1':{size:5,results:[]},'Q01-L1':{size:5,results:[]}}};migrate6(o);return !o.rounds['Q00-L1']&&!!o.rounds['Q00-L2']&&!!o.rounds['G02-L1']&&!!o.rounds['Q01-L1'];})());
-  freshP();S.quizFor='G02';
-  inf=onRoundEnd('Q01',1,rnd(['f','f','f','x','f']));
-  t('Kurztest: 4 von 5 ⇒ Bauteil per Check, kein Pfad-Eintrag Q01',inf.quiz.passed&&S.checked.G02&&!S.passed['Q01-L1']);
-  freshP();S.quizFor='G02';
-  inf=onRoundEnd('Q01',1,rnd(['f','x','f','x','f']));
-  t('Kurztest: 3 von 5 ⇒ nicht frei',!inf.quiz.passed&&!S.checked.G02);
+  t('Migration 6: alte Schnellcheck-Runden (10 Fragen) werden verworfen, Rest bleibt',(()=>{const o={rounds:{'Q00-L1':{size:10,results:[]},'Q00-L2':{size:15,results:[]},'G02-L1':{size:5,results:[]}}};migrate6(o);return !o.rounds['Q00-L1']&&!!o.rounds['Q00-L2']&&!!o.rounds['G02-L1'];})());
   freshP();
   const dk=(off)=>{const d=new Date();d.setDate(d.getDate()+off);return dayKey(d);};
   S.days[dk(0)]=1;S.days[dk(-1)]=2;S.days[dk(-2)]=1;
@@ -434,10 +418,10 @@ function runSelfTests(){
     try{steps.forEach(s=>{introRich(s.h);s.say.forEach(introRich);if(s.fig)introFigNode(s.fig);if(s.calc)introCalcNode(s.calc);if(s.tryit)introTry(s.tryit);if(s.lab)labFigure({mode:'strip',base:s.lab.base,cur:s.lab.cur,last:{op:s.lab.op,k:s.lab.k}});});}catch(e){built=false;}
     t('Erklärungen: alle Schritte lassen sich aufbauen',built);
     t('Erklärungen: **fett** und {n|d} werden zu Text, Hervorhebung und Bruch',(()=>{const n=introRich('Tippe **Prüfen**. Aus {4|6} wird {2|3}.');return n.length===7&&n[1].tagName==='STRONG'&&n[1].textContent==='Prüfen'&&n[3].classList.contains('frac')&&n[3].textContent==='46'&&n[5].classList.contains('frac')&&n[5].textContent==='23';})());
-    /* Gate: ungesehen oder ausdrücklich geöffnet; nie für Kurztest, Spiele, Startseite */
+    /* Gate: ungesehen oder ausdrücklich geöffnet; nie für Spiele, Startseite */
     S.intro={};
     t('Gate: Bruchlabor und Übungen des Lernpfads zeigen die Erklärung, solange sie ungesehen ist',introWanted({kind:'lab'})==='LAB'&&introWanted({kind:'practice',id:'G02'})==='G02'&&introWanted({kind:'practice',id:'Q00'})==='Q00');
-    t('Gate: nie beim Kurztest, bei Spielen, auf der Startseite und bei unbekannten Kennungen',!introWanted({kind:'practice',id:'Q01'})&&!introWanted({kind:'practice',id:'O01'})&&!introWanted({kind:'game',id:'S01'})&&!introWanted({kind:'home'})&&!introWanted({kind:'practice',id:'ZZ'})&&!introWanted({kind:'practice',id:'constructor'})&&!introWanted(null));
+    t('Gate: nie bei Spielen, auf der Startseite und bei unbekannten Kennungen',!introWanted({kind:'practice',id:'O01'})&&!introWanted({kind:'game',id:'S01'})&&!introWanted({kind:'home'})&&!introWanted({kind:'practice',id:'ZZ'})&&!introWanted({kind:'practice',id:'constructor'})&&!introWanted(null));
     S.intro={G02:true,LAB:true};
     t('Gate: Gesehenes kommt nicht wieder – außer per Knopf im Merkkasten (view.intro)',!introWanted({kind:'practice',id:'G02'})&&!introWanted({kind:'lab'})&&introWanted({kind:'practice',id:'G02',intro:true})==='G02'&&introWanted({kind:'lab',intro:true})==='LAB'&&introWanted({kind:'practice',id:'G03'})==='G03');
     S.intro=keepI;
@@ -479,7 +463,7 @@ function runSelfTests(){
   {
     const keepV=S.view;
     const bt=(v)=>{S.view=v;return backTarget();};
-    t('Navigation: pfadView findet das Thema zu Bauteil, Labor und unbekannter ID',pfadView('G02').thema==='veraendern'&&pfadView('LAB').thema==='veraendern'&&pfadView('Q01').thema==='veraendern'&&pfadView().thema==='veraendern');
+    t('Navigation: pfadView findet das Thema zu Bauteil, Labor und unbekannter ID',pfadView('G02').thema==='veraendern'&&pfadView('LAB').thema==='veraendern'&&pfadView().thema==='veraendern');
     t('Navigation: Zurück aus dem Lernpfad führt zur Themenübersicht, aus der Übersicht nirgends hin',JSON.stringify(bt({kind:'home',tab:'pfad',thema:'veraendern'}))==='{"kind":"home","tab":"pfad"}'&&bt({kind:'home',tab:'pfad'})===null);
     t('Navigation: Zurück aus einem Bauteil des Lernpfads führt in den Lernpfad dieses Themas',bt({kind:'practice',id:'G02',from:'pfad'}).thema==='veraendern'&&bt({kind:'lab',from:'pfad'}).thema==='veraendern');
     t('Navigation: Zurück aus Üben führt in die Gruppe, aus der Gruppe in die Übersicht',bt({kind:'practice',id:'G02'}).group==='Entdecken'&&bt({kind:'home',tab:'ueben',group:'Entdecken'}).tab==='ueben'&&!bt({kind:'home',tab:'ueben',group:'Entdecken'}).group);

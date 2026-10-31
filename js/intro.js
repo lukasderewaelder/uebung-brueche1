@@ -152,20 +152,20 @@ const INTRO={
       say:['Du brauchst zwei Wege mit verschiedenen Zahlen.','Weg 1 kann ein großer Schritt sein.','Weg 2 besteht aus kleinen Schritten.','Mit **Weg neu starten** beginnst du noch einmal.'],
       calc:[[[12,18],'=',[12,18,'d',6],'=',[2,3]],[[12,18],'=',[6,9],'=',[2,3]]]}
   ]},
-  Q00:{title:'Schnellcheck',steps:[
+  Q00:{title:'Eingangstest',steps:[
     {h:'Blitzfragen',
       say:[TASKS.Q00.size+' Fragen warten auf dich.','Du tippst nur die Antwort an.','Es gibt keine Zeitmessung.']},
     {h:'Sofort eine Rückmeldung',
       say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Dann geht es mit der nächsten Frage weiter.']},
     {h:'Danach siehst du, was fehlt',
-      say:['Am Ende siehst du, was du schon kannst.','Wenn etwas fehlt, bekommst du einen Plan.','Weißt du etwas nicht, rate bitte nicht wild.']},
+      say:['Am Ende siehst du, was du schon kannst.','Danach wählst du: dem Pfad folgen oder selbst aussuchen.','Weißt du etwas nicht, rate bitte nicht wild.']},
     {h:'Der Abschlusscheck',
       say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat auch '+TASKS.Q00.size+' Fragen.','Ab '+needOf(TASKS.Q00.size)+' richtigen Antworten gibt es die Urkunde.']}
   ]}
 };
 const hasIntro=(id)=>Object.prototype.hasOwnProperty.call(INTRO,id);
 const introSeen=(id)=>!!(S.intro&&S.intro[id]===true);
-/* Zu welcher Ansicht gehört eine Erklärung? Bruchlabor und jede Übung des Lernpfads – nicht der Kurztest, nicht die Spiele */
+/* Zu welcher Ansicht gehört eine Erklärung? Bruchlabor und jede Übung des Lernpfads – nicht die Spiele */
 function introIdOf(v){
   if(!v)return null;
   if(v.kind==='lab')return 'LAB';

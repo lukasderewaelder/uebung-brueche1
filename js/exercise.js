@@ -243,7 +243,7 @@ const openEntry=(id)=>{if(!isGame(id))S.last=id;go({kind:isGame(id)?'game':'prac
 function setLevel(id,l){S.levelByType[id]=l;persist();renderAll();}
 
 /* Symbole und Kennfarbe je Übung (erw = Erweitern/Orange, kue = Kürzen/Petrol) */
-const ICON={Q00:'blitz',Q01:'blitz',G01:'lineal',T01:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'zahnrad',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor'};
+const ICON={Q00:'blitz',G01:'lineal',T01:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'zahnrad',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor'};
 const ACC={G02:'erw',O01:'erw',G03:'kue',G04:'kue',T01:'kue',O02:'kue',G05:'mix'};
 function backTarget(){
   const v=S.view;
@@ -428,7 +428,7 @@ function renderSummary(main,id,lvl,key,round){
     el('div',{class:'rowbtns'},...btns)));
 }
 
-/* Ergebnis des Schnellchecks (Q00) und des Kurztests (Q01) */
+/* Ergebnis des Eingangstests und Abschlusschecks (Q00) */
 function renderQuickSummary(main,id,lvl,key,round){
   const info=round.info||{};
   const right=round.results.filter(r=>r==='f'||r==='l').length,share=right/round.size;
@@ -436,15 +436,6 @@ function renderQuickSummary(main,id,lvl,key,round){
   const btn=(label,fn,primary)=>el('button',{type:'button',class:'btn'+(primary?' primary':''),onclick:fn},label);
   const toPfad=()=>go(pfadView(id));
   const stars=bigStars(share>=0.9?3:share>=0.7?2:share>=0.4?1:0);
-  if(id==='Q01'){
-    const q=info.quiz||{},st=q.station||S.quizFor,name=st?stationTitle(st):'das Bauteil',ok=!!q.passed;
-    main.append(el('div',{class:'card summary'},
-      el('div',{class:'stampbox'},ok?'Kurztest bestanden':'Noch nicht'),el('p',null),stars,
-      el('p',null,`${right} von ${round.size} richtig`),
-      el('p',null,ok?name+' ist geschafft (per Check). Es geht weiter.':'Du brauchst '+needOf(round.size)+' von '+round.size+' richtig. Übe zuerst das Bauteil – dann klappt es.'),
-      el('div',{class:'rowbtns'},...(ok?[btn('Weiter im Lernpfad',toPfad,true)]:[btn('Zum Bauteil',()=>openStation(st),true),btn('Nochmal',again),btn('Zum Lernpfad',toPfad)]))));
-    return;
-  }
   /* Schnellcheck (Q00): Ergebnis je nach Stufe – von vorn beginnen, Themenliste oder fit */
   const ev=info.ev||qEvaluate(round.results,round.sk,round.size,true); /* Runden ohne info.ev: aus den Antworten rechnen */
   const per={};

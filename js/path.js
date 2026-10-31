@@ -109,29 +109,24 @@ function onRoundEnd(id,lvl,round){
     const sure=Q_SKILLS.filter(sk=>ev.skills[sk].status==='sitzt');
     sure.forEach(sk=>{const st=Q_STATION[sk];if(st&&!stationDone(st)){S.checked[st]=true;info.placed.push(st);}});
     if(sure.length===Q_SKILLS.length&&!stationDone('G05')){S.checked.G05=true;info.placed.push('G05');}
-    /* Ergebnis für „Dein Plan“ merken; wenige Treffer mitten im Pfad überschreiben einen vorhandenen Plan nicht */
+    /* Ergebnis des Eingangstests merken (Marken im Lernpfad); wenige Treffer mitten im Pfad überschreiben einen vorhandenen nicht */
     if(ev.trust||!S.einstufung)S.einstufung={at:Date.now(),right:ev.right,size:ev.size,stufe:ev.stufe,skills:ev.skills};
     /* Abschluss: alle Pflicht-Bauteile davor fertig und mindestens 80 % richtig */
     const ready=pathState().filter(r=>r.must&&!r.m.final).every(r=>r.done);
     info.ready=ready;
     if(ready&&info.passed&&!S.final){S.final=true;info.final=true;}
-  }else if(id==='Q01'){
-    const st=S.quizFor;
-    info.quiz={station:st,right,need,passed:info.passed};
-    if(st&&info.passed&&!stationDone(st))S.checked[st]=true;
   }else if(info.passed&&PATH.some(m=>m.id===id)){
     info.firstPass=!stationDone(id);
     S.passed[keyOf(id,lvl)]=true;
   }
   /* perfekte Runde: jede Aufgabe beim 1. Versuch ohne Tipp richtig (zählt für „alles perfekt“) */
-  if(id!=='Q01'&&round.results.length&&round.results.every(r=>r==='f')){(S.perfect=S.perfect||{})[keyOf(id,lvl)]=true;info.perfect=true;}
+  if(round.results.length&&round.results.every(r=>r==='f')){(S.perfect=S.perfect||{})[keyOf(id,lvl)]=true;info.perfect=true;}
   info.daily=markDay();
   return info;
 }
 /* Punkte und Einblendung am Rundenende (eine Einblendung, damit nichts übereinanderliegt) */
 function roundAward(info){
   let xp=15,label='Runde geschafft!';
-  if(info.quiz&&info.quiz.passed){xp+=10;label='Kurztest geschafft!';}
   if(info.firstPass){xp+=20;label='Bauteil fertig!';}
   if(info.daily){xp+=10;if(label==='Runde geschafft!')label='Tagesziel!';}
   if(info.final){xp+=50;label='Urkunde!';}
@@ -162,11 +157,6 @@ function openStation(id){
   if(id==='LAB')go({kind:'lab',from:'pfad'});
   else{S.last=id;go({kind:'practice',id,from:'pfad'});}
 }
-function startKurztest(stationId){
-  S.quizSkills=PATH_SKILLS[stationId].slice();S.quizFor=stationId;
-  S.levelByType.Q01=1;S.rounds[keyOf('Q01',1)]={results:[],cur:null,size:TASKS.Q01.size};
-  go({kind:'practice',id:'Q01',from:'pfad'});
-}
 function lockSheet(row,modus){
   const mod=moduleOf(row.id);
   if(modus==='frei'){
@@ -183,51 +173,6 @@ function lockSheet(row,modus){
     el('div',{class:'modalbtns'},
       el('button',{type:'button',class:'btn',onclick:()=>{m.remove();openStation(b);}},'Zu: '+name),
       el('button',{type:'button',class:'btn alt',onclick:()=>m.remove()},'Schließen'))]);
-}
-
-/* ---------- Dein Plan (nach dem Schnellcheck) ---------- */
-/* Zustandslos aus S.einstufung und dem Lernpfad berechnet; null, wenn es keinen (mehr) gibt.
-   Posten in Lernpfad-Reihenfolge (Grundlegendes zuerst): Bauteile, deren Fähigkeit nicht „sitzt“, dazu G05, solange
-   etwas nicht sitzt; bei „von vorn“ das Bruchlabor und Gleiche Anteile (danach läuft der normale Pfad). */
-function planOf(rows){
-  try{
-    const e=S.einstufung;
-    if(!e||S.final)return null;
-    rows=rows||pathState();
-    const byId={};rows.forEach(r=>{byId[r.id]=r;});
-    const skillOf={};Object.keys(Q_STATION).forEach(sk=>{skillOf[Q_STATION[sk]]=sk;});
-    const stat=(id)=>{const x=e.skills&&e.skills[skillOf[id]];return x?x.status:'ueben';};
-    const items=[];
-    if(e.stufe==='start'){
-      ['LAB','G01'].forEach(id=>{if(byId[id])items.push({id,status:'ueben'});});
-    }else{
-      let weak=false;
-      PATH.forEach(m=>{
-        if(skillOf[m.id]){const st=stat(m.id);if(st!=='sitzt'){weak=true;items.push({id:m.id,status:st});}}
-        else if(m.id==='G05'&&weak)items.push({id:'G05',status:'ueben'});
-      });
-    }
-    items.forEach(it=>{it.done=!!(byId[it.id]&&byId[it.id].done);});
-    const now=items.find(it=>!it.done);
-    return now?{items,now,stufe:e.stufe}:null;
-  }catch(err){return null;}
-}
-function planCard(plan){
-  const li=plan.items.map(it=>{
-    const now=it.id===plan.now.id;
-    const kurz=now&&it.status==='fast'&&PATH_SKILLS[it.id];
-    return el('li',{class:'plan-it'+(it.done?' done':'')+(now?' now':'')},
-      el('span',{class:'pl-ic','aria-hidden':'true'},it.done?icon('haken'):now?icon('weiter'):null),
-      el('span',{class:'pl-nm'},stationTitle(it.id),now?el('small',null,'jetzt'):null),
-      el('span',{class:'pl-st'},it.done?'fertig':it.status==='fast'?'fast':'üben'),
-      kurz?el('span',{class:'pl-act'},
-        el('button',{type:'button',class:'btn small',onclick:()=>startKurztest(it.id)},'Kurztest'),
-        el('button',{type:'button',class:'btn small alt',onclick:()=>openStation(it.id)},'Üben')):null);
-  });
-  return el('section',{class:'plancard','aria-label':'Dein Plan'},
-    el('div',{class:'lblm'},'Dein Plan'),
-    el('p',null,plan.stufe==='start'?'Fang vorn an – dann geht es Schritt für Schritt weiter.':'Das solltest du üben:'),
-    el('ol',{class:'planlist'},...li));
 }
 
 /* ---------- Ansicht: Eingangstest, Wahl, Pfad und Selbst aussuchen ---------- */

@@ -1,10 +1,10 @@
 'use strict';
 /* =====================================================================
    Themen (Module): die eine Stelle, an der ein Lernthema angemeldet wird
-   Ein Thema bringt mit: Übungsgruppen (Üben), Lernpfad-Bauteile und – falls vorhanden –
-   Kurztest-Fähigkeiten. Die Aufgabentypen selbst stehen in TASKS (js/tasks.js).
+   Ein Thema bringt mit: Übungsgruppen (Üben), Lernpfad-Bauteile. Die Aufgabentypen selbst stehen in TASKS (js/tasks.js).
    status 'aktiv': erscheint in Lernen und Üben. status 'geplant': nur ein Hinweis
    „Bald“ ohne Link, ohne Aufgaben (keine Platzhalterseiten).
+   quickcheck: das Thema hat einen Eingangstest (Q00), Pflicht vor dem Lernpfad.
    rank: Aufgaben und Lernpfad des Themas zählen für „alles perfekt“ (höchster Rang).
    Neues Thema: Eintrag hier, Aufgabentypen in eigener Datei vor modules.js, Symbole in ICON/ACC (exercise.js).
    ===================================================================== */
@@ -14,7 +14,7 @@ const MODULES=[
   {id:'veraendern',name:'Brüche verändern',desc:'Gleiche Anteile erkennen, erweitern und kürzen.',icon:'aus',status:'aktiv',rank:true,quickcheck:true,
     /* Übungsgruppen (Reiter „Üben“): Name → Symbol, Muster, Text, Aufgaben */
     groups:{
-      'Entdecken':{pat:'dots',icon:'lupe',text:'Labor, Schnellcheck, Teilbarkeit, Erweitern und Kürzen',ids:['LAB','Q00','G01','T01','G02','G03','G04','G05','B01']},
+      'Entdecken':{pat:'dots',icon:'lupe',text:'Labor, Eingangstest, Teilbarkeit, Erweitern und Kürzen',ids:['LAB','Q00','G01','T01','G02','G03','G04','G05','B01']},
       'Knobeln':{pat:'dash',icon:'zirkel',text:'Lücken, Fehler und mehrere Lösungen',ids:['U01','U02','U03','O01','O02']},
       'Umwandeln':{pat:'hatch',icon:'wechsel',text:'Dezimalzahlen und gemischte Zahlen',ids:['D01','D02','D03']}
     },
@@ -33,9 +33,7 @@ const MODULES=[
       {id:'U01',grp:'Knobeln'},{id:'U02',grp:'Knobeln'},{id:'U03',grp:'Knobeln'},{id:'O02',grp:'Knobeln'},
       {id:'Q00',grp:'Abschluss',must:true,final:true,title:'Abschlusscheck',desc:TASKS.Q00.size+' Fragen zeigen, was du kannst. Ab '+needOf(TASKS.Q00.size)+' richtig gibt es die Urkunde.'}
     ],
-    pathGroups:{Entdecken:'lupe',Erweitern:'aus','Kürzen':'ein',Mischen:'zahnrad',Knobeln:'zirkel',Abschluss:'plakette'},
-    /* Welche Fähigkeiten prüft der Kurztest für ein Bauteil? */
-    pathSkills:{G01:['gleich'],G02:['erweitern'],T01:['teilbar'],G03:['kuerzen'],G04:['vollstaendig','kuerzen'],G05:['erweitern','kuerzen']}
+    pathGroups:{Entdecken:'lupe',Erweitern:'aus','Kürzen':'ein',Mischen:'zahnrad',Knobeln:'zirkel',Abschluss:'plakette'}
   },
   {id:'zahlenstrahl',name:'Brüche am Zahlenstrahl',desc:'Brüche einordnen und ablesen.',icon:'lineal',status:'geplant'},
   {id:'vergleichen',name:'Brüche vergleichen',desc:'Brüche vergleichen und ordnen.',icon:'wechsel',status:'geplant'},
@@ -53,7 +51,6 @@ const PRACTICE_ORDER=flat('practice');
 const PATH=flat('path');
 const GROUPS=merged('groups');
 const PATH_GROUPS=merged('pathGroups');
-const PATH_SKILLS=merged('pathSkills');
 /* Thema, zu dem eine Übung, ein Bauteil oder eine Gruppe gehört */
 const moduleOf=(id)=>activeModules().find(m=>(m.practice||[]).includes(id)||(m.path||[]).some(x=>x.id===id)||(m.groups&&m.groups[id]))||null;
 /* Aufgaben, die für „alles perfekt“ zählen */

@@ -30,7 +30,7 @@ const PROBLEMS=[
     tip:'Mit **Überspringen** kommt die nächste Aufgabe.'},
   {id:'thema',q:'Ich verstehe ein Thema nicht',
     steps:['Öffne das Thema. Zum Beispiel **Erweitern** im Lernpfad.','Tippe auf **Merkkasten**.','Tippe oben auf **Erklärung**. Dann siehst du sie noch einmal.'],
-    tip:'Auch das **Bruchlabor** und der **Schnellcheck** haben eine Erklärung.'},
+    tip:'Auch das **Bruchlabor** und der **Eingangstest** haben eine Erklärung.'},
   {id:'hilfe',q:'Nichts davon hilft',last:true,
     steps:['Frag deine Lehrerin, deinen Lehrer oder jemanden zu Hause.','Erzähle genau, was du getippt hast. Sag auch, was dann passiert ist.','Zeige diese Angaben. Du kannst auch ein Foto vom Bildschirm machen.'],
     extra:techInfo}
