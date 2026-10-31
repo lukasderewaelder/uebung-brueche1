@@ -696,6 +696,54 @@ function runSelfTests(){
     t('Navigation: Zurück aus Üben führt in die Gruppe, aus der Gruppe in die Übersicht',bt({kind:'practice',id:'G02'}).group==='Entdecken'&&bt({kind:'home',tab:'ueben',group:'Entdecken'}).tab==='ueben'&&!bt({kind:'home',tab:'ueben',group:'Entdecken'}).group);
     S.view=keepV;
   }
+
+  /* Paket 4: Sprache für Kinder, Rechenprobe im Lob, Merkkästen, Schriftgröße */
+  {
+    const jargon=/Bauteil|Bauplan|Baupläne|Blatt \d|Blitz|Maßgenau|Millimeter|Legende: alles perfekt|\bPos\b/;
+    t('Lob: keine Floskeln mit Technikwörtern (Maßgenau, Millimeter, Bauteil in Ordnung)',PRAISE.length>=5&&PRAISE.every(p=>!jargon.test(p)));
+    const bom=bomList(['G02']);
+    t('Stückliste: Spalte „Nr.“ statt „Pos“',bom.textContent.includes('Nr.')&&!/\bPos\b/.test(bom.textContent));
+    t('Symbole: kein Blitz mehr (Eingangstest, Abschluss, Testkarte), der Haken ersetzt ihn',ICON.Q00==='haken'&&ICON.ZQ==='haken'&&!document.getElementById('i-blitz')&&!Object.values(ICON).includes('blitz'));
+    const keepV=S.view,keepR=S.rounds,keepI=S.intro,seen=[];
+    try{
+      S.rounds={};S.intro={G02:true,Q00:true,ZQ:true,G04:true};
+      [{kind:'home',tab:'pfad'},{kind:'home',tab:'pfad',thema:'veraendern'},{kind:'home',tab:'ueben'},{kind:'home',tab:'spiele'},{kind:'home',tab:'rang'},{kind:'practice',id:'G02'},{kind:'practice',id:'Q00'},{kind:'game',id:'S02'}].forEach(v=>{
+        S.view=v;renderAll();
+        if(jargon.test(app.textContent))seen.push((v.tab||v.id)+': '+(app.textContent.match(jargon)||[''])[0]);
+      });
+      S.view={kind:'practice',id:'G02'};S.rounds={};renderAll();
+      const tb=document.querySelector('.titleblock');
+      t('Aufgabenblatt: „Aufgabe 1 von 5“ statt „Blatt 1/5“',!!tb&&/Aufgabe 1 von 5/.test(tb.textContent)&&!/Blatt/.test(tb.textContent));
+      S.view={kind:'home',tab:'rang'};renderAll();
+      t('Ich-Reiter: „Alle Ziele“ statt „Legende: alles perfekt“',/Alle Ziele/.test(app.textContent)&&!/Legende: alles perfekt/.test(app.textContent));
+    }finally{S.view=keepV;S.rounds=keepR;S.intro=keepI;persist();renderAll();}
+    t('Sprache: in Lernen, Üben, Spiele, Ich, Aufgabe, Eingangstest und Tresor kommen Bauteil, Bauplan, Blatt, Pos und Blitz nicht mehr vor',seen.length===0||(console.log(seen),false));
+    /* Rechenprobe statt Floskel */
+    const keepX={xp:S.xp,streak:S.streak,bestStreak:S.bestStreak,skills:S.skills};
+    const fb=(task,draft)=>{const st=newState(task);st.draft=draft;const host=el('div');const m=mountTask(host,st,{save(){},done(){}});m.check();return host.textContent;};
+    const f1=fb({type:'G02',level:1,mode:'factor',a:2,b:5,k:3},{'r.n':'6','r.d':'15'});
+    const f2=fb({type:'G03',level:1,mode:'factor',a:12,b:18,k:3},{'r.n':'4','r.d':'6'});
+    const f3=fb({type:'G03',level:2,mode:'full',a:84,b:126,p:2,q:3},{'r.n':'2','r.d':'3'});
+    const f4=fb({type:'D03',level:1,w:2,n:1,d:3},{'r.n':'7','r.d':'3'});
+    Object.assign(S,keepX);persist();
+    t('Lob mit Rechnung: „Richtig: 2 · 3 = 6 und 5 · 3 = 15.“ (Erweitern), 12 : 3 = 4 und 18 : 3 = 6 (Kürzen mit Zahl), 84 : 42 = 2 und 126 : 42 = 3 (so weit wie möglich), 2 · 3 + 1 = 7 (gemischte Zahl)',
+      f1.includes('Richtig: 2 · 3 = 6 und 5 · 3 = 15.')&&f2.includes('Richtig: 12 : 3 = 4 und 18 : 3 = 6.')&&f3.includes('84 : 42 = 2 und 126 : 42 = 3')&&f4.includes('2 · 3 + 1 = 7'));
+    t('Lob mit Rechnung: Aufgaben ohne kurze Rechnung (Bruchfamilie, Schnelltest) behalten Lob und Begründung',proofText({type:'O01',p:2,q:3})===null&&proofText({type:'Q00'})===null&&proofText({type:'G05',mode:'denom',a:6,b:9,N:3})==='9 : 3 = 3 und 6 : 3 = 2.'&&proofText({type:'U02',mode:'expand',from:[2,3],to:[6,9],k:3})==='2 · 3 = 6 und 3 · 3 = 9.');
+    /* Merkkästen: Beispiel zuerst, kurze Sätze, Fachwörter erklärt */
+    const ids=Object.keys(NOTES),words=(s)=>s.split(/\s+/).filter(Boolean).length;
+    let longest=0,firstOK=0,bad=[];
+    ids.forEach(id=>{
+      let nodes;try{nodes=NOTES[id].build([]);}catch(e){bad.push(id);return;}
+      const f=nodes[0];if(f.classList.contains('ex')||/^Beispiel/.test(f.textContent))firstOK++;
+      nodes.filter(n=>n.tagName==='P'||n.classList.contains('rule')).forEach(n=>n.textContent.split(/[.!?]\s+/).forEach(s=>{longest=Math.max(longest,words(s));}));
+    });
+    t('Merkkästen: alle 10 (M1–M10) bauen sich, beginnen mit dem Beispiel, Sätze höchstens 14 Wörter (längster: '+longest+')',ids.length===10&&bad.length===0&&firstOK===10&&longest<=14);
+    const txt=(id)=>NOTES[id].build([]).map(n=>n.textContent).join(' ');
+    t('Merkkästen: Fachwörter kommen nach dem Beispiel mit Erklärung (Erweiterungszahl, Kürzungszahl, Quersumme, Dezimalbruch, gemischte Zahl, kgV)',txt('M2').includes('Erweiterungszahl. Sie ist mindestens 2')&&txt('M3').includes('Kürzungszahl. Sie ist mindestens 2')&&txt('M7').includes('Quersumme bekommst du, wenn du alle Ziffern addierst')&&txt('M4').includes('heißt Dezimalbruch')&&txt('M6').includes('Natürliche Zahlen sind 1, 2, 3')&&txt('M10').includes('kleinstes gemeinsames Vielfaches (kgV)'));
+    /* Schrift: Menü und Rang-Chip mindestens 16 px */
+    const px=(cls)=>{const x=el('span',{class:cls});document.body.append(x);const v=parseFloat(getComputedStyle(x).fontSize);x.remove();return v;};
+    t('Schrift: Menü, Rangname, XP und Serie sind mindestens 16 px groß (navb '+px('navb')+', gname '+px('gname')+', gxp '+px('gxp')+')',['navb','gname','gxp','gstreak'].every(c=>px(c)>=16));
+  }
   /* Paket 3: Tipps – drei Stufen je Aufgabe, bezogen auf die Zahlen, Sätze kurz, Regeln nur wenn sie passen */
   {
     const ids=Object.keys(TASKS).filter(id=>!TASKS[id].quick);
@@ -818,7 +866,7 @@ function runSelfTests(){
     t('Labor: Meldung zum Zähler ist ein vollständiger Satz',LAB_WRONG.zaehler.includes('mit der Zahl multipliziert oder durch sie geteilt'));
     const noteText=Object.keys(NOTES).map(k=>NOTES[k].title+' '+NOTES[k].build([]).map(n=>n.textContent).join(' ')).join(' ');
     t('Begriffe: „gemischte Zahl“ und „Bruch“, nie „gemeiner Bruch“ oder „gemischte Schreibweise“ (Merkkästen, Aufgaben, Erklärungen)',!/gemeine[rn]? Bruch|[Gg]emischte Schreibweise/.test(noteText+JSON.stringify(INTRO)+Object.values(TASKS).map(x=>x.name+' '+x.desc).join(' '))&&TASKS.D03.name==='Gemischte Zahl → Bruch'&&NOTES.M6.title==='Gemischte Zahl als Bruch');
-    t('Merkkästen: Erweiterungszahl und Kürzungszahl „mindestens 2“; M5 ohne „führende Nullen“, mit „Zähle alle Stellen“',noteText.includes('Erweiterungszahl, mindestens 2')&&noteText.includes('Kürzungszahl, mindestens 2')&&noteText.includes('Zähle alle Stellen hinter dem Komma')&&!/Führende Nullen|unbemerkt/.test(noteText));
+    t('Merkkästen: Erweiterungszahl und Kürzungszahl „mindestens 2“; M5 ohne „führende Nullen“, mit „Zähle alle Stellen“',noteText.includes('Erweiterungszahl. Sie ist mindestens 2')&&noteText.includes('Kürzungszahl. Sie ist mindestens 2')&&noteText.includes('Zähle alle Stellen hinter dem Komma')&&!/Führende Nullen|unbemerkt/.test(noteText));
     t('Merkkasten M9: Weg 1 (Einteilung anpassen) vor Weg 2 (Bruch anpassen), kein Weg A/B',noteText.indexOf('Weg 1: Einteilung anpassen')>=0&&noteText.indexOf('Weg 1: Einteilung anpassen')<noteText.indexOf('Weg 2: Bruch anpassen')&&!/Weg [AB]\b/.test(noteText));
     t('Kleinstes gemeinsames Vielfaches: nur als Randnotiz (Z06-Erklärung nennt zuerst „die kleinste Zahl, in die alle Nenner passen“)',INTRO.Z06.steps.some(s=>s.say[1]&&s.say[1].includes('kleinste Zahl, in die alle Nenner passen')&&s.say.some(x=>x.includes('Fachwort'))));
     t('Z08-Erklärung: gemischte Zahl mit Rechnung 7/4 = 1 + 3/4 = 1 ¾, Überschrift „Brüche, die natürliche Zahlen sind“',INTRO.Z08.steps.some(s=>(s.calc||[]).some(l=>l.some(x=>x&&x.m&&x.m.join()==='1,3,4')))&&INTRO.Z08.steps.some(s=>s.h==='Brüche, die natürliche Zahlen sind'&&s.say[0].includes('1, 2 oder 3')));

@@ -133,7 +133,7 @@ function renderMemory(id){
    9 Spiel S02 – Der Bruch-Tresor
    Der Code ist ein Bruch. Jedes Schloss (Erweitern oder Kürzen) gibt eine Ziffer frei.
    Sind alle Schlösser offen, steht der Code-Bruch da – der Tresor nimmt aber nur den
-   gekürzten Bruch. Wer ihn knackt, findet einen Bauplan für die Sammlung.
+   gekürzten Bruch. Wer ihn knackt, findet eine Sammelkarte für die Sammlung.
    ===================================================================== */
 const VAULT_GROUPS={
   1:[['G02','U02'],['G03','G04','T01'],['U01','B01','G05']],
@@ -141,7 +141,7 @@ const VAULT_GROUPS={
 };
 const LOOT=['Zahnradwagen','Dampfschiff','Windmühle','Leuchtturm','Hängebrücke','Segelflieger','Uhrwerk','Hebekran','Schleusentor','Wasserrad','Fernrohr','Seilbahn'];
 const lootOf=()=>S.loot||(S.loot=[]);
-/* Bevorzugt einen Bauplan, den es in der Sammlung noch nicht gibt */
+/* Bevorzugt eine Sammelkarte, die es in der Sammlung noch nicht gibt */
 function pickLoot(){
   const have=lootOf(),rest=LOOT.filter(x=>!have.includes(x));
   return RNG.pick(rest.length?rest:LOOT);
@@ -174,7 +174,7 @@ function renderVault(id){
   const fillStats=()=>help.setStats(el('div',null,el('h3',null,'Deine Runden'),el('table',{class:'stats'},
     el('tr',null,el('td',null,'Gespielte Runden'),el('td',null,el('b',null,String(rec.played)))),
     el('tr',null,el('td',null,'Geknackte Tresore'),el('td',null,el('b',null,String(rec.won)))),
-    el('tr',null,el('td',null,'Baupläne gesammelt'),el('td',null,el('b',null,lootOf().length+' von '+LOOT.length)))),
+    el('tr',null,el('td',null,'Sammelkarten gesammelt'),el('td',null,el('b',null,lootOf().length+' von '+LOOT.length)))),
     lootOf().length?el('p',{class:'lootlist'},lootOf().join(' · ')):null));
   fillStats();
   main.append(el('div',{class:'progress'},el('span',{class:'lvlbadge'},LEVEL_LABEL[lvl])));
@@ -223,15 +223,15 @@ function renderVault(id){
   };
   const drawTop=()=>{
     const open=v.locks.filter(solved).length;
-    const text=v.opened?`Der Tresor ist offen! Du hast den Bauplan »${v.loot}« gefunden.`
+    const text=v.opened?`Der Tresor ist offen! Du hast die Sammelkarte »${v.loot}« gefunden.`
       :allSolved()?'Alle Schlösser sind offen. Jetzt steht der ganze Code-Bruch da.'
-      :`Im Tresor liegt der Bauplan »${v.loot}«. Der Code ist ein Bruch – jedes Schloss verrät dir eine Ziffer.`;
+      :`Im Tresor liegt die Sammelkarte »${v.loot}«. Der Code ist ein Bruch – jedes Schloss verrät dir eine Ziffer.`;
     top.replaceChildren(
       el('div',{class:'vhead'},el('span',{class:'lblm'},'Code-Bruch'),
         v.opened?el('span',{class:'stampbox'},'Geknackt'):el('span',{class:'lblm vcount'},`${open} von ${n} offen`)),
       el('p',null,text),
       el('div',{class:'vpanel'},codeFrac(),el('div',{class:'vside'},lockChips(),
-        v.opened?el('small',null,'Deine Sammlung: '+lootOf().length+' von '+LOOT.length+' Baupläne'):null)));
+        v.opened?el('small',null,'Deine Sammlung: '+lootOf().length+' von '+LOOT.length+' Sammelkarten'):null)));
     fresh=-1;
   };
 
@@ -249,7 +249,7 @@ function renderVault(id){
   const openVault=()=>{
     v.opened=true;rec.won++;
     const have=lootOf();if(!have.includes(v.loot))have.push(v.loot);
-    live.textContent='Der Tresor ist offen. Bauplan '+v.loot+' gefunden.';
+    live.textContent='Der Tresor ist offen. Sammelkarte '+v.loot+' gefunden.';
     persist();fillStats();drawPuzzle();toTop();
     award(40,'Tresor geknackt!'); /* erst nach dem Umbau, damit die Einblendung über dem endgültigen Bedienpult liegt */
   };

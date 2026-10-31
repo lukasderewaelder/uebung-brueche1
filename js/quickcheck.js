@@ -349,7 +349,7 @@ const QUICK={
     return t.kind==='div'?[['Schau dir die Ziffern an.'],[DIV_RULE[t.k]]]:[['Lies die Frage genau.'],Q_HINT[t.kind]];
   }
 };
-TASKS.Q00=Object.assign({area:'Grundlagen',name:'Eingangstest',desc:Q_COUNT+' Blitzfragen zum Antippen – ohne Zeitdruck.',size:Q_COUNT,
+TASKS.Q00=Object.assign({area:'Grundlagen',name:'Eingangstest',desc:Q_COUNT+' Kurzfragen zum Antippen – ohne Zeitdruck.',size:Q_COUNT,
   gen:makeQuickGen('Q00'),
   ctx(round){
     if(!round.plan)round.plan=qPlan();

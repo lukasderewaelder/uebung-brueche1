@@ -14,9 +14,9 @@ function listLevel(ids){
   const mk=(n)=>el('button',{type:'button','aria-pressed':String(l===n),onclick:()=>set(n)},LEVEL_LABEL[n]);
   return el('div',{class:'levelrow'},el('span',{class:'lblm'},'Schwierigkeit'),el('div',{class:'seg',role:'group','aria-label':'Schwierigkeit wählen'},mk(1),mk(2)));
 }
-/* Stückliste: Pos · Bezeichnung · Sterne leicht/knifflig */
+/* Stückliste: Nr. · Bezeichnung · Sterne leicht/knifflig */
 function bomList(ids){
-  const head=el('div',{class:'bomhead'},el('span',null,'Pos'),el('span',null,'Bezeichnung'),el('span',null,'Leicht'),el('span',null,'Knifflig'),el('span'));
+  const head=el('div',{class:'bomhead'},el('span',null,'Nr.'),el('span',null,'Bezeichnung'),el('span',null,'Leicht'),el('span',null,'Knifflig'),el('span'));
   const rows=ids.map((id,i)=>{
     if(id==='LAB'){
       const done=!!(S.lab&&S.lab.done);
@@ -44,13 +44,13 @@ function moduleCard(m){
   if(z==='wahl')return el('section',{class:'tcard'},head,
     el('div',{class:'rowbtns'},btn('Wie möchtest du lernen?',openThema,true)));
   const {must,doneN,go1,rows}=pfadInfo(m,z);
-  const seg=el('span',{class:'segn',role:'img','aria-label':doneN+' von '+must.length+' Pflicht-Bauteilen fertig'});
+  const seg=el('span',{class:'segn',role:'img','aria-label':doneN+' von '+must.length+' Pflicht-Stationen fertig'});
   must.forEach((r,i)=>seg.append(el('i',{class:i<doneN?'on':''})));
   return el('section',{class:'tcard'},head,
     el('div',{class:'tc-prog'},seg,el('b',null,doneN+' von '+must.length)),
     el('div',{class:'rowbtns'},
       z==='pfad'&&go1?btn(startWord(rows,go1)+': '+stationTitle(go1.id),()=>openStation(go1.id),true,'play'):null,
-      btn(z==='pfad'?'Lernpfad ansehen':'Bauteile ansehen',openThema,!(z==='pfad'&&go1))));
+      btn(z==='pfad'?'Lernpfad ansehen':'Stationen ansehen',openThema,!(z==='pfad'&&go1))));
 }
 function lernenTab(home){
   home.append(el('h1',null,'Lernen'),...activeModules().map(moduleCard));
@@ -72,13 +72,13 @@ function renderHome(){
     if(thema)pfadTab(home,thema);else lernenTab(home);
   }else if(tab==='spiele'){
     home.append(el('h1',null,'Spiele'),listLevel(['S01','S02']),el('div',{class:'menu'},
-      ...['S01','S02'].map(id=>{const r=S.games[keyOf(id,levelOf(id))];return bigBtn(ICON[id],()=>openEntry(id),GAMES[id].name,GAMES[id].desc,[r?`Runden: ${r.played}`:'',id==='S02'&&lootOf().length?`Baupläne: ${lootOf().length} von ${LOOT.length}`:''].filter(Boolean).join(' · '),'',null,id==='S01'?'dots':'hatch');})));
+      ...['S01','S02'].map(id=>{const r=S.games[keyOf(id,levelOf(id))];return bigBtn(ICON[id],()=>openEntry(id),GAMES[id].name,GAMES[id].desc,[r?`Runden: ${r.played}`:'',id==='S02'&&lootOf().length?`Sammelkarten: ${lootOf().length} von ${LOOT.length}`:''].filter(Boolean).join(' · '),'',null,id==='S01'?'dots':'hatch');})));
   }else if(tab==='rang'){
     const total=Object.values(S.progress).reduce((a,p)=>a+p.done,0);
     home.append(el('h1',null,'Ich'),rankCard(),dayCard(),
       el('p',{class:'stats'},`Aufgaben bearbeitet: ${total} · Längste Serie: ${S.bestStreak||0}`),
       fold('Alle Ränge',rankLadder()),
-      fold('Legende: alles perfekt',perfectionList()),
+      fold('Alle Ziele',perfectionList()),
       fold('Deine Sterne',bomList(PRACTICE_ORDER)),
       el('div',{class:'rowbtns'},
         el('button',{type:'button',class:'btn small',onclick:openOptions},icon('zahnrad'),' Optionen'),

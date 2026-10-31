@@ -150,7 +150,7 @@ function onRoundEnd(id,lvl,round){
 /* Punkte und Einblendung am Rundenende (eine Einblendung, damit nichts übereinanderliegt) */
 function roundAward(info){
   let xp=15,label='Runde geschafft!';
-  if(info.firstPass){xp+=20;label='Bauteil fertig!';}
+  if(info.firstPass){xp+=20;label='Station fertig!';}
   if(info.daily){xp+=10;if(label==='Runde geschafft!')label='Tagesziel!';}
   if(info.final){xp+=50;label='Urkunde!';}
   award(xp,label);
@@ -192,7 +192,7 @@ function clearStation(id){
 }
 function resetSheet(id){
   const title=stationTitle(id);
-  const m=modal([icon('neu','big'),el('h2',null,'Bauteil zurücksetzen?'),el('p',null,el('b',null,title)),
+  const m=modal([icon('neu','big'),el('h2',null,'Station zurücksetzen?'),el('p',null,el('b',null,title)),
     el('p',null,'Angefangene Runden werden gelöscht, und die Erklärung erscheint wieder. Fertig, Sterne und Punkte bleiben.'),
     el('div',{class:'modalbtns'},
       el('button',{type:'button',class:'btn danger',onclick:()=>{m.remove();clearStation(id);persist();renderAll();toast('Zurückgesetzt: '+title);}},'Zurücksetzen'),
@@ -271,7 +271,7 @@ function startEingang(mod,retake){
   go({kind:'practice',id:qid,from:'pfad'});
 }
 function pfadLine(doneN,total){
-  const seg=el('span',{class:'segn',role:'img','aria-label':doneN+' von '+total+' Pflicht-Bauteilen fertig'});
+  const seg=el('span',{class:'segn',role:'img','aria-label':doneN+' von '+total+' Pflicht-Stationen fertig'});
   for(let i=0;i<total;i++)seg.append(el('i',{class:i<doneN?'on':''}));
   return el('div',{class:'pfadline'},seg,el('b',null,doneN+' von '+total+' geschafft'));
 }
@@ -281,7 +281,7 @@ function modusSwitch(mod,modus){
 }
 function gateCard(mod){
   return el('section',{class:'gate'},
-    el('div',{class:'gate-ic','aria-hidden':'true'},icon('blitz')),
+    el('div',{class:'gate-ic','aria-hidden':'true'},icon('haken')),
     el('h2',null,'Eingangstest'),
     el('p',null,TASKS[mod.qid].size+' kurze Fragen zeigen, was du schon kannst. Danach geht es los.'),
     el('p',null,'Du hast keine Zeitnot, und es gibt keine Note.'),
@@ -291,7 +291,7 @@ function gateCard(mod){
 function wahlCards(mod){
   return el('section',{class:'wahl'},
     el('h2',null,'Wie möchtest du lernen?'),
-    bigBtn('pfad',()=>setModus(mod,'pfad'),'Dem Pfad folgen','Alle Bauteile der Reihe nach. Empfohlen.',null,'go'),
+    bigBtn('pfad',()=>setModus(mod,'pfad'),'Dem Pfad folgen','Alle Stationen der Reihe nach. Empfohlen.',null,'go'),
     bigBtn('heft',()=>setModus(mod,'frei'),'Selbst aussuchen','Du siehst alles. Offen ist, was du schon kannst.'));
 }
 function pfadTab(home,mod){
@@ -304,8 +304,8 @@ function pfadTab(home,mod){
   if(z==='pfad'){
     const go1=info.go1;
     if(go1)home.append(bigBtn('play',()=>openStation(go1.id),startWord(info.rows,go1)+': '+stationTitle(go1.id),QCHK[go1.id]||go1.id==='LAB'?null:LEVEL_LABEL[levelOf(go1.id)],null,'go'));
-    else home.append(el('div',{class:'msg ok'},'Alle Pflicht-Bauteile sind fertig – stark! '+(info.rows.some(r=>!r.must)?'Probiere die freiwilligen Bauteile oder ein Spiel.':'Probiere ein Spiel oder ein anderes Thema.')));
-    home.append(fold('Alle Bauteile',pfadMap(info.rows,z)));
+    else home.append(el('div',{class:'msg ok'},'Alle Pflicht-Stationen sind fertig – stark! '+(info.rows.some(r=>!r.must)?'Probiere die freiwilligen Stationen oder ein Spiel.':'Probiere ein Spiel oder ein anderes Thema.')));
+    home.append(fold('Alle Stationen',pfadMap(info.rows,z)));
   }else{
     home.append(el('p',{class:'modushint'},'Hier siehst du alles. Offen ist, was du im Eingangstest schon konntest. Den Rest schaltet der Pfad frei.'),pfadMap(info.rows,z));
   }

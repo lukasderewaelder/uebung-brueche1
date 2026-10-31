@@ -252,7 +252,7 @@ function zqGen(level,R,ctx){
   const skill=(ctx&&ctx.skill)||R.pick(ZQ_SKILLS),kind=R.pick(ZQ_KINDS[skill]);
   return Object.assign({type:'ZQ',level,avoid:[]},ZQ_GEN[kind](level,R));
 }
-TASKS.ZQ=Object.assign({area:'Zahlenstrahl',name:'Eingangstest',desc:ZQ_SKILLS.length*Q_PER_SKILL+' Blitzfragen zum Antippen – ohne Zeitdruck.',size:ZQ_SKILLS.length*Q_PER_SKILL,
+TASKS.ZQ=Object.assign({area:'Zahlenstrahl',name:'Eingangstest',desc:ZQ_SKILLS.length*Q_PER_SKILL+' Kurzfragen zum Antippen – ohne Zeitdruck.',size:ZQ_SKILLS.length*Q_PER_SKILL,
   gen:zqGen,
   ctx(round){
     if(!round.plan)round.plan=qPlan(null,ZQ_SKILLS,Q_PER_SKILL);

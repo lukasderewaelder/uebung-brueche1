@@ -85,7 +85,7 @@ function award(xp,label){
   checkRankUp();
 }
 /* Abwechslungsreiches Lob (nie zweimal dasselbe hintereinander) */
-const PRAISE=['Maßgenau.','Sitzt.','Sauber gerechnet.','Stimmt auf den Millimeter.','Passt.','Volltreffer.','Genau so.','Bauteil in Ordnung.'];
+const PRAISE=['Sitzt.','Sauber gerechnet.','Passt.','Volltreffer.','Genau so.','Stark.'];
 let lastPraise=-1;
 function praise(){
   let i;do{i=Math.floor(Math.random()*PRAISE.length);}while(i===lastPraise);
@@ -236,7 +236,8 @@ function mountTask(host,st,cb){
       if(res.correct){
         st.status='correct';
         const why=res.feedback.replace(/^Richtig!\s*/,'');
-        showFb('ok',quick?(praise()+' '+firstSentence(why)).trim():praise()+' '+why);
+        const proof=quick?null:proofText(st.task); /* Rechnung statt Floskel, wo es eine kurze gibt */
+        showFb('ok',quick?(praise()+' '+firstSentence(why)).trim():proof?'Richtig: '+proof:praise()+' '+why);
         awardCorrect(st.attempts===0&&st.hint===0,quick);
         if(quick)recordSkill(st.task.skill,true);
         cb.done('correct');return 'correct';
@@ -282,7 +283,7 @@ const openEntry=(id)=>{if(!isGame(id))S.last=id;go({kind:isGame(id)?'game':'prac
 function setLevel(id,l){S.levelByType[id]=l;persist();renderAll();}
 
 /* Symbole und Kennfarbe je Übung (erw = Erweitern/Orange, kue = Kürzen/Petrol) */
-const ICON={ZQ:'blitz',Z01:'lineal',Z02:'lupe',Z03:'lineal',Z04:'aus',Z05:'wechsel',Z06:'zahnrad',Z07:'lineal',Z08:'wechsel',Q00:'blitz',G01:'lineal',T01:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'zahnrad',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor'};
+const ICON={ZQ:'haken',Z01:'lineal',Z02:'lupe',Z03:'lineal',Z04:'aus',Z05:'wechsel',Z06:'zahnrad',Z07:'lineal',Z08:'wechsel',Q00:'haken',G01:'lineal',T01:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'zahnrad',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor'};
 const ACC={G02:'erw',O01:'erw',G03:'kue',G04:'kue',T01:'kue',O02:'kue',G05:'mix'};
 function backTarget(){
   const v=S.view;
@@ -377,7 +378,7 @@ function renderPractice(id){
     const x=Math.min(round.size,round.results.length+(st.status==='open'?1:0));
     ruler.replaceChildren(...ticks);
     ruler.setAttribute('aria-label',`Aufgabe ${x} von ${round.size}`);
-    tbBlatt.textContent=`Blatt ${x}/${round.size}`;
+    tbBlatt.textContent=`Aufgabe ${x} von ${round.size}`;
   };
   main.append(ruler);
   const card=el('div',{class:'card'});
@@ -472,7 +473,7 @@ function renderSummary(main,id,lvl,key,round){
   if(inPath){
     const nx=pathState(moduleOf(id)).find(r=>r.next);
     if(passed){
-      msg=info.firstPass?'Bauteil fertig!'+(nx?' Als Nächstes: '+stationTitle(nx.id)+'.':''):'Wieder geschafft – stark!';
+      msg=info.firstPass?'Station fertig!'+(nx?' Als Nächstes: '+stationTitle(nx.id)+'.':''):'Wieder geschafft – stark!';
       btns=[btn('Weiter im Lernpfad',toPfad,true),btn('Nochmal',again),lvlBtn];
     }else{
       /* Punkte: ohne Tipp ganz, mit Tipp oder zweitem Versuch halb (Altdaten ohne info.points: nur die Treffer) */
@@ -481,7 +482,7 @@ function renderSummary(main,id,lvl,key,round){
       btns=[btn('Nochmal',again,true),btn('Zum Lernpfad',toPfad),lvlBtn];
     }
   }else btns=[btn(`Neue Runde (${TASKS[id].size} Aufgaben)`,again,true),lvlBtn];
-  main.append(el('div',{class:'card summary'},el('div',{class:'stampbox'},passed?'Bauteil fertig':'Runde fertig'),el('p',null),bigStars(stars),
+  main.append(el('div',{class:'card summary'},el('div',{class:'stampbox'},passed?'Station fertig':'Runde fertig'),el('p',null),bigStars(stars),
     el('p',null,`${round.size} Aufgaben bearbeitet · ${LEVEL_LABEL[lvl]}`),
     el('table',null,
       el('tr',null,el('td',null,'Beim 1. Versuch ohne Tipp richtig'),el('td',null,el('b',null,String(c('f'))))),

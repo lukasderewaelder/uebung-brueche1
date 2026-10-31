@@ -153,7 +153,7 @@ const INTRO={
       calc:[[[12,18],'=',[12,18,'d',6],'=',[2,3]],[[12,18],'=',[6,9],'=',[2,3]]]}
   ]},
   Q00:{title:'Eingangstest',steps:[
-    {h:'Blitzfragen',
+    {h:'Kurzfragen',
       say:[TASKS.Q00.size+' Fragen warten auf dich.','Du tippst eine Antwort an. Dann tippst du auf **Prüfen**.','Es gibt keine Zeitmessung.']},
     {h:'Sofort eine Rückmeldung',
       say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Dann geht es mit der nächsten Frage weiter.']},
@@ -163,7 +163,7 @@ const INTRO={
       say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat auch '+TASKS.Q00.size+' Fragen.','Ab '+needOf(TASKS.Q00.size)+' richtigen Antworten gibt es die Urkunde.']}
   ]},
   ZQ:{title:'Eingangstest',steps:[
-    {h:'Blitzfragen zum Zahlenstrahl',
+    {h:'Kurzfragen zum Zahlenstrahl',
       say:[TASKS.ZQ.size+' Fragen warten auf dich.','Du tippst eine Antwort an. Dann tippst du auf **Prüfen**.','Manchmal siehst du einen Zahlenstrahl.'],
       nline:{from:0,to:1,parts:5,marks:[{n:3,d:5,text:'A'}],labels:'wholes'}},
     {h:'Sofort eine Rückmeldung',

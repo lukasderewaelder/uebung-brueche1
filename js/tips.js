@@ -252,5 +252,32 @@ TIPS.Z08=(t)=>{
     [t.kind==='between'?`Der Punkt liegt hinter der ${w}. Die nächste ganze Zahl ist ${w+1}.`:`Du hast ${w} Ganze und ${rest} Abschnitte. Der Nenner bleibt ${t.d}.`]];
 };
 
+/* ---------- Rückmeldung bei „richtig“: die Rechnung statt einer Floskel ----------
+   proofText(task) liefert den Satz nach „Richtig: “ (null = die Aufgabe hat keine kurze Rechenprobe, dann gilt Lob + Begründung) */
+const PROOF={
+  G02:(t)=>`${t.a} · ${t.k} = ${t.a*t.k} und ${t.b} · ${t.k} = ${t.b*t.k}. Der Wert bleibt gleich.`,
+  G03:(t)=>{
+    if(t.mode==='factor')return `${t.a} : ${t.k} = ${t.a/t.k} und ${t.b} : ${t.k} = ${t.b/t.k}. Der Wert bleibt gleich.`;
+    if(t.irreducible)return 'Keine Zahl größer als 1 teilt beide Zahlen. Der Bruch ist fertig gekürzt.';
+    const g=gcd(t.a,t.b);
+    return `${t.a} : ${g} = ${t.p} und ${t.b} : ${g} = ${t.q}. Der Bruch ist fertig gekürzt.`;
+  },
+  G05:(t)=>{
+    if(t.mode==='denom'){
+      const up=t.N>t.b,k=up?t.N/t.b:t.b/t.N,n=t.a*t.N/t.b;
+      return up?`${t.b} · ${k} = ${t.N} und ${t.a} · ${k} = ${n}.`:`${t.b} : ${k} = ${t.N} und ${t.a} : ${k} = ${n}.`;
+    }
+    const e1=[t.a*t.k,t.b*t.k];
+    return `${t.a} · ${t.k} = ${e1[0]} und ${t.b} · ${t.k} = ${e1[1]}, dann ${e1[0]} : ${t.m} = ${e1[0]/t.m} und ${e1[1]} : ${t.m} = ${e1[1]/t.m}.`;
+  },
+  U02:(t)=>{
+    const e=t.mode==='expand',op=e?' · ':' : ';
+    return `${t.from[0]}${op}${t.k} = ${t.to[0]} und ${t.from[1]}${op}${t.k} = ${t.to[1]}.`;
+  },
+  D03:(t)=>`${t.w} · ${t.d} + ${t.n} = ${t.w*t.d+t.n}. Der Nenner bleibt ${t.d}.`
+};
+PROOF.G04=PROOF.G03;PROOF.V01=PROOF.G03;
+function proofText(task){const f=PROOF[task.type];return f?f(task):null;}
+
 /* Anmelden: jede Aufgabe liefert ihre Tipps aus TIPS (die Schnelltests Q00 und ZQ zeigen keine Tipps, behalten aber ihre eigenen) */
 Object.keys(TIPS).forEach(id=>{if(TASKS[id]){TASKS[id].hints=function(t){return TIPS[id](t);};}});

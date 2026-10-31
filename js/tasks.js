@@ -863,7 +863,7 @@ function divExplain(n,k){
   }
   return [];
 }
-TASKS.T01={area:'Grundlagen',name:'Teilbarkeit',desc:'Blitzcheck: Geht das Kürzen mit 2, 3, 4, 5, 6, 9 oder 10?',notes:['M7','M3'],size:8,
+TASKS.T01={area:'Grundlagen',name:'Teilbarkeit',desc:'Kurzcheck: Geht das Kürzen mit 2, 3, 4, 5, 6, 9 oder 10?',notes:['M7','M3'],size:8,
   gen(level,R){
     const k=R.pick([2,3,4,5,6,9,10]);
     const yes=R.chance(0.5);
