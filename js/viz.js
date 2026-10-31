@@ -154,7 +154,7 @@ function drawNumberLine(opts={}){
   }
   if(opts.secs){
     for(let i=g.i0;i<g.i1;i++){
-      const r=S_('rect',{class:'nl-sec'+(opts.secs.on&&opts.secs.on.has(i)?' on':''),x:g.xAt(i),y:y-22,width:g.sp,height:14});
+      const r=S_('rect',{class:'nl-sec'+(opts.secs.on&&opts.secs.on.has(i)?' on':''),x:g.xAt(i),y:y-30,width:g.sp,height:24});
       if(opts.secs.onTap){
         r.setAttribute('role','button');r.setAttribute('tabindex','0');r.setAttribute('aria-label','Abschnitt '+(i+1));
         r.addEventListener('click',()=>opts.secs.onTap(i));

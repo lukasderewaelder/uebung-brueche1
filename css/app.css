@@ -775,8 +775,8 @@ svg.nline .nl-mark.good{fill:var(--ok)}
 svg.nline .nl-mark.bad{fill:var(--bad)}
 svg.nline .nl-cell{fill:transparent;stroke:var(--chalk);stroke-width:1.5}
 svg.nline .nl-cell.on{fill:var(--cell-on)}
-svg.nline .nl-sec{fill:rgba(173,216,255,.1);stroke:var(--grid-2);stroke-width:1}
-svg.nline .nl-sec.on{fill:rgba(120,190,255,.6)}
+svg.nline .nl-sec{fill:rgba(173,216,255,.1);stroke:var(--chalk-dim);stroke-width:1.5}
+svg.nline .nl-sec.on{fill:rgba(120,190,255,.55)}
 svg.nline .nl-sec[role="button"]{cursor:pointer}
 svg.nline .nl-frame{fill:rgba(255,197,61,.12);stroke:var(--amber);stroke-width:2}
 svg.nline .nl-cap{fill:transparent;cursor:pointer}
@@ -793,8 +793,18 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 .nlbox.bad{outline:2px dotted var(--bad);outline-offset:4px}
 .nlbox.good{outline:2px solid var(--ok);outline-offset:4px}
 .nlcount{font:700 1.1rem var(--font-mono);color:var(--amber)}
-.nlpair{display:grid;gap:0.5rem}
-.nlpair .nlsmall svg.nline{max-width:none!important}
+.chip[aria-pressed="true"]{background:rgba(69,224,212,.22);box-shadow:inset 0 0 0 3px var(--kue)}
+.introtry .nlcap{font:600 .72rem var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--chalk-dim)}
+.nlpicks{display:grid;gap:0.625rem;margin:0.75rem 0}
+.nlpicks .pick{padding:0.5rem}
+.nlpicks .pick svg{max-width:100%;width:100%}
+.q.sm{font-size:1rem;color:var(--chalk-dim)}
+/* Zahlenstrahl auf hellem Grund (Merkkasten, Wahlkarten): dunkle Linien */
+.help svg.nline .nl-axis,.help svg.nline .nl-tick,.pick svg.nline .nl-axis,.pick svg.nline .nl-tick{stroke:var(--ink)}
+.help svg.nline .nl-num,.pick svg.nline .nl-num{fill:var(--ink)}
+.help svg.nline .nl-lab{fill:#7a4e00}
+.help svg.nline .nl-mark,.pick svg.nline .nl-mark{fill:var(--mark);stroke:var(--ink)}
+.help svg.nline .nl-cell{stroke:var(--ink)}
 
 /* Reiter „Lernen“: Themenkarten und geplante Themen */
 .tcard{margin:0.75rem 0;padding:0.875rem;background:var(--bp-2);border:3px double var(--chalk)}

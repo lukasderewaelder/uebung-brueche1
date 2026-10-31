@@ -19,11 +19,12 @@ function stationDone(id){
 }
 /* im Eingangstest beherrscht, aber noch nicht selbst bestanden */
 const stationChecked=(id)=>!!S.checked[id]&&!stationPassed(id);
-/* Reihenfolge, Freischaltung (modus 'pfad' oder 'frei', Standard 'pfad'). Je Zeile: done, checked, open, locked, blocker, next */
+/* Reihenfolge, Freischaltung eines Themas (modus 'pfad' oder 'frei', Standard 'pfad'; ohne Thema das erste aktive).
+   Je Zeile: done, checked, open, locked, blocker, next */
 function pathState(mod,modus){
   const rows=[];let blocker=null,allDone=true;
   const frei=modus==='frei';
-  (mod?mod.path:PATH).forEach(m=>{
+  (mod||activeModules()[0]).path.forEach(m=>{
     const done=stationDone(m.id),checked=stationChecked(m.id);
     let open;
     if(frei){
@@ -36,13 +37,17 @@ function pathState(mod,modus){
   if(!frei){const nx=rows.find(r=>r.must&&!r.done);if(nx)nx.next=true;}
   return rows;
 }
-/* Eingestuft = den Eingangstest gemacht oder schon im Lernpfad gearbeitet (Üben allein zählt nicht) */
-const eingestuft=()=>!!(S.placed||S.final||(S.lab&&S.lab.done)||Object.keys(S.passed||{}).length||Object.keys(S.checked||{}).length);
+/* Eingestuft = den Eingangstest gemacht oder schon im Lernpfad dieses Themas gearbeitet (Üben allein zählt nicht;
+   Bestandenes aus anderen Themen auch nicht) */
+function eingestuft(mod){
+  const ids=(mod.path||[]).map(m=>m.id),mine=(o)=>Object.keys(o||{}).some(k=>ids.includes(k.replace(/-L\d$/,'')));
+  return !!((mod.quickcheck&&(S.placed||S.final))||(ids.includes('LAB')&&S.lab&&S.lab.done)||mine(S.passed)||mine(S.checked));
+}
 const modusOf=(mod)=>{const m=S.modus&&S.modus[mod.id];return m==='pfad'||m==='frei'?m:null;};
 /* 'gate' (erst der Eingangstest), 'wahl' (Pfad oder Selbst aussuchen), sonst der gewählte Modus */
 function lernenZustand(mod){
-  if(!mod.quickcheck)return modusOf(mod)||'pfad'; /* Themen ohne Eingangstest: gleich der Pfad */
-  if(!eingestuft())return 'gate';
+  if(!mod.quickcheck)return 'pfad'; /* Themen ohne Eingangstest: gleich der Pfad, es gibt nichts „Beherrschtes“ zum Aussuchen */
+  if(!eingestuft(mod))return 'gate';
   return modusOf(mod)||'wahl';
 }
 function ensureModus(mod,m){
@@ -99,12 +104,12 @@ function onRoundEnd(id,lvl,round){
   if(id==='Q00'){
     /* Einstufung: nur „sitzt“ (alle Fragen einer Fähigkeit richtig) schaltet das Bauteil per Check frei – und nur,
        wenn nicht fast alles falsch war */
-    const hadProgress=pathState().some(r=>r.must&&!r.m.final&&r.done);
+    const qm=activeModules().find(m=>m.quickcheck); /* das Thema, zu dem dieser Test gehört */
+    const hadProgress=pathState(qm).some(r=>r.must&&!r.m.final&&r.done);
     const ev=qEvaluate(round.results,round.sk,round.size,hadProgress);
     info.ev=ev;
     S.placed=true;
     /* Sehr wenige Treffer: kein Auswahlbildschirm, es geht direkt in den Pfad */
-    const qm=activeModules().find(m=>m.quickcheck);
     if(ev.stufe==='start'&&qm&&!modusOf(qm))ensureModus(qm,'pfad');
     const sure=Q_SKILLS.filter(sk=>ev.skills[sk].status==='sitzt');
     sure.forEach(sk=>{const st=Q_STATION[sk];if(st&&!stationDone(st)){S.checked[st]=true;info.placed.push(st);}});
@@ -112,7 +117,7 @@ function onRoundEnd(id,lvl,round){
     /* Ergebnis des Eingangstests merken (Marken im Lernpfad); wenige Treffer mitten im Pfad überschreiben einen vorhandenen nicht */
     if(ev.trust||!S.einstufung)S.einstufung={at:Date.now(),right:ev.right,size:ev.size,stufe:ev.stufe,skills:ev.skills};
     /* Abschluss: alle Pflicht-Bauteile davor fertig und mindestens 80 % richtig */
-    const ready=pathState().filter(r=>r.must&&!r.m.final).every(r=>r.done);
+    const ready=pathState(qm).filter(r=>r.must&&!r.m.final).every(r=>r.done);
     info.ready=ready;
     if(ready&&info.passed&&!S.final){S.final=true;info.final=true;}
   }else if(info.passed&&PATH.some(m=>m.id===id)){
@@ -255,11 +260,11 @@ function pfadTab(home,mod){
   if(z==='gate'){home.append(gateCard());return;}
   if(z==='wahl'){home.append(wahlCards(mod));return;}
   const info=pfadInfo(mod,z);
-  home.append(modusSwitch(mod,z),pfadLine(info.doneN,info.must.length));
+  home.append(...(mod.quickcheck?[modusSwitch(mod,z)]:[]),pfadLine(info.doneN,info.must.length)); /* Pfad oder Selbst aussuchen gibt es nur mit Eingangstest */
   if(z==='pfad'){
     const go1=info.go1;
     if(go1)home.append(bigBtn('play',()=>openStation(go1.id),startWord(info.rows,go1)+': '+stationTitle(go1.id),go1.id==='Q00'||go1.id==='LAB'?null:LEVEL_LABEL[levelOf(go1.id)],null,'go'));
-    else home.append(el('div',{class:'msg ok'},'Alle Pflicht-Bauteile sind fertig – stark! Probiere die Knobel-Bauteile oder ein Spiel.'));
+    else home.append(el('div',{class:'msg ok'},'Alle Pflicht-Bauteile sind fertig – stark! '+(info.rows.some(r=>!r.must)?'Probiere die freiwilligen Bauteile oder ein Spiel.':'Probiere ein Spiel oder ein anderes Thema.')));
     home.append(fold('Alle Bauteile',pfadMap(info.rows,z)));
   }else{
     home.append(el('p',{class:'modushint'},'Hier siehst du alles. Offen ist, was du im Eingangstest schon konntest. Den Rest schaltet der Pfad frei.'),pfadMap(info.rows,z));
