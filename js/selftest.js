@@ -550,6 +550,28 @@ function runSelfTests(){
     }
     t('Zahlenstrahl: '+drawn+' Ansichten (Aufgabe, Tipps, Musterlösung) bauen ohne Fehler auf',drawBad.length===0||(console.log(drawBad.slice(0,3)),false));
   }
+  /* Abwechslung (Nenner in einer Runde, Zahlenmaterial), Zahlenraum Leicht bis 100 in kleinem Anteil, Bauteil zurücksetzen */
+  {
+    SEEN.clear();
+    const dist=(id,key,min)=>{let ok=0,R=150;for(let r=0;r<R;r++){const round={},set=new Set();for(let i=0;i<5;i++)set.add(key(generateUnique(id,1,null,round)));if(set.size>=min)ok++;}return ok/R;};
+    const keys={G02:t=>t.b,G03:t=>t.b,G04:t=>t.b,G05:t=>t.b,U01:t=>t.terms[0].d,U02:t=>simplify(t.from[0],t.from[1])[1],O02:t=>t.q,D03:t=>t.d,Z02:t=>t.m,Z03:t=>t.m,Z04:t=>t.d};
+    const low=Object.keys(keys).filter(id=>dist(id,keys[id],4)<0.97);
+    t('Abwechslung: in 97 % der Runden (Leicht) stehen mindestens 4 verschiedene Nenner in den 5 Aufgaben ('+Object.keys(keys).join(', ')+')',low.length===0||(console.log(low),false));
+    const distinct=(id,lvl)=>{const s=new Set();for(let i=0;i<400;i++)s.add(sigOf(generateTask(id,lvl)));return s.size;};
+    const few=[['G02',180],['G03',180],['G04',200],['G05',190],['Z02',45],['Z03',45],['D03',120]].filter(([id,n])=>distinct(id,1)<n);
+    t('Zahlenmaterial: Leicht liefert deutlich mehr verschiedene Aufgaben (G02/G03/G04/G05 ≥ 180, Zahlenstrahl Z02/Z03 ≥ 45, D03 ≥ 120 in 400 Läufen)',few.length===0||(console.log(few),false));
+    const badBig=[];
+    for(const id of ['G02','G03','G04','G05']){let gt=0,mx=0;const n=800;for(let i=0;i<n;i++){const m=Math.max(...numsOf(generateTask(id,1)));mx=Math.max(mx,m);if(m>60)gt++;}if(mx>100||gt/n<0.03||gt/n>0.25)badBig.push(id+' max '+mx+' Anteil '+(gt/n).toFixed(2));}
+    for(const id of ['U01','U02','U03','O02'])for(let i=0;i<300;i++){const m=Math.max(...numsOf(generateTask(id,1)));if(m>60){badBig.push(id+' '+m);break;}}
+    t('Zahlenraum Leicht: Erweitern/Kürzen (G02–G05) haben in 3–25 % der Aufgaben Zahlen über 60, nie über 100; die Umkehr- und Offenen Aufgaben bleiben bis 60',badBig.length===0||(console.log(badBig),false));
+    const keepRI={rounds:S.rounds,intro:S.intro,passed:S.passed};
+    S.rounds={'G02-L1':{results:['f'],cur:null,size:5},'G02-L2':{results:[],cur:{task:{}},size:5},'G03-L1':{results:[],cur:null,size:5}};S.intro={G02:true,G03:true};S.passed={'G02-L1':true};
+    const vmod=moduleById('veraendern'),row=(id)=>pathState(vmod).find(r=>r.id===id);
+    t('Zurücksetzen: Bauteil mit angefangener Runde oder gesehener Erklärung lässt sich zurücksetzen, ein unberührtes nicht; der Knopf erscheint nur dann',stationResettable('G02')&&stationResettable('G03')&&!stationResettable('G04')&&!!modNode(row('G02'),1,'pfad').querySelector('.modreset')&&!modNode(row('G04'),3,'pfad').querySelector('.modreset'));
+    clearStation('G02');
+    t('Zurücksetzen: G02 verliert beide Runden und die Erklärung, G03 bleibt, „Fertig“ bleibt erhalten, die Erklärung erscheint wieder',!S.rounds['G02-L1']&&!S.rounds['G02-L2']&&!S.intro.G02&&S.intro.G03===true&&!!S.rounds['G03-L1']&&stationDone('G02')&&!stationResettable('G02')&&introWanted({kind:'practice',id:'G02'})==='G02');
+    Object.assign(S,keepRI);
+  }
   /* Thema Zahlenstrahl im Lernpfad (zwei Themen): eigener Pfad ohne Eingangstest, Pfad und Urkunde der Brüche-Werkstatt bleiben unabhängig */
   {
     const zs=moduleById('zahlenstrahl'),vm=moduleById('veraendern');

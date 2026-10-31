@@ -16,14 +16,32 @@ const scrim=document.getElementById('scrim');
 const SEEN=new Set();
 const SIG_SKIP=new Set(['avoid','cards','shown','opts','optNums','why','fill']);
 const sigOf=t=>JSON.stringify(t,(k,v)=>(SIG_SKIP.has(k)||(k==='answer'&&TASKS[t.type].quick))?undefined:v);
-function generateUnique(typeId,level,ctx){
-  let t=null;
+/* Kennzeichen einer Aufgabe für die Abwechslung innerhalb einer Runde: Nenner und Teile (n…), Faktor (k…), Art (x…) */
+function varietyTokens(t){
+  const o=[];
+  ['b','d','m','q','l','N'].forEach(k=>{if(typeof t[k]==='number')o.push('n'+t[k]);});
+  if(typeof t.k==='number')o.push('k'+t.k);
+  ['kind','mode'].forEach(k=>{if(typeof t[k]==='string')o.push('x'+t[k]);});
+  const T=TASKS[t.type];
+  return T&&T.variety?o.concat(T.variety(t)):o;
+}
+/* Neue Aufgabe, möglichst eine, die in dieser Sitzung noch nicht vorkam. Mit round wird aus bis zu 30 Kandidaten die gewählt,
+   die den bisherigen Aufgaben der Runde am wenigsten ähnelt (gleiche Nenner zählen 3, Faktoren 2, Arten 1; ein schon gestelltes
+   Exemplar 0,5 – bei kleinen Zahlenräumen sind Wiederholungen irgendwann nicht zu vermeiden, gleiche Nenner in einer Runde
+   dann trotzdem selten); round.vk merkt die Kennzeichen der Aufgaben dieser Runde. */
+const VARIETY_WEIGHT={n:3,k:2,x:1};
+function generateUnique(typeId,level,ctx,round){
+  const quick=!!TASKS[typeId].quick,used=(round&&round.vk)||[];
+  let best=null,bestScore=Infinity;
   for(let i=0;i<30;i++){
-    t=generateTask(typeId,level,null,ctx);
-    const s=sigOf(t);
-    if(!SEEN.has(s)){SEEN.add(s);return t;}
+    const t=generateTask(typeId,level,null,ctx);
+    const score=(SEEN.has(sigOf(t))?0.5:0)+(quick||!round?0:varietyTokens(t).reduce((n,x)=>n+VARIETY_WEIGHT[x[0]]*used.filter(u=>u===x).length,0));
+    if(score<bestScore){best=t;bestScore=score;}
+    if(!score)break;
   }
-  return t;
+  SEEN.add(sigOf(best));
+  if(round&&!quick)round.vk=used.concat(varietyTokens(best));
+  return best;
 }
 const levelOf=(id)=>S.levelByType[id]||1;
 const keyOf=(id,l)=>id+'-L'+l;
@@ -311,7 +329,7 @@ function renderPractice(id){
     (T.quick?renderQuickSummary:renderSummary)(main,id,lvl,key,round);
     return;
   }
-  if(!round.cur)round.cur=newState(generateUnique(id,lvl,T.ctx?T.ctx(round):null));
+  if(!round.cur)round.cur=newState(generateUnique(id,lvl,T.ctx?T.ctx(round):null,round));
   const st=round.cur,quick=!!T.quick;
   help.setNotes(noteFor(id,st.task));fillStats();
 
