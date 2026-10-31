@@ -17,18 +17,24 @@ const Q_HINT={
   div:[]
 };
 const Q_SKILL_NAME={gleich:'Gleiche Brüche erkennen',teilbar:'Teilbarkeit',erweitern:'Erweitern',kuerzen:'Kürzen',vollstaendig:'Vollständig kürzen'};
-/* Zu welcher Übung gehört die Fähigkeit? */
-const Q_STATION={gleich:'G01',teilbar:'T01',erweitern:'G02',kuerzen:'G03',vollstaendig:'G04'};
 const Q_PER_SKILL=3;                        /* Fragen je Fähigkeit im Schnellcheck */
 const Q_COUNT=Q_SKILLS.length*Q_PER_SKILL;  /* 15 */
 const Q_START_SHARE=0.3;                    /* höchstens dieser Anteil richtig = „fast alles falsch“ (bei 15 Fragen: 4) */
-/* Fragenplan: Q_PER_SKILL Blöcke mit allen Fähigkeiten in zufälliger Reihenfolge, nie zweimal dieselbe hintereinander */
-function qPlan(R){
-  R=R||RNG;
+/* Eingangstests je Thema (Schlüssel = Aufgaben-ID des Tests, steht im Thema als qid):
+   skills: Fähigkeiten (je 3 Fragen), names: Anzeigenamen, stations: zu welchen Lernpfad-Bauteilen eine Fähigkeit gehört
+   (3 von 3 richtig ⇒ diese Bauteile sind im Modus „Selbst aussuchen“ offen), allSure: Bauteile, die erst aufgehen, wenn alles sitzt,
+   startText: Satz bei „fast alles falsch“. Der Test ist zugleich der Abschlusscheck des Themas (Urkunde). */
+const QCHK={
+  Q00:{skills:Q_SKILLS,names:Q_SKILL_NAME,stations:{gleich:['G01'],teilbar:['T01'],erweitern:['G02'],kuerzen:['G03'],vollstaendig:['G04']},allSure:['G05'],
+    startText:'Im Lernpfad lernst du alles Schritt für Schritt. Das Bruchlabor hilft dir beim Start.'}
+};
+/* Fragenplan: je Fähigkeit per Blöcke (Standard 3) mit allen Fähigkeiten in zufälliger Reihenfolge, nie zweimal dieselbe hintereinander */
+function qPlan(R,skills,per){
+  R=R||RNG;skills=skills||Q_SKILLS;per=per||Q_PER_SKILL;
   const out=[];
-  for(let b=0;b<Q_PER_SKILL;b++){
+  for(let b=0;b<per;b++){
     let blk;
-    do{blk=R.shuffle(Q_SKILLS);}while(out.length&&blk[0]===out[out.length-1]);
+    do{blk=R.shuffle(skills);}while(out.length&&blk[0]===out[out.length-1]);
     out.push(...blk);
   }
   return out;
@@ -36,7 +42,9 @@ function qPlan(R){
 const qLim=(level)=>level===1?60:300;
 const Q_LETTERS=['A','B','C','D'];
 
-function qCoprime(R,qmin,qmax){let p,q;do{q=R.int(qmin,qmax);p=R.int(1,q-1);}while(gcd(p,q)!==1);return [p,q];}
+const Q_IMPROPER=0.2; /* Anteil unechter Brüche (z. B. 4/3) */
+/* [Zähler, Nenner] teilerfremd; mit Wahrscheinlichkeit Q_IMPROPER unecht (Zähler > Nenner ≥ 2) */
+function qCoprime(R,qmin,qmax){let p,q;do{q=R.int(qmin,qmax);p=R.int(1,q-1);}while(gcd(p,q)!==1);return (p>=2&&R.chance(Q_IMPROPER))?[q,p]:[p,q];}
 function qDivisors(n){const out=[];for(let d=2;d<=n;d++)if(n%d===0)out.push(d);return out;}
 /* Vier Zahlenoptionen: richtige Zahl + 3 Fallen, alle verschieden, 1..lim */
 function qNumOptions(R,ans,cand,lim){
@@ -58,7 +66,7 @@ function qEq(level,R){
   const L=qLim(level);
   for(let guard=0;guard<80;guard++){
     const [p,q]=qCoprime(R,2,level===1?9:25);
-    const kmax=Math.min(level===1?6:12,Math.floor(L/q));
+    const kmax=Math.min(level===1?6:12,Math.floor(L/Math.max(p,q)));
     if(kmax<1)continue;
     const ks=Array.from({length:kmax},(_,i)=>i+1);
     const k1=R.pick(ks),a=p*k1,b=q*k1;
@@ -90,11 +98,11 @@ function qMissing(level,R,skill){
     const expand=skill==='erweitern'?true:skill==='kuerzen'?false:R.chance(0.5);
     let a,b,n,d,k;
     if(expand){
-      b=R.int(2,level===1?9:25);a=R.int(1,b-1);k=R.int(2,level===1?5:9);
+      b=R.int(2,level===1?9:25);a=R.chance(Q_IMPROPER)?R.int(b+1,2*b-1):R.int(1,b-1);k=R.int(2,level===1?5:9);
       n=a*k;d=b*k;
     }else{
       const [p,q]=qCoprime(R,2,level===1?7:15);
-      const gmax=Math.floor(L/q);if(gmax<2)continue;
+      const gmax=Math.floor(L/Math.max(p,q));if(gmax<2)continue;
       const g=R.int(2,Math.min(gmax,level===1?12:30));
       k=R.pick(qDivisors(g));
       a=p*g;b=q*g;n=a/k;d=b/k;
@@ -131,10 +139,10 @@ function qReducible(level,R){
       b=R.int(level===1?5:12,L);
       const odd=R.chance(0.6);
       let t=0;
-      do{a=R.int(1,b-1);t++;}while((gcd(a,b)!==1||(odd&&(a%2===0||b%2===0)))&&t<80);
+      do{a=R.chance(Q_IMPROPER)?R.int(b+1,2*b-1):R.int(1,b-1);t++;}while((gcd(a,b)!==1||(odd&&(a%2===0||b%2===0)))&&t<80);
       why='Zähler und Nenner haben keinen gemeinsamen Teiler außer 1. Der Bruch lässt sich nicht kürzen.';
     }
-    if(a<1||a>=b||b>L)continue;
+    if(a<1||b<2||Math.max(a,b)>L)continue;
     if(yes!==(gcd(a,b)>1))continue;
     return {kind:'reducible',skill:'kuerzen',from:[a,b],answer:yes?'ja':'nein',why};
   }
@@ -145,7 +153,7 @@ function qWhich(level,R){
   const L=qLim(level),maxTile=level===1?10:15;
   for(let guard=0;guard<150;guard++){
     const [p,q]=qCoprime(R,2,level===1?9:25);
-    const gmax=Math.floor(L/q);if(gmax<2)continue;
+    const gmax=Math.floor(L/Math.max(p,q));if(gmax<2)continue;
     const g=R.int(2,Math.min(gmax,level===1?12:30));
     const a=p*g,b=q*g;
     const valid=qDivisors(g).filter(x=>x<=maxTile);
@@ -168,7 +176,7 @@ function qFull(level,R){
   const L=qLim(level);
   for(let guard=0;guard<150;guard++){
     const [p,q]=qCoprime(R,2,level===1?9:25);
-    const gmax=Math.floor(L/q);if(gmax<4)continue;
+    const gmax=Math.floor(L/Math.max(p,q));if(gmax<4)continue;
     const yes=R.chance(0.5);
     const g=R.int(4,Math.min(gmax,level===1?12:30));
     const proper=qDivisors(g).filter(x=>x<g);
@@ -202,7 +210,7 @@ function qKind(level,R,skill){
         else{let k2;do{k2=R.int(2,level===1?5:9);}while(k2===k);c=a*k;d=b*k2;why='Zähler und Nenner wurden mit verschiedenen Zahlen multipliziert.';}
       }
     }else{
-      const [p,q]=qCoprime(R,2,level===1?7:15),gmax=Math.floor(L/q);
+      const [p,q]=qCoprime(R,2,level===1?7:15),gmax=Math.floor(L/Math.max(p,q));
       if(gmax<2)continue;
       const g=R.int(2,Math.min(gmax,level===1?12:30));
       a=p*g;b=q*g;
@@ -263,6 +271,32 @@ function qPick(view,id,node,group){
   if(view.submit)view.submit();
 }
 
+/* Antworten zum Antippen: vier Karten A–D (Text txt, Bruch f=[n,d] oder gemischte Zahl mx=[w,n,d]) oder Ja/Nein */
+function qOptions(view,host,t){
+  const d=view.draft;
+  if(t.opts){
+    const grid=el('div',{class:'tiles tiles-'+t.opts.length,role:'group','aria-label':'Antworten'});
+    t.opts.forEach((o,i)=>{
+      const shown=o.f?frac(o.f[0],o.f[1]):o.mx?mixed(o.mx[0],o.mx[1],o.mx[2]):el('span',{class:'tv'},o.txt);
+      const b=el('button',{type:'button',class:'tile'+(o.ic?' tile-ic':''),'aria-pressed':String(d.ans===o.id),'aria-label':'Antwort '+Q_LETTERS[i]+': '+o.txt},
+        el('span',{class:'ltr','aria-hidden':'true'},Q_LETTERS[i]),o.ic?icon(o.ic):null,shown);
+      b.disabled=view.locked();qMark(b,o.id,view,t);
+      b.addEventListener('click',()=>qPick(view,o.id,b,grid));
+      view.inputs['t'+o.id]=b;grid.append(b);
+    });
+    host.append(grid);
+  }else{
+    const row=el('div',{class:'yesno'});
+    [['ja','haken','Ja'],['nein','kreuz','Nein']].forEach(([v,ic,label])=>{
+      const b=el('button',{type:'button',class:'btn yn','aria-pressed':String(d.ans===v),'aria-label':label},icon(ic),label);
+      b.disabled=view.locked();qMark(b,v,view,t);
+      b.addEventListener('click',()=>qPick(view,v,b,row));
+      view.inputs['yn'+v]=b;row.append(b);
+    });
+    host.append(row);
+  }
+}
+
 const QUICK={
   quick:true,
   notes:['M1','M2','M3','M7'],
@@ -289,26 +323,7 @@ const QUICK={
       host.append(eq(f(t.from),'=',el('span',{class:'frac',role:'math','aria-label':(t.blank==='n'?'gesuchte Zahl':t.to[0])+' durch '+(t.blank==='d'?'gesuchte Zahl':t.to[1])},el('span',{class:'num'},tn),el('span',{class:'den'},td))));
     }else if(t.kind==='full')host.append(eq(f(t.from),'=',f(t.to)));
     else if(t.kind==='kind')host.append(eq(f(t.from),'→',f(t.to)));
-    if(t.opts){
-      const grid=el('div',{class:'tiles tiles-'+t.opts.length,role:'group','aria-label':'Antworten'});
-      t.opts.forEach((o,i)=>{
-        const b=el('button',{type:'button',class:'tile'+(o.ic?' tile-ic':''),'aria-pressed':String(d.ans===o.id),'aria-label':'Antwort '+Q_LETTERS[i]+': '+o.txt},
-          el('span',{class:'ltr','aria-hidden':'true'},Q_LETTERS[i]),o.ic?icon(o.ic):null,el('span',{class:'tv'},o.txt));
-        b.disabled=view.locked();qMark(b,o.id,view,t);
-        b.addEventListener('click',()=>qPick(view,o.id,b,grid));
-        view.inputs['t'+o.id]=b;grid.append(b);
-      });
-      host.append(grid);
-    }else{
-      const row=el('div',{class:'yesno'});
-      [['ja','haken','Ja'],['nein','kreuz','Nein']].forEach(([v,ic,label])=>{
-        const b=el('button',{type:'button',class:'btn yn','aria-pressed':String(d.ans===v),'aria-label':label},icon(ic),label);
-        b.disabled=view.locked();qMark(b,v,view,t);
-        b.addEventListener('click',()=>qPick(view,v,b,row));
-        view.inputs['yn'+v]=b;row.append(b);
-      });
-      host.append(row);
-    }
+    qOptions(view,host,t);
   },
   validate(t,d){
     if(!d.ans)return invalid('Tippe eine Antwort an.');

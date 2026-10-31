@@ -82,7 +82,7 @@ function runSelfTests(){
     const yes=k.answer==='ja';
     switch(k.kind){
       case 'eqYN':if(yes!==equivalent(a,b,c,d))bad.push('eqYN');break;
-      case 'reducible':if(yes!==(gcd(a,b)>1)||a>=b)bad.push('reducible');break;
+      case 'reducible':if(yes!==(gcd(a,b)>1))bad.push('reducible');break;
       case 'full':if(!equivalent(a,b,c,d)||yes!==isFullyReduced(c,d))bad.push('full');break;
       case 'div':if(yes!==divisible(k.n,k.k))bad.push('div');break;
       case 'which':{
@@ -492,7 +492,7 @@ function runSelfTests(){
           return {fit:'ja',x:String(t.a*t.m/t.b),nl:{pts:[t.a*t.m/t.b]}};
         }
         case 'Z06':return {nl:{parts:t.l,pts:t.fr.map(f=>f[0]*t.l/f[1])}};
-        case 'Z07':{const d={};t.ns.forEach((n,j)=>{d['w'+j]={pts:t.level===1?[t.p]:t.ps.slice()};});return d;}
+        case 'Z07':{const d={};t.ns.forEach((n,j)=>{d['w'+j]={pts:t.level===1?[t.p]:t.ps.map(p=>p-(t.from||0)*t.q)};});return d;}
         case 'Z08':
           if(t.kind==='between')return {lo:String(Math.floor(t.n/t.d)),hi:String(Math.floor(t.n/t.d)+1)};
           if(t.kind==='mixed')return {w:String(Math.floor(t.n/t.d)),'r.n':String(t.n%t.d),'r.d':String(t.d)};
@@ -535,6 +535,13 @@ function runSelfTests(){
     t('Z06: 4 und 8 Teile richtig, 6 Teile → einteilung (4 geht nicht auf), 3 Teile → einteilung',v(z6,{nl:{parts:4,pts:[2,3]}}).correct&&v(z6,{nl:{parts:8,pts:[4,6]}}).correct&&v(z6,{nl:{parts:6,pts:[3,4]}}).errorCode==='einteilung'&&v(z6,{nl:{parts:1,pts:[0,0]}}).invalid);
     const z7={type:'Z07',level:1,q:2,p:1,ns:[1,2,4],avoid:[]};
     t('Z07: 1/2 auf Strahlen bis 1, 2, 4 an Strich 1; Mitte des ganzen Strahls (Strich 2 bei Länge 2) → whole',v(z7,{w0:{pts:[1]},w1:{pts:[1]},w2:{pts:[1]}}).correct&&v(z7,{w0:{pts:[1]},w1:{pts:[2]},w2:{pts:[1]}}).errorCode==='whole'&&v(z7,{w0:{pts:[1]},w1:{pts:[1]}}).invalid);
+    const z7b={type:'Z07',level:2,q:3,from:1,ns:[2],ps:[4,7],avoid:[]};
+    t('Z07 knifflig: Strahl von 1 bis 3, nur 1 und 2 beschriftet: 4/3 liegt am Strich 1, 7/3 am Strich 4 (Zähler − 1 · Nenner); ein Strich daneben → ticks',v(z7b,{w0:{pts:[1,4]}}).correct&&v(z7b,{w0:{pts:[2,4]}}).errorCode==='ticks'&&v(z7b,{w0:{pts:[4,7]}}).errorCode==='pos'&&v(z7b,{w0:{pts:[1]}}).invalid);
+    {
+      let bad=0,nz=0,improper=0;
+      for(let i=0;i<300;i++){const k=generateTask('Z07',2);if(k.from>0)nz++;if(k.ps.every(p=>p>k.q))improper++;if(k.ps.some(p=>p<=k.from*k.q||p>=(k.from+k.ns[0])*k.q||p%k.q===0))bad++;}
+      t('Z07 knifflig: Strahlen beginnen oft bei 1, 2 oder 3 (mehr als die Hälfte), alle Brüche liegen im Strahl und nicht auf ganzen Zahlen ('+nz+' von 300 mit Start über 0)',bad===0&&nz>150&&improper>150);
+    }
     const z8={type:'Z08',level:1,kind:'mixed',u:2,d:4,n:7,avoid:[]},z8b={type:'Z08',level:1,kind:'between',u:2,d:4,n:7,avoid:[]};
     t('Z08: 7/4 = 1 3/4 richtig, falsche Ganze → whole, falscher Rest → rest; zwischen 1 und 2 richtig, 2 und 3 falsch',v(z8,{w:'1','r.n':'3','r.d':'4'}).correct&&v(z8,{w:'2','r.n':'3','r.d':'4'}).errorCode==='whole'&&v(z8,{w:'1','r.n':'3','r.d':'5'}).errorCode==='rest'&&v(z8b,{lo:'1',hi:'2'}).correct&&!v(z8b,{lo:'2',hi:'3'}).correct);
     /* Zeichnen: jede Aufgabe baut ihre Ansicht ohne Fehler auf (auch mit Lösung) */
@@ -560,6 +567,21 @@ function runSelfTests(){
     const distinct=(id,lvl)=>{const s=new Set();for(let i=0;i<400;i++)s.add(sigOf(generateTask(id,lvl)));return s.size;};
     const few=[['G02',180],['G03',180],['G04',200],['G05',190],['Z02',45],['Z03',45],['D03',120]].filter(([id,n])=>distinct(id,1)<n);
     t('Zahlenmaterial: Leicht liefert deutlich mehr verschiedene Aufgaben (G02/G03/G04/G05 ≥ 180, Zahlenstrahl Z02/Z03 ≥ 45, D03 ≥ 120 in 400 Läufen)',few.length===0||(console.log(few),false));
+    /* Unechte Brüche (z. B. 4/3) kommen überall vor, wo Brüche gerechnet oder eingetragen werden – in beiden Niveaus */
+    const isImp=(k)=>{switch(k.type){
+      case 'G01':return k.target.n>k.target.d;
+      case 'G02':case 'G03':case 'G04':case 'G05':case 'U03':case 'Z05':return k.a>k.b;
+      case 'U01':return k.terms.some(x=>x.n>x.d);
+      case 'U02':return k.from[0]>k.from[1]||k.to[0]>k.to[1];
+      case 'O01':case 'O02':return k.p>k.q;
+      case 'D01':case 'D02':return k.n>k.den;
+      case 'Z02':case 'Z03':return k.idx.some(i=>i>k.m);
+      case 'Z04':return k.fr.some(n=>n>k.d);
+      case 'Q00':return !!k.from&&(k.from[0]>k.from[1]||(!!k.to&&k.to[0]>k.to[1]));
+    }return false;};
+    const noImp=[];
+    for(const id of ['G01','G02','G03','G04','G05','U01','U02','U03','O01','O02','D01','D02','Z02','Z03','Z04','Z05','Q00'])for(const lvl of [1,2]){let c=0;const n=500;for(let i=0;i<n;i++)if(isImp(generateTask(id,lvl)))c++;if(c/n<0.07)noImp.push(id+'-L'+lvl+' '+Math.round(c/n*100)+'%');}
+    t('Unechte Brüche überall: in G01–G05, U01–U03, O01, O02, D01, D02, Zahlenstrahl Z02–Z05 und dem Eingangstest kommen sie in beiden Niveaus in mindestens 7 % der Aufgaben vor',noImp.length===0||(console.log(noImp),false));
     const badBig=[];
     for(const id of ['G02','G03','G04','G05']){let gt=0,mx=0;const n=800;for(let i=0;i<n;i++){const m=Math.max(...numsOf(generateTask(id,1)));mx=Math.max(mx,m);if(m>60)gt++;}if(mx>100||gt/n<0.03||gt/n>0.25)badBig.push(id+' max '+mx+' Anteil '+(gt/n).toFixed(2));}
     for(const id of ['U01','U02','U03','O02'])for(let i=0;i<300;i++){const m=Math.max(...numsOf(generateTask(id,1)));if(m>60){badBig.push(id+' '+m);break;}}
@@ -575,10 +597,10 @@ function runSelfTests(){
   /* Thema Zahlenstrahl im Lernpfad (zwei Themen): eigener Pfad ohne Eingangstest, Pfad und Urkunde der Brüche-Werkstatt bleiben unabhängig */
   {
     const zs=moduleById('zahlenstrahl'),vm=moduleById('veraendern');
-    const snap={passed:S.passed,checked:S.checked,final:S.final,placed:S.placed,days:S.days,lab:S.lab,einstufung:S.einstufung,modus:S.modus,perfect:S.perfect};
-    const fresh=()=>{S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;S.einstufung=null;S.modus={};S.perfect={};};
+    const snap={passed:S.passed,checked:S.checked,final:S.final,placed:S.placed,days:S.days,lab:S.lab,einstufung:S.einstufung,modus:S.modus,perfect:S.perfect,mq:S.mq};
+    const fresh=()=>{S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;S.einstufung=null;S.modus={};S.perfect={};S.mq={};};
     fresh();
-    t('Thema Zahlenstrahl: aktiv, ohne Eingangstest, nicht im Rang, acht Pflicht-Bauteile Z01–Z08, Pfad ohne Wahl',zs.status==='aktiv'&&!zs.quickcheck&&!zs.rank&&zs.path.length===8&&zs.path.every(p=>p.must&&p.id===('Z0'+(zs.path.indexOf(p)+1)))&&lernenZustand(zs)==='pfad'&&PRACTICE_ORDER.includes('Z08')&&!rankPractice().includes('Z01')&&!rankPath().some(p=>p.id==='Z01')&&moduleOf('Z05').id==='zahlenstrahl'&&moduleOf('Eintragen').id==='zahlenstrahl');
+    t('Thema Zahlenstrahl: aktiv, mit Eingangstest ZQ, nicht im Rang, acht Pflicht-Bauteile Z01–Z08 und der Abschlusscheck ZQ, Pfad erst nach dem Eingangstest',zs.status==='aktiv'&&zs.quickcheck&&zs.qid==='ZQ'&&!zs.rank&&zs.path.length===9&&zs.path.slice(0,8).every((p,i)=>p.must&&p.id===('Z0'+(i+1)))&&zs.path[8].id==='ZQ'&&zs.path[8].final&&lernenZustand(zs)==='gate'&&PRACTICE_ORDER.includes('Z08')&&PRACTICE_ORDER.includes('ZQ')&&!rankPractice().includes('Z01')&&!rankPath().some(p=>p.id==='Z01')&&moduleOf('Z05').id==='zahlenstrahl'&&moduleOf('Eintragen').id==='zahlenstrahl'&&moduleOf('ZQ').id==='zahlenstrahl');
     const rows=()=>pathState(zs);
     t('Pfad Zahlenstrahl: Start bei Z01, Z02 gesperrt (wartet auf Z01), alles andere gesperrt',rows().find(r=>r.next).id==='Z01'&&rows().find(r=>r.id==='Z02').locked&&rows().find(r=>r.id==='Z02').blocker==='Z01'&&rows().find(r=>r.id==='Z08').locked);
     onRoundEnd('Z01',1,{results:['f','f','f','l','x'],size:5});
@@ -586,8 +608,65 @@ function runSelfTests(){
     t('Eingangstest von „Brüche verändern“ bleibt Pflicht, auch wenn Zahlenstrahl-Bauteile bestanden sind; erst Bauteile dieses Themas zählen als Einstieg',lernenZustand(vm)==='gate'&&(S.passed['G01-L1']=true,lernenZustand(vm)==='wahl'));
     fresh();
     ['Z01','Z02','Z03','Z04','Z05','Z06','Z07','Z08'].forEach(x=>{S.passed[x+'-L1']=true;});
-    t('Pfad Zahlenstrahl: alle acht bestanden ⇒ kein nächstes Bauteil, ohne Urkunde (S.final unberührt)',!rows().some(r=>r.next)&&rows().every(r=>r.done)&&!S.final);
+    t('Pfad Zahlenstrahl: alle acht bestanden ⇒ nächstes ist der Abschlusscheck ZQ, noch keine Urkunde (S.final unberührt)',rows().find(r=>r.next).id==='ZQ'&&rows().filter(r=>r.id!=='ZQ').every(r=>r.done)&&!stationDone('ZQ')&&!S.final);
     t('Pfad Brüche verändern: bestandene Zahlenstrahl-Bauteile ändern dort nichts (Start weiter bei G01, nichts fertig)',pathState(vm).find(r=>r.next).id==='G01'&&!pathState(vm).some(r=>r.done));
+    /* Eingangstest zum Zahlenstrahl (ZQ): Auswertung, Freischalten (3 von 3 = sitzt), Urkunde – getrennt vom Test der Brüche-Werkstatt */
+    const zr=(res,plan)=>({results:res.slice(),size:res.length,sk:plan}),zplan=[].concat(ZQ_SKILLS,ZQ_SKILLS,ZQ_SKILLS);
+    fresh();
+    t('Eingangstest Zahlenstrahl: 15 Fragen, 5 Fähigkeiten; der Test gehört zum Thema (qmodOf), Q00 bleibt bei Brüche verändern; Zustand getrennt',TASKS.ZQ.size===15&&QCHK.ZQ.skills.length===5&&Object.values(QCHK.ZQ.stations).flat().join()==='Z01,Z02,Z03,Z04,Z05,Z06,Z07,Z08'&&qmodOf('ZQ').id==='zahlenstrahl'&&qmodOf('Q00').id==='veraendern'&&qstate(vm)===S&&qstate(zs)!==S&&lernenZustand(zs)==='gate'&&lernenZustand(vm)==='gate');
+    let zi=onRoundEnd('ZQ',1,zr(zplan.map(()=>'f'),zplan));
+    t('Eingangstest Zahlenstrahl: 15 von 15 ⇒ alle acht Bauteile als beherrscht gemerkt, nichts fertig, noch keine Urkunde; Brüche verändern unberührt; danach die Wahl',['Z01','Z02','Z03','Z04','Z05','Z06','Z07','Z08'].every(x=>S.checked[x]&&!stationDone(x))&&!zi.final&&zi.qmod==='zahlenstrahl'&&qstate(zs).placed&&!qstate(zs).final&&!!qstate(zs).einstufung&&!S.placed&&!S.final&&!S.einstufung&&lernenZustand(zs)==='wahl'&&lernenZustand(vm)==='gate'&&checkMark('Z03')==='sitzt');
+    fresh();
+    const ip=zplan.indexOf('ablesen');
+    onRoundEnd('ZQ',1,zr(zplan.map((s,i)=>i===ip?'x':'f'),zplan));
+    const F=pathState(zs,'frei'),P=pathState(zs,'pfad'),fr=(id)=>F.find(r=>r.id===id),pf=(id)=>P.find(r=>r.id===id);
+    t('Eingangstest Zahlenstrahl: Fähigkeit „Ablesen und Eintragen“ 2 von 3 ⇒ Z02 und Z03 nicht offen (Check „fast“), alle anderen Bauteile sitzen',!S.checked.Z02&&!S.checked.Z03&&['Z01','Z04','Z05','Z06','Z07','Z08'].every(x=>S.checked[x])&&checkMark('Z02')==='fast'&&checkMark('Z03')==='fast'&&checkMark('Z04')==='sitzt');
+    t('Selbst aussuchen: Bauteile mit 3 von 3 sind offen und überspringen die Lücke (Z04 offen trotz Z02), Z02 bleibt gesperrt, der Abschlusscheck erst nach allen',fr('Z01').open&&fr('Z02').locked&&fr('Z03').locked&&fr('Z04').open&&fr('Z08').open&&fr('ZQ').locked);
+    t('Dem Pfad folgen: der Check überspringt nichts – alles wartet auf Z01, Z04 bleibt gesperrt, Z01 ist als Nächstes dran',pf('Z01').next&&pf('Z04').locked&&pf('Z04').blocker==='Z01');
+    fresh();
+    onRoundEnd('ZQ',1,zr(zplan.map((s,i)=>i<4?'f':'x'),zplan));
+    t('Eingangstest Zahlenstrahl: höchstens 4 von 15 richtig ⇒ nichts als beherrscht gemerkt, direkt in den Pfad ohne Wahl',Object.keys(S.checked).length===0&&S.modus.zahlenstrahl==='pfad'&&lernenZustand(zs)==='pfad'&&qstate(zs).einstufung.stufe==='start');
+    fresh();
+    ['Z01','Z02','Z03','Z04','Z05','Z06','Z07','Z08'].forEach(x=>{S.passed[x+'-L1']=true;});
+    zi=onRoundEnd('ZQ',1,zr(zplan.map((s,i)=>i<11?'f':'x'),zplan));
+    t('Abschlusscheck Zahlenstrahl: alles bestanden, aber nur 11 von 15 ⇒ keine Urkunde (ready, nicht passed)',zi.ready&&!zi.passed&&!zi.final&&!stationDone('ZQ'));
+    zi=onRoundEnd('ZQ',1,zr(zplan.map((s,i)=>i<12?'f':'x'),zplan));
+    t('Abschlusscheck Zahlenstrahl: alles bestanden und 12 von 15 ⇒ Urkunde nur für dieses Thema (S.final der Brüche-Werkstatt bleibt)',zi.final&&stationDone('ZQ')&&qstate(zs).final&&!S.final&&!stationDone('Q00')&&zi.qmod==='zahlenstrahl'&&rows().every(r=>r.done));
+    /* Fragen: je Art genau eine richtige Antwort, Bild und Antwort stimmen mathematisch, Prüfung und Ansicht arbeiten */
+    const zqProblems=(k)=>{
+      if(!ZQ_KINDS[k.skill]||!ZQ_KINDS[k.skill].includes(k.kind))return 'skill/kind';
+      if(k.opts){if(k.opts.length!==4||k.opts.filter(o=>o.id===k.answer).length!==1)return 'Antwort';if(new Set(k.opts.map(o=>o.txt)).size!==4)return 'Dubletten';}
+      else if(k.answer!=='ja'&&k.answer!=='nein')return 'ja/nein';
+      const o=k.opts&&k.opts.find(x=>x.id===k.answer),yes=k.answer==='ja',mk=k.fig&&k.fig.marks&&k.fig.marks.find(x=>x.text===k.answer);
+      const ok={
+        count:()=>+o.txt===k.m&&k.opts.every(x=>x.id===k.answer||+x.txt!==k.m),
+        isN:()=>yes===(k.n===k.p),
+        even:()=>yes===!k.fig.uneven,
+        read:()=>!!o.f&&o.f[0]===k.idx&&o.f[1]===k.m&&k.opts.every(x=>x.id===k.answer||!equivalent(x.f[0],x.f[1],k.idx,k.m)),
+        place:()=>!!mk&&mk.i===k.n&&k.fig.marks.length===4&&new Set(k.fig.marks.map(x=>x.i)).size===4&&k.fig.marks.every(x=>x.i%k.m!==0),
+        parts:()=>+o.txt===k.d&&k.opts.every(x=>x.id===k.answer||+x.txt%k.d!==0),
+        fits:()=>yes===fitsDivision(k.d,k.m)&&gcd(k.n,k.d)===1,
+        expand:()=>+o.txt===k.a*k.m/k.b&&Number.isInteger(k.a*k.m/k.b),
+        common:()=>+o.txt===k.l&&k.ds.every(d=>(+o.txt)%d===0)&&k.opts.every(x=>x.id===k.answer||+x.txt%k.l!==0),
+        fitsAll:()=>yes===k.ds.every(d=>k.m%d===0),
+        unit:()=>!!mk&&mk.i===k.p&&new Set(k.fig.marks.map(x=>x.i)).size===4,
+        between:()=>o.txt===k.w+' und '+(k.w+1)&&Math.floor(k.n/k.d)===k.w,
+        mixed:()=>!!o.mx&&o.mx[0]===k.w&&o.mx[1]===k.rest&&o.mx[2]===k.d&&k.n===k.w*k.d+k.rest,
+        nat:()=>yes===(k.n%k.d===0)
+      }[k.kind];
+      return ok&&ok()?null:'Inhalt '+k.kind;
+    };
+    const zqBad=[];let zqN=0,zqDraw=0;
+    for(const lvl of [1,2])for(const sk of ZQ_SKILLS)for(let i=0;i<150;i++){
+      const k=zqGen(lvl,RNG,{skill:sk});zqN++;
+      const p=zqProblems(k);if(p){zqBad.push(p+' '+JSON.stringify(k).slice(0,140));continue;}
+      const wrongAns=k.opts?k.opts.find(x=>x.id!==k.answer).id:(k.answer==='ja'?'nein':'ja');
+      if(!validateTask(k,{ans:k.answer}).correct||validateTask(k,{ans:wrongAns}).correct||!validateTask(k,{}).invalid||TASKS.ZQ.hints(k).length<2||TASKS.ZQ.hints(k)[1].length<1)zqBad.push('Prüfung '+k.kind);
+      if(i<20)try{const host=el('div'),c=mountTask(host,newState(k),{save(){},done(){}});c.solution();zqDraw++;}catch(e){zqBad.push('Ansicht '+k.kind+': '+e.message);}
+    }
+    t('Eingangstest Zahlenstrahl: '+zqN+' Fragen (alle 14 Arten, beide Niveaus) haben genau eine richtige Antwort und stimmen mathematisch; '+zqDraw+' Ansichten mit Musterlösung',zqBad.length===0||(console.log(zqBad.slice(0,4)),false));
+    const zqKinds=new Set();for(let i=0;i<400;i++)zqKinds.add(zqGen(1+i%2,RNG,{skill:ZQ_SKILLS[i%5]}).kind);
+    t('Eingangstest Zahlenstrahl: Fragenplan 5 Fähigkeiten × 3, jede Art kommt vor',qPlan(RNG,ZQ_SKILLS,3).length===15&&ZQ_SKILLS.every(s=>qPlan(RNG,ZQ_SKILLS,3).filter(x=>x===s).length===3)&&zqKinds.size===14);
     /* Erklärungen der Zahlenstrahl-Bauteile: Strahlen und Ausprobieren gültig */
     const zsSteps=[].concat(...['Z01','Z02','Z03','Z04','Z05','Z06','Z07','Z08'].map(id=>INTRO[id].steps));
     t('Erklärungen Zahlenstrahl: jeder Strahl und jedes Ausprobieren ist gültig (Teile, Marken im Strahl, Strichzahl, passende und unpassende Einteilung)',zsSteps.every(s=>{

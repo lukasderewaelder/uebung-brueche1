@@ -162,6 +162,17 @@ const INTRO={
     {h:'Der Abschlusscheck',
       say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat auch '+TASKS.Q00.size+' Fragen.','Ab '+needOf(TASKS.Q00.size)+' richtigen Antworten gibt es die Urkunde.']}
   ]},
+  ZQ:{title:'Eingangstest',steps:[
+    {h:'Blitzfragen zum Zahlenstrahl',
+      say:[TASKS.ZQ.size+' Fragen warten auf dich.','Du tippst nur die Antwort an.','Manchmal siehst du einen Zahlenstrahl.'],
+      nline:{from:0,to:1,parts:5,marks:[{n:3,d:5,text:'A'}],labels:'wholes'}},
+    {h:'Sofort eine Rückmeldung',
+      say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Es gibt keine Zeitmessung.']},
+    {h:'Danach siehst du, was fehlt',
+      say:['Am Ende siehst du, was du schon kannst.','Danach wählst du: dem Pfad folgen oder selbst aussuchen.','Weißt du etwas nicht, rate bitte nicht wild.']},
+    {h:'Der Abschlusscheck',
+      say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat auch '+TASKS.ZQ.size+' Fragen.','Ab '+needOf(TASKS.ZQ.size)+' richtigen Antworten gibt es die Urkunde.']}
+  ]},
   /* Zahlenstrahl: nline = ein Strahl oder eine Liste von Strahlen {from,to,parts,marks,labels,strip,secs}; nltry = Einteilung ausprobieren {to,ks,mark} */
   Z01:{title:'Einteilung erkennen',steps:[
     {h:'Striche und Abschnitte',
@@ -252,9 +263,9 @@ const INTRO={
     {h:'Derselbe Bruch',
       say:['{1|2} liegt immer in der Mitte zwischen 0 und 1.','Auf einem langen Strahl liegt es nicht in der Strahlmitte.'],
       nline:[{from:0,to:1,parts:2,marks:[{n:1,d:2,text:'1/2'}],labels:'ends'},{from:0,to:2,parts:2,marks:[{n:1,d:2,text:'1/2'}],labels:'ends'}]},
-    {h:'Nur 0 und 1',
-      say:['Manchmal sind nur 0 und 1 beschriftet.','Die 1 zeigt dir, wie lang ein Ganzes ist.'],
-      nline:{from:0,to:3,parts:2,labels:[0,1]}}
+    {h:'Nicht immer bei 0',
+      say:['Ein Strahl muss nicht bei 0 beginnen.','Manchmal sind nur 1 und 2 beschriftet.','Der Abstand zwischen ihnen ist ein Ganzes.'],
+      nline:{from:1,to:3,parts:2,labels:[1,2]}}
   ]},
   Z08:{title:'Größer als 1',steps:[
     {h:'Hinter der 1',

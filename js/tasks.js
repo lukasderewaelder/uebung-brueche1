@@ -81,7 +81,8 @@ const TASKS={};
 TASKS.G01={area:'Grundlagen',name:'Gleiche Anteile erkennen',desc:'Finde die Bilder und Brüche, die denselben Anteil zeigen.',notes:['M1'],size:5,
   gen(level,R){
     let p,q,k0;
-    do{q=level===1?R.pick([2,3,4,5,6,8]):R.int(3,9);p=R.int(1,q-1);}while(gcd(p,q)!==1);
+    const imp=R.chance(level===1?0.15:0.25); /* auch unechte Brüche (z. B. 4/3): dann nur als Zahlkarten, ein Bild zeigt höchstens ein Ganzes */
+    do{q=level===1?R.pick([2,3,4,5,6,8]):R.int(3,9);p=imp?R.int(q+1,2*q-1):R.int(1,q-1);}while(gcd(p,q)!==1);
     k0=level===1?1:R.int(2,4);
     const a=p*k0,b=q*k0,maxK=level===1?4:7,dmax=level===1?24:63,total=level===1?5:6;
     const equal=Array.from({length:maxK},(_,i)=>i+1).filter(k=>k!==k0&&q*k<=dmax).map(k=>[p*k,q*k]);
@@ -91,7 +92,7 @@ TASKS.G01={area:'Grundlagen',name:'Gleiche Anteile erkennen',desc:'Finde die Bil
     /* typische Fehlvorstellungen als Gegenkarten */
     const dist=[],pool=[];
     const same=(x,n,d)=>x[0]===n&&x[1]===d;
-    const add=(n,d)=>{if(n>=1&&d>n&&d<=dmax&&!equivalent(a,b,n,d)&&!pool.some(x=>same(x,n,d)))pool.push([n,d]);};
+    const add=(n,d)=>{if(n>=1&&(imp||d>n)&&d<=dmax&&!equivalent(a,b,n,d)&&!pool.some(x=>same(x,n,d)))pool.push([n,d]);};
     [[a+1,b],[a-1,b],[b-a,b],[a,b*2],[a,b+1],[p,q+1],[p+1,q+1],[p+1,q],[a+k0,b+1],[b-a+1,b+1]].forEach(c=>add(c[0],c[1]));
     [2,3,4].forEach(k=>{add(p*k+1,q*k);add(p*k-1,q*k);add(p*k,q*k+1);});
     for(const c of R.shuffle(pool)){if(dist.length>=total-nCorrect)break;dist.push(c);}
@@ -100,16 +101,16 @@ TASKS.G01={area:'Grundlagen',name:'Gleiche Anteile erkennen',desc:'Finde die Bil
     const pC=level===1?0.3:0.1;
     const withFill=(f)=>{if(f.mode!=='num')f.fill=scatterFill(f.n,f.d,f.mode,R,{pClassic:pC});return f;};
     const mk=([n,d])=>{
-      const m=pickMode(d,R);
+      const m=n<=d?pickMode(d,R):null;
       return withFill({n,d,mode:(m&&R.chance(level===1?0.5:(d>12?0.6:0.35)))?m:'num'});
     };
     const cards=R.shuffle(correct.concat(dist)).map(mk);
-    const tm=level===1?(pickMode(b,R)||'strip'):'num';
+    const tm=level===1&&!imp?(pickMode(b,R)||'strip'):'num';
     return {type:'G01',level,target:withFill({n:a,d:b,mode:tm}),cards,avoid:[redKey(a,b)]};
   },
   prompt(t,h){
     const n=t.cards.filter(c=>equivalent(c.n,c.d,t.target.n,t.target.d)).length;
-    h.append(el('p',{class:'q'},t.level===1?'Welche Karten zeigen denselben Anteil wie das Bild?':['Welche Karten sind gleich viel wert wie ',frac(t.target.n,t.target.d),'?'],' ',el('b',null,'(Es gibt '+n+' richtige.)')));
+    h.append(el('p',{class:'q'},t.level===1&&t.target.mode!=='num'?'Welche Karten zeigen denselben Anteil wie das Bild?':['Welche Karten sind gleich viel wert wie ',frac(t.target.n,t.target.d),'?'],' ',el('b',null,'(Es gibt '+n+' richtige.)')));
   },
   render(view,host){
     const t=view.task,d=view.draft;d.sel=d.sel||[];
@@ -164,7 +165,7 @@ TASKS.G02={area:'Grundlagen',name:'Erweitern',desc:'Erweitere Brüche mit einer 
     if(level===1){
       if(ctx&&ctx.big){do{b=R.int(7,16);k=R.int(5,9);}while(b*k<45||b*k>100);} /* Leicht, kleiner Anteil: größere Zahlen bis 100 */
       else{b=R.pick([2,3,4,5,6,7,8,9,10,12]);k=R.pick([2,3,4,5,6]);}
-      a=R.int(1,b-1);
+      a=R.chance(0.2)?R.int(b+1,2*b-1):R.int(1,b-1); /* auch unechte Brüche (z. B. 7/5) */
     }
     else{b=R.int(5,25);a=R.chance(0.2)?R.int(b+1,2*b):R.int(2,b-1);k=R.pick([6,7,8,9,10,11,12,13]);if(R.chance(0.3))mode='target';}
     return {type:'G02',level,mode,a,b,k,avoid:[redKey(a,b),redKey(a*k,b*k)]};
@@ -192,19 +193,20 @@ TASKS.G02={area:'Grundlagen',name:'Erweitern',desc:'Erweitere Brüche mit einer 
 TASKS.G03={area:'Grundlagen',name:'Kürzen',desc:'Kürze Brüche mit einer Zahl oder so weit wie möglich.',notes:['M3'],size:5,
   gen(level,R,ctx){
     const big=level===1&&!!(ctx&&ctx.big); /* Leicht, kleiner Anteil: größere Zahlen bis 100, auch unechte Brüche (z. B. 54/45) */
+    const imp=R.chance(big?0.4:0.2); /* unechte Brüche (z. B. 12/9) kommen in jedem Niveau vor */
     const pq=(qmin,qmax,imp)=>{let p,q;do{q=R.int(qmin,qmax);p=imp?R.int(q+1,2*q-1):R.int(1,q-1);}while(gcd(p,q)!==1);return [p,q];};
     const top=(p,q)=>Math.max(p,q),bigOK=(p,q,s)=>top(p,q)*s>=45&&top(p,q)*s<=100;
     if(R.chance(level===1?0.5:0.35)){
       let k,p,q;
       if(level===1){
-        do{k=R.pick(big?[6,7,8,9,10,11,12]:[2,3,4,5,6]);q=R.int(big?3:2,big?9:8);p=big&&R.chance(0.4)?R.int(q+1,2*q-1):R.int(1,q-1);}while(big&&!bigOK(p,q,k));
-      }else{k=R.pick([6,8,9,12]);q=R.int(3,12);p=R.int(1,q-1);}
+        do{k=R.pick(big?[6,7,8,9,10,11,12]:[2,3,4,5,6]);q=R.int(big?3:2,big?9:8);p=imp?R.int(q+1,2*q-1):R.int(1,q-1);}while(big&&!bigOK(p,q,k));
+      }else{k=R.pick([6,8,9,12]);q=R.int(3,12);p=imp?R.int(q+1,2*q-1):R.int(1,q-1);}
       const a=p*k,b=q*k;
       return {type:'G03',level,mode:'factor',a,b,k,avoid:[redKey(a,b)]};
     }
     let p,q,g;
-    if(level===1){do{[p,q]=pq(big?3:2,9,big&&R.chance(0.4));g=R.pick(big?[6,7,8,9,10,11,12]:[2,3,4,5,6]);}while(big&&!bigOK(p,q,g));}
-    else{[p,q]=pq(3,17,false);g=R.int(6,15);}
+    if(level===1){do{[p,q]=pq(big?3:2,9,imp);g=R.pick(big?[6,7,8,9,10,11,12]:[2,3,4,5,6]);}while(big&&!bigOK(p,q,g));}
+    else{[p,q]=pq(3,17,imp);g=R.int(6,15);}
     return {type:'G03',level,mode:'full',a:p*g,b:q*g,p,q,avoid:[redKey(p,q)]};
   },
   prompt(t,h){
@@ -238,8 +240,9 @@ TASKS.G03={area:'Grundlagen',name:'Kürzen',desc:'Kürze Brüche mit einer Zahl 
 TASKS.U01={area:'Umkehraufgaben',name:'Bruch-Lücken',desc:'Ergänze die fehlende Zahl in gleichwertigen Brüchen.',notes:['M1','M2'],size:5,
   gen(level,R){
     let p,q;
-    if(level===1){do{q=R.int(2,8);p=R.int(1,q-1);}while(gcd(p,q)!==1);}
-    else{do{q=R.int(3,12);p=R.int(1,q-1);}while(gcd(p,q)!==1);}
+    const imp=R.chance(0.2); /* auch unechte Brüche */
+    if(level===1){do{q=R.int(2,8);p=imp?R.int(q+1,2*q-1):R.int(1,q-1);}while(gcd(p,q)!==1);}
+    else{do{q=R.int(3,12);p=imp?R.int(q+1,2*q-1):R.int(1,q-1);}while(gcd(p,q)!==1);}
     const ms=level===1?(R.chance(0.5)?[1,R.int(2,6)]:[R.int(2,6),1]):R.shuffle([1,2,3,4,5,6,7,8,9]).slice(0,3);
     const full=R.int(0,ms.length-1);
     const terms=ms.map((m,i)=>({n:p*m,d:q*m,blank:i===full?null:R.pick(['n','d'])}));
@@ -297,8 +300,9 @@ TASKS.U02={area:'Umkehraufgaben',name:'Erweiterungs- oder Kürzungszahl finden',
   gen(level,R){
     const mode=R.chance(0.5)?'expand':'reduce';
     let p,q,k,mid=null,total;
-    if(level===1){do{q=R.int(2,9);p=R.int(1,q-1);}while(gcd(p,q)!==1);k=R.pick([2,3,4,5,6]);}
-    else{do{q=R.int(3,14);p=R.int(1,q-1);}while(gcd(p,q)!==1);k=R.int(6,15);}
+    const imp=R.chance(0.2); /* auch unechte Brüche */
+    if(level===1){do{q=R.int(2,9);p=imp?R.int(q+1,2*q-1):R.int(1,q-1);}while(gcd(p,q)!==1);k=R.pick([2,3,4,5,6]);}
+    else{do{q=R.int(3,14);p=imp?R.int(q+1,2*q-1):R.int(1,q-1);}while(gcd(p,q)!==1);k=R.int(6,15);}
     total=k;
     if(level===2&&mode==='expand'&&R.chance(0.35)){
       const k1=R.int(2,5),k2=R.int(2,6);mid=[p*k1,q*k1];k=k1*k2;total=k;
@@ -354,26 +358,27 @@ TASKS.U03={area:'Umkehraufgaben',name:'Fehler finden und berichtigen',desc:'Find
     for(let tries=0;tries<50;tries++){
       let kind=R.pick(level===1?['expand','reduce']:['expand','reduce','notFull','twoStep']);
       let errType,shown,a,b,k,fix='op',intro=null;
+      const imp=R.chance(0.2); /* auch unechte Brüche */
       if(kind==='expand'){
-        b=R.int(2,level===1?10:15);a=R.int(1,b-1);k=R.int(2,level===1?6:9);
+        b=R.int(2,level===1?10:15);a=imp?R.int(b+1,2*b-1):R.int(1,b-1);k=R.int(2,level===1?6:9);
         errType=R.pick(level===1?['onlyNum','onlyDen','diff']:['onlyNum','onlyDen','diff','add']);
         if(errType==='onlyNum')shown=[a*k,b];
         else if(errType==='onlyDen')shown=[a,b*k];
         else if(errType==='diff'){const k2=R.int(2,9);if(k2===k)continue;shown=[a*k,b*k2];}
         else{const m=R.int(1,5);shown=[a+m,b+m];}
       }else if(kind==='reduce'){
-        k=R.int(2,level===1?6:9);const q=R.int(2,level===1?8:12),p=R.int(1,q-1);a=p*k;b=q*k;
+        k=R.int(2,level===1?6:9);const q=R.int(2,level===1?8:12),p=imp?R.int(q+1,2*q-1):R.int(1,q-1);a=p*k;b=q*k;
         errType=R.pick(level===1?['onlyNum','onlyDen']:['onlyNum','onlyDen','diff']);
         if(errType==='onlyNum')shown=[p,b];
         else if(errType==='onlyDen')shown=[a,q];
         else{const k2=R.pick([2,3,4,5,6,7,8,9]);if(k2===k||b%k2!==0||a%k!==0)continue;shown=[a/k,b/k2];}
       }else if(kind==='notFull'){
-        let p,q;do{q=R.int(3,12);p=R.int(1,q-1);}while(gcd(p,q)!==1);
+        let p,q;do{q=R.int(3,12);p=imp?R.int(q+1,2*q-1):R.int(1,q-1);}while(gcd(p,q)!==1);
         const g=R.pick([6,8,9,10,12]),f=smallestPrimeFactor(g);
         a=p*g;b=q*g;shown=[a/f,b/f];errType='notFull';fix='full';k=null;
         intro='so weit wie möglich gekürzt';
       }else{ /* twoStep: erster Schritt richtig, zweiter falsch */
-        const q=R.int(2,8),p=R.int(1,q-1),k1=R.int(2,4);
+        const q=R.int(2,8),p=imp?R.int(q+1,2*q-1):R.int(1,q-1),k1=R.int(2,4);
         kind='expand';a=p*k1;b=q*k1;
         const k2=R.int(2,4);k=k2;errType=R.pick(['onlyNum','onlyDen']);
         const base=[p,q],mid=[p*k1,q*k1];
@@ -536,7 +541,8 @@ TASKS.B01={area:'Grundlagen',name:'Bruchbilder verändern',desc:'Teile ein Bild 
 TASKS.O01={area:'Offene Aufgaben',name:'Bruchfamilien',desc:'Gib mehrere verschiedene Brüche mit demselben Wert an.',notes:['M1','M2'],size:5,
   gen(level,R){
     let p,q;
-    do{q=level===1?R.int(2,9):R.int(3,12);p=R.int(1,q-1);}while(gcd(p,q)!==1);
+    const imp=R.chance(0.25); /* auch unechte Brüche */
+    do{q=level===1?R.int(2,9):R.int(3,12);p=imp?R.int(q+1,2*q-1):R.int(1,q-1);}while(gcd(p,q)!==1);
     const t={type:'O01',level,p,q,need:4,avoid:[redKey(p,q)]};
     if(level===2){
       t.den=q*R.int(4,10);
@@ -606,7 +612,8 @@ function pathFraction(a,b,ks){let n=a,d=b;for(const k of ks){n/=k;d/=k;}return [
 TASKS.O02={area:'Offene Aufgaben',name:'Kürzen-Maschine',desc:'Kürze auf zwei verschiedenen Wegen.',notes:['M3'],size:5,
   gen(level,R){
     let p,q;
-    do{q=level===1?R.int(2,8):R.int(5,13);p=R.int(1,q-1);}while(gcd(p,q)!==1);
+    const imp=R.chance(0.2); /* auch unechte Brüche */
+    do{q=level===1?R.int(2,8):R.int(5,13);p=imp?R.int(q+1,2*q-1):R.int(1,q-1);}while(gcd(p,q)!==1);
     const g=level===1?R.pick([6,8,9,10,12,14,15]):R.pick([12,18,24,30,36,42,48,60]);
     return {type:'O02',level,a:p*g,b:q*g,p,q,mode:level===1?'target':'full',avoid:[redKey(p,q)]};
   },
@@ -709,7 +716,7 @@ TASKS.D02={area:'Darstellungen umwandeln',name:'Dezimalzahl → Dezimalbruch',de
   gen(level,R){
     const places=level===1?R.pick([1,2,2]):R.pick([3,3,4,2]);
     const den=Math.pow(10,places);
-    let n=level===1?R.int(1,den-1):(R.chance(0.35)?R.int(den+1,3*den-1):R.int(1,den-1));
+    let n=level===1?(R.chance(0.2)?R.int(den+1,2*den-1):R.int(1,den-1)):(R.chance(0.35)?R.int(den+1,3*den-1):R.int(1,den-1));
     if(level===1&&n%10===0)n++;
     if(level===2&&!R.chance(0.2)&&n%10===0)n++;
     const s=decOf(n,places);
@@ -771,7 +778,7 @@ TASKS.D03={area:'Darstellungen umwandeln',name:'Gemischte Schreibweise → gemei
 TASKS.G04=Object.assign({},TASKS.G03,{name:'Kürzen so weit wie möglich',desc:'Kürze so weit wie möglich – manchmal geht es nicht mehr!',size:5,
   gen(level,R,ctx){
     const big=level===1&&!!(ctx&&ctx.big); /* Leicht, kleiner Anteil: Zahlen bis 100 */
-    const improper=(level===2&&R.chance(0.2))||(level===1&&R.chance(big?0.4:0.1));
+    const improper=R.chance(big?0.4:level===1?0.2:0.25); /* auch unechte Brüche */
     let p,q,g;
     do{q=level===1?R.int(big?4:2,11):R.int(3,19);p=improper?R.int(q+1,2*q):R.int(1,q-1);}while(gcd(p,q)!==1);
     if(R.chance(0.2))return {type:'G04',level,mode:'full',a:p,b:q,p,q,irreducible:true,avoid:[redKey(p,q)]};
@@ -905,14 +912,14 @@ TASKS.T01={area:'Grundlagen',name:'Teilbarkeit',desc:'Blitzcheck: Geht das Kürz
 TASKS.G05={area:'Grundlagen',name:'Erweitern und Kürzen gemischt',desc:'Mal erweitern, mal kürzen – entscheide selbst.',notes:['M2','M3'],size:5,
   gen(level,R,ctx){
     const big=level===1&&!!(ctx&&ctx.big); /* Leicht, kleiner Anteil: größere Zahlen bis 100 */
-    const two=R.chance(level===1?0.3:0.5);
+    const two=R.chance(level===1?0.3:0.5),imp=R.chance(0.2); /* auch unechte Brüche (z. B. 7/4) */
     if(two){
-      let p,q;do{q=R.int(2,level===1?7:11);p=R.int(1,q-1);}while(gcd(p,q)!==1);
+      let p,q;do{q=R.int(2,level===1?7:11);p=imp?R.int(q+1,2*q-1):R.int(1,q-1);}while(gcd(p,q)!==1);
       const m=R.pick(level===1?(big?[3,4,5]:[2,3,4]):[2,3,4,5,6]);
       let k;do{k=R.int(2,level===1?5:9);}while(k%m===0);
       return {type:'G05',level,mode:'twostep',a:p*m,b:q*m,k,m,avoid:[redKey(p,q)]};
     }
-    let p,q;do{q=R.int(2,level===1?9:13);p=R.int(1,q-1);}while(gcd(p,q)!==1);
+    let p,q;do{q=R.int(2,level===1?9:13);p=imp?R.int(q+1,2*q-1):R.int(1,q-1);}while(gcd(p,q)!==1);
     const g=level===1?R.pick(big?[5,6,8,9]:[2,3,4,5]):R.pick([2,3,4,5,6,8,9]);
     const a=p*g,b=q*g;
     let N;
