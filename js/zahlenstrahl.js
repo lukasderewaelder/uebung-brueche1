@@ -135,7 +135,7 @@ TASKS.Z01={area:'Zahlenstrahl',name:'Einteilung erkennen',desc:'Abschnitte zähl
 TASKS.Z02={area:'Zahlenstrahl',name:'Brüche ablesen',desc:'Lies zu Punkten am Zahlenstrahl den Bruch ab.',notes:['M8'],size:5,
   gen(level,R){
     let u=1,m,k=1;
-    if(level===1)m=R.pick([2,3,4,5,6,8,9,10,12]);
+    if(level===1){u=R.pick([1,1,2]);m=R.pick(u===1?[2,3,4,5,6,8,9,10,12]:[2,3,4,5,6]);} /* auch Strahl bis 2: unechte Brüche */
     else{u=R.pick([1,1,2,3]);m=R.pick(u===1?[4,5,6,8,9,10,12]:u===2?[2,3,4,5,6]:[2,3,4]);k=R.int(2,3);}
     return {type:'Z02',level,u,m,idx:nlIdxs(R,k,u*m,m),avoid:[]};
   },
@@ -174,7 +174,7 @@ TASKS.Z02={area:'Zahlenstrahl',name:'Brüche ablesen',desc:'Lies zu Punkten am Z
 TASKS.Z03={area:'Zahlenstrahl',name:'Brüche eintragen',desc:'Trage Brüche auf einem eingeteilten Zahlenstrahl ein.',notes:['M8'],size:5,
   gen(level,R){
     let u=1,m,k=1;
-    if(level===1)m=R.pick([2,3,4,5,6,8,9,10,12]);
+    if(level===1){u=R.pick([1,1,2]);m=R.pick(u===1?[2,3,4,5,6,8,9,10,12]:[2,3,4,5,6]);} /* auch Strahl bis 2: unechte Brüche */
     else{u=R.pick([1,1,2,3]);m=R.pick(u===1?[4,5,6,8,9,10,12]:u===2?[2,3,4,5,6]:[2,3,4]);k=R.int(2,3);}
     return {type:'Z03',level,u,m,idx:nlIdxs(R,k,u*m,m),avoid:[]};
   },
@@ -213,7 +213,7 @@ TASKS.Z03={area:'Zahlenstrahl',name:'Brüche eintragen',desc:'Trage Brüche auf 
 /* ---------- Z04 Weg B: Einteilung anpassen ---------- */
 TASKS.Z04={area:'Zahlenstrahl',name:'Einteilung anpassen',desc:'Teile den Strahl passend zum Nenner ein und trage ein.',notes:['M9','M8'],size:5,
   gen(level,R){
-    if(level===1){const d=R.pick([2,3,4,5,6,7,8,9,10]);return {type:'Z04',level,u:1,d,fr:[R.int(1,d-1)],avoid:[]};}
+    if(level===1){const d=R.pick([2,3,4,5,6,7,8,9,10]),u=R.chance(0.2)?2:1,pool=[];for(let n=1;n<u*d;n++)if(n%d!==0)pool.push(n);return {type:'Z04',level,u,d,fr:[R.pick(pool)],avoid:[]};}
     const u=R.pick([1,2,3]),dm=Math.min(12,nlMaxParts(u)),d=R.pick([4,5,6,7,8,9,10,12].filter(x=>x<=dm));
     const pool=[];for(let n=1;n<u*d;n++)if(n%d!==0)pool.push(n);
     return {type:'Z04',level,u,d,fr:R.shuffle(pool).slice(0,R.int(2,3)).sort((a,b)=>a-b),avoid:[]};
@@ -225,7 +225,7 @@ TASKS.Z04={area:'Zahlenstrahl',name:'Einteilung anpassen',desc:'Teile den Strahl
   render(view,host){
     const t=view.task;
     lineWidget(view,host,{from:0,to:t.u,choose:{max:nlMaxParts(t.u),start:1},labels:'wholes',place:t.fr.length===1?['A']:NL_LET.slice(0,t.fr.length),
-      strip:t.fr.length===1?{n:t.fr[0],d:t.d,hint:2}:null,label:'Zahlenstrahl'});
+      strip:t.fr.length===1&&t.fr[0]<=t.d?{n:t.fr[0],d:t.d,hint:2}:null,label:'Zahlenstrahl'});
   },
   validate(t,d){
     const s=d.nl||{},m=s.parts==null?1:s.parts,pts=s.pts||[];
@@ -251,7 +251,7 @@ TASKS.Z04={area:'Zahlenstrahl',name:'Einteilung anpassen',desc:'Teile den Strahl
   },
   hints(t){
     const h=[['Der Nenner sagt, in wie viele gleich große Abschnitte jedes Ganze geteilt wird.']];
-    if(t.fr.length===1)h.push([`Jetzt liegt ein Bruchstreifen über dem Strahl. Er ist in ${t.d} gleiche Teile geteilt: So soll auch der Strahl eingeteilt werden.`]);
+    if(t.fr.length===1&&t.fr[0]<=t.d)h.push([`Jetzt liegt ein Bruchstreifen über dem Strahl. Er ist in ${t.d} gleiche Teile geteilt: So soll auch der Strahl eingeteilt werden.`]);
     h.push(['Stelle zuerst die Teile je Ganzem ein. Zähle dann den Zähler vom Strich 0 aus ab.']);
     return h;
   }
@@ -265,16 +265,17 @@ TASKS.Z05={area:'Zahlenstrahl',name:'Bruch anpassen',desc:'Bringe den Bruch auf 
     if(level===2)kind=R.pick(['expand','reduce','nofit']);
     if(kind==='expand'){
       const b=R.pick(level===1?[2,3,4,5,6]:[3,4,5,6,8,9]),mx=level===1?12:24;
-      const k=R.pick([2,3,4,5].filter(x=>b*x<=mx)),m=b*k,a=R.int(1,b-1);
-      return {type:'Z05',level,kind,a,b,m,k,avoid:[]};
+      const k=R.pick([2,3,4,5].filter(x=>b*x<=mx)),m=b*k,a=(m*2<=24&&R.chance(0.2))?R.int(b+1,2*b-1):R.int(1,b-1); /* auch unechte Brüche: dann Strahl bis 2 */
+      return {type:'Z05',level,kind,a,b,m,k,u:a>b?2:1,avoid:[]};
     }
     if(kind==='reduce'){
-      const m=R.pick([2,3,4,5,6,8,10]),k=R.pick([2,3,4].filter(x=>m*x<=24)),a1=R.int(1,m-1);
-      return {type:'Z05',level,kind,a:a1*k,b:m*k,m,k,avoid:[]};
+      const m=R.pick([2,3,4,5,6,8,10]),k=R.pick([2,3,4].filter(x=>m*x<=24)),a1=R.chance(0.2)?R.int(m+1,2*m-1):R.int(1,m-1);
+      return {type:'Z05',level,kind,a:a1*k,b:m*k,m,k,u:a1>m?2:1,avoid:[]};
     }
     let a,b,m,tries=0;
-    do{b=R.pick([3,5,6,7,9]);m=R.pick([4,6,8,10,12]);a=R.int(1,b-1);tries++;}while((nlLands(a,b,m)||b===m)&&tries<200);
-    return {type:'Z05',level,kind,a,b,m,avoid:[]};
+    const imp=R.chance(0.2);
+    do{b=R.pick([3,5,6,7,9]);m=R.pick([4,6,8,10,12]);a=imp?R.int(b+1,2*b-1):R.int(1,b-1);tries++;}while((nlLands(a,b,m)||b===m)&&tries<200);
+    return {type:'Z05',level,kind,a,b,m,u:a>b?2:1,avoid:[]};
   },
   prompt(t,h){
     h.append(el('p',{class:'q'},'Trage ',frac(t.a,t.b),' ein. Der Strahl ist in ',strong(t.m),' Abschnitte je Ganzem geteilt.'));
@@ -290,8 +291,9 @@ TASKS.Z05={area:'Zahlenstrahl',name:'Bruch anpassen',desc:'Bringe den Bruch auf 
       const num=el('span',{class:'num'},intInput(view,'x','Neuer Zähler'));
       host.append(el('div',{class:'eq'},frac(t.a,t.b),'=',el('span',{class:'frac inp',role:'group','aria-label':'Bruch mit dem Nenner '+t.m},num,el('span',{class:'den'},String(t.m)))));
     }
-    lineWidget(view,host,t.kind==='nofit'?{from:0,to:1,choose:{max:NL_MAXSTEPS,start:t.m},labels:'wholes',place:['A'],strip:{n:t.a,d:t.b,hint:2},label:'Zahlenstrahl'}
-      :{from:0,to:1,parts:t.m,labels:'wholes',place:['A'],strip:{n:t.a,d:t.b,hint:2},label:'Zahlenstrahl'});
+    const u=t.u||1,strip=t.a<t.b?{n:t.a,d:t.b,hint:2}:null; /* unechte Brüche: Strahl bis 2, ohne Streifen (er zeigt höchstens ein Ganzes) */
+    lineWidget(view,host,t.kind==='nofit'?{from:0,to:u,choose:{max:nlMaxParts(u),start:t.m},labels:'wholes',place:['A'],strip,label:'Zahlenstrahl'}
+      :{from:0,to:u,parts:t.m,labels:'wholes',place:['A'],strip,label:'Zahlenstrahl'});
   },
   validate(t,d){
     const s=d.nl||{},pts=s.pts||[],lands=nlLands(t.a,t.b,t.m),red=simplify(t.a,t.b);
@@ -325,16 +327,16 @@ TASKS.Z05={area:'Zahlenstrahl',name:'Bruch anpassen',desc:'Bringe den Bruch auf 
     if(t.kind==='nofit'){
       const m2=red[1];
       return [line(`${ft(t.a,t.b)} liegt nicht auf einem Strich der Einteilung mit ${t.m} Teilen: Der Nenner ${red[1]} geht nicht in ${t.m} auf.`),
-        line(`Teile feiner, zum Beispiel in ${m2} Teile je Ganzem, und zähle ${t.a*m2/t.b} Abschnitte.`),nlSol(0,1,m2,[t.a*m2/t.b],[ft(t.a,t.b)])];
+        line(`Teile feiner, zum Beispiel in ${m2} Teile je Ganzem, und zähle ${t.a*m2/t.b} Abschnitte.`),nlSol(0,t.u||1,m2,[t.a*m2/t.b],[ft(t.a,t.b)])];
     }
     const e=t.kind==='expand';
     return [line(e?`Der Nenner ${t.b} wird mit ${t.k} multipliziert, um ${t.m} zu erhalten: erweitern mit ${t.k}.`:`Der Nenner ${t.b} wird durch ${t.k} geteilt, um ${t.m} zu erhalten: kürzen mit ${t.k}.`),
       eq(frac(t.a,t.b),'=',frac(t.a+(e?' · ':' : ')+t.k,t.b+(e?' · ':' : ')+t.k),'=',frac(t.a*t.m/t.b,t.m)),
-      line(`Zähle ${t.a*t.m/t.b} Abschnitte von 0 aus.`),nlSol(0,1,t.m,[t.a*t.m/t.b],[ft(t.a,t.b)])];
+      line(`Zähle ${t.a*t.m/t.b} Abschnitte von 0 aus.`),nlSol(0,t.u||1,t.m,[t.a*t.m/t.b],[ft(t.a,t.b)])];
   },
   hints(t){
     const h=[t.kind==='nofit'?['Prüfe: Geht der Nenner des Bruchs in die Zahl der Teile je Ganzem auf?']:['Vergleiche den Nenner des Bruchs mit der Zahl der Abschnitte je Ganzem auf dem Strahl.']];
-    h.push(['Jetzt liegt ein Bruchstreifen über dem Strahl. Er zeigt den Bruch in seinem Nenner, der Strahl hat eine andere Einteilung.']);
+    if(t.a<t.b)h.push(['Jetzt liegt ein Bruchstreifen über dem Strahl. Er zeigt den Bruch in seinem Nenner, der Strahl hat eine andere Einteilung.']);
     h.push(t.kind==='expand'?[`Womit musst du ${t.b} multiplizieren, um ${t.m} zu erhalten? Dieselbe Zahl gilt für den Zähler.`]
       :t.kind==='reduce'?[`Wodurch musst du ${t.b} teilen, um ${t.m} zu erhalten? Dieselbe Zahl gilt für den Zähler.`]
       :['Wenn die Einteilung nicht passt, teile den Strahl feiner. Der Nenner des Bruchs muss in die Teile aufgehen.']);
@@ -356,7 +358,7 @@ function nlFracsFor(R,ds,u){
 TASKS.Z06={area:'Zahlenstrahl',name:'Mehrere Brüche eintragen',desc:'Finde eine Einteilung, die für alle Brüche passt.',notes:['M10','M9'],size:5,
   gen(level,R){
     let ds,u=1;
-    if(level===1)ds=R.pick(NL_SETS1);
+    if(level===1){ds=R.pick(NL_SETS1);if(commonDenominator(ds)*2<=12&&R.chance(0.3))u=2;} /* auch Strahl bis 2: unechte Brüche */
     else{ds=R.pick(NL_SETS2);const l=commonDenominator(ds);if(l<=12&&R.chance(0.4))u=2;}
     return {type:'Z06',level,u,fr:R.shuffle(nlFracsFor(R,ds,u)),l:commonDenominator(ds),avoid:[]};
   },
@@ -392,48 +394,59 @@ TASKS.Z06={area:'Zahlenstrahl',name:'Mehrere Brüche eintragen',desc:'Finde eine
 };
 
 /* ---------- Z07 Einheit lesen ---------- */
-TASKS.Z07={area:'Zahlenstrahl',name:'Einheit lesen',desc:'Ein Ganzes geht von 0 bis 1: Trage Brüche auf Strahlen verschiedener Länge ein.',notes:['M8'],size:5,
+TASKS.Z07={area:'Zahlenstrahl',name:'Einheit lesen',desc:'Ein Ganzes geht von einer ganzen Zahl zur nächsten: Trage Brüche auf Strahlen verschiedener Länge ein.',notes:['M8'],size:5,
+  /* Leicht: derselbe echte Bruch auf Strahlen von 0 bis 1, 2, 3 oder 4. Knifflig: Strahl beginnt auch bei 1, 2 oder 3 (nur Anfang und eine
+     weitere ganze Zahl beschriftet), die Brüche sind meist größer als 1; Strichnummer = Zähler − from·Nenner */
   gen(level,R){
     if(level===1){
       const q=R.pick([2,3,4,5]),p=R.int(1,q-1),ns=R.shuffle([1,2,3,4].filter(n=>n*q<=12)).slice(0,R.int(2,3));
       if(!ns.includes(1)&&R.chance(0.5))ns[ns.length-1]=1;
       return {type:'Z07',level,q,p,ns,avoid:[]};
     }
-    const q=R.pick([2,3,4,5]),n=R.pick([2,3].filter(x=>x*q<=12)),pool=[];
-    for(let i=q+1;i<n*q;i++)if(i%q!==0)pool.push(i);
-    return {type:'Z07',level,q,ns:[n],ps:R.shuffle(pool).slice(0,Math.min(2,pool.length)).sort((a,b)=>a-b),avoid:[]};
+    const q=R.pick([2,3,4,5]),n=R.pick([2,3].filter(x=>x*q<=12)),from=R.pick([0,1,1,2,2,3]),pool=[];
+    for(let i=Math.max(1,from*q+1);i<(from+n)*q;i++)if(i%q!==0)pool.push(i);
+    return {type:'Z07',level,q,from,ns:[n],ps:R.shuffle(pool).slice(0,Math.min(2,pool.length)).sort((a,b)=>a-b),avoid:[]};
   },
   prompt(t,h){
+    const f=t.from||0;
     if(t.level===1)h.append(el('p',{class:'q'},'Trage ',frac(t.p,t.q),' auf jedem Strahl ein.'),el('p',{class:'q sm'},'Ein Ganzes geht immer von 0 bis 1, nicht bis zum Ende des Strahls.'));
-    else h.append(el('p',{class:'q'},'Trage ein: ',...t.ps.map((p,k)=>[el('b',null,NL_LET[k]),' = ',frac(p,t.q),k<t.ps.length-1?'   ':''])),el('p',{class:'q sm'},'Nur 0 und 1 sind beschriftet. Die 1 zeigt dir, wie lang ein Ganzes ist.'));
+    else h.append(el('p',{class:'q'},'Trage ein: ',...t.ps.map((p,k)=>[el('b',null,NL_LET[k]),' = ',frac(p,t.q),k<t.ps.length-1?'   ':''])),
+      el('p',{class:'q sm'},'Nur ',strong(f),' und ',strong(f+1),' sind beschriftet. Der Abstand zwischen ihnen ist ein Ganzes.'));
   },
   render(view,host){
-    const t=view.task;
+    const t=view.task,f=t.from||0;
     t.ns.forEach((n,j)=>{
       host.append(el('div',{class:'nlcap'},t.level===1?'Strahl '+(j+1)+(n>1?' (bis '+n+')':' (bis 1)'):'Strahl'));
-      lineWidget(view,host,{key:'w'+j,from:0,to:n,parts:t.q,labels:t.level===1?'ends':[0,1],place:t.level===1?['A']:NL_LET.slice(0,t.ps.length),label:'Strahl '+(j+1)});
+      lineWidget(view,host,{key:'w'+j,from:f,to:f+n,parts:t.q,labels:t.level===1?'ends':[f,f+1],place:t.level===1?['A']:NL_LET.slice(0,t.ps.length),label:'Strahl '+(j+1)});
     });
   },
   validate(t,d){
-    const marks={};let first=null;
+    const f=t.from||0,marks={};let first=null;
     for(let j=0;j<t.ns.length;j++){
-      const s=d['w'+j]||{},pts=s.pts||[],want=t.level===1?[t.p]:t.ps;
+      const s=d['w'+j]||{},pts=s.pts||[],want=t.level===1?[t.p]:t.ps.map(p=>p-f*t.q);
       if(pts.length!==want.length||pts.some(p=>p==null))return invalid(t.level===1?'Setze auf jedem Strahl einen Punkt.':'Setze zuerst alle Punkte: wähle A, B, C und tippe auf den Strahl.');
       want.forEach((w,k)=>{const ok=pts[k]===w;marks['w'+j+'p'+k]=ok;if(!first&&!ok)first={j,k,w,p:pts[k]};});
     }
-    if(!first)return right('Richtig! Ein Ganzes geht immer von 0 bis 1, egal wie lang der Strahl ist.');
+    if(!first)return right(f?`Richtig! Ein Ganzes ist der Abstand von ${f} bis ${f+1}. Der Strahl muss nicht bei 0 beginnen.`:'Richtig! Ein Ganzes geht immer von 0 bis 1, egal wie lang der Strahl ist.');
     const n=t.ns[first.j];
     if(t.level===1&&n>1&&first.p===t.p*n)return wrong('whole','Du hast den ganzen Strahl als Ganzes genommen. Ein Ganzes geht nur von 0 bis 1, danach beginnt das nächste Ganze.',marks);
-    if(nlOffBy(first.p,first.w))return wrong('ticks','Du bist einen Strich daneben. Zähle die Abschnitte von 0 aus.',marks);
-    return wrong('pos',t.level===1?`Auf Strahl ${first.j+1}: Finde zuerst die 1. Von 0 bis 1 liegt ein Ganzes mit ${t.q} Abschnitten.`:'Finde zuerst die 1. Von 0 bis 1 liegt ein Ganzes. Zähle dann die Abschnitte ab 0.',marks);
+    if(nlOffBy(first.p,first.w))return wrong('ticks',`Du bist einen Strich daneben. Zähle die Abschnitte von ${f} aus.`,marks);
+    return wrong('pos',t.level===1?`Auf Strahl ${first.j+1}: Finde zuerst die 1. Von 0 bis 1 liegt ein Ganzes mit ${t.q} Abschnitten.`
+      :f?`Der Strahl beginnt bei ${f}. Ein Ganzes ist der Abstand von ${f} bis ${f+1}. Rechne: Wie viele Abschnitte liegen zwischen ${f} und dem Bruch?`:'Finde zuerst die 1. Von 0 bis 1 liegt ein Ganzes. Zähle dann die Abschnitte ab 0.',marks);
   },
   solution(t){
+    const f=t.from||0;
     if(t.level===1)return [line(`Von 0 bis 1 ist ein Ganzes in ${t.q} Abschnitte geteilt. ${ft(t.p,t.q)} liegt immer bei ${t.p} Abschnitten von 0 aus.`),
       ...t.ns.map(n=>nlSol(0,n,t.q,[t.p],[ft(t.p,t.q)],{labels:'ends'}))];
-    return [line(`Von 0 bis 1 ist ein Ganzes in ${t.q} Abschnitte geteilt. Der Zähler sagt, wie viele Abschnitte du von 0 aus zählst.`),
-      ...t.ps.map((p,k)=>line(`${NL_LET[k]} = `,frac(p,t.q),`: ${p} Abschnitte von 0 aus.`)),nlSol(0,t.ns[0],t.q,t.ps,NL_LET.slice(0,t.ps.length),{labels:[0,1]})];
+    return [line(f?`Der Strahl beginnt bei ${f}. Von ${f} bis ${f+1} ist ein Ganzes in ${t.q} Abschnitte geteilt. Ziehe ${f} Ganze, also ${f*t.q} Abschnitte, vom Zähler ab.`:`Von 0 bis 1 ist ein Ganzes in ${t.q} Abschnitte geteilt. Der Zähler sagt, wie viele Abschnitte du von 0 aus zählst.`),
+      ...t.ps.map((p,k)=>line(`${NL_LET[k]} = `,frac(p,t.q),f?`: ${p} − ${f*t.q} = ${p-f*t.q} Abschnitte ab ${f}.`:`: ${p} Abschnitte von 0 aus.`)),
+      nlSol(f,f+t.ns[0],t.q,t.ps.map(p=>p-f*t.q),NL_LET.slice(0,t.ps.length),{labels:[f,f+1]})];
   },
-  hints(t){return [['Ein Ganzes ist immer die Strecke von 0 bis 1, nicht der ganze Strahl.'],[`Finde die 1 auf dem Strahl. Von 0 bis 1 ist ein Ganzes in ${t.q} Abschnitte geteilt.`]];}
+  hints(t){
+    const f=t.from||0;
+    return [[f?'Ein Ganzes ist der Abstand zwischen zwei ganzen Zahlen, hier von '+f+' bis '+(f+1)+'. Der Strahl muss nicht bei 0 beginnen.':'Ein Ganzes ist immer die Strecke von 0 bis 1, nicht der ganze Strahl.'],
+      [f?`Zähle ab ${f}: Wie viele Abschnitte sind es bis zum Bruch? Von ${f} bis ${f+1} sind es ${t.q}.`:`Finde die 1 auf dem Strahl. Von 0 bis 1 ist ein Ganzes in ${t.q} Abschnitte geteilt.`]];
+  }
 };
 
 /* ---------- Z08 Größer als 1 ---------- */

@@ -82,7 +82,7 @@ function runSelfTests(){
     const yes=k.answer==='ja';
     switch(k.kind){
       case 'eqYN':if(yes!==equivalent(a,b,c,d))bad.push('eqYN');break;
-      case 'reducible':if(yes!==(gcd(a,b)>1)||a>=b)bad.push('reducible');break;
+      case 'reducible':if(yes!==(gcd(a,b)>1))bad.push('reducible');break;
       case 'full':if(!equivalent(a,b,c,d)||yes!==isFullyReduced(c,d))bad.push('full');break;
       case 'div':if(yes!==divisible(k.n,k.k))bad.push('div');break;
       case 'which':{
@@ -492,7 +492,7 @@ function runSelfTests(){
           return {fit:'ja',x:String(t.a*t.m/t.b),nl:{pts:[t.a*t.m/t.b]}};
         }
         case 'Z06':return {nl:{parts:t.l,pts:t.fr.map(f=>f[0]*t.l/f[1])}};
-        case 'Z07':{const d={};t.ns.forEach((n,j)=>{d['w'+j]={pts:t.level===1?[t.p]:t.ps.slice()};});return d;}
+        case 'Z07':{const d={};t.ns.forEach((n,j)=>{d['w'+j]={pts:t.level===1?[t.p]:t.ps.map(p=>p-(t.from||0)*t.q)};});return d;}
         case 'Z08':
           if(t.kind==='between')return {lo:String(Math.floor(t.n/t.d)),hi:String(Math.floor(t.n/t.d)+1)};
           if(t.kind==='mixed')return {w:String(Math.floor(t.n/t.d)),'r.n':String(t.n%t.d),'r.d':String(t.d)};
@@ -535,6 +535,13 @@ function runSelfTests(){
     t('Z06: 4 und 8 Teile richtig, 6 Teile → einteilung (4 geht nicht auf), 3 Teile → einteilung',v(z6,{nl:{parts:4,pts:[2,3]}}).correct&&v(z6,{nl:{parts:8,pts:[4,6]}}).correct&&v(z6,{nl:{parts:6,pts:[3,4]}}).errorCode==='einteilung'&&v(z6,{nl:{parts:1,pts:[0,0]}}).invalid);
     const z7={type:'Z07',level:1,q:2,p:1,ns:[1,2,4],avoid:[]};
     t('Z07: 1/2 auf Strahlen bis 1, 2, 4 an Strich 1; Mitte des ganzen Strahls (Strich 2 bei Länge 2) → whole',v(z7,{w0:{pts:[1]},w1:{pts:[1]},w2:{pts:[1]}}).correct&&v(z7,{w0:{pts:[1]},w1:{pts:[2]},w2:{pts:[1]}}).errorCode==='whole'&&v(z7,{w0:{pts:[1]},w1:{pts:[1]}}).invalid);
+    const z7b={type:'Z07',level:2,q:3,from:1,ns:[2],ps:[4,7],avoid:[]};
+    t('Z07 knifflig: Strahl von 1 bis 3, nur 1 und 2 beschriftet: 4/3 liegt am Strich 1, 7/3 am Strich 4 (Zähler − 1 · Nenner); ein Strich daneben → ticks',v(z7b,{w0:{pts:[1,4]}}).correct&&v(z7b,{w0:{pts:[2,4]}}).errorCode==='ticks'&&v(z7b,{w0:{pts:[4,7]}}).errorCode==='pos'&&v(z7b,{w0:{pts:[1]}}).invalid);
+    {
+      let bad=0,nz=0,improper=0;
+      for(let i=0;i<300;i++){const k=generateTask('Z07',2);if(k.from>0)nz++;if(k.ps.every(p=>p>k.q))improper++;if(k.ps.some(p=>p<=k.from*k.q||p>=(k.from+k.ns[0])*k.q||p%k.q===0))bad++;}
+      t('Z07 knifflig: Strahlen beginnen oft bei 1, 2 oder 3 (mehr als die Hälfte), alle Brüche liegen im Strahl und nicht auf ganzen Zahlen ('+nz+' von 300 mit Start über 0)',bad===0&&nz>150&&improper>150);
+    }
     const z8={type:'Z08',level:1,kind:'mixed',u:2,d:4,n:7,avoid:[]},z8b={type:'Z08',level:1,kind:'between',u:2,d:4,n:7,avoid:[]};
     t('Z08: 7/4 = 1 3/4 richtig, falsche Ganze → whole, falscher Rest → rest; zwischen 1 und 2 richtig, 2 und 3 falsch',v(z8,{w:'1','r.n':'3','r.d':'4'}).correct&&v(z8,{w:'2','r.n':'3','r.d':'4'}).errorCode==='whole'&&v(z8,{w:'1','r.n':'3','r.d':'5'}).errorCode==='rest'&&v(z8b,{lo:'1',hi:'2'}).correct&&!v(z8b,{lo:'2',hi:'3'}).correct);
     /* Zeichnen: jede Aufgabe baut ihre Ansicht ohne Fehler auf (auch mit Lösung) */
@@ -560,6 +567,21 @@ function runSelfTests(){
     const distinct=(id,lvl)=>{const s=new Set();for(let i=0;i<400;i++)s.add(sigOf(generateTask(id,lvl)));return s.size;};
     const few=[['G02',180],['G03',180],['G04',200],['G05',190],['Z02',45],['Z03',45],['D03',120]].filter(([id,n])=>distinct(id,1)<n);
     t('Zahlenmaterial: Leicht liefert deutlich mehr verschiedene Aufgaben (G02/G03/G04/G05 ≥ 180, Zahlenstrahl Z02/Z03 ≥ 45, D03 ≥ 120 in 400 Läufen)',few.length===0||(console.log(few),false));
+    /* Unechte Brüche (z. B. 4/3) kommen überall vor, wo Brüche gerechnet oder eingetragen werden – in beiden Niveaus */
+    const isImp=(k)=>{switch(k.type){
+      case 'G01':return k.target.n>k.target.d;
+      case 'G02':case 'G03':case 'G04':case 'G05':case 'U03':case 'Z05':return k.a>k.b;
+      case 'U01':return k.terms.some(x=>x.n>x.d);
+      case 'U02':return k.from[0]>k.from[1]||k.to[0]>k.to[1];
+      case 'O01':case 'O02':return k.p>k.q;
+      case 'D01':case 'D02':return k.n>k.den;
+      case 'Z02':case 'Z03':return k.idx.some(i=>i>k.m);
+      case 'Z04':return k.fr.some(n=>n>k.d);
+      case 'Q00':return !!k.from&&(k.from[0]>k.from[1]||(!!k.to&&k.to[0]>k.to[1]));
+    }return false;};
+    const noImp=[];
+    for(const id of ['G01','G02','G03','G04','G05','U01','U02','U03','O01','O02','D01','D02','Z02','Z03','Z04','Z05','Q00'])for(const lvl of [1,2]){let c=0;const n=500;for(let i=0;i<n;i++)if(isImp(generateTask(id,lvl)))c++;if(c/n<0.07)noImp.push(id+'-L'+lvl+' '+Math.round(c/n*100)+'%');}
+    t('Unechte Brüche überall: in G01–G05, U01–U03, O01, O02, D01, D02, Zahlenstrahl Z02–Z05 und dem Eingangstest kommen sie in beiden Niveaus in mindestens 7 % der Aufgaben vor',noImp.length===0||(console.log(noImp),false));
     const badBig=[];
     for(const id of ['G02','G03','G04','G05']){let gt=0,mx=0;const n=800;for(let i=0;i<n;i++){const m=Math.max(...numsOf(generateTask(id,1)));mx=Math.max(mx,m);if(m>60)gt++;}if(mx>100||gt/n<0.03||gt/n>0.25)badBig.push(id+' max '+mx+' Anteil '+(gt/n).toFixed(2));}
     for(const id of ['U01','U02','U03','O02'])for(let i=0;i<300;i++){const m=Math.max(...numsOf(generateTask(id,1)));if(m>60){badBig.push(id+' '+m);break;}}

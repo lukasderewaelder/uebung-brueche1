@@ -80,7 +80,7 @@ function zqEven(level,R){
 /* --- Ablesen und Eintragen --- */
 function zqRead(level,R){
   for(let g=0;g<100;g++){
-    const u=level===1?1:R.pick([1,2,3]),m=R.pick(level===1?[3,4,5,6,8]:[3,4,5,6,8,10].filter(x=>u*x<=12)),steps=u*m;
+    const u=level===1?R.pick([1,1,2]):R.pick([1,2,3]),m=R.pick((level===1?[3,4,5,6,8]:[3,4,5,6,8,10]).filter(x=>u*x<=12)),steps=u*m; /* auch Strahl bis 2: unechte Brüche */
     const i=R.int(1,steps-1);if(i%m===0)continue;
     const right={f:[i,m],txt:zqF(i,m)};
     const cands=[[i,m+1],[i+1,m],[i-1,m],[i,steps],[i,m-1],[i+1,m+1]].filter(x=>x[0]>=1&&x[1]>=2).map(x=>({f:x,txt:zqF(x[0],x[1])}));
@@ -93,7 +93,7 @@ function zqRead(level,R){
 }
 function zqPlace(level,R){
   for(let g=0;g<100;g++){
-    const u=level===1?1:R.pick([1,2,3]),m=R.pick(level===1?[3,4,5,6,8]:[3,4,5,6,8,10].filter(x=>u*x<=12)),steps=u*m;
+    const u=level===1?R.pick([1,1,2]):R.pick([1,2,3]),m=R.pick((level===1?[3,4,5,6,8]:[3,4,5,6,8,10]).filter(x=>u*x<=12)),steps=u*m; /* auch Strahl bis 2: unechte Brüche */
     const n=R.int(1,steps-1);if(n%m===0)continue;
     const near=[n+1,n-1].filter(x=>x>=1&&x<steps&&x%m!==0);
     const pts=zqPoints(R,4,steps,m,[n].concat(near.slice(0,2)));
@@ -109,7 +109,7 @@ function zqPlace(level,R){
 /* --- Einteilung und Bruch anpassen --- */
 function zqParts(level,R){
   for(let g=0;g<100;g++){
-    const d=R.pick(level===1?[3,4,5,6,8]:[4,5,6,7,8,9,10,12]),n=R.int(1,d-1);
+    const d=R.pick(level===1?[3,4,5,6,8]:[4,5,6,7,8,9,10,12]),n=R.chance(0.25)?R.int(d+1,2*d-1):R.int(1,d-1);
     const r=zqNums(R,d,[d+1,d-1,d+2,d-2,n,n+1],x=>x%d!==0,2,24);
     if(!r)continue;
     return Object.assign({kind:'parts',skill:'anpassen',n,d,why:`Der Nenner ${d} sagt: ${d} Abschnitte je Ganzem. Dann zählst du ${n} Abschnitte ab 0.`},r);
@@ -119,18 +119,18 @@ function zqParts(level,R){
 function zqFits(level,R){
   const want=R.chance(0.5); /* etwa je zur Hälfte Ja und Nein */
   for(let g=0;g<200;g++){
-    const m=R.pick(level===1?[4,6,8,10]:[4,6,8,9,10,12]),d=R.pick(level===1?[2,3,4,5]:[2,3,4,5,6,8,9]),n=R.int(1,d-1);
+    const m=R.pick(level===1?[4,6,8,10]:[4,6,8,9,10,12]),d=R.pick(level===1?[2,3,4,5]:[2,3,4,5,6,8,9]),n=(m<=6&&R.chance(0.25))?R.int(d+1,2*d-1):R.int(1,d-1);
     if(gcd(n,d)!==1||d===m)continue;
     const yes=fitsDivision(d,m);
     if(yes!==want&&g<150)continue;
-    return {kind:'fits',skill:'anpassen',n,d,m,fig:{from:0,to:1,parts:m},answer:yes?'ja':'nein',
+    return {kind:'fits',skill:'anpassen',n,d,m,fig:{from:0,to:n>d?2:1,parts:m},answer:yes?'ja':'nein',
       why:yes?`${d} geht in ${m} auf: ${zqF(n,d)} = ${zqF(n*m/d,m)} liegt genau auf einem Strich.`:`${d} geht nicht in ${m} auf: ${zqF(n,d)} liegt zwischen zwei Strichen.`};
   }
   throw new Error('zqFits');
 }
 function zqExpand(level,R){
   for(let g=0;g<100;g++){
-    const b=R.pick(level===1?[2,3,4,5,6]:[3,4,5,6,8]),k=R.pick([2,3,4,5].filter(x=>b*x<=(level===1?12:24))),a=R.int(1,b-1),m=b*k,ans=a*k;
+    const b=R.pick(level===1?[2,3,4,5,6]:[3,4,5,6,8]),k=R.pick([2,3,4,5].filter(x=>b*x<=(level===1?12:24))),a=R.chance(0.25)?R.int(b+1,2*b-1):R.int(1,b-1),m=b*k,ans=a*k;
     const r=zqNums(R,ans,[a,a+(m-b),m,a*(k+1),a*(k-1),ans+1,ans-1],()=>true,1,60);
     if(!r)continue;
     return Object.assign({kind:'expand',skill:'anpassen',a,b,m,k,why:`${b} · ${k} = ${m}, also auch den Zähler mal ${k}: ${a} · ${k} = ${ans}.`},r);

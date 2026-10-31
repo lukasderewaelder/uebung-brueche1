@@ -42,7 +42,9 @@ function qPlan(R,skills,per){
 const qLim=(level)=>level===1?60:300;
 const Q_LETTERS=['A','B','C','D'];
 
-function qCoprime(R,qmin,qmax){let p,q;do{q=R.int(qmin,qmax);p=R.int(1,q-1);}while(gcd(p,q)!==1);return [p,q];}
+const Q_IMPROPER=0.2; /* Anteil unechter Brüche (z. B. 4/3) */
+/* [Zähler, Nenner] teilerfremd; mit Wahrscheinlichkeit Q_IMPROPER unecht (Zähler > Nenner ≥ 2) */
+function qCoprime(R,qmin,qmax){let p,q;do{q=R.int(qmin,qmax);p=R.int(1,q-1);}while(gcd(p,q)!==1);return (p>=2&&R.chance(Q_IMPROPER))?[q,p]:[p,q];}
 function qDivisors(n){const out=[];for(let d=2;d<=n;d++)if(n%d===0)out.push(d);return out;}
 /* Vier Zahlenoptionen: richtige Zahl + 3 Fallen, alle verschieden, 1..lim */
 function qNumOptions(R,ans,cand,lim){
@@ -64,7 +66,7 @@ function qEq(level,R){
   const L=qLim(level);
   for(let guard=0;guard<80;guard++){
     const [p,q]=qCoprime(R,2,level===1?9:25);
-    const kmax=Math.min(level===1?6:12,Math.floor(L/q));
+    const kmax=Math.min(level===1?6:12,Math.floor(L/Math.max(p,q)));
     if(kmax<1)continue;
     const ks=Array.from({length:kmax},(_,i)=>i+1);
     const k1=R.pick(ks),a=p*k1,b=q*k1;
@@ -96,11 +98,11 @@ function qMissing(level,R,skill){
     const expand=skill==='erweitern'?true:skill==='kuerzen'?false:R.chance(0.5);
     let a,b,n,d,k;
     if(expand){
-      b=R.int(2,level===1?9:25);a=R.int(1,b-1);k=R.int(2,level===1?5:9);
+      b=R.int(2,level===1?9:25);a=R.chance(Q_IMPROPER)?R.int(b+1,2*b-1):R.int(1,b-1);k=R.int(2,level===1?5:9);
       n=a*k;d=b*k;
     }else{
       const [p,q]=qCoprime(R,2,level===1?7:15);
-      const gmax=Math.floor(L/q);if(gmax<2)continue;
+      const gmax=Math.floor(L/Math.max(p,q));if(gmax<2)continue;
       const g=R.int(2,Math.min(gmax,level===1?12:30));
       k=R.pick(qDivisors(g));
       a=p*g;b=q*g;n=a/k;d=b/k;
@@ -137,10 +139,10 @@ function qReducible(level,R){
       b=R.int(level===1?5:12,L);
       const odd=R.chance(0.6);
       let t=0;
-      do{a=R.int(1,b-1);t++;}while((gcd(a,b)!==1||(odd&&(a%2===0||b%2===0)))&&t<80);
+      do{a=R.chance(Q_IMPROPER)?R.int(b+1,2*b-1):R.int(1,b-1);t++;}while((gcd(a,b)!==1||(odd&&(a%2===0||b%2===0)))&&t<80);
       why='Zähler und Nenner haben keinen gemeinsamen Teiler außer 1. Der Bruch lässt sich nicht kürzen.';
     }
-    if(a<1||a>=b||b>L)continue;
+    if(a<1||b<2||Math.max(a,b)>L)continue;
     if(yes!==(gcd(a,b)>1))continue;
     return {kind:'reducible',skill:'kuerzen',from:[a,b],answer:yes?'ja':'nein',why};
   }
@@ -151,7 +153,7 @@ function qWhich(level,R){
   const L=qLim(level),maxTile=level===1?10:15;
   for(let guard=0;guard<150;guard++){
     const [p,q]=qCoprime(R,2,level===1?9:25);
-    const gmax=Math.floor(L/q);if(gmax<2)continue;
+    const gmax=Math.floor(L/Math.max(p,q));if(gmax<2)continue;
     const g=R.int(2,Math.min(gmax,level===1?12:30));
     const a=p*g,b=q*g;
     const valid=qDivisors(g).filter(x=>x<=maxTile);
@@ -174,7 +176,7 @@ function qFull(level,R){
   const L=qLim(level);
   for(let guard=0;guard<150;guard++){
     const [p,q]=qCoprime(R,2,level===1?9:25);
-    const gmax=Math.floor(L/q);if(gmax<4)continue;
+    const gmax=Math.floor(L/Math.max(p,q));if(gmax<4)continue;
     const yes=R.chance(0.5);
     const g=R.int(4,Math.min(gmax,level===1?12:30));
     const proper=qDivisors(g).filter(x=>x<g);
@@ -208,7 +210,7 @@ function qKind(level,R,skill){
         else{let k2;do{k2=R.int(2,level===1?5:9);}while(k2===k);c=a*k;d=b*k2;why='Zähler und Nenner wurden mit verschiedenen Zahlen multipliziert.';}
       }
     }else{
-      const [p,q]=qCoprime(R,2,level===1?7:15),gmax=Math.floor(L/q);
+      const [p,q]=qCoprime(R,2,level===1?7:15),gmax=Math.floor(L/Math.max(p,q));
       if(gmax<2)continue;
       const g=R.int(2,Math.min(gmax,level===1?12:30));
       a=p*g;b=q*g;
