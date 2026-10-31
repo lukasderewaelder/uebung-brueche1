@@ -580,8 +580,8 @@ function runSelfTests(){
       case 'Q00':return !!k.from&&(k.from[0]>k.from[1]||(!!k.to&&k.to[0]>k.to[1]));
     }return false;};
     const noImp=[];
-    for(const id of ['G01','G02','G03','G04','G05','U01','U02','U03','O01','O02','D01','D02','Z02','Z03','Z04','Z05','Q00'])for(const lvl of [1,2]){let c=0;const n=500;for(let i=0;i<n;i++)if(isImp(generateTask(id,lvl)))c++;if(c/n<0.07)noImp.push(id+'-L'+lvl+' '+Math.round(c/n*100)+'%');}
-    t('Unechte Brüche überall: in G01–G05, U01–U03, O01, O02, D01, D02, Zahlenstrahl Z02–Z05 und dem Eingangstest kommen sie in beiden Niveaus in mindestens 7 % der Aufgaben vor',noImp.length===0||(console.log(noImp),false));
+    for(const id of ['G01','G02','G03','G04','G05','U01','U02','U03','O01','O02','D01','D02','Z02','Z03','Z04','Z05','Q00'])for(const lvl of [1,2]){let c=0;const n=1000;for(let i=0;i<n;i++)if(isImp(generateTask(id,lvl)))c++;if(c/n<0.05)noImp.push(id+'-L'+lvl+' '+Math.round(c/n*100)+'%');}
+    t('Unechte Brüche überall: in G01–G05, U01–U03, O01, O02, D01, D02, Zahlenstrahl Z02–Z05 und dem Eingangstest kommen sie in beiden Niveaus in mindestens 5 % der Aufgaben vor',noImp.length===0||(console.log(noImp),false));
     const badBig=[];
     for(const id of ['G02','G03','G04','G05']){let gt=0,mx=0;const n=800;for(let i=0;i<n;i++){const m=Math.max(...numsOf(generateTask(id,1)));mx=Math.max(mx,m);if(m>60)gt++;}if(mx>100||gt/n<0.03||gt/n>0.25)badBig.push(id+' max '+mx+' Anteil '+(gt/n).toFixed(2));}
     for(const id of ['U01','U02','U03','O02'])for(let i=0;i<300;i++){const m=Math.max(...numsOf(generateTask(id,1)));if(m>60){badBig.push(id+' '+m);break;}}

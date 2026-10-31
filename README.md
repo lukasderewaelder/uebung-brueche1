@@ -62,4 +62,4 @@ Das Thema Zahlenstrahl ist das Muster dafür (`js/zahlenstrahl.js`, `js/linewidg
 
 ## Veröffentlichen
 
-GitHub Pages liefert die Dateien mit zehn Minuten Zwischenspeicher aus. Damit niemand eine neue `index.html` mit alten Skripten mischt (leere Seite), tragen alle Skript- und CSS-Verweise in `index.html` `?v=N`. **Bei jeder Änderung an `js/` oder `css/` die Zahl überall hochzählen** (Suchen und Ersetzen von `?v=7`).
+GitHub Pages liefert die Dateien mit zehn Minuten Zwischenspeicher aus. Damit niemand eine neue `index.html` mit alten Skripten mischt (leere Seite), tragen alle Skript- und CSS-Verweise in `index.html` `?v=N`. **Bei jeder Änderung an `js/` oder `css/` die Zahl überall hochzählen** (Suchen und Ersetzen von `?v=8`).
