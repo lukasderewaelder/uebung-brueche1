@@ -207,16 +207,16 @@ function runSelfTests(){
   t('G04: nur „Nicht kürzbar“ bei kürzbarem Bruch ist falsch',!validateTask({type:'G04',level:1,mode:'full',a:6,b:9,p:2,q:3},{none:true}).correct);
   t('„Fast“-Meldung: richtiger Wert, aber andere Form',validateTask({type:'G03',level:1,mode:'factor',a:12,b:18,k:3},{'r.n':'2','r.d':'3'}).soft===true&&!validateTask({type:'G03',level:1,mode:'factor',a:12,b:18,k:3},{'r.n':'3','r.d':'5'}).soft);
   /* Lernpfad */
-  const keepP={passed:S.passed,checked:S.checked,final:S.final,placed:S.placed,days:S.days,lab:S.lab,quizFor:S.quizFor,quizSkills:S.quizSkills,einstufung:S.einstufung,perfect:Object.assign({},S.perfect)};
-  const freshP=()=>{S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;S.einstufung=null;S.perfect={};};
+  const keepP={passed:S.passed,checked:S.checked,final:S.final,placed:S.placed,days:S.days,lab:S.lab,quizFor:S.quizFor,quizSkills:S.quizSkills,einstufung:S.einstufung,modus:S.modus,perfect:Object.assign({},S.perfect)};
+  const freshP=()=>{S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;S.einstufung=null;S.modus={};S.perfect={};};
   const R_=(id)=>pathState().find(r=>r.id===id);
   freshP();
   t('Pfad: Start – nächstes Bauteil G01, Labor offen, G02/B01/Abschluss gesperrt',pathState().find(r=>r.next).id==='G01'&&R_('LAB').open&&R_('G02').locked&&R_('G02').blocker==='G01'&&R_('B01').locked&&R_('Q00').locked);
   S.passed['G01-L1']=true;
   t('Pfad: G01 fertig ⇒ G02 nächstes, freiwilliges B01 offen',R_('G02').next&&R_('B01').open&&!R_('B01').must);
   S.checked.G03=true;
-  t('Pfad: per Check fertig, dahinter bleibt gesperrt bis alles davor fertig ist',R_('G03').done&&R_('G03').via&&!R_('G03').locked&&R_('G04').locked&&R_('G04').blocker==='G02');
-  S.passed['G02-L2']=true;S.passed['T01-L1']=true;
+  t('Pfad: im Check beherrscht ist nicht fertig – bleibt gesperrt hinter dem Nächsten',R_('G03').checked&&!R_('G03').done&&R_('G03').locked&&R_('G03').blocker==='G02'&&R_('G04').blocker==='G02');
+  S.passed['G02-L2']=true;S.passed['T01-L1']=true;S.passed['G03-L1']=true;
   t('Pfad: knifflig bestanden zählt, nächstes ist G04',R_('G02').done&&R_('G04').next);
   ['G04','G05'].forEach(x=>{S.passed[x+'-L1']=true;});
   t('Pfad: nach G05 sind Knobel-Bauteile und Abschluss offen',['U01','U02','U03','O02','Q00'].every(x=>R_(x).open)&&R_('Q00').next);
@@ -259,7 +259,7 @@ function runSelfTests(){
   t('Plan: alles erledigt ⇒ Karte verschwindet',planOf()===null);
   freshP();
   inf=onRoundEnd('Q00',1,rnd(qres([]),qplan));
-  t('Einstufung: 15 von 15 schaltet alles frei, Urkunde, kein Plan',['G01','G02','T01','G03','G04','G05'].every(x=>S.checked[x])&&inf.final&&S.final&&planOf()===null);
+  t('Einstufung: 15 von 15 merkt alles als beherrscht, aber ohne echten Pfad keine Urkunde und nichts fertig',['G01','G02','T01','G03','G04','G05'].every(x=>S.checked[x])&&!inf.ready&&!inf.final&&!S.final&&!pathState().some(r=>r.must&&r.done));
   freshP();
   inf=onRoundEnd('Q00',1,rnd(qres(qplan.map((_,i)=>i).filter(i=>i>=4)),qplan));
   t('Von vorn: höchstens 4 richtig ohne Fortschritt – nichts freigeschaltet, Plan = Bruchlabor + Gleiche Anteile',inf.ev.stufe==='start'&&Object.keys(S.checked).length===0&&S.placed&&!S.final&&(()=>{const p=planOf();return !!p&&p.items.map(x=>x.id).join()==='LAB,G01'&&p.now.id==='LAB'&&p.stufe==='start';})());
@@ -300,6 +300,43 @@ function runSelfTests(){
   const old={progress:{'G03-L1':{first:5},'G02-L2':{first:3},'D01-L1':{first:9},'G01-L1':{first:4}}};
   migrate4(old);
   t('Migration: mind. 4 Treffer ⇒ bestanden; Rest und Nicht-Pfad-Übungen nicht',old.passed['G03-L1']&&old.passed['G01-L1']&&!old.passed['G02-L2']&&!old.passed['D01-L1']&&!!old.checked&&!!old.days);
+  /* Lernen: Eingangstest, Wahl, Pfad und Selbst aussuchen */
+  {
+    const mod=moduleById('veraendern'),Z=()=>lernenZustand(mod);
+    const view=()=>{const d=el('div');pfadTab(d,mod);return d;};
+    const beispiel=()=>{freshP();return onRoundEnd('Q00',1,rnd(qres([].concat(pos('teilbar').slice(0,1),pos('kuerzen'),pos('vollstaendig'))),qplan));};
+    freshP();
+    t('Lernen: Neuling → erst der Eingangstest; Üben-Runden allein ändern das nicht',Z()==='gate'&&(()=>{S.progress['G02-L1']={done:3,first:2,later:1,skipped:0,shown:0};const z=Z();delete S.progress['G02-L1'];return z==='gate';})());
+    const gv=view();
+    t('Lernen: Eingangstest-Ansicht hat nur den Startknopf, keine Bauteil-Liste, keinen Schalter',/Eingangstest starten/.test(gv.textContent)&&!gv.querySelector('.rail')&&!gv.querySelector('.seg')&&/Üben/.test(gv.textContent));
+    onRoundEnd('Q00',1,rnd(qres([1,3,8]),qplan));
+    t('Lernen: nach dem Check (fit) kommt die Wahl mit zwei Karten, noch kein Modus gespeichert',Z()==='wahl'&&!S.modus.veraendern&&view().querySelectorAll('.wahl .bigbtn').length===2);
+    freshP();onRoundEnd('Q00',1,rnd(qres(qplan.map((_,i)=>i).filter(i=>i>=4)),qplan));
+    t('Lernen: höchstens 4 von 15 richtig → direkt der Pfad, keine Wahl',Z()==='pfad'&&S.modus.veraendern==='pfad');
+    freshP();S.passed['G02-L1']=true;
+    t('Lernen: Bestandsnutzer (schon Fortschritt, noch keine Wahl) → einmal die Wahl',Z()==='wahl');
+    S.modus.veraendern='irgendwas';
+    t('Lernen: unbekannter Modus gilt als „keine Wahl“',Z()==='wahl'&&lernenZustand({id:'x',path:[]})==='pfad');
+    beispiel();
+    t('Beispiel-Check: Gleiche Anteile und Erweitern beherrscht, Teilbarkeit „fast“, Kürzen „üben“',S.checked.G01&&S.checked.G02&&!S.checked.T01&&!S.checked.G03&&!S.checked.G04&&S.einstufung.skills.teilbar.status==='fast'&&S.einstufung.skills.kuerzen.status==='ueben');
+    const P=pathState(mod,'pfad'),F=pathState(mod,'frei');
+    const rP=(id)=>P.find(r=>r.id===id),rF=(id)=>F.find(r=>r.id===id);
+    t('Pfad-Modus: der Check überspringt nichts – Gleiche Anteile als Nächstes, Erweitern noch gesperrt',rP('G01').next&&!rP('G01').done&&rP('G01').checked&&rP('G02').locked);
+    t('Selbst aussuchen: Beherrschtes offen (G01, G02), dazu Labor und Bruchbilder vor der Lücke',rF('G01').open&&rF('G02').open&&rF('LAB').open&&rF('B01').open&&!rF('G01').done);
+    t('Selbst aussuchen: die Lücke (Teilbarkeit) und alles danach gesperrt, auch Knobeln, Mischen, Abschluss',['T01','G03','G04','G05','U01','U02','U03','O02','Q00'].every(id=>rF(id).locked)&&!F.some(r=>r.next));
+    S.passed['G01-L1']=true;
+    t('Fortschritt gilt in beiden Modi: G01 fertig, im Pfad ist Erweitern dran',pathState(mod,'frei').find(r=>r.id==='G01').done&&pathState(mod,'pfad').find(r=>r.id==='G01').done&&pathState(mod,'pfad').find(r=>r.next).id==='G02');
+    beispiel();S.modus.veraendern='pfad';
+    const pv=view();
+    t('Pfad-Ansicht: Schalter, Fortschrittszeile, „Start: Gleiche Anteile erkennen“, Liste eingeklappt, Check-Marken',!!pv.querySelector('.seg')&&!!pv.querySelector('.pfadline')&&/^Start: Gleiche Anteile erkennen/.test(pv.querySelector('.bigbtn').textContent)&&!!pv.querySelector('details.fold:not([open]) .rail')&&pv.querySelectorAll('.mchk.sitzt').length===2&&pv.querySelectorAll('.mchk.fast').length===1&&/Als Nächstes/.test(pv.textContent)&&!/Weiter geht/.test(pv.textContent)&&/Eingangstest wiederholen/.test(pv.textContent));
+    S.passed['G01-L1']=true;
+    t('Pfad-Ansicht: nach dem ersten bestandenen Bauteil heißt der Knopf „Weiter“',/^Weiter: Gleiche Anteile erkennen|^Weiter: Erweitern/.test(view().querySelector('.bigbtn').textContent));
+    S.modus.veraendern='frei';
+    const fv=view();
+    t('Selbst-aussuchen-Ansicht: Liste offen (nicht eingeklappt), Hinweis, keine Hauptkarte, offene und gesperrte Bauteile',!!fv.querySelector('.rail')&&!fv.querySelector('details')&&!!fv.querySelector('.modushint')&&!fv.querySelector('.bigbtn')&&fv.querySelectorAll('li.mod.locked').length>=8&&fv.querySelectorAll('li.mod.open, li.mod.done').length>=3);
+    t('Tagesziel und Serie stehen im Reiter Ich (dayCard), nicht mehr im Lernpfad',/Tagesziel/.test(dayCard().textContent)&&!/Tagesziel/.test(view().textContent));
+    freshP();
+  }
   /* Bruch-Tresor: Code-Bruch, Schlösser, Tür */
   {
     let okCode=true,okSlots=true,okTypes=true,okDoor=true,okRange=true;

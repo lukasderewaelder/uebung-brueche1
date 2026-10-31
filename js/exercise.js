@@ -454,8 +454,8 @@ function renderQuickSummary(main,id,lvl,key,round){
       el('div',{class:'stampbox'},'Check fertig'),el('p',null),
       el('p',null,`${right} von ${round.size} richtig`),
       el('p',null,'Das war noch schwer. Das ist ganz normal.'),
-      el('p',null,'Im Lernpfad lernst du alles Schritt für Schritt. Fang vorn an: Erst probierst du im Bruchlabor aus.'),
-      el('div',{class:'rowbtns'},btn('Lernpfad von vorn beginnen',()=>openStation('LAB'),true),btn('Nochmal',again))));
+      el('p',null,'Im Lernpfad lernst du alles Schritt für Schritt. Das Bruchlabor hilft dir beim Start.'),
+      el('div',{class:'rowbtns'},btn('Zum Lernpfad',toPfad,true),btn('Nochmal',again))));
     return;
   }
   /* Fähigkeiten in Lernpfad-Reihenfolge */
@@ -468,25 +468,18 @@ function renderQuickSummary(main,id,lvl,key,round){
       el('td',null,Q_SKILL_NAME[sk]),
       el('td',{class:x.status==='sitzt'?'sits':'ueben'},el('b',null,x.status==='sitzt'?'sitzt':x.status==='fast'?'fast':'üben')));
   });
-  const placed=(info.placed||[]).map(stationTitle);
-  const plan=planOf();
+  const sitzt=order.filter(sk=>ev.skills[sk].status==='sitzt').map(sk=>Q_SKILL_NAME[sk]);
+  const ueben=order.filter(sk=>ev.skills[sk].status!=='sitzt').map(sk=>Q_SKILL_NAME[sk]);
   const lines=[];
   if(info.final)lines.push('Urkunde! Du hast den Lernpfad geschafft.');
   else{
     if(ev.stufe==='fit')lines.push('Du bist fit!');
-    if(placed.length)lines.push('Per Check fertig: '+placed.join(', ')+'.');
-    if(plan){
-      lines.push((ev.stufe==='fit'?'Noch offen: ':'Das solltest du üben: ')+plan.items.filter(it=>!it.done).map(it=>stationTitle(it.id)).join(', ')+'.');
-      if(plan.items.some(it=>!it.done&&it.status==='fast'))lines.push('Bei „fast“ kannst du es mit dem Kurztest versuchen.');
-    }else if(!placed.length)lines.push('Alles sitzt – stark!');
+    if(sitzt.length)lines.push('Das sitzt schon: '+sitzt.join(', ')+'.');
+    if(ueben.length)lines.push('Das solltest du noch üben: '+ueben.join(', ')+'.');
+    else lines.push('Alles sitzt – stark!');
     if(info.ready&&!info.passed)lines.push('Für die Urkunde brauchst du '+needOf(round.size)+' von '+round.size+' richtig.');
   }
-  const btns=[];
-  const nowIt=plan&&plan.now;
-  if(nowIt){
-    const nm=stationTitle(nowIt.id);
-    btns.push(nowIt.status==='fast'&&PATH_SKILLS[nowIt.id]?btn('Kurztest: '+nm,()=>startKurztest(nowIt.id),true):btn('Mit '+nm+' beginnen',()=>openStation(nowIt.id),true),btn('Zum Lernpfad',toPfad));
-  }else btns.push(btn('Weiter im Lernpfad',toPfad,true));
+  const btns=[btn('Weiter',toPfad,true)];
   if(order.every(sk=>ev.skills[sk].status==='sitzt')&&lvl===1)btns.push(btn('Knifflig probieren',()=>setLevel(id,2)));
   btns.push(btn('Nochmal',again));
   main.append(el('div',{class:'card summary'},

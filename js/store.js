@@ -14,7 +14,7 @@ const Store={
   },
   clear(){try{localStorage.removeItem(KEY);}catch(e){this.ok=false;}}
 };
-const defaultState=()=>({v:1,levelByType:{},rounds:{},progress:{},games:{},skills:{},lab:null,passed:{},checked:{},days:{},perfect:{},intro:{},ui:{size:'m'},view:{kind:'home'}});
+const defaultState=()=>({v:1,modus:{},levelByType:{},rounds:{},progress:{},games:{},skills:{},lab:null,passed:{},checked:{},days:{},perfect:{},intro:{},ui:{size:'m'},view:{kind:'home'}});
 let S=Object.assign(defaultState(),Store.load()||{});
 function persist(){Store.save(S);}
 
