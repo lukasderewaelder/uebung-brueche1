@@ -291,7 +291,7 @@ const LEVEL_LABEL={1:'Leicht',2:'Knifflig'};
 function levelControl(id){
   const l=levelOf(id);
   const mk=(n,long,short)=>el('button',{type:'button','aria-pressed':String(l===n),onclick:()=>setLevel(id,n)},el('span',{class:'long'},long),el('span',{class:'short'},short));
-  return el('div',{class:'seg',role:'group','aria-label':'Niveau wählen'},mk(1,'Niveau 1 – Grundlagen','Niveau 1'),mk(2,'Niveau 2 – Knifflig','Niveau 2'));
+  return el('div',{class:'seg',role:'group','aria-label':'Niveau wählen'},mk(1,'Leicht','Leicht'),mk(2,'Knifflig','Knifflig'));
 }
 /* Hilfespalte: rechts auf dem Desktop, Schublade (Tablet), Bottom-Sheet (Smartphone) */
 function helpPanel(introId){

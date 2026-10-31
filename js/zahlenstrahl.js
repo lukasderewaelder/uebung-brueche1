@@ -210,7 +210,7 @@ TASKS.Z03={area:'Zahlenstrahl',name:'Brüche eintragen',desc:'Trage Brüche auf 
   }
 };
 
-/* ---------- Z04 Weg B: Einteilung anpassen ---------- */
+/* ---------- Z04 Weg 1: Einteilung anpassen ---------- */
 TASKS.Z04={area:'Zahlenstrahl',name:'Einteilung anpassen',desc:'Teile den Strahl passend zum Nenner ein und trage ein.',notes:['M9','M8'],size:5,
   gen(level,R){
     if(level===1){const d=R.pick([2,3,4,5,6,7,8,9,10]),u=R.chance(0.2)?2:1,pool=[];for(let n=1;n<u*d;n++)if(n%d!==0)pool.push(n);return {type:'Z04',level,u,d,fr:[R.pick(pool)],avoid:[]};}
@@ -257,7 +257,7 @@ TASKS.Z04={area:'Zahlenstrahl',name:'Einteilung anpassen',desc:'Teile den Strahl
   }
 };
 
-/* ---------- Z05 Weg A: Bruch anpassen ---------- */
+/* ---------- Z05 Weg 2: Bruch anpassen ---------- */
 const nlLands=(a,b,m)=>(a*m)%b===0;
 TASKS.Z05={area:'Zahlenstrahl',name:'Bruch anpassen',desc:'Bringe den Bruch auf den Nenner der Einteilung und trage ein.',notes:['M9','M2','M3'],size:5,
   gen(level,R){
@@ -390,7 +390,7 @@ TASKS.Z06={area:'Zahlenstrahl',name:'Mehrere Brüche eintragen',desc:'Finde eine
       ...t.fr.map((f,k)=>line(`${NL_LET[k]} = `,frac(f[0],f[1]),'= ',frac(f[0]*t.l/f[1],t.l))),
       nlSol(0,t.u,t.l,t.fr.map(f=>f[0]*t.l/f[1]),NL_LET.slice(0,t.fr.length))];
   },
-  hints(t){return [['Die Einteilung muss für jeden Nenner passen: Jeder Nenner muss in die Zahl der Teile aufgehen.'],['Suche das kleinste gemeinsame Vielfache aller Nenner.']];}
+  hints(t){return [['Die Einteilung muss für jeden Nenner passen: Jeder Nenner muss in die Zahl der Teile aufgehen.'],['Suche die kleinste Zahl, in die alle Nenner aufgehen.']];}
 };
 
 /* ---------- Z07 Einheit lesen ---------- */
@@ -451,7 +451,7 @@ TASKS.Z07={area:'Zahlenstrahl',name:'Einheit lesen',desc:'Ein Ganzes geht von ei
 
 /* ---------- Z08 Größer als 1 ---------- */
 const NL_CASES=[[2,2],[2,3],[2,4],[2,5],[2,6],[3,2],[3,3],[3,4],[4,2],[4,3]]; /* Strahl bis u mit Nenner d: u·d höchstens 12 */
-TASKS.Z08={area:'Zahlenstrahl',name:'Größer als 1',desc:'Zwischen welchen ganzen Zahlen liegt ein Bruch? Gemischte Schreibweise.',notes:['M8','M6'],size:5,
+TASKS.Z08={area:'Zahlenstrahl',name:'Größer als 1',desc:'Zwischen welchen ganzen Zahlen liegt ein Bruch? Gemischte Zahl.',notes:['M8','M6'],size:5,
   gen(level,R){
     const kind=R.pick(level===1?['between','mixed']:['between','mixed','nat']);
     if(kind==='nat'){

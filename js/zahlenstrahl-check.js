@@ -21,7 +21,7 @@ const ZQ_HINT={
   parts:['Der Nenner sagt, in wie viele Abschnitte ein Ganzes geteilt wird.'],
   fits:['Geht der Nenner des Bruchs in die Zahl der Teile auf?'],
   expand:['Erweitere den Bruch so, dass der Nenner zur Einteilung passt. Zähler und Nenner mit derselben Zahl.'],
-  common:['Jeder Nenner muss in die Zahl der Teile aufgehen. Suche ein gemeinsames Vielfaches.'],
+  common:['Jeder Nenner muss in die Zahl der Teile aufgehen. Suche eine Zahl, in die alle Nenner aufgehen.'],
   fitsAll:['Prüfe jeden Nenner einzeln: Geht er in die Zahl der Teile auf?'],
   unit:['Ein Ganzes ist die Strecke von 0 bis 1, nicht der ganze Strahl.'],
   between:['Wie viele Ganze passen in den Bruch? Teile den Zähler durch den Nenner.'],

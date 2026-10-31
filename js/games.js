@@ -42,6 +42,11 @@ function genMemoryPairs(level,count,R){
   }
   return pairs;
 }
+/* Leicht: meist Bild und Bruch, manchmal zwei Brüche; Knifflig: Bild/Bruch, zwei Brüche oder zwei Bilder gemischt */
+const MEMORY_RULE={
+  1:'Meist gehört ein Bild zu einem Bruch, manchmal sind es zwei Brüche.',
+  2:'Es können Bild und Bruch, zwei Brüche oder zwei Bilder zusammengehören.'
+};
 function newMemory(level){
   const pairs=genMemoryPairs(level,level===1?6:10,RNG);
   const cards=[];
@@ -65,13 +70,13 @@ function renderMemory(id){
     el('tr',null,el('td',null,'Beendete Runden'),el('td',null,el('b',null,String(rec.won)))),
     el('tr',null,el('td',null,'Wenigste Versuche'),el('td',null,el('b',null,rec.best==null?'–':String(rec.best)))))));
   fillStats();
-  main.append(el('div',{class:'progress'},el('span',{class:'lvlbadge'},'Niveau '+LEVEL_LABEL[lvl])));
+  main.append(el('div',{class:'progress'},el('span',{class:'lvlbadge'},LEVEL_LABEL[lvl])));
   const card=el('div',{class:'card'});
   const stats=el('div',{class:'memstats','aria-live':'polite'});
   const msg=el('div',{'aria-live':'polite'});
   const grid=el('div',{class:'memgrid n'+m.cards.length,id:'memhost'});
   const hints=el('div',{class:'hints'});
-  card.append(el('p',null,'Decke zwei Karten auf. Ein Paar zeigt denselben Anteil – auch wenn die Karten verschieden aussehen. Bruchbilder und Brüche mit Bruchstrich gehören zusammen.'),stats,msg,grid,hints);
+  card.append(el('p',null,'Decke zwei Karten auf. Ein Paar zeigt denselben Anteil – auch wenn die Karten verschieden aussehen. '+MEMORY_RULE[lvl]),stats,msg,grid,hints);
   main.append(card);
   const hintBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('hinweis')),'Tipp');
   const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkkasten');
@@ -172,7 +177,7 @@ function renderVault(id){
     el('tr',null,el('td',null,'Baupläne gesammelt'),el('td',null,el('b',null,lootOf().length+' von '+LOOT.length)))),
     lootOf().length?el('p',{class:'lootlist'},lootOf().join(' · ')):null));
   fillStats();
-  main.append(el('div',{class:'progress'},el('span',{class:'lvlbadge'},'Niveau '+LEVEL_LABEL[lvl])));
+  main.append(el('div',{class:'progress'},el('span',{class:'lvlbadge'},LEVEL_LABEL[lvl])));
   const top=el('div',{class:'card vaultcard'});
   const puzzle=el('div',{class:'card vaultpuzzle'});
   const live=el('div',{class:'sr','aria-live':'polite'});

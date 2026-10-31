@@ -667,7 +667,13 @@ TASKS.O02={area:'Offene Aufgaben',name:'Kürzen-Maschine',desc:'Kürze auf zwei 
   validate(t,d){
     const paths=d.paths||[];
     if(paths.length<2)return invalid('Finde noch '+(2-paths.length===2?'zwei Wege':'einen zweiten Weg')+'. Tippe die Kürzungszahlen.');
-    if(paths[0].join(',')===paths[1].join(','))return wrong('same','Beide Wege nutzen dieselben Kürzungszahlen. Suche einen anderen Weg.');
+    /* Ein Weg zählt über seine Kürzungszahlen, nicht über deren Reihenfolge: ÷2 › ÷3 und ÷3 › ÷2 sind derselbe Weg */
+    const sorted=(ks)=>ks.slice().sort((a,b)=>a-b).join(',');
+    if(sorted(paths[0])===sorted(paths[1])){
+      return paths[0].join(',')===paths[1].join(',')
+        ?wrong('same','Beide Wege nutzen dieselben Kürzungszahlen. Suche einen anderen Weg.')
+        :wrong('same','Das ist derselbe Weg in anderer Reihenfolge. Suche einen Weg mit anderen Kürzungszahlen.');
+    }
     return right('Richtig! Zwei verschiedene Wege, dasselbe Ergebnis.');
   },
   solution(t){
@@ -738,15 +744,15 @@ TASKS.D02={area:'Darstellungen umwandeln',name:'Dezimalzahl → Dezimalbruch',de
   hints(t){return HINT.d2.map(x=>[x]);}
 };
 
-/* ---------- D03 Gemischte Schreibweise -> gemeiner Bruch ---------- */
-TASKS.D03={area:'Darstellungen umwandeln',name:'Gemischte Schreibweise → gemeiner Bruch',desc:'Schreibe gemischte Zahlen als gemeinen Bruch.',notes:['M6'],size:5,
+/* ---------- D03 Gemischte Zahl -> Bruch ---------- */
+TASKS.D03={area:'Darstellungen umwandeln',name:'Gemischte Zahl → Bruch',desc:'Schreibe gemischte Zahlen als Bruch.',notes:['M6'],size:5,
   gen(level,R){
     let w,n,d;
     if(level===1){do{d=R.int(2,10);n=R.int(1,d-1);}while(gcd(n,d)!==1);w=R.int(1,6);}
     else{do{d=R.int(3,19);n=R.int(1,d-1);w=R.int(5,25);}while(gcd(n,d)!==1||w*d+n>300);}
     return {type:'D03',level,w,n,d,avoid:[w+' '+n+'/'+d,redKey(n,d)]};
   },
-  prompt(t,h){h.append(el('p',{class:'q'},'Schreibe ',mixed(t.w,t.n,t.d),' als gemeinen Bruch. Der Nenner ',strong(t.d),' bleibt gleich.'));},
+  prompt(t,h){h.append(el('p',{class:'q'},'Schreibe ',mixed(t.w,t.n,t.d),' als Bruch. Der Nenner ',strong(t.d),' bleibt gleich.'));},
   render(view,host){
     const t=view.task,box=[eq(mixed(t.w,t.n,t.d),'=',fracInput(view,'r'))];
     if(t.level===1){
@@ -867,7 +873,10 @@ function divExplain(n,k){
     case 5:return ['Letzte Ziffer von '+n+': '+last+' → '+(last===0||last===5?'0 oder 5':'weder 0 noch 5')+'.'];
     case 10:return ['Letzte Ziffer von '+n+': '+last+' → '+(last===0?'0':'nicht 0')+'.'];
     case 3:case 9:return ['Quersumme: '+sum+' = '+ds+'.',ds+' ist '+(ds%k===0?'':'nicht ')+'durch '+k+' teilbar.'];
-    case 4:{const l2=n%100;return ['Letzte zwei Ziffern: '+l2+'.',l2+' : 4 '+(l2%4===0?'geht auf ('+(l2/4)+').':'geht nicht auf.')];}
+    case 4:{
+      const l2=n%100,s2=String(l2).padStart(2,'0'); /* zweistellig zeigen: „00“, „04“ */
+      return ['Letzte zwei Ziffern: '+s2+'.',l2===0?'00 ist durch 4 teilbar.':s2+' : 4 '+(l2%4===0?'geht auf ('+(l2/4)+').':'geht nicht auf.')];
+    }
     case 6:return ['Durch 2? Letzte Ziffer '+last+' → '+yn(n%2===0)+'.','Durch 3? Quersumme '+sum+' = '+ds+' → '+yn(ds%3===0)+'.','Beides nötig: '+(n%6===0?'ja':'nein')+'.'];
   }
   return [];

@@ -13,7 +13,7 @@ const LAB_QUIZ=[
   {id:'teile',txt:'Die Zahl der Teile'}
 ];
 const LAB_WRONG={
-  zaehler:'Der Zähler ändert sich: Er wird mit multipliziert oder geteilt.',
+  zaehler:'Der Zähler ändert sich: Er wird mit der Zahl multipliziert oder durch sie geteilt.',
   nenner:'Auch der Nenner ändert sich. Zähler und Nenner rechnen immer mit.',
   teile:'Die Zahl der Teile ist der Nenner – und der ändert sich.'
 };

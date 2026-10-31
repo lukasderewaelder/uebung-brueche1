@@ -376,6 +376,10 @@ function runSelfTests(){
     t('Erklärungen: keine Rechnung im Text (Zahlen, Rechenzeichen, Brüche stehen als Daten), kein Emoji, kein ✓/★/✗',texts.every(x=>!/\d\s*[·×÷+−=]\s*\d|\d\s*:\s*\d|[☀-➿\u{1F000}-\u{1FFFF}]/u.test(x)));
     /* Rechnungen: alle Brüche einer Zeile gleich (Lücke „?“ muss ganzzahlig lösbar sein), Erweitern/Kürzen mit Zahl ≥ 2 passend, Rechenketten stimmen */
     const isOp=(x)=>x==='+'||x==='·'||x===':',calcOK=(l)=>{
+      if(l.some(x=>x&&x.m)){ /* gemischte Zahl: Bruch = Ganze + Rest = {m} */
+        const [w,n,d]=l.find(x=>x&&x.m).m,f2=l.filter(Array.isArray);
+        return f2.length===2&&equivalent(f2[0][0],f2[0][1],w*d+n,d)&&f2[1][0]===n&&f2[1][1]===d&&l.includes(w);
+      }
       const fr=l.filter(Array.isArray);
       if(fr.length){
         const known=fr.filter(f=>!f.includes('?')),gap=fr.filter(f=>f.includes('?'));
@@ -691,6 +695,29 @@ function runSelfTests(){
     t('Navigation: Zurück aus einem Bauteil des Lernpfads führt in den Lernpfad dieses Themas',bt({kind:'practice',id:'G02',from:'pfad'}).thema==='veraendern'&&bt({kind:'lab',from:'pfad'}).thema==='veraendern');
     t('Navigation: Zurück aus Üben führt in die Gruppe, aus der Gruppe in die Übersicht',bt({kind:'practice',id:'G02'}).group==='Entdecken'&&bt({kind:'home',tab:'ueben',group:'Entdecken'}).tab==='ueben'&&!bt({kind:'home',tab:'ueben',group:'Entdecken'}).group);
     S.view=keepV;
+  }
+  /* Paket 1: Fehler und Begriffe */
+  {
+    const o2={type:'O02',level:1,a:12,b:18,p:2,q:3,mode:'target'};
+    const same=validateTask(o2,{paths:[[2,3],[3,2]]});
+    t('O02: dieselben Zahlen in anderer Reihenfolge sind derselbe Weg (eigene Meldung); ÷6 und ÷2›÷3 sowie ÷3›÷2 und ÷6 sind verschieden',!same.correct&&/anderer Reihenfolge/.test(same.feedback)&&validateTask(o2,{paths:[[6],[3,2]]}).correct&&!validateTask(o2,{paths:[[2,3],[2,3]]}).correct);
+    t('O02-Tipp: nennt andere Kürzungszahlen, keine Rechenketten',HINT.ways.join(' ').includes('andere Kürzungszahlen')&&!HINT.ways.join(' ').includes('Rechenketten'));
+    const z04=INTRO.Z04.steps.map(s=>s.say.join(' ')).join(' ');
+    t('Z04-Erklärung: zählt Abschnitte von 0 aus, kein „sechster Strich“',z04.includes('Zähle 6 Abschnitte von 0 aus')&&!/sechste|Strich:/.test(z04));
+    const t01=INTRO.T01.steps.map(s=>s.say.join(' ')).join(' ');
+    t('T01-Erklärung: Quersumme heißt „Addiere dazu alle Ziffern“, nicht „zähle zusammen“',t01.includes('Addiere dazu alle Ziffern.')&&!/zusammen/.test(t01));
+    t('Teilbarkeit durch 4: zweistellig gezeigt („00“, „04“), 00 ist durch 4 teilbar',divExplain(400,4)[0]==='Letzte zwei Ziffern: 00.'&&divExplain(400,4)[1]==='00 ist durch 4 teilbar.'&&divExplain(504,4)[0]==='Letzte zwei Ziffern: 04.'&&divExplain(504,4)[1].startsWith('04 : 4')&&divExplain(512,4)[0]==='Letzte zwei Ziffern: 12.');
+    t('Labor: Meldung zum Zähler ist ein vollständiger Satz',LAB_WRONG.zaehler.includes('mit der Zahl multipliziert oder durch sie geteilt'));
+    const noteText=Object.keys(NOTES).map(k=>NOTES[k].title+' '+NOTES[k].build([]).map(n=>n.textContent).join(' ')).join(' ');
+    t('Begriffe: „gemischte Zahl“ und „Bruch“, nie „gemeiner Bruch“ oder „gemischte Schreibweise“ (Merkkästen, Aufgaben, Erklärungen)',!/gemeine[rn]? Bruch|[Gg]emischte Schreibweise/.test(noteText+JSON.stringify(INTRO)+Object.values(TASKS).map(x=>x.name+' '+x.desc).join(' '))&&TASKS.D03.name==='Gemischte Zahl → Bruch'&&NOTES.M6.title==='Gemischte Zahl als Bruch');
+    t('Merkkästen: Erweiterungszahl und Kürzungszahl „mindestens 2“; M5 ohne „führende Nullen“, mit „Zähle alle Stellen“',noteText.includes('Erweiterungszahl, mindestens 2')&&noteText.includes('Kürzungszahl, mindestens 2')&&noteText.includes('Zähle alle Stellen hinter dem Komma')&&!/Führende Nullen|unbemerkt/.test(noteText));
+    t('Merkkasten M9: Weg 1 (Einteilung anpassen) vor Weg 2 (Bruch anpassen), kein Weg A/B',noteText.indexOf('Weg 1: Einteilung anpassen')>=0&&noteText.indexOf('Weg 1: Einteilung anpassen')<noteText.indexOf('Weg 2: Bruch anpassen')&&!/Weg [AB]\b/.test(noteText));
+    t('Kleinstes gemeinsames Vielfaches: nur als Randnotiz (Z06-Erklärung nennt zuerst „die kleinste Zahl, in die alle Nenner passen“)',INTRO.Z06.steps.some(s=>s.say[1]&&s.say[1].includes('kleinste Zahl, in die alle Nenner passen')&&s.say.some(x=>x.includes('Fachwort'))));
+    t('Z08-Erklärung: gemischte Zahl mit Rechnung 7/4 = 1 + 3/4 = 1 ¾, Überschrift „Brüche, die natürliche Zahlen sind“',INTRO.Z08.steps.some(s=>(s.calc||[]).some(l=>l.some(x=>x&&x.m&&x.m.join()==='1,3,4')))&&INTRO.Z08.steps.some(s=>s.h==='Brüche, die natürliche Zahlen sind'&&s.say[0].includes('1, 2 oder 3')));
+    t('Memory: Regel je Niveau, verschieden und nicht leer',MEMORY_RULE[1]&&MEMORY_RULE[2]&&MEMORY_RULE[1]!==MEMORY_RULE[2]);
+    const lc=levelControl('G02').textContent;
+    t('Niveau heißt überall „Leicht“ und „Knifflig“ (Niveau-Schalter), nie „Niveau 1“',lc.includes('Leicht')&&lc.includes('Knifflig')&&!lc.includes('Niveau'));
+    t('Thema heißt „Erweitern und Kürzen“, Seitentitel „Bruchwerkstatt“',moduleById('veraendern').name==='Erweitern und Kürzen'&&document.title==='Bruchwerkstatt');
   }
   const bad=res.filter(r=>!r.ok);
   console.log(`Selbsttest: ${res.length-bad.length}/${res.length} bestanden`);

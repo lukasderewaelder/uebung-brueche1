@@ -4,7 +4,7 @@
    Kurze Karten (3–4 Schritte) mit Bild, Rechnung und – bei Erweitern und Kürzen – zum Ausprobieren.
    Sätze höchstens 14 Wörter (runSelfTests prüft das). **fett** nennt einen Knopf oder ein Merkwort, {n|d} ist ein Bruch.
    Rechnungen stehen als Daten in calc, nie im Text: [n,d] = Bruch, [n,d,'x',k] bzw. [n,d,'d',k] = Bruch mit „· k“
-   bzw. „: k“ in Zähler und Nenner, Zahl = Zahl, anderer Text = Rechenzeichen oder Wort, {wrong:true,t:[…]} = falsche Rechnung.
+   bzw. „: k“ in Zähler und Nenner, {m:[w,n,d]} = gemischte Zahl, Zahl = Zahl, anderer Text = Rechenzeichen oder Wort, {wrong:true,t:[…]} = falsche Rechnung.
    Schritt: h (Überschrift), say (Sätze), dazu höchstens eins von fig (Streifen/Kreise), lab (Ausgang/Jetzt), tryit (Ausprobieren), calc.
    Gate in renderAll: ungesehen oder per Knopf „Erklärung“ im Merkkasten (view.intro). Altbestand: migrateIntro.
    ===================================================================== */
@@ -69,7 +69,7 @@ const INTRO={
     {h:'Die letzte Ziffer verrät viel',
       say:['**2**: Die letzte Ziffer ist 0, 2, 4, 6 oder 8.','**5**: Die letzte Ziffer ist 0 oder 5.','**10**: Die letzte Ziffer ist 0.']},
     {h:'Die Quersumme',
-      say:['Für **3** und **9** brauchst du die Quersumme.','Zähle dazu alle Ziffern zusammen.','Ist die Summe durch 3 teilbar, ist es auch die Zahl.','Bei der 9 ist es genauso.'],
+      say:['Für **3** und **9** brauchst du die Quersumme.','Addiere dazu alle Ziffern.','Ist die Summe durch 3 teilbar, ist es auch die Zahl.','Bei der 9 ist es genauso.'],
       calc:[[252,'→',2,'+',5,'+',2,'=',9]]},
     {h:'Vier und sechs',
       say:['**4**: Die letzten zwei Ziffern sind durch 4 teilbar.','**6**: Die Zahl ist durch 2 und durch 3 teilbar.','Alle Regeln findest du im **Merkkasten**.']}
@@ -225,7 +225,7 @@ const INTRO={
       say:['Zähle 3 Abschnitte von 0 aus.','Tippe auf den Strich oder nutze **◀** und **▶**.'],
       nline:{from:0,to:1,parts:5,marks:[{n:3,d:5,text:'3/5'}],labels:'wholes'}},
     {h:'Feiner geht auch',
-      say:['Mit 10 Teilen liegt {3|5} auch auf einem Strich.','Es ist der sechste Strich: {6|10}.','Jede Einteilung, in die der Nenner aufgeht, passt.'],
+      say:['Mit 10 Teilen liegt {3|5} auch auf einem Strich.','Zähle 6 Abschnitte von 0 aus. Dort liegt {6|10}.','Jede Einteilung, in die der Nenner aufgeht, passt.'],
       nline:{from:0,to:1,parts:10,marks:[{n:6,d:10,text:'6/10'}],labels:'wholes'}}
   ]},
   Z05:{title:'Bruch anpassen',steps:[
@@ -248,8 +248,8 @@ const INTRO={
     {h:'Jeder Nenner muss aufgehen',
       say:['Nimm {1|2}, {3|4} und {5|6}.','Die Nenner 2, 4 und 6 gehen alle in 12 auf.','Also teilst du ein Ganzes in 12 Abschnitte.'],
       nline:{from:0,to:1,parts:12,marks:[{n:1,d:2,text:'A'},{n:3,d:4,text:'B'},{n:5,d:6,text:'C'}],labels:'wholes'}},
-    {h:'Das kleinste gemeinsame Vielfache',
-      say:['Je kleiner die Einteilung, desto einfacher.','Suche das kleinste Vielfache aller Nenner.','Bei 2, 4 und 6 ist es 12.']},
+    {h:'Die kleinste passende Einteilung',
+      say:['Je kleiner die Einteilung, desto einfacher.','Suche die kleinste Zahl, in die alle Nenner passen.','Bei 2, 4 und 6 ist das 12.','Das Fachwort heißt kleinstes gemeinsames Vielfaches.']},
     {h:'So gehst du vor',
       say:['Stelle zuerst die Teile je Ganzem ein.','Wähle A, B oder C und tippe auf den Strahl.','Dann tippe auf **Prüfen**.']}
   ]},
@@ -274,11 +274,12 @@ const INTRO={
     {h:'Zwischen welchen Zahlen?',
       say:['Frage: Wie viele Ganze passen hinein?','Es ist ein Ganzes und noch 3 Viertel.','Also liegt {7|4} zwischen 1 und 2.'],
       calc:[[7,':',4,'=',1,'Rest',3]]},
-    {h:'Gemischte Schreibweise',
+    {h:'Gemischte Zahl',
       say:['Ein Ganzes und 3 Viertel schreibst du als gemischte Zahl.','Der Nenner bleibt gleich.'],
-      nline:{from:0,to:2,parts:4,marks:[{n:7,d:4,text:'7/4'}],labels:'wholes'}},
-    {h:'Natürliche Zahlen',
-      say:['Manche Brüche sind ganze Zahlen.','Bei {8|4} geht der Zähler ohne Rest durch den Nenner.','Es sind genau 2 Ganze.'],
+      nline:{from:0,to:2,parts:4,marks:[{n:7,d:4,text:'7/4'}],labels:'wholes'},
+      calc:[[[7,4],'=',1,'+',[3,4],'=',{m:[1,3,4]}]]},
+    {h:'Brüche, die natürliche Zahlen sind',
+      say:['Manche Brüche sind natürliche Zahlen, wie 1, 2 oder 3.','Bei {8|4} geht der Zähler ohne Rest durch den Nenner.','Es sind genau 2 Ganze.'],
       calc:[[8,':',4,'=',2]]}
   ]}
 };
@@ -331,6 +332,7 @@ function introRich(s){
 const INTRO_OPS=['=','→','·',':','+'];
 function introCalcLine(tokens){
   const parts=tokens.map(t=>{
+    if(t&&t.m)return mixed(t.m[0],t.m[1],t.m[2]);
     if(Array.isArray(t)){
       const [n,d,how,k]=t;
       return how==='x'?frac(n+' · '+k,d+' · '+k):how==='d'?frac(n+' : '+k,d+' : '+k):frac(n,d);

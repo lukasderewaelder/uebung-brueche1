@@ -31,7 +31,7 @@ const NOTES={
   M2:{title:'Erweitern eines Bruchs',build(avoid){
     const e=pickEx(NOTE_EX.M2,x=>redKey(x.a,x.b),avoid);
     return [
-      el('p',null,'Ein Bruch wird ',strong('erweitert'),', wenn man seinen ',strong('Zähler und seinen Nenner mit derselben natürlichen Zahl (Erweiterungszahl) multipliziert'),'.'),
+      el('p',null,'Ein Bruch wird ',strong('erweitert'),', wenn man seinen ',strong('Zähler und seinen Nenner mit derselben natürlichen Zahl (Erweiterungszahl, mindestens 2) multipliziert'),'.'),
       el('p',null,strong('Der Wert des Bruchs ändert sich dabei nicht.')),
       el('div',{class:'ex'},strong('Beispiel: '),eq(frac(e.a,e.b),'=',frac(e.a+' · '+e.k,e.b+' · '+e.k),'=',frac(e.a*e.k,e.b*e.k))),
       el('div',{class:'figrow'},figStrip(e.a,e.b),figStrip(e.a*e.k,e.b*e.k))
@@ -39,7 +39,7 @@ const NOTES={
   M3:{title:'Kürzen eines Bruchs',build(avoid){
     const e=pickEx(NOTE_EX.M3,x=>redKey(x.a,x.b),avoid);
     return [
-      el('p',null,'Ein Bruch wird ',strong('gekürzt'),', wenn man seinen ',strong('Zähler und seinen Nenner durch dieselbe natürliche Zahl (Kürzungszahl) dividiert'),'.'),
+      el('p',null,'Ein Bruch wird ',strong('gekürzt'),', wenn man seinen ',strong('Zähler und seinen Nenner durch dieselbe natürliche Zahl (Kürzungszahl, mindestens 2) dividiert'),'.'),
       el('p',null,strong('Der Wert des Bruchs ändert sich dabei nicht.')),
       el('div',{class:'ex'},strong('Beispiel: '),eq(frac(e.a,e.b),'=',frac(e.a+' : '+e.k,e.b+' : '+e.k),'=',frac(e.a/e.k,e.b/e.k))),
       el('p',null,strong('So weit wie möglich gekürzt: '),'Zähler und Nenner können nicht mehr beide durch dieselbe natürliche Zahl größer als 1 geteilt werden.'),
@@ -66,19 +66,19 @@ const NOTES={
     const ex=list.map(s=>{const p=parseGermanDecimal(s);return eq(el('span',null,s),'=',frac(p.num,p.den));});
     return [
       el('p',null,'Jede Stelle nach dem Komma ist wichtig. Bei einer Stelle nach dem Komma steht ',strong('10'),' im Nenner, bei zwei Stellen ',strong('100'),', bei drei Stellen ',strong('1000'),'.'),
-      el('p',null,'Der Zähler enthält die Zahl ohne Komma. Führende Nullen nach dem Komma bestimmen trotzdem den Nenner.'),
+      el('p',null,'Zähle alle Stellen hinter dem Komma, auch die Nullen. Der Zähler ist die Zahl ohne Komma.'),
       el('div',{class:'ex'},strong('Beispiele:'),ex),
-      el('p',null,'Bei ',el('b',null,'0,050'),' sind es drei Nachkommastellen: ',frac(50,1000),' (nicht unbemerkt auf zwei Stellen verkürzen). ',el('b',null,'0,05'),' und ',el('b',null,'0,050'),' haben denselben Wert, werden aber mit unterschiedlich vielen Stellen geschrieben.')
+      el('p',null,el('b',null,'0,05'),' hat 2 Stellen, also ',frac(5,100),'. ',el('b',null,'0,050'),' hat 3 Stellen, also ',frac(50,1000),'. Beide Brüche haben denselben Wert.')
     ];}},
-  M6:{title:'Gemischte Schreibweise als gemeiner Bruch',build(avoid){
+  M6:{title:'Gemischte Zahl als Bruch',build(avoid){
     const e=pickEx(NOTE_EX.M6,x=>x[0]+' '+x[1]+'/'+x[2],avoid);
     const [w,n,d]=e;
     const figs=[];
     for(let i=0;i<w;i++)figs.push(drawFractionStrip(d,d,{maxW:150,label:'Ganzes'}));
     figs.push(drawFractionStrip(n,d,{maxW:150,label:'Bruchteil'}));
     return [
-      el('p',null,'Eine gemischte Schreibweise besteht aus einer ',strong('ganzen Zahl und einem Bruch'),'.'),
-      el('p',null,'Um sie als gemeinen Bruch zu schreiben, rechnet man: ',strong('Ganze · Nenner + Zähler'),'. Das Ergebnis wird zum neuen Zähler. ',strong('Der Nenner bleibt gleich.')),
+      el('p',null,'Eine gemischte Zahl besteht aus einer ',strong('natürlichen Zahl und einem Bruch'),'.'),
+      el('p',null,'Um sie als Bruch zu schreiben, rechnet man: ',strong('Ganze · Nenner + Zähler'),'. Das Ergebnis wird zum neuen Zähler. ',strong('Der Nenner bleibt gleich.')),
       el('div',{class:'ex'},strong('Beispiel: '),eq(mixed(w,n,d),'=',frac(`${w} · ${d} + ${n}`,d),'=',frac(w*d+n,d))),
       el('div',{class:'ex'},el('span',null,w+' + '),frac(n,d)),
       el('div',{class:'figrow'},figs)
@@ -94,10 +94,10 @@ const NOTES={
   M9:{title:'Zwei Wege zum Punkt',build(avoid){
     return [
       el('p',null,'So trägst du einen Bruch ein, wenn die Einteilung nicht zum Nenner passt. Es gibt zwei Wege, und beide führen zum selben Punkt.'),
-      el('p',null,strong('Weg B: Einteilung anpassen. '),'Teile den Strahl so ein, wie der Nenner sagt, und zähle dann den Zähler ab.'),
+      el('p',null,strong('Weg 1: Einteilung anpassen. '),'Teile den Strahl so ein, wie der Nenner sagt, und zähle dann den Zähler ab.'),
       el('div',{class:'ex'},frac(3,5),': ein Ganzes in 5 Abschnitte teilen, 3 Abschnitte zählen.'),
       el('div',{class:'figrow'},drawNumberLine({from:0,to:1,parts:5,marks:[{n:3,d:5}],maxW:360,label:'Drei Fünftel mit fünf Abschnitten'})),
-      el('p',null,strong('Weg A: Bruch anpassen. '),'Erweitere oder kürze den Bruch auf den Nenner der vorhandenen Einteilung.'),
+      el('p',null,strong('Weg 2: Bruch anpassen. '),'Erweitere oder kürze den Bruch auf den Nenner der vorhandenen Einteilung.'),
       el('div',{class:'ex'},eq(frac(3,5),'=',frac('3 · 2','5 · 2'),'=',frac(6,10))),
       el('div',{class:'figrow'},drawNumberLine({from:0,to:1,parts:10,marks:[{n:6,d:10}],maxW:360,label:'Sechs Zehntel mit zehn Abschnitten'})),
       el('p',null,strong('Merke: '),'Ein feineres Raster zeigt denselben Punkt: ',frac(3,5),' = ',frac(6,10),'. Erweitern heißt feiner teilen, Kürzen heißt gröber teilen.')
@@ -106,7 +106,7 @@ const NOTES={
     return [
       el('p',null,'Ein Bruch liegt ',strong('genau auf einem Strich'),', wenn sein Nenner in die Zahl der Teile je Ganzem ',strong('aufgeht'),'.'),
       el('div',{class:'ex'},frac(1,3),' passt bei 3, 6, 9, 12 Teilen, aber nicht bei 10 Teilen.'),
-      el('p',null,'Für ',strong('mehrere Brüche'),' brauchst du eine Einteilung, in die alle Nenner aufgehen: ein gemeinsames Vielfaches. Das kleinste ist am einfachsten.'),
+      el('p',null,'Für ',strong('mehrere Brüche'),' brauchst du eine Einteilung, in die alle Nenner aufgehen. Die kleinste solche Zahl ist am einfachsten. Das Fachwort dafür heißt kleinstes gemeinsames Vielfaches (kgV).'),
       el('div',{class:'ex'},strong('Beispiel: '),frac(1,2),', ',frac(3,4),', ',frac(5,6),': 2, 4 und 6 gehen in 12 auf. Also 12 Teile je Ganzem.'),
       el('div',{class:'figrow'},drawNumberLine({from:0,to:1,parts:12,marks:[{n:1,d:2,text:'A'},{n:3,d:4,text:'B'},{n:5,d:6,text:'C'}],maxW:360,label:'Brüche mit zwölf Abschnitten'}))
     ];}}
@@ -133,7 +133,7 @@ const HINT={
   error:['Prüfe, ob in beiden Zeilen dieselbe Rechnung durchgeführt wurde.','Kontrolliere den Wert vor und nach dem Rechenschritt.'],
   picture:['Zähle im Vorgabebild: Wie viele Teile sind gefärbt, wie viele gibt es? Der Anteil muss gleich groß bleiben.','Überlege, wie viele neue Teile aus einem alten Teil entstehen.'],
   family:['Du kannst neue Brüche erzeugen, indem du Zähler und Nenner gleich veränderst.','Suche unterschiedliche Erweiterungszahlen und beachte die Bedingungen.'],
-  ways:['Suche verschiedene Zahlen, durch die beide Zahlen teilbar sind.','Beginne die Rechenketten nicht beide mit derselben Kürzungszahl.'],
+  ways:['Suche verschiedene Zahlen, durch die beide Zahlen teilbar sind.','Nimm für Weg 2 andere Kürzungszahlen. Dieselben Zahlen in anderer Reihenfolge sind kein neuer Weg.'],
   d1:['Achte darauf, ob der Nenner 10, 100 oder 1000 ist.','Zähle, wie viele Stellen nach dem Komma benötigt werden.'],
   d2:['Zähle zuerst die Stellen nach dem Komma.','Der Nenner hängt von der Zahl der Nachkommastellen ab.'],
   mixed:['Die ganzen Anteile müssen in Bruchteile umgerechnet werden.','Denke an Ganze · Nenner + Zähler; der Nenner bleibt gleich.'],
