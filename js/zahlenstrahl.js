@@ -65,16 +65,16 @@ TASKS.Z01={area:'Zahlenstrahl',name:'Einteilung erkennen',desc:'Abschnitte zähl
   gen(level,R){
     const kind=R.pick(level===1?['count','count','pick']:['count','pick','even']);
     if(kind==='count'){
-      if(level===1)return {type:'Z01',level,kind,u:1,m:R.pick([2,3,4,5,6,8,10]),avoid:[]};
-      const u=R.pick([2,3]);
+      if(level===1)return {type:'Z01',level,kind,u:1,m:R.pick([2,3,4,5,6,7,8,9,10]),avoid:[]};
+      const u=R.pick([2,3,4]);
       return {type:'Z01',level,kind,u,m:R.pick([2,3,4,5,6].filter(x=>u*x<=12)),avoid:[]};
     }
     if(kind==='pick'){
-      const u=level===1?1:2,m=R.pick(level===1?[3,4,5,6,8]:[3,4,5]);
+      const u=level===1?1:2,m=R.pick(level===1?[3,4,5,6,7,8]:[3,4,5]);
       const opts=R.shuffle([m,m-1,R.pick(u===1?[m+1,m+2]:[m+1])]);
       return {type:'Z01',level,kind,u,m,opts,ans:opts.indexOf(m),trap:opts.indexOf(m-1),avoid:[]};
     }
-    const m=R.pick([4,5,6,8]),equal=R.chance(0.5);
+    const m=R.pick([4,5,6,7,8]),equal=R.chance(0.5);
     return {type:'Z01',level,kind,u:1,m,equal,k:R.int(1,m-1),shift:R.pick([-0.35,0.35]),avoid:[]};
   },
   prompt(t,h){
@@ -135,8 +135,8 @@ TASKS.Z01={area:'Zahlenstrahl',name:'Einteilung erkennen',desc:'Abschnitte zähl
 TASKS.Z02={area:'Zahlenstrahl',name:'Brüche ablesen',desc:'Lies zu Punkten am Zahlenstrahl den Bruch ab.',notes:['M8'],size:5,
   gen(level,R){
     let u=1,m,k=1;
-    if(level===1)m=R.pick([2,3,4,5,6,10]);
-    else{u=R.pick([1,1,2,3]);m=R.pick(u===1?[4,5,6,8,10,12]:u===2?[2,3,4,5,6]:[2,3,4]);k=R.int(2,3);}
+    if(level===1)m=R.pick([2,3,4,5,6,8,9,10,12]);
+    else{u=R.pick([1,1,2,3]);m=R.pick(u===1?[4,5,6,8,9,10,12]:u===2?[2,3,4,5,6]:[2,3,4]);k=R.int(2,3);}
     return {type:'Z02',level,u,m,idx:nlIdxs(R,k,u*m,m),avoid:[]};
   },
   prompt(t,h){h.append(el('p',{class:'q'},t.idx.length===1?'Welcher Bruch gehört zum Punkt A?':'Gib zu jedem Punkt den Bruch an.'));},
@@ -174,8 +174,8 @@ TASKS.Z02={area:'Zahlenstrahl',name:'Brüche ablesen',desc:'Lies zu Punkten am Z
 TASKS.Z03={area:'Zahlenstrahl',name:'Brüche eintragen',desc:'Trage Brüche auf einem eingeteilten Zahlenstrahl ein.',notes:['M8'],size:5,
   gen(level,R){
     let u=1,m,k=1;
-    if(level===1)m=R.pick([2,3,4,5,6,10]);
-    else{u=R.pick([1,1,2,3]);m=R.pick(u===1?[4,5,6,8,10,12]:u===2?[2,3,4,5,6]:[2,3,4]);k=R.int(2,3);}
+    if(level===1)m=R.pick([2,3,4,5,6,8,9,10,12]);
+    else{u=R.pick([1,1,2,3]);m=R.pick(u===1?[4,5,6,8,9,10,12]:u===2?[2,3,4,5,6]:[2,3,4]);k=R.int(2,3);}
     return {type:'Z03',level,u,m,idx:nlIdxs(R,k,u*m,m),avoid:[]};
   },
   prompt(t,h){
@@ -213,8 +213,8 @@ TASKS.Z03={area:'Zahlenstrahl',name:'Brüche eintragen',desc:'Trage Brüche auf 
 /* ---------- Z04 Weg B: Einteilung anpassen ---------- */
 TASKS.Z04={area:'Zahlenstrahl',name:'Einteilung anpassen',desc:'Teile den Strahl passend zum Nenner ein und trage ein.',notes:['M9','M8'],size:5,
   gen(level,R){
-    if(level===1){const d=R.pick([2,3,4,5,6,8,10]);return {type:'Z04',level,u:1,d,fr:[R.int(1,d-1)],avoid:[]};}
-    const u=R.pick([1,2,3]),dm=Math.min(12,nlMaxParts(u)),d=R.pick([4,5,6,8,10,12].filter(x=>x<=dm));
+    if(level===1){const d=R.pick([2,3,4,5,6,7,8,9,10]);return {type:'Z04',level,u:1,d,fr:[R.int(1,d-1)],avoid:[]};}
+    const u=R.pick([1,2,3]),dm=Math.min(12,nlMaxParts(u)),d=R.pick([4,5,6,7,8,9,10,12].filter(x=>x<=dm));
     const pool=[];for(let n=1;n<u*d;n++)if(n%d!==0)pool.push(n);
     return {type:'Z04',level,u,d,fr:R.shuffle(pool).slice(0,R.int(2,3)).sort((a,b)=>a-b),avoid:[]};
   },
@@ -264,16 +264,16 @@ TASKS.Z05={area:'Zahlenstrahl',name:'Bruch anpassen',desc:'Bringe den Bruch auf 
     let kind='expand';
     if(level===2)kind=R.pick(['expand','reduce','nofit']);
     if(kind==='expand'){
-      const b=R.pick(level===1?[2,3,4,5,6]:[3,4,5,6,8]),mx=level===1?12:24;
+      const b=R.pick(level===1?[2,3,4,5,6]:[3,4,5,6,8,9]),mx=level===1?12:24;
       const k=R.pick([2,3,4,5].filter(x=>b*x<=mx)),m=b*k,a=R.int(1,b-1);
       return {type:'Z05',level,kind,a,b,m,k,avoid:[]};
     }
     if(kind==='reduce'){
-      const m=R.pick([2,3,4,5,6,8]),k=R.pick([2,3,4].filter(x=>m*x<=24)),a1=R.int(1,m-1);
+      const m=R.pick([2,3,4,5,6,8,10]),k=R.pick([2,3,4].filter(x=>m*x<=24)),a1=R.int(1,m-1);
       return {type:'Z05',level,kind,a:a1*k,b:m*k,m,k,avoid:[]};
     }
     let a,b,m,tries=0;
-    do{b=R.pick([3,6,7,9]);m=R.pick([4,8,10,12]);a=R.int(1,b-1);tries++;}while((nlLands(a,b,m)||b===m)&&tries<200);
+    do{b=R.pick([3,5,6,7,9]);m=R.pick([4,6,8,10,12]);a=R.int(1,b-1);tries++;}while((nlLands(a,b,m)||b===m)&&tries<200);
     return {type:'Z05',level,kind,a,b,m,avoid:[]};
   },
   prompt(t,h){
@@ -343,8 +343,8 @@ TASKS.Z05={area:'Zahlenstrahl',name:'Bruch anpassen',desc:'Bringe den Bruch auf 
 };
 
 /* ---------- Z06 Mehrere Brüche auf einem Strahl ---------- */
-const NL_SETS1=[[2,4],[2,3],[3,6],[2,6],[4,6],[3,4],[2,5],[5,10]];
-const NL_SETS2=[[3,8],[6,8],[8,12],[3,4,8],[4,6,8],[2,3,8],[3,6,8],[3,4,6],[2,3,4],[4,6,12]];
+const NL_SETS1=[[2,4],[2,3],[3,6],[2,6],[4,6],[3,4],[2,5],[5,10],[2,8],[4,8],[3,9],[4,12],[6,12]];
+const NL_SETS2=[[3,8],[6,8],[8,12],[3,4,8],[4,6,8],[2,3,8],[3,6,8],[3,4,6],[2,3,4],[4,6,12],[4,5],[4,10],[6,9],[3,4,12]];
 /* je Nenner ein Bruch n/d im Strahl bis u (nicht ganz), alle Werte verschieden */
 function nlFracsFor(R,ds,u){
   for(let tries=0;tries<60;tries++){
@@ -395,11 +395,11 @@ TASKS.Z06={area:'Zahlenstrahl',name:'Mehrere Brüche eintragen',desc:'Finde eine
 TASKS.Z07={area:'Zahlenstrahl',name:'Einheit lesen',desc:'Ein Ganzes geht von 0 bis 1: Trage Brüche auf Strahlen verschiedener Länge ein.',notes:['M8'],size:5,
   gen(level,R){
     if(level===1){
-      const q=R.pick([2,3,4]),p=R.int(1,q-1),ns=R.shuffle([1,2,3,4].filter(n=>n*q<=12)).slice(0,R.int(2,3));
+      const q=R.pick([2,3,4,5]),p=R.int(1,q-1),ns=R.shuffle([1,2,3,4].filter(n=>n*q<=12)).slice(0,R.int(2,3));
       if(!ns.includes(1)&&R.chance(0.5))ns[ns.length-1]=1;
       return {type:'Z07',level,q,p,ns,avoid:[]};
     }
-    const q=R.pick([2,3,4]),n=R.pick([2,3].filter(x=>x*q<=12)),pool=[];
+    const q=R.pick([2,3,4,5]),n=R.pick([2,3].filter(x=>x*q<=12)),pool=[];
     for(let i=q+1;i<n*q;i++)if(i%q!==0)pool.push(i);
     return {type:'Z07',level,q,ns:[n],ps:R.shuffle(pool).slice(0,Math.min(2,pool.length)).sort((a,b)=>a-b),avoid:[]};
   },
@@ -437,7 +437,7 @@ TASKS.Z07={area:'Zahlenstrahl',name:'Einheit lesen',desc:'Ein Ganzes geht von 0 
 };
 
 /* ---------- Z08 Größer als 1 ---------- */
-const NL_CASES=[[2,3],[2,4],[2,5],[2,6],[3,2],[3,3],[3,4]]; /* Strahl bis u mit Nenner d: u·d höchstens 12 */
+const NL_CASES=[[2,2],[2,3],[2,4],[2,5],[2,6],[3,2],[3,3],[3,4],[4,2],[4,3]]; /* Strahl bis u mit Nenner d: u·d höchstens 12 */
 TASKS.Z08={area:'Zahlenstrahl',name:'Größer als 1',desc:'Zwischen welchen ganzen Zahlen liegt ein Bruch? Gemischte Schreibweise.',notes:['M8','M6'],size:5,
   gen(level,R){
     const kind=R.pick(level===1?['between','mixed']:['between','mixed','nat']);

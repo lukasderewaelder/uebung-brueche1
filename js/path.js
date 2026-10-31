@@ -162,6 +162,23 @@ function openStation(id){
   if(id==='LAB')go({kind:'lab',from:'pfad'});
   else{S.last=id;go({kind:'practice',id,from:'pfad'});}
 }
+/* ---------- Bauteil zurücksetzen: angefangene Runden (Leicht und Knifflig) und Erklärung; Fertig, Sterne und Punkte bleiben ---------- */
+function stationResettable(id){
+  const rounds=[1,2].some(l=>{const r=S.rounds[keyOf(id,l)];return !!r&&!!((r.results&&r.results.length)||r.cur);});
+  return rounds||!!(S.intro&&S.intro[id]===true);
+}
+function clearStation(id){
+  [1,2].forEach(l=>{delete S.rounds[keyOf(id,l)];});
+  if(S.intro)delete S.intro[id];
+}
+function resetSheet(id){
+  const title=stationTitle(id);
+  const m=modal([icon('neu','big'),el('h2',null,'Bauteil zurücksetzen?'),el('p',null,el('b',null,title)),
+    el('p',null,'Angefangene Runden werden gelöscht, und die Erklärung erscheint wieder. Fertig, Sterne und Punkte bleiben.'),
+    el('div',{class:'modalbtns'},
+      el('button',{type:'button',class:'btn danger',onclick:()=>{m.remove();clearStation(id);persist();renderAll();toast('Zurückgesetzt: '+title);}},'Zurücksetzen'),
+      el('button',{type:'button',class:'btn alt',onclick:()=>m.remove()},'Abbrechen'))]);
+}
 function lockSheet(row,modus){
   const mod=moduleOf(row.id);
   if(modus==='frei'){
@@ -204,6 +221,7 @@ function modNode(r,pos,modus){
       el('span',{class:'mpos'},String(pos+1).padStart(2,'0')),
       el('span',{class:'mnm'},el('b',null,title),el('small',null,desc)),
       el('span',{class:'mside'},chk?el('span',{class:'mchk '+chk},'Check: '+CHECK_TEXT[chk]):null,el('span',{class:'mtag'},tag),stars)));
+  if(stationResettable(id))li.append(el('button',{type:'button',class:'modreset','aria-label':title+' zurücksetzen',title:'Zurücksetzen',onclick:()=>resetSheet(id)},icon('neu')));
   return li;
 }
 function pfadMap(rows,modus){
