@@ -473,50 +473,46 @@ function introLineTry(spec){
 }
 
 /* ---------- Probeaufgabe auf der ersten Karte ---------- */
-/* Eine kleine Aufgabe (Leicht) der Station selbst: zählt nicht für Sterne, Punkte und Serie (cb.probe). Danach kommt die Erklärung. */
+/* Eine kleine Aufgabe (Leicht) der Station selbst: zählt nicht für Sterne, Punkte und Serie (cb.probe). Danach kommt die Erklärung.
+   Die Probe hat dasselbe Bedienpult wie eine Übung (Zahlentasten oder Meldung, darunter Tipp | Kenne ich schon | Prüfen/Weiter). */
 const introHasProbe=(id)=>!!(TASKS[id]&&!TASKS[id].quick&&!finalModOf(id)&&id!=='LAB');
-const PROBE_STEP={h:'Probiere es aus',say:['Löse zuerst eine kleine Aufgabe.','Ein Fehler ist nicht schlimm.','Danach kommt die Erklärung.'],probe:true};
+const PROBE_STEP={h:'Probiere es aus',say:[],probe:true}; /* der Hinweis „Fehler sind erlaubt“ steht in der Schrittzeile */
 function buildProbe(id){
-  const st=newState(generateTask(id,1)),host=el('div',{class:'probetask'}),fbHost=el('div',{class:'probefb','aria-live':'polite'});
-  const box=el('div',{class:'introprobe'});
-  let api;
-  const checkB=el('button',{type:'button',class:'btn primary small'},'Prüfen');
-  const hintB=el('button',{type:'button',class:'btn small'},icon('hinweis'),' Tipp');
-  const solB=el('button',{type:'button',class:'btn small'},icon('auge'),' Lösung ansehen');
-  const pad=makeKeypad(host,()=>check());
-  const upd=()=>{
-    const open=st.status==='open',all=api.hintCount();
-    checkB.disabled=!open;hintB.disabled=!open||st.hint>=all;solB.classList.toggle('hidden',!(open&&(st.attempts>0||st.hint>0)));
-    setHintLabel(hintB,st.hint>=all?'Alle Tipps':(st.hint?'Tipp '+(st.hint+1):'Tipp'));
-    pad.refresh();
-  };
-  const cb={probe:true,save(){},msgHost:fbHost,done(){api=mountTask(host,st,cb);upd();}};
-  api=mountTask(host,st,cb);
-  const check=()=>{if(st.status==='open'){api.check();upd();}};
-  checkB.addEventListener('click',check);
-  hintB.addEventListener('click',()=>{api.hint();upd();});
-  solB.addEventListener('click',()=>{api.solution();upd();});
-  box.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();check();}});
-  box.append(host,fbHost,el('div',{class:'rowbtns probebtns'},checkB,hintB,solB),pad.el);
-  upd();
-  return box;
+  const st=newState(generateTask(id,1)),host=el('div',{class:'probetask'}),msg=el('div',{class:'dockmsg'});
+  const P={st,host,msg,upd:null};
+  const pad=makeKeypad(host,()=>P.check());
+  P.pad=pad;P.dp=dockPanel(msg,pad,host);
+  const cb={probe:true,save(){},msgHost:msg,
+    onMsg:(what)=>P.dp.showMsg(what),
+    changed:()=>{pad.refresh();P.dp.reserve(true);fitPage();},
+    done(){P.api=mountTask(host,st,cb);if(P.upd)P.upd();}};
+  P.api=mountTask(host,st,cb);
+  P.check=()=>{if(st.status==='open'){P.api.check();if(P.upd)P.upd();}};
+  P.hint=()=>{P.api.hint();if(P.upd)P.upd();};
+  host.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();P.check();}});
+  return P;
 }
 
 /* ---------- Ansicht: Erklärung ---------- */
 function renderIntro(id){
   const I=INTRO[id],steps=introHasProbe(id)?[PROBE_STEP].concat(I.steps):I.steps,total=steps.length,again=!!(S.view&&S.view.intro);
   const known=!again&&!stationPassed(id)&&checkMark(id)==='sitzt'; /* im Eingangstest schon gezeigt: „Kenne ich schon“ ist der Hauptknopf */
-  let probeEl=null; /* die Probeaufgabe bleibt beim Blättern erhalten */
+  let P=null; /* die Probeaufgabe bleibt beim Blättern erhalten */
   let i=0;
   const root=el('div',{class:'page'});root.append(topbar(I.title));
   const shell=el('div',{class:'shell'}),main=el('main',{class:'work introwork'});
   main.dataset.acc=ACC[id]||PATH_ACC[id]||'';
   shell.append(main);root.append(shell);app.append(root);
+  root.introApi={next:()=>goNext()}; /* für den Layout-Test: Karten der Reihe nach durchblättern */
   const card=el('div',{class:'card'});
-  const backB=el('button',{type:'button',class:'btn introback','aria-label':'Zurück zum vorigen Schritt'},icon('zurueck'),'Zurück');
+  /* Knöpfe an festen Plätzen: links Hilfe (Zurück bzw. Tipp), Mitte „Kenne ich schon“, rechts der eine gelbe Hauptknopf */
+  const backB=el('button',{type:'button',class:'btn introback','aria-label':'Zurück zum vorigen Schritt'},icon('zurueck'));
   const skipB=el('button',{type:'button',class:'btn introskip'+(known?' primary':'')},again?'Schließen':'Kenne ich schon');
   const nextB=el('button',{type:'button',class:'btn intronext'+(known?'':' primary')});
-  main.append(card,el('div',{class:'actionbar'},el('div',{class:'primaryrow'},backB,skipB,nextB)));
+  const hintB=el('button',{type:'button',class:'btn'});
+  const checkB=el('button',{type:'button',class:'btn introcheck'+(known?'':' primary')},'Prüfen');
+  const row=el('div',{class:'primaryrow introrow'}),bar=el('div',{class:'actionbar'},row);
+  main.append(card,bar);
   /* „Los geht’s“ und „Kenne ich schon“: Erklärung gilt als gesehen, es geht zur eigentlichen Ansicht.
      Ausdrücklich geöffnet (Merkkasten): das Kennzeichen view.intro verschwindet, der Verlaufseintrag wird ersetzt. */
   const finish=()=>{
@@ -527,13 +523,34 @@ function renderIntro(id){
     }
     persist();renderAll();window.scrollTo(0,0);
   };
+  const goNext=()=>{if(i<total-1){i++;draw(true);}else finish();};
+  /* Probe: Knöpfe und Bedienpult nach dem Zustand der Aufgabe einstellen */
+  const updProbe=()=>{
+    const st=P.st,open=st.status==='open',all=P.api.hintCount();
+    checkB.textContent=open?'Prüfen':'Weiter';checkB.classList.toggle('ready',!open);
+    hintB.disabled=!open||st.hint>=all;
+    setHintLabel(hintB,st.hint>=all?'Alle Tipps':(st.hint?`Tipp ${st.hint+1}`:'Tipp'));
+    P.pad.refresh();P.dp.reserve(true);fitPage();
+  };
+  const drawBar=()=>{
+    const s=steps[i];
+    if(s.probe){
+      P=P||buildProbe(id);P.upd=updProbe;
+      row.className='primaryrow introrow probe';row.replaceChildren(hintB,skipB,checkB);
+      bar.replaceChildren(P.dp.el,row);
+    }else{
+      row.className='primaryrow introrow';row.replaceChildren(backB,skipB,nextB);
+      bar.replaceChildren(row);
+    }
+  };
   const draw=(move)=>{
     const s=steps[i],last=i===total-1;
+    drawBar();
     const ruler=el('div',{class:'ruler introruler','aria-hidden':'true'});
     for(let k=0;k<total;k++)ruler.append(el('i',{class:'tk'+(k<i?' f':k===i?' cur':'')}));
     const h=el('h2',{class:'introh',tabindex:'-1'},s.h);
     card.replaceChildren(...[ruler,
-      el('p',{class:'introstep'},'Schritt '+(i+1)+' von '+total),
+      el('p',{class:'introstep'},'Schritt '+(i+1)+' von '+total+(s.probe?' · Fehler sind erlaubt':'')),
       known?el('p',{class:'introknown'},icon('haken'),'Das konntest du schon im Eingangstest.'):null,
       h,
       el('div',{class:'introtxt'},s.say.map(t=>el('p',null,introRich(t)))),
@@ -543,15 +560,18 @@ function renderIntro(id){
       s.nltry?introLineTry(s.nltry):null,
       s.calc?introCalcNode(s.calc):null,
       s.tryit?introTry(s.tryit):null,
-      s.probe?(probeEl=probeEl||buildProbe(id)):null,
+      s.probe?el('div',{class:'introprobe'},P.host):null,
       el('div',{class:'titleblock'},el('span',{class:'tb-id'},icon('gluehbirne'),el('span',{class:'tb-name'},I.title)),el('span',{class:'tb-c'},'Erklärung'))].filter(Boolean));
     backB.disabled=i===0;
     nextB.replaceChildren(...(last?[again?'Zur Übung':'Los geht’s',icon('play')]:['Weiter',icon('weiter')]));
     skipB.onclick=finish;
+    if(s.probe)updProbe();else fitPage();
     if(move){window.scrollTo(0,0);h.focus({preventScroll:true});}
   };
   backB.addEventListener('click',()=>{if(i>0){i--;draw(true);}});
-  nextB.addEventListener('click',()=>{if(i<total-1){i++;draw(true);}else finish();});
+  nextB.addEventListener('click',goNext);
+  hintB.addEventListener('click',()=>{if(P)P.hint();});
+  checkB.addEventListener('click',()=>{if(!P)return;if(P.st.status==='open')P.check();else goNext();});
   draw(false);
 }
 /* Knopf „Erklärung“ im Merkkasten: dieselbe Ansicht noch einmal, mit Erklärung davor */

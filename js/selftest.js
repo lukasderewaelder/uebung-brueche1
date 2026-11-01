@@ -769,27 +769,29 @@ function runSelfTests(){
     try{
       S.intro={};S.rounds={};S.progress={};S.xp=40;S.streak=3;
       S.view={kind:'practice',id:'G02'};renderAll();
-      const btns=[...app.querySelectorAll('.primaryrow .btn')].map(b=>b.textContent.trim());
-      t('Erklärung: erste Karte „Probiere es aus“ mit Aufgabe (Eingabefelder, Prüfen, Tipp), 5 Schritte (4 + Probe); „Kenne ich schon“ steht gleich groß neben „Zurück“ und „Weiter“',/Probiere es aus/.test(app.querySelector('.introh').textContent)&&!!app.querySelector('.introprobe input')&&/Schritt 1 von 5/.test(app.textContent)&&btns.length===3&&btns[1]==='Kenne ich schon'&&btns[0].includes('Zurück')&&btns[2].includes('Weiter')&&!app.querySelector('.linkrow'));
+      const barBtns=()=>[...app.querySelectorAll('.actionbar .primaryrow .btn')],btns=barBtns().map(b=>b.textContent.trim());
+      const dockMsg=()=>(app.querySelector('.actionbar .dockmsg')||{textContent:''}).textContent;
+      t('Erklärung: erste Karte „Probiere es aus“ ist ein Bildschirm wie eine Übung: Aufgabe in der Karte, ein Bedienpult unten (Tipp | Kenne ich schon | Prüfen), ein gelber Hauptknopf; 5 Schritte (4 + Probe)',/Probiere es aus/.test(app.querySelector('.introh').textContent)&&!!app.querySelector('.introprobe input')&&/Schritt 1 von 5/.test(app.textContent)&&btns.join('|')==='Tipp|Kenne ich schon|Prüfen'&&app.querySelectorAll('.actionbar .btn.primary').length===1&&app.querySelectorAll('.card button').length===0&&!app.querySelector('.linkrow'));
       const box=app.querySelector('.introprobe'),fr=box.querySelector('.frac'),ka=+box.querySelector('strong').textContent,a7=+fr.querySelector('.num').textContent,b7=+fr.querySelector('.den').textContent;
       const ins=[...box.querySelectorAll('input[type=text]')],setI=(i,v)=>{i.value=String(v);i.dispatchEvent(new Event('input',{bubbles:true}));};
+      const pruefen=()=>barBtns().find(b=>b.textContent.trim()==='Prüfen').click();
       setI(ins[0],a7);setI(ins[1],b7);
-      [...box.querySelectorAll('button')].find(b=>b.textContent.trim()==='Prüfen').click();
-      t('Probeaufgabe: falsche Antwort zeigt Rückmeldung, bricht die Serie nicht ab und gibt keine Punkte',/Prüfe|Beim Erweitern|Der Bruch ist unverändert/.test(box.textContent)&&S.streak===3&&S.xp===40);
+      pruefen();
+      t('Probeaufgabe: falsche Antwort zeigt die Rückmeldung unten im Bedienpult, bricht die Serie nicht ab und gibt keine Punkte',/Prüfe|Beim Erweitern|Der Bruch ist unverändert/.test(dockMsg())&&S.streak===3&&S.xp===40);
       setI([...box.querySelectorAll('input[type=text]')][0],a7*ka);setI([...box.querySelectorAll('input[type=text]')][1],b7*ka);
-      [...box.querySelectorAll('button')].find(b=>b.textContent.trim()==='Prüfen').click();
-      t('Probeaufgabe: richtige Antwort zeigt die Rechnung; keine Punkte, keine Serie, kein Fortschritt (zählt nicht für Sterne)',/Richtig: /.test(box.textContent)&&S.xp===40&&S.streak===3&&Object.keys(S.progress).length===0&&Object.keys(S.rounds).length===0);
-      const bs=[...app.querySelectorAll('.primaryrow .btn')];
-      bs[2].click();
-      t('Erklärung: „Weiter“ führt zur ersten Erklärkarte der Station, die Probe bleibt davor',/Schritt 2 von 5/.test(app.textContent)&&/Erweitern heißt: feiner teilen/.test(app.querySelector('.introh').textContent));
-      [...app.querySelectorAll('.primaryrow .btn')][1].click();
+      pruefen();
+      t('Probeaufgabe: richtige Antwort zeigt die Rechnung, der Hauptknopf heißt dann „Weiter“; keine Punkte, keine Serie, kein Fortschritt (zählt nicht für Sterne)',/Richtig: /.test(dockMsg())&&barBtns()[2].textContent.trim()==='Weiter'&&S.xp===40&&S.streak===3&&Object.keys(S.progress).length===0&&Object.keys(S.rounds).length===0);
+      barBtns()[2].click();
+      const bs=barBtns();
+      t('Erklärung: „Weiter“ führt zur ersten Erklärkarte der Station; ab Karte 2 stehen unten ‹ | Kenne ich schon | Weiter (nur Pfeil links, ein gelber Hauptknopf)',/Schritt 2 von 5/.test(app.textContent)&&/Erweitern heißt: feiner teilen/.test(app.querySelector('.introh').textContent)&&bs.map(b=>b.textContent.trim()).join('|')==='|Kenne ich schon|Weiter'&&bs[0].getAttribute('aria-label')==='Zurück zum vorigen Schritt'&&app.querySelectorAll('.actionbar .btn.primary').length===1);
+      barBtns()[1].click();
       t('„Kenne ich schon“: Erklärung gilt als gesehen, die Übung öffnet sich',S.intro.G02===true&&!app.querySelector('.introwork'));
       S.intro={};S.view={kind:'lab'};renderAll();
-      t('Bruchlabor: keine Probeaufgabe, vier Schritte; „Kenne ich schon“ auch dort',!app.querySelector('.introprobe')&&/Schritt 1 von 4/.test(app.textContent)&&[...app.querySelectorAll('.primaryrow .btn')][1].textContent.trim()==='Kenne ich schon');
+      t('Bruchlabor: keine Probeaufgabe, vier Schritte; „Kenne ich schon“ auch dort',!app.querySelector('.introprobe')&&/Schritt 1 von 4/.test(app.textContent)&&[...app.querySelectorAll('.actionbar .primaryrow .btn')][1].textContent.trim()==='Kenne ich schon');
       S.intro={};S.view={kind:'practice',id:'QA'};renderAll();
       t('Abschlusscheck: keine Probeaufgabe vor der Erklärung',!app.querySelector('.introprobe')&&/Schritt 1 von 3/.test(app.textContent));
       S.intro={G03:true};S.view={kind:'practice',id:'G03',intro:true};renderAll();
-      t('Erklärung aus dem Merkkasten (again): Knopf heißt „Schließen“',[...app.querySelectorAll('.primaryrow .btn')][1].textContent.trim()==='Schließen');
+      t('Erklärung aus dem Merkkasten (again): Knopf heißt „Schließen“',[...app.querySelectorAll('.actionbar .primaryrow .btn')][1].textContent.trim()==='Schließen');
     }finally{Object.assign(S,keep7);persist();renderAll();}
   }
   /* Paket 6: Abschlusschecks QA und ZA, gemischte Runden, „Stimmt das?“, Transfer, Hinweis „Erst Erweitern und Kürzen“ */
@@ -1180,14 +1182,15 @@ function runSelfTests(){
     const keepB={view:S.view,intro:S.intro,einstufung:S.einstufung,checked:S.checked,passed:S.passed};
     try{
       S.intro={};S.passed={};S.checked={};S.einstufung=null;
-      S.view={kind:'practice',id:'G02'};renderAll();
+      const second=()=>{renderAll();app.querySelector('.page').introApi.next();}; /* Karte 2 (Karte 1 ist die Probeaufgabe) */
+      S.view={kind:'practice',id:'G02'};second();
       const plain=!app.querySelector('.introknown')&&app.querySelector('.intronext').classList.contains('primary')&&!app.querySelector('.introskip').classList.contains('primary');
-      S.einstufung={at:1,right:15,size:15,skills:{erweitern:{status:'sitzt'}}};S.checked={G02:true};renderAll();
+      S.einstufung={at:1,right:15,size:15,skills:{erweitern:{status:'sitzt'}}};S.checked={G02:true};second();
       const hint=app.querySelector('.introknown'),skip=app.querySelector('.introskip'),next=app.querySelector('.intronext');
       t('Erklärung nach „sitzt“ im Eingangstest: Hinweis „Das konntest du schon im Eingangstest“, „Kenne ich schon“ ist der Hauptknopf, „Weiter“ der zweite; ohne Eingangstest bleibt alles wie vorher',plain&&!!hint&&/Das konntest du schon im Eingangstest\./.test(hint.textContent)&&skip.classList.contains('primary')&&!next.classList.contains('primary')&&next.textContent.includes('Weiter')&&skip.textContent.includes('Kenne ich schon'));
-      S.einstufung={at:1,right:10,size:15,skills:{erweitern:{status:'fast'}}};S.checked={};renderAll();
+      S.einstufung={at:1,right:10,size:15,skills:{erweitern:{status:'fast'}}};S.checked={};second();
       const fastNo=!app.querySelector('.introknown');
-      S.einstufung={at:1,right:15,size:15,skills:{erweitern:{status:'sitzt'}}};S.checked={G02:true};S.view={kind:'practice',id:'G02',intro:true};renderAll();
+      S.einstufung={at:1,right:15,size:15,skills:{erweitern:{status:'sitzt'}}};S.checked={G02:true};S.view={kind:'practice',id:'G02',intro:true};second();
       t('Erklärung: bei „fast“ und beim Aufruf aus dem Merkkasten kein Hinweis, „Weiter“ bleibt der Hauptknopf',fastNo&&!app.querySelector('.introknown')&&app.querySelector('.intronext').classList.contains('primary'));
       S.view={kind:'practice',id:'G02'};renderAll();
       app.querySelector('.introskip').click();
@@ -1272,6 +1275,43 @@ function runSelfTests(){
     finally{try{if(keepRaw===null)localStorage.removeItem(KEY);else localStorage.setItem(KEY,keepRaw);}catch(e){}applyUi();}
     t('Start: das Skript im <head> setzt „Hell“ oder „Dunkel“ aus dem Speicher vor dem ersten Zeichnen; kaputter oder leerer Speicher stört nicht',!!boot&&bootOK);
   }
+  /* Paket E: ein Bildschirm ohne Scrollen (Bedienpult mit festen Plätzen, Meldung/Tipp statt Zahlentasten, Lösungsfenster, Etappen) */
+  {
+    const keepE={view:S.view,rounds:S.rounds,intro:S.intro,modus:S.modus,unlocked:S.unlocked,levelByType:S.levelByType,xp:S.xp,streak:S.streak,progress:S.progress};
+    const bar=()=>[...app.querySelectorAll('.actionbar .primaryrow .btn')];
+    const btn=(txt)=>bar().find(b=>b.textContent.trim().startsWith(txt));
+    const panel=()=>app.querySelector('.dockpanel');
+    try{
+      S.modus={veraendern:'frei',zahlenstrahl:'frei'};S.unlocked={veraendern:true,zahlenstrahl:true};Object.keys(INTRO).forEach(k=>S.intro[k]=true);
+      S.levelByType.G02=1;S.rounds={};S.view={kind:'practice',id:'G02'};renderAll();
+      t('Bedienpult: Tipp | Merkkasten | Prüfen, ein gelber Hauptknopf rechts; „Lösung ansehen“ und „Überspringen“ liegen in der Meldung, nicht unter der Karte',bar().map(b=>b.textContent.trim()).join('|')==='Tipp|Merkkasten|Prüfen'&&bar()[2].classList.contains('primary')&&app.querySelectorAll('.actionbar .btn.primary').length===1&&!app.querySelector('.work > .linkrow')&&!!app.querySelector('.dockmsg .linkrow'));
+      btn('Prüfen').click();
+      const inMsg=panel().classList.contains('msgmode');
+      const inp=app.querySelector('.card input[type=text]');inp.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));
+      t('Bedienpult: die Meldung ersetzt die Zahlentasten (derselbe Platz), ein Tipp auf ein Eingabefeld bringt die Tasten zurück',inMsg&&!panel().classList.contains('msgmode'));
+      btn('Tipp').click();
+      t('Tipp steht im Bedienpult: „Tipp 1 von 3: …“ im ersten Absatz, ohne „Einklappen“; die Aufgabe darüber bleibt unverändert',panel().classList.contains('msgmode')&&/Tipp 1 von 3:/.test(app.querySelector('.dockmsg .hint').textContent)&&!app.querySelector('.dockmsg .hint-toggle')&&app.querySelector('.dockmsg').dataset.show==='hint');
+      btn('Tipp').click();btn('Tipp').click();
+      const lsg=btn('Lösung');if(lsg)lsg.click();
+      const frage=document.querySelector('.modal');
+      t('Nach dem dritten Tipp heißt der linke Knopf „Lösung“ (statt „Alle Tipps“) und fragt vor dem Ansehen nach',!!lsg&&!!frage&&/Lösung ansehen\?/.test(frage.textContent));
+      [...document.querySelectorAll('.modal button')].find(b=>b.textContent.trim()==='Lösung ansehen').click();
+      const sheet=document.querySelector('.solsheet');
+      t('Musterlösung öffnet ein eigenes Fenster („Musterlösung“, „Schließen“); in der Karte steht keine Lösung, in der Meldung bleibt „Lösung ansehen“',!!sheet&&/Musterlösung/.test(sheet.textContent)&&!!sheet.querySelector('.solbody')&&!app.querySelector('.card .solution')&&!app.querySelector('.card .solbox')&&!!app.querySelector('.dockmsg .sollink'));
+      if(sheet)sheet.querySelector('button').click();
+      t('Lösungsfenster schließt sich; „Weiter“ ist danach der Hauptknopf',!document.querySelector('.solsheet')&&!!btn('Weiter')&&btn('Weiter').classList.contains('primary'));
+      S.levelByType.U04=1;S.rounds={};S.view={kind:'practice',id:'U04'};renderAll();
+      const etappen=()=>[...app.querySelectorAll('.etappe')].map(e=>e.hidden).join();
+      const zu1=etappen()==='false,true'&&app.querySelector('.etsum').hidden;
+      app.querySelector('.btn.yn').click();
+      const zu2=etappen()==='true,false'&&!app.querySelector('.etsum').hidden&&/Stimmt/.test(app.querySelector('.etsum').textContent);
+      app.querySelector('.etsum').click();
+      t('Zweiteilige Aufgabe (U04) in Etappen: erst nur Teil 1; nach der Antwort klappt er zur Zeile zusammen und Teil 2 erscheint; ein Tipp auf die Zeile öffnet Teil 1 wieder',zu1&&zu2&&etappen()==='false,true');
+      S.levelByType.U03=1;S.rounds={};S.view={kind:'practice',id:'U03'};renderAll();
+      const r0=app.querySelector('.etappe input[type=radio]');r0.checked=true;r0.dispatchEvent(new Event('change',{bubbles:true}));
+      t('U03 in Etappen: nach der Wahl der Fehlerart erscheinen die Eingabefelder für die Berichtigung (Teil 2) und die Zeile nennt den Fehler',etappen()==='true,false'&&/Fehler: /.test(app.querySelector('.etsum').textContent)&&!!app.querySelector('.etappe:not([hidden]) input[type=text]'));
+    }finally{Object.assign(S,keepE);persist();renderAll();}
+  }
   const bad=res.filter(r=>!r.ok);
   console.log(`Selbsttest: ${res.length-bad.length}/${res.length} bestanden`);
   bad.forEach(b=>console.error('FEHLER:',b.name));
@@ -1279,3 +1319,71 @@ function runSelfTests(){
 }
 window.runSelfTests=runSelfTests;
 
+
+/* =====================================================================
+   Layout-Test: passt jede Aufgabe ohne Scrollen auf einen kleinen Handybildschirm?
+   Aufruf in der Konsole: await runLayoutTests()  (Standard 375 × 600, drei Stichproben je Aufgabe und Niveau)
+   Gemessen wird in einem unsichtbaren Rahmen genau dieser Größe, mit Zahlentasten (Touch), in vier Zuständen:
+   neue Aufgabe · Teil 2 (zweiteilige Aufgaben) · nach „Prüfen“ · nach drei Tipps.
+   ===================================================================== */
+async function runLayoutTests(w=375,h=600,samples=3,ids,intro=true){
+  ids=ids||Object.keys(TASKS).filter(id=>!['QA','ZA'].includes(id));
+  const f=document.createElement('iframe');
+  f.style.cssText='position:fixed;left:0;top:0;width:'+w+'px;height:'+h+'px;border:0;visibility:hidden;pointer-events:none';
+  f.src='index.html?layouttest='+Date.now();
+  document.body.append(f);
+  await new Promise(r=>{f.onload=r;});
+  const cw=f.contentWindow;
+  /* nichts speichern (der Rahmen teilt den Speicher mit der echten Seite), Touch-Gerät vortäuschen */
+  cw.eval(`persist=function(){};
+    const _mm=window.matchMedia.bind(window);window.matchMedia=(q)=>/pointer:\s*coarse/.test(q)?{matches:true,media:q,addEventListener(){},removeEventListener(){},addListener(){},removeListener(){}}:_mm(q);
+    window.__ov=()=>document.documentElement.scrollHeight-window.innerHeight;
+    window.__btn=(t)=>[...document.querySelectorAll('.actionbar button, .card button')].find(b=>b.textContent.trim().startsWith(t)&&!b.disabled);
+    S.modus={veraendern:'frei',zahlenstrahl:'frei'};S.unlocked={veraendern:true,zahlenstrahl:true};Object.keys(INTRO).forEach(k=>S.intro[k]=true);`);
+  const out={};
+  for(const id of ids){
+    for(const lvl of [1,2]){
+      const worst={neu:-1,teil2:-1,pruefen:-1,tipps:-1};
+      for(let i=0;i<samples;i++){
+        const r=cw.eval(`(()=>{
+          S.levelByType['${id}']=${lvl};S.rounds={};S.view={kind:'practice',id:'${id}'};
+          try{renderAll();}catch(e){return {err:e.message};}
+          window.scrollTo(0,0);
+          const a=__ov();
+          let e2=-1;const first=document.querySelector('.etappe:not([hidden]) input[type=radio], .etappe:not([hidden]) button.yn');
+          if(first){first.click();if(first.type==='radio'){first.checked=true;first.dispatchEvent(new Event('change',{bubbles:true}));}e2=__ov();}
+          const b=__btn('Prüfen');if(b)b.click();const w2=__ov();
+          S.rounds={};renderAll();
+          for(let k=0;k<3;k++){const t=__btn('Tipp');if(t)t.click();}
+          return {neu:a,teil2:e2,pruefen:w2,tipps:__ov()};
+        })()`);
+        if(r.err){out[id+'-L'+lvl]='FEHLER '+r.err;break;}
+        for(const k of Object.keys(worst))worst[k]=Math.max(worst[k],r[k]);
+      }
+      if(!out[id+'-L'+lvl])out[id+'-L'+lvl]=worst;
+    }
+  }
+  /* Erklärkarten: jede Karte jeder Erklärung (Karte 1 ist die Probeaufgabe), die Probe zusätzlich nach drei Tipps */
+  if(intro){
+    for(const id of Object.keys(INTRO)){
+      const r=cw.eval(`(()=>{
+        S.intro={};S.rounds={};S.view=${id==='LAB'?"{kind:'lab'}":`{kind:'practice',id:'${id}'}`};
+        try{renderAll();}catch(e){return {err:e.message};}
+        let worst=-1,n=0,tipps=-1,g=0;
+        while(document.querySelector('.introwork')&&g++<14){
+          window.scrollTo(0,0);worst=Math.max(worst,__ov());n++;
+          if(n===1&&document.querySelector('.introrow.probe')){for(let k=0;k<3;k++){const t=__btn('Tipp');if(t)t.click();}tipps=__ov();window.scrollTo(0,0);}
+          document.querySelector('.page').introApi.next();
+        }
+        return {karten:worst,tippsProbe:tipps};
+      })()`);
+      out['Erklärung '+id]=r.err?'FEHLER '+r.err:{neu:r.karten,teil2:-1,pruefen:-1,tipps:r.tippsProbe};
+    }
+  }
+  f.remove();
+  const bad=Object.entries(out).filter(([k,v])=>typeof v==='string'||Math.max(v.neu,v.teil2,v.pruefen,v.tipps)>0)
+    .map(([k,v])=>k+' '+(typeof v==='string'?v:'neu '+Math.max(0,v.neu)+', Teil 2 '+Math.max(0,v.teil2)+', Prüfen '+Math.max(0,v.pruefen)+', Tipps '+Math.max(0,v.tipps)));
+  console.log('Layout '+w+' × '+h+': '+(Object.keys(out).length-bad.length)+' von '+Object.keys(out).length+' Aufgaben passen ohne Scrollen');
+  if(bad.length)console.log('Zu hoch (Pixel über dem Rand):\n'+bad.join('\n'));
+  return {total:Object.keys(out).length,tooHigh:bad,detail:out};
+}

@@ -938,3 +938,146 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 /* Paket D: Darstellung (Hell / Dunkel / Automatisch) in den Einstellungen */
 .optseg3{grid-template-columns:repeat(3,1fr)}
 .opthint{display:block;margin-top:.4rem;color:var(--ink-dim)}
+
+/* Paket E: ein Bildschirm ohne Scrollen.
+   Bedienpult: ein Platz für Zahlentasten ODER Meldung/Tipp, die Aufgabe darüber bleibt unverändert. */
+.dockpanel{display:grid}
+.dockpanel>*{grid-area:1/1;min-width:0}
+.dockpanel.msgmode>.keypad{visibility:hidden}
+.dockpanel:has(>.keypad:not(.hidden)):not(.msgmode)>.dockmsg{visibility:hidden}
+.dockpanel:has(>.keypad:not(.hidden))>.dockmsg{align-self:start;max-height:calc(2*max(44px,2.75rem) + .25rem);overflow:auto;margin-bottom:.5rem}
+.dockmsg{max-height:26dvh}
+.dockmsg[data-show="fb"] .hints{display:none}
+.dockmsg[data-show="hint"] .feedback,.dockmsg[data-show="hint"] .linkrow{display:none}
+.dockmsg .msg{min-height:0;margin-bottom:.25rem;padding:.375rem .625rem .375rem 4.5rem}
+.dockmsg .msg.ok{padding-left:3.5rem}
+.dockmsg .msg::before{left:.375rem;font-size:.62rem}
+.dockmsg .hint{margin-bottom:.25rem;padding:.25rem .625rem .25rem .75rem;border-left-width:8px}
+.dockmsg .hint-toggle{display:none}
+.dockmsg .hint p{margin:.15em 0}
+.dockmsg .linkrow{margin:.25rem 0 0;gap:.5rem}
+.dockmsg .linkrow .btn{min-height:max(40px,2.5rem);flex:1}
+.sollink{margin-top:.125rem;width:100%}
+/* Musterlösung: eigenes Fenster, scrollt dort */
+.solsheet .modalcard{display:flex;flex-direction:column;gap:.5rem;max-height:calc(100dvh - 2.5rem);text-align:left}
+.solsheet .modalcard h2{display:flex;align-items:center;gap:.5rem;margin:0}
+.solsheet .solbody{flex:1;min-height:0;overflow:auto}
+/* niedrige Bildschirme (Handy mit Adressleiste): Ränder und Abstände enger, Schrift wächst nicht über die Höhe hinaus */
+@media (max-height:820px){
+  :root{--fs:clamp(13px,min(calc(13.6px + .55vw),2.45dvh),22px)}
+  .topbar{min-height:max(48px,3rem);padding-top:max(.25rem,env(safe-area-inset-top));padding-bottom:.25rem}
+  .shell{padding-top:.375rem}
+  .ruler{margin-bottom:.375rem}
+  .ruler .tk{height:.875rem}
+  .card{padding:.625rem .75rem 0}
+  .card>:last-child:not(.titleblock){margin-bottom:.5rem}
+  .titleblock{margin:.5rem -.75rem 0}
+  .titleblock>*{padding:.25rem .5rem}
+  .prompt::before{display:none}
+  .q{font-size:1.1rem;margin:.1em 0 .4em}
+  .stage{margin:.25rem 0 .125rem}
+  .actionbar{margin-top:.5rem;padding-top:.5rem;padding-bottom:calc(.375rem + env(safe-area-inset-bottom))}
+  .keypad{gap:.25rem}
+  .key,.primaryrow .btn{min-height:max(44px,2.75rem)}
+}
+
+/* Zweiteilige Aufgaben in Etappen (U03, U04, U06) und kompaktere Aufgabenteile auf niedrigen Bildschirmen */
+.etappe[hidden],.etsum[hidden]{display:none}
+.etsum{display:flex;align-items:center;gap:.5rem;width:100%;min-height:max(40px,2.5rem);margin:.375rem 0;padding:.25rem .625rem;text-align:left;background:var(--bp);color:var(--chalk);border:2px solid var(--ok);cursor:pointer;font-weight:600;border-radius:2px}
+.etsum:disabled{opacity:1;cursor:default}
+.etsum .ic{color:var(--ok);flex:none}
+.etsum .ets{flex:1;min-width:0}
+.etsum .etc{flex:none;font:700 .7rem var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--chalk-dim)}
+.famlist{display:grid;grid-template-columns:1fr 1fr;gap:0 .75rem}
+@media (max-height:820px){
+  .wrongclaim{padding:.25rem .625rem}
+  .wrongclaim .eq{font-size:1.3rem;margin:.1em 0}
+  .opts{gap:.375rem;margin:.375rem 0 .5rem}
+  .opt{padding:.375rem .625rem;min-height:max(44px,2.75rem)}
+  .yesno{margin:.5rem 0;gap:.5rem}
+  .btn.yn{min-height:4rem;font-size:1.15rem}
+  .tiles{margin:.375rem 0 .25rem;gap:.5rem}
+  .tiles-3 .tile,.tile.tile-txt{min-height:3.25rem}
+  .famrow{margin:.25rem 0}
+  .famnote{display:none}
+  .cond{margin:.25rem 0;padding-left:1.1rem}
+  .eq{margin:.25em 0}
+}
+.dockpanel.reserve{min-height:calc(2*max(44px,2.75rem) + .75rem)}
+.dockpanel.reserve>.dockmsg{align-self:start;max-height:calc(2*max(44px,2.75rem) + .25rem);overflow:auto}
+@media (max-height:820px){
+  .controls{display:grid;grid-template-columns:1fr 1fr;gap:.25rem .5rem;margin:.375rem 0}
+  .controls .stepper{margin:0;justify-content:center;flex-wrap:wrap;gap:.25rem}
+  .controls .stepper .lab{flex:0 0 100%;min-width:0;text-align:center;line-height:1}
+  .controls .stepper:nth-child(3){display:none}
+  .controls>.btn{grid-column:1/-1;min-height:max(40px,2.5rem)}
+  .stepper button{width:max(44px,2.75rem);height:max(44px,2.75rem)}
+  .machfrac{font-size:1.8rem}
+  .machhist{margin:.125rem 0 .25rem;min-height:1.2em}
+  .chip{min-width:max(44px,2.75rem);min-height:max(44px,2.75rem)}
+  .chiprow{gap:.375rem;margin:.25rem 0}
+  .machsg:empty{display:none}
+  .machsg{margin:.25rem 0;min-height:0}
+  .machdone{margin:.125rem 0}
+}
+.dockpanel.reserve-s{min-height:4.25rem}
+.dockpanel.reserve:not(:has(>.keypad:not(.hidden))){min-height:4.25rem}
+.dockpanel.reserve-s>.dockmsg,.dockpanel.reserve:not(:has(>.keypad:not(.hidden)))>.dockmsg{max-height:calc(2*max(44px,2.75rem) + .25rem);overflow:auto}
+@media (max-height:820px){
+  .controls{grid-template-columns:1fr 1fr auto}
+  .controls>.btn{grid-column:auto;align-self:end;padding:0 .625rem}
+  .controls>.btn .btxt{display:none}
+  .controls .stepper:first-child:nth-last-child(2){grid-column:1/3}
+  .figpair figcaption,.figpair .cap{display:none}
+}
+@media (max-height:820px){
+  .ruler{margin-bottom:.25rem}
+  .ruler .tk{height:.625rem}
+  .shell{padding-top:.25rem}
+  .card{padding:.5rem .625rem 0}
+  .titleblock{margin:.375rem -.625rem 0;font-size:.6rem;letter-spacing:.08em}
+  .titleblock>*{padding:.1875rem .5rem}
+  .card>:last-child:not(.titleblock){margin-bottom:.375rem}
+  .actionbar{margin-top:.375rem;padding-top:.4375rem;padding-bottom:calc(.3125rem + env(safe-area-inset-bottom))}
+  .keypad{margin-bottom:.375rem}
+  .dockpanel:has(>.keypad:not(.hidden))>.dockmsg{margin-bottom:.375rem}
+}
+.dockmsg .hint.compact{padding:.25rem .625rem .25rem .75rem}
+.dockmsg .hint.compact p{margin:.1em 0}
+.hint .hl{display:inline-flex;align-items:center;gap:.25rem;font:700 .68rem var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-dim)}
+.hint .hl .ic{width:1rem;height:1rem}
+@media (max-height:820px){
+  .eq .frac input,.fracin input{min-height:max(40px,2.5rem)}
+}
+/* Erklärung: Knöpfe an festen Plätzen (links Zurück als Pfeil, Mitte Kenne ich schon, rechts Hauptknopf); Probeaufgabe mit Bedienpult */
+.introrow{grid-template-columns:3.25rem 1fr 1fr;grid-auto-flow:row}
+.introrow.probe{grid-template-columns:1fr 1.5fr 1fr}
+.introrow .introback{padding:0}
+.introrow .introskip{line-height:1.15}
+.introprobe{margin:.25rem 0}
+.probetask .prompt{margin-bottom:.25rem}
+.key.invis{visibility:hidden}
+.dockpanel.reserve-s{min-height:0}
+/* sehr niedrige Bildschirme: das Schriftfeld der Karte (Name, „Aufgabe 1 von 5“, Niveau) entfällt, die Fortschrittsleiste zeigt die Aufgabe */
+@media (max-height:640px){
+  .card>.titleblock{display:none}
+  .card>:last-child{margin-bottom:.375rem}
+}
+/* mehrere Bruch-Eingaben (z. B. A, B, C am Zahlenstrahl) stehen nebeneinander statt untereinander */
+@media (max-height:820px){
+  .stage:has(>.eq+.eq){display:flex;flex-wrap:wrap;justify-content:space-between;gap:0 .5rem}
+  .stage:has(>.eq+.eq)>*{flex:0 0 100%}
+  .stage:has(>.eq+.eq)>.eq{flex:1 1 30%;justify-content:center;gap:.2em;font-size:1.3rem}
+}
+/* Spiele auf sehr niedrigen Bildschirmen: Tresor ohne den Erklärabsatz (steht im Merkkasten), Memory-Karten niedriger */
+@media (max-height:700px){
+  .vaultcard>p{display:none}
+  .mcard{height:5rem}
+}
+@media (max-height:820px){
+  .memgrid.n20{grid-template-columns:repeat(5,1fr)}
+  .memgrid .mcard{height:5.5rem}
+}
+@media (max-height:700px){
+  .memgrid .mcard{height:4.5rem}
+}
