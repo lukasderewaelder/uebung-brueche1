@@ -42,6 +42,11 @@ function genMemoryPairs(level,count,R){
   }
   return pairs;
 }
+/* Leicht: meist Bild und Bruch, manchmal zwei Brüche; Knifflig: Bild/Bruch, zwei Brüche oder zwei Bilder gemischt */
+const MEMORY_RULE={
+  1:'Meist gehört ein Bild zu einem Bruch, manchmal sind es zwei Brüche.',
+  2:'Es können Bild und Bruch, zwei Brüche oder zwei Bilder zusammengehören.'
+};
 function newMemory(level){
   const pairs=genMemoryPairs(level,level===1?6:10,RNG);
   const cards=[];
@@ -65,13 +70,13 @@ function renderMemory(id){
     el('tr',null,el('td',null,'Beendete Runden'),el('td',null,el('b',null,String(rec.won)))),
     el('tr',null,el('td',null,'Wenigste Versuche'),el('td',null,el('b',null,rec.best==null?'–':String(rec.best)))))));
   fillStats();
-  main.append(el('div',{class:'progress'},el('span',{class:'lvlbadge'},'Niveau '+LEVEL_LABEL[lvl])));
+  main.append(el('div',{class:'progress'},el('span',{class:'lvlbadge'},LEVEL_LABEL[lvl])));
   const card=el('div',{class:'card'});
   const stats=el('div',{class:'memstats','aria-live':'polite'});
   const msg=el('div',{'aria-live':'polite'});
   const grid=el('div',{class:'memgrid n'+m.cards.length,id:'memhost'});
   const hints=el('div',{class:'hints'});
-  card.append(el('p',null,'Decke zwei Karten auf. Ein Paar zeigt denselben Anteil – auch wenn die Karten verschieden aussehen. Bruchbilder und Brüche mit Bruchstrich gehören zusammen.'),stats,msg,grid,hints);
+  card.append(el('p',null,'Decke zwei Karten auf. Ein Paar zeigt denselben Anteil – auch wenn die Karten verschieden aussehen. '+MEMORY_RULE[lvl]),stats,msg,grid,hints);
   main.append(card);
   const hintBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('hinweis')),'Tipp');
   const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkkasten');
@@ -128,30 +133,70 @@ function renderMemory(id){
    9 Spiel S02 – Der Bruch-Tresor
    Der Code ist ein Bruch. Jedes Schloss (Erweitern oder Kürzen) gibt eine Ziffer frei.
    Sind alle Schlösser offen, steht der Code-Bruch da – der Tresor nimmt aber nur den
-   gekürzten Bruch. Wer ihn knackt, findet einen Bauplan für die Sammlung.
+   gekürzten Bruch. Wer ihn knackt, findet eine Sammelkarte für die Sammlung.
    ===================================================================== */
+/* Je Schloss ein Aufgabentyp mit einer Zahl als Lösung (jede Art höchstens einmal); die Ziffer des Schlosses ist die letzte Ziffer dieser Zahl */
 const VAULT_GROUPS={
-  1:[['G02','U02'],['G03','G04','T01'],['U01','B01','G05']],
-  2:[['G02','G05'],['G03','G04'],['U01','U02','T01'],['U03','B01','O01','O02']]
+  1:[['G02','U02'],['G03','G04'],['U01','G05']],
+  2:[['G02'],['G03','G04'],['U01','G05'],['U02','U03']]
 };
+/* Schlüsselzahl einer Schloss-Aufgabe: Zähler des Ergebnisses (Erweitern, Kürzen, gemischt, Fehler berichtigen), Erweiterungs-/Kürzungszahl (U02)
+   oder die erste gesuchte Zahl der Lücken (U01) */
+function vaultKey(t){
+  switch(t.type){
+    case 'G02':return t.a*t.k;
+    case 'G03':case 'G04':return t.mode==='factor'?t.a/t.k:(t.p!=null?t.p:t.a);
+    case 'G05':return t.mode==='denom'?t.a*t.N/t.b:t.a*t.k/t.m;
+    case 'U01':{const x=t.terms.find(y=>y.blank);return x.blank==='n'?x.n:x.d;}
+    case 'U02':return t.k;
+    case 'U03':return t.fix==='full'?simplify(t.a,t.b)[0]:(t.kind==='expand'?t.a*t.k:t.a/t.k);
+  }
+  return null;
+}
+/* Eine Aufgabe, deren Schlüsselzahl auf die gesuchte Ziffer endet (null, wenn der Typ so etwas nicht hergibt) */
+function vaultTask(type,level,digit){
+  for(let i=0;i<500;i++){
+    const t=generateTask(type,level),k=vaultKey(t);
+    if(Number.isInteger(k)&&k>=0&&k%10===digit)return t;
+  }
+  return null;
+}
 const LOOT=['Zahnradwagen','Dampfschiff','Windmühle','Leuchtturm','Hängebrücke','Segelflieger','Uhrwerk','Hebekran','Schleusentor','Wasserrad','Fernrohr','Seilbahn'];
 const lootOf=()=>S.loot||(S.loot=[]);
-/* Bevorzugt einen Bauplan, den es in der Sammlung noch nicht gibt */
+const lootIcon=(name,cls)=>icon('loot'+LOOT.indexOf(name),cls);
+/* Alle zwölf Sammelkarten: gefundene mit Bild und Namen, die übrigen als Schloss */
+function lootGrid(){
+  const have=lootOf();
+  return el('ul',{class:'lootgrid','aria-label':'Sammelkarten: '+have.length+' von '+LOOT.length},...LOOT.map(n=>{
+    const got=have.includes(n);
+    return el('li',{class:'lootcell'+(got?' have':''),'aria-label':got?n:'noch nicht gefunden'},got?lootIcon(n):icon('schloss'),el('small',null,got?n:'?'));
+  }));
+}
+/* Bevorzugt eine Sammelkarte, die es in der Sammlung noch nicht gibt */
 function pickLoot(){
   const have=lootOf(),rest=LOOT.filter(x=>!have.includes(x));
   return RNG.pick(rest.length?rest:LOOT);
 }
+/* Der Code ist ein Bruch; Schloss i verrät die Ziffer i, und die ist die letzte Ziffer der Lösung seiner Aufgabe.
+   Zu jeder Ziffer wird eine passende Aufgabe gesucht (geht es für einen Code nicht, kommt ein neuer Code). */
 function newVault(level){
-  const c=vaultCode(level,RNG);
-  const types=RNG.shuffle(VAULT_GROUPS[level].map(g=>RNG.pick(g)));
-  return {
-    ver:2,level,digits:(String(c.a)+String(c.b)).split('').map(Number),numLen:String(c.a).length,
-    locks:types.map(t=>newState(generateUnique(t,level))),
-    door:newState({type:'V01',level,mode:'full',a:c.a,b:c.b,p:c.p,q:c.q,avoid:[]}),
-    active:0,opened:false,loot:pickLoot()
-  };
+  for(let tries=0;tries<80;tries++){
+    const c=vaultCode(level,RNG),digits=(String(c.a)+String(c.b)).split('').map(Number),groups=RNG.shuffle(VAULT_GROUPS[level]),locks=[];
+    for(let i=0;i<digits.length;i++){
+      let task=null;
+      for(const ty of RNG.shuffle(groups[i])){task=vaultTask(ty,level,digits[i]);if(task)break;}
+      if(!task)break;
+      locks.push(newState(task));
+    }
+    if(locks.length===digits.length)return {
+      ver:3,level,digits,numLen:String(c.a).length,locks,
+      door:newState({type:'V01',level,mode:'full',a:c.a,b:c.b,p:c.p,q:c.q,avoid:[]}),
+      active:0,opened:false,loot:pickLoot()
+    };
+  }
+  throw new Error('Tresor: kein Code gefunden');
 }
-const vaultOk=(v,lvl)=>!!v&&v.ver===2&&v.level===lvl&&Array.isArray(v.locks)&&v.locks.length===v.digits.length&&!!v.door;
+const vaultOk=(v,lvl)=>!!v&&v.ver===3&&v.level===lvl&&Array.isArray(v.locks)&&v.locks.length===v.digits.length&&!!v.door;
 function renderVault(id){
   const lvl=levelOf(id),key=keyOf(id,lvl),rec=gameRec(key);
   if(!vaultOk(rec.state,lvl)){rec.state=newVault(lvl);rec.played++;persist();}
@@ -169,10 +214,10 @@ function renderVault(id){
   const fillStats=()=>help.setStats(el('div',null,el('h3',null,'Deine Runden'),el('table',{class:'stats'},
     el('tr',null,el('td',null,'Gespielte Runden'),el('td',null,el('b',null,String(rec.played)))),
     el('tr',null,el('td',null,'Geknackte Tresore'),el('td',null,el('b',null,String(rec.won)))),
-    el('tr',null,el('td',null,'Baupläne gesammelt'),el('td',null,el('b',null,lootOf().length+' von '+LOOT.length)))),
-    lootOf().length?el('p',{class:'lootlist'},lootOf().join(' · ')):null));
+    el('tr',null,el('td',null,'Sammelkarten gesammelt'),el('td',null,el('b',null,lootOf().length+' von '+LOOT.length)))),
+    lootGrid()));
   fillStats();
-  main.append(el('div',{class:'progress'},el('span',{class:'lvlbadge'},'Niveau '+LEVEL_LABEL[lvl])));
+  main.append(el('div',{class:'progress'},el('span',{class:'lvlbadge'},LEVEL_LABEL[lvl])));
   const top=el('div',{class:'card vaultcard'});
   const puzzle=el('div',{class:'card vaultpuzzle'});
   const live=el('div',{class:'sr','aria-live':'polite'});
@@ -218,15 +263,15 @@ function renderVault(id){
   };
   const drawTop=()=>{
     const open=v.locks.filter(solved).length;
-    const text=v.opened?`Der Tresor ist offen! Du hast den Bauplan »${v.loot}« gefunden.`
+    const text=v.opened?`Der Tresor ist offen! Du hast die Sammelkarte »${v.loot}« gefunden.`
       :allSolved()?'Alle Schlösser sind offen. Jetzt steht der ganze Code-Bruch da.'
-      :`Im Tresor liegt der Bauplan »${v.loot}«. Der Code ist ein Bruch – jedes Schloss verrät dir eine Ziffer.`;
+      :`Im Tresor liegt die Sammelkarte »${v.loot}«. Der Code ist ein Bruch. Jedes Schloss verrät dir eine Ziffer: die letzte Ziffer seiner Lösung.`;
     top.replaceChildren(
       el('div',{class:'vhead'},el('span',{class:'lblm'},'Code-Bruch'),
         v.opened?el('span',{class:'stampbox'},'Geknackt'):el('span',{class:'lblm vcount'},`${open} von ${n} offen`)),
       el('p',null,text),
       el('div',{class:'vpanel'},codeFrac(),el('div',{class:'vside'},lockChips(),
-        v.opened?el('small',null,'Deine Sammlung: '+lootOf().length+' von '+LOOT.length+' Baupläne'):null)));
+        v.opened?el('div',{class:'lootbig'},lootIcon(v.loot,'big'),el('b',null,v.loot),el('small',null,'Deine Sammlung: '+lootOf().length+' von '+LOOT.length+' Sammelkarten')):null)));
     fresh=-1;
   };
 
@@ -244,15 +289,13 @@ function renderVault(id){
   const openVault=()=>{
     v.opened=true;rec.won++;
     const have=lootOf();if(!have.includes(v.loot))have.push(v.loot);
-    live.textContent='Der Tresor ist offen. Bauplan '+v.loot+' gefunden.';
+    live.textContent='Der Tresor ist offen. Sammelkarte '+v.loot+' gefunden.';
     persist();fillStats();drawPuzzle();toTop();
     award(40,'Tresor geknackt!'); /* erst nach dem Umbau, damit die Einblendung über dem endgültigen Bedienpult liegt */
   };
-  /* Erster Tipp: allgemeiner Hinweis; bei Kürzen-Aufgaben (und an der Tür) nennt er auch die 2-Regel */
+  /* Erster Tipp: allgemeiner Hinweis zum Tresor (die Tipps der Aufgabe selbst nennen die passende Teilbarkeitsregel) */
   const prefixFor=()=>{
-    if(onDoor())return [[HINT.vault[1],RULE2]];
-    const l=cur(),own=TASKS[l.task.type].hints(l.task);
-    return [own.length&&own.every(h=>h.some(x=>/2 geht IMMER/i.test(x)))?[HINT.vault[0],RULE2]:[HINT.vault[0]]];
+    return [[HINT.vault[onDoor()?1:0]]];
   };
   const cbFor=()=>({
     save:()=>persist(),
@@ -263,7 +306,7 @@ function renderVault(id){
       persist();
       if(kind==='correct'){
         if(onDoor()){openVault();return;}
-        fresh=v.active;live.textContent='Schloss '+(v.active+1)+' ist offen. Ziffer '+v.digits[v.active]+' im Code.';drawTop();
+        fresh=v.active;live.textContent='Schloss '+(v.active+1)+' ist offen. Ziffer '+v.digits[v.active]+' im Code, die letzte Ziffer deiner Lösung.';drawTop();
         ctrl=mountTask(host,cur(),cbFor());refresh();toTop();
         return;
       }
@@ -299,7 +342,7 @@ function renderVault(id){
     if(l.status==='open'){ctrl.check();refresh();return;}
     if(l.status==='shown'){ /* Lösung gesehen: neuer Versuch (Schloss: anderes Rätsel, Tür: derselbe Code-Bruch) */
       if(onDoor())v.door=newState(v.door.task);
-      else v.locks[v.active]=newState(generateUnique(l.task.type,lvl));
+      else v.locks[v.active]=newState(vaultTask(l.task.type,lvl,v.digits[v.active])||generateUnique(l.task.type,lvl)); /* neues Rätsel, dieselbe Ziffer */
       persist();drawPuzzle();return;
     }
     const nxt=v.locks.findIndex((x,i)=>!solved(x)&&i!==v.active);

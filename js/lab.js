@@ -13,7 +13,7 @@ const LAB_QUIZ=[
   {id:'teile',txt:'Die Zahl der Teile'}
 ];
 const LAB_WRONG={
-  zaehler:'Der Zähler ändert sich: Er wird mit multipliziert oder geteilt.',
+  zaehler:'Der Zähler ändert sich: Er wird mit der Zahl multipliziert oder durch sie geteilt.',
   nenner:'Auch der Nenner ändert sich. Zähler und Nenner rechnen immer mit.',
   teile:'Die Zahl der Teile ist der Nenner – und der ändert sich.'
 };
@@ -53,7 +53,7 @@ function labTell(from,to,op,k){
 }
 function labWhy(cur,op,k){
   if(op==='x')return 'Mit '+k+' entstünden '+cur[1]*k+' Teile. Mehr als '+LAB_MAX+' passen nicht ins Bild.';
-  return 'Mit '+k+' geht das nicht: '+cur[0]+' und '+cur[1]+' sind nicht beide durch '+k+' teilbar.'+(k===2?' Die 2 geht IMMER, wenn beide gerade sind.':'');
+  return 'Mit '+k+' geht das nicht: '+cur[0]+' und '+cur[1]+' sind nicht beide durch '+k+' teilbar.';
 }
 
 /* ---------- Zeichnung: Ausgang und Jetzt, Maßlinien, Mittellinie ---------- */

@@ -10,9 +10,9 @@ const Q_NOTES={eqYN:['M1'],missing:['M2','M3'],reducible:['M7','M3'],which:['M7'
 const Q_HINT={
   eqYN:['Vergleiche beide Brüche: Wurde bei Zähler und Nenner dasselbe gerechnet?'],
   missing:['Was ist mit dem bekannten Zähler oder Nenner passiert? Dasselbe gilt für die gesuchte Zahl.'],
-  reducible:['Gibt es eine Zahl größer als 1, durch die beide Zahlen teilbar sind?',RULE2],
-  which:['Teste: Teilt die Zahl sowohl den Zähler als auch den Nenner?',RULE2],
-  full:['Prüfe, ob du noch einmal kürzen kannst.',RULE2],
+  reducible:['Gibt es eine Zahl größer als 1, durch die beide Zahlen teilbar sind?'],
+  which:['Teste: Teilt die Zahl sowohl den Zähler als auch den Nenner?'],
+  full:['Prüfe, ob du noch einmal kürzen kannst.'],
   kind:['Vergleiche die Zahlen vorher und nachher: Wurde bei beiden dasselbe gerechnet?'],
   div:[]
 };
@@ -20,12 +20,13 @@ const Q_SKILL_NAME={gleich:'Gleiche Brüche erkennen',teilbar:'Teilbarkeit',erwe
 const Q_PER_SKILL=3;                        /* Fragen je Fähigkeit im Schnellcheck */
 const Q_COUNT=Q_SKILLS.length*Q_PER_SKILL;  /* 15 */
 const Q_START_SHARE=0.3;                    /* höchstens dieser Anteil richtig = „fast alles falsch“ (bei 15 Fragen: 4) */
+const Q_UNSURE_START=0.5;                   /* mindestens dieser Anteil „Weiß ich nicht“ = ebenfalls direkt in den Pfad (bei 15 Fragen: 8) */
 /* Eingangstests je Thema (Schlüssel = Aufgaben-ID des Tests, steht im Thema als qid):
    skills: Fähigkeiten (je 3 Fragen), names: Anzeigenamen, stations: zu welchen Lernpfad-Bauteilen eine Fähigkeit gehört
-   (3 von 3 richtig ⇒ diese Bauteile sind im Modus „Selbst aussuchen“ offen), allSure: Bauteile, die erst aufgehen, wenn alles sitzt,
+   (3 von 3 richtig ⇒ diese Bauteile sind in „Meine Übersicht“ offen), allSure: Bauteile, die erst aufgehen, wenn alles sitzt,
    startText: Satz bei „fast alles falsch“. Der Test ist zugleich der Abschlusscheck des Themas (Urkunde). */
 const QCHK={
-  Q00:{skills:Q_SKILLS,names:Q_SKILL_NAME,stations:{gleich:['G01'],teilbar:['T01'],erweitern:['G02'],kuerzen:['G03'],vollstaendig:['G04']},allSure:['G05'],
+  Q00:{skills:Q_SKILLS,names:Q_SKILL_NAME,stations:{gleich:['G01'],teilbar:['T01','T02'],erweitern:['G02'],kuerzen:['G03'],vollstaendig:['G04']},allSure:['G05'],
     startText:'Im Lernpfad lernst du alles Schritt für Schritt. Das Bruchlabor hilft dir beim Start.'}
 };
 /* Fragenplan: je Fähigkeit per Blöcke (Standard 3) mit allen Fähigkeiten in zufälliger Reihenfolge, nie zweimal dieselbe hintereinander */
@@ -264,16 +265,26 @@ function qMark(node,id,view,t){
   node.append(el('span',{class:'mk','aria-hidden':'true'},icon(right?'haken':'kreuz'),right?'richtig':'falsch'));
   node.setAttribute('aria-label',(node.getAttribute('aria-label')||'')+(right?' – richtig':' – deine Antwort, falsch'));
 }
+/* Antippen markiert nur; gewertet wird mit „Prüfen“ (oder Enter auf der markierten Antwort) */
 function qPick(view,id,node,group){
   if(view.locked())return;
   view.draft.ans=id;view.save();
   group.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===node)));
-  if(view.submit)view.submit();
+}
+/* „Weiß ich nicht“: weder richtig noch falsch (Antwort-ID „?“) */
+const Q_UNSURE='?';
+function qUnsureBtn(view,group){
+  const b=el('button',{type:'button',class:'btn unsure','aria-pressed':String(view.draft.ans===Q_UNSURE)},icon('frage'),'Weiß ich nicht');
+  b.disabled=view.locked();
+  b.addEventListener('click',()=>qPick(view,Q_UNSURE,b,group));
+  view.inputs['t'+Q_UNSURE]=b;
+  return b;
 }
 
 /* Antworten zum Antippen: vier Karten A–D (Text txt, Bruch f=[n,d] oder gemischte Zahl mx=[w,n,d]) oder Ja/Nein */
 function qOptions(view,host,t){
   const d=view.draft;
+  const wrap=el('div',{class:'qopts'}); /* alle Antworten samt „Weiß ich nicht“: nur eine ist markiert */
   if(t.opts){
     const grid=el('div',{class:'tiles tiles-'+t.opts.length,role:'group','aria-label':'Antworten'});
     t.opts.forEach((o,i)=>{
@@ -281,19 +292,21 @@ function qOptions(view,host,t){
       const b=el('button',{type:'button',class:'tile'+(o.ic?' tile-ic':''),'aria-pressed':String(d.ans===o.id),'aria-label':'Antwort '+Q_LETTERS[i]+': '+o.txt},
         el('span',{class:'ltr','aria-hidden':'true'},Q_LETTERS[i]),o.ic?icon(o.ic):null,shown);
       b.disabled=view.locked();qMark(b,o.id,view,t);
-      b.addEventListener('click',()=>qPick(view,o.id,b,grid));
+      b.addEventListener('click',()=>qPick(view,o.id,b,wrap));
       view.inputs['t'+o.id]=b;grid.append(b);
     });
-    host.append(grid);
+    wrap.append(grid,qUnsureBtn(view,wrap));
+    host.append(wrap);
   }else{
     const row=el('div',{class:'yesno'});
     [['ja','haken','Ja'],['nein','kreuz','Nein']].forEach(([v,ic,label])=>{
       const b=el('button',{type:'button',class:'btn yn','aria-pressed':String(d.ans===v),'aria-label':label},icon(ic),label);
       b.disabled=view.locked();qMark(b,v,view,t);
-      b.addEventListener('click',()=>qPick(view,v,b,row));
+      b.addEventListener('click',()=>qPick(view,v,b,wrap));
       view.inputs['yn'+v]=b;row.append(b);
     });
-    host.append(row);
+    wrap.append(row,qUnsureBtn(view,wrap));
+    host.append(wrap);
   }
 }
 
@@ -327,6 +340,7 @@ const QUICK={
   },
   validate(t,d){
     if(!d.ans)return invalid('Tippe eine Antwort an.');
+    if(d.ans===Q_UNSURE)return unsure('Das ist in Ordnung. '+qAnswerText(t)+' '+t.why);
     if(d.ans===t.answer)return right('Richtig! '+t.why);
     return wrong('quick',qAnswerText(t)+' '+t.why);
   },
@@ -335,7 +349,7 @@ const QUICK={
     return t.kind==='div'?[['Schau dir die Ziffern an.'],[DIV_RULE[t.k]]]:[['Lies die Frage genau.'],Q_HINT[t.kind]];
   }
 };
-TASKS.Q00=Object.assign({area:'Grundlagen',name:'Eingangstest',desc:Q_COUNT+' Blitzfragen zum Antippen – ohne Zeitdruck.',size:Q_COUNT,
+TASKS.Q00=Object.assign({area:'Grundlagen',name:'Eingangstest',desc:Q_COUNT+' Kurzfragen zum Antippen – ohne Zeitdruck.',size:Q_COUNT,
   gen:makeQuickGen('Q00'),
   ctx(round){
     if(!round.plan)round.plan=qPlan();
@@ -343,3 +357,27 @@ TASKS.Q00=Object.assign({area:'Grundlagen',name:'Eingangstest',desc:Q_COUNT+' Bl
   }},QUICK);
 wrapRange('Q00');
 
+/* ---------- Abschlusscheck „Erweitern und Kürzen“ (QA) ----------
+   15 Aufgaben: 10 zum Antippen (2 je Fähigkeit, wie im Eingangstest) und 5 zum Rechnen (2× Erweitern G02, 2× Kürzen so weit wie möglich G04,
+   1× Lücke U01). Eine Runde mit Aufgaben mehrerer Arten: gen() liefert Aufgaben der echten Typen, QA reicht prompt/render/validate/solution/hints
+   an den Typ der Aufgabe weiter. Urkunde ab 12 Punkten (ohne Tipp 1, mit Tipp ½) und nach allen Pflicht-Stationen. */
+const proxyOf=(extra)=>Object.assign({
+  prompt(t,h){TASKS[t.type].prompt(t,h);},
+  render(v,h){TASKS[v.task.type].render(v,h);},
+  validate(t,d){return TASKS[t.type].validate(t,d);},
+  solution(t){return TASKS[t.type].solution(t);},
+  hints(t){return TASKS[t.type].hints(t);}
+},extra);
+const QA_TAP=10,QA_CALC=['G02','G02','G04','G04','U01'];
+TASKS.QA=proxyOf({area:'Grundlagen',name:'Abschlusscheck',desc:QA_TAP+' Aufgaben zum Antippen und '+QA_CALC.length+' zum Rechnen – am Ende des Lernpfads.',notes:['M1','M2','M3','M7'],size:QA_TAP+QA_CALC.length,
+  ctx(round){
+    if(!round.plan)round.plan=qPlan(null,Q_SKILLS,2);
+    const i=round.results.length;
+    return i<QA_TAP?{skill:round.plan[i],slot:i}:{slot:i};
+  },
+  gen(level,R,ctx){
+    const i=ctx&&ctx.slot!=null?ctx.slot:0;
+    if(i<QA_TAP)return TASKS.Q00.gen(level,R,{skill:(ctx&&ctx.skill)||R.pick(Q_SKILLS)});
+    return TASKS[QA_CALC[i-QA_TAP]].gen(level,R,null);
+  }
+});

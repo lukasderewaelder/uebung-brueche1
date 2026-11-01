@@ -2,7 +2,7 @@
 /* =====================================================================
    Eingangstest und Abschlusscheck zum Zahlenstrahl: ZQ (15 Fragen: 5 Fähigkeiten à 3)
    Wie Q00 (quickcheck.js) nur Antipp-Fragen (A–D oder Ja/Nein), jetzt mit Zahlenstrahl-Bild; jede Frage trägt ein skill-Etikett.
-   3 von 3 richtig = „sitzt“: die Bauteile der Fähigkeit sind im Modus „Selbst aussuchen“ offen (stations).
+   3 von 3 richtig = „sitzt“: die Bauteile der Fähigkeit sind in „Meine Übersicht“ offen (stations).
    Bilder liegen als Daten in t.fig {from,to,parts,marks,labels} oder {uneven:{m,k,shift}}.
    ===================================================================== */
 const ZQ_SKILLS=['einteilung','ablesen','anpassen','mehrere','einheit'];
@@ -21,7 +21,7 @@ const ZQ_HINT={
   parts:['Der Nenner sagt, in wie viele Abschnitte ein Ganzes geteilt wird.'],
   fits:['Geht der Nenner des Bruchs in die Zahl der Teile auf?'],
   expand:['Erweitere den Bruch so, dass der Nenner zur Einteilung passt. Zähler und Nenner mit derselben Zahl.'],
-  common:['Jeder Nenner muss in die Zahl der Teile aufgehen. Suche ein gemeinsames Vielfaches.'],
+  common:['Jeder Nenner muss in die Zahl der Teile aufgehen. Suche eine Zahl, in die alle Nenner aufgehen.'],
   fitsAll:['Prüfe jeden Nenner einzeln: Geht er in die Zahl der Teile auf?'],
   unit:['Ein Ganzes ist die Strecke von 0 bis 1, nicht der ganze Strahl.'],
   between:['Wie viele Ganze passen in den Bruch? Teile den Zähler durch den Nenner.'],
@@ -252,9 +252,25 @@ function zqGen(level,R,ctx){
   const skill=(ctx&&ctx.skill)||R.pick(ZQ_SKILLS),kind=R.pick(ZQ_KINDS[skill]);
   return Object.assign({type:'ZQ',level,avoid:[]},ZQ_GEN[kind](level,R));
 }
-TASKS.ZQ=Object.assign({area:'Zahlenstrahl',name:'Eingangstest',desc:ZQ_SKILLS.length*Q_PER_SKILL+' Blitzfragen zum Antippen – ohne Zeitdruck.',size:ZQ_SKILLS.length*Q_PER_SKILL,
+TASKS.ZQ=Object.assign({area:'Zahlenstrahl',name:'Eingangstest',desc:ZQ_SKILLS.length*Q_PER_SKILL+' Kurzfragen zum Antippen – ohne Zeitdruck.',size:ZQ_SKILLS.length*Q_PER_SKILL,
   gen:zqGen,
   ctx(round){
     if(!round.plan)round.plan=qPlan(null,ZQ_SKILLS,Q_PER_SKILL);
     return {skill:round.plan[round.results.length%round.plan.length]};
   }},ZQUICK);
+
+/* ---------- Abschlusscheck Zahlenstrahl (ZA): 10 Antippfragen (2 je Fähigkeit) + 5 Aufgaben am Strahl (Ablesen, Eintragen, Einteilung anpassen,
+   Bruch anpassen, Einheit lesen); Urkunde ab 12 Punkten und nach allen Pflicht-Stationen ---------- */
+const ZA_TAP=10,ZA_LINE=['Z02','Z03','Z04','Z05','Z07'];
+TASKS.ZA=proxyOf({area:'Zahlenstrahl',name:'Abschlusscheck',desc:ZA_TAP+' Aufgaben zum Antippen und '+ZA_LINE.length+' am Zahlenstrahl – am Ende des Lernpfads.',notes:['M8','M9','M10'],size:ZA_TAP+ZA_LINE.length,
+  ctx(round){
+    if(!round.plan)round.plan=qPlan(null,ZQ_SKILLS,2);
+    const i=round.results.length;
+    return i<ZA_TAP?{skill:round.plan[i],slot:i}:{slot:i};
+  },
+  gen(level,R,ctx){
+    const i=ctx&&ctx.slot!=null?ctx.slot:0;
+    if(i<ZA_TAP)return TASKS.ZQ.gen(level,R,{skill:(ctx&&ctx.skill)||R.pick(ZQ_SKILLS)});
+    return TASKS[ZA_LINE[i-ZA_TAP]].gen(level,R,null);
+  }
+});

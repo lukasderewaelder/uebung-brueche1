@@ -14,9 +14,9 @@ function listLevel(ids){
   const mk=(n)=>el('button',{type:'button','aria-pressed':String(l===n),onclick:()=>set(n)},LEVEL_LABEL[n]);
   return el('div',{class:'levelrow'},el('span',{class:'lblm'},'Schwierigkeit'),el('div',{class:'seg',role:'group','aria-label':'Schwierigkeit wählen'},mk(1),mk(2)));
 }
-/* Stückliste: Pos · Bezeichnung · Sterne leicht/knifflig */
+/* Stückliste: Nr. · Bezeichnung · Sterne leicht/knifflig */
 function bomList(ids){
-  const head=el('div',{class:'bomhead'},el('span',null,'Pos'),el('span',null,'Bezeichnung'),el('span',null,'Leicht'),el('span',null,'Knifflig'),el('span'));
+  const head=el('div',{class:'bomhead'},el('span',null,'Nr.'),el('span',null,'Bezeichnung'),el('span',null,'Leicht'),el('span',null,'Knifflig'),el('span'));
   const rows=ids.map((id,i)=>{
     if(id==='LAB'){
       const done=!!(S.lab&&S.lab.done);
@@ -35,22 +35,24 @@ function bomList(ids){
 }
 /* Reiter „Lernen“: ein Thema wählen. Geplante Themen sind nur ein Hinweis, kein Link. */
 function moduleCard(m){
-  const z=lernenZustand(m),openThema=()=>go({kind:'home',tab:'pfad',thema:m.id});
+  const z=lernenZustand(m),rec0=recommendNote(m),openThema=()=>go({kind:'home',tab:'pfad',thema:m.id});
   const head=el('div',{class:'tc-head'},el('span',{class:'ico','aria-hidden':'true'},icon(m.icon)),el('div',null,el('h2',null,m.name),el('p',null,m.desc)));
   const btn=(label,fn,primary,ic)=>el('button',{type:'button',class:'btn'+(primary?' primary':''),onclick:fn},ic?icon(ic):null,label);
   if(z==='gate')return el('section',{class:'tcard'},head,
-    el('p',{class:'tc-note'},TASKS[m.qid].size+' kurze Fragen zeigen zuerst, was du schon kannst.'),
-    el('div',{class:'rowbtns'},btn('Eingangstest starten',()=>startEingang(m),true,'play')));
+    rec0?el('p',{class:'tc-note'},'Empfohlen: erst '+rec0.name+'.'):null,
+    el('p',{class:'tc-note'},'Willst du testen, was du schon kannst? Das dauert etwa 5 Minuten.'),
+    el('div',{class:'rowbtns gatebtns'},btn('Eingangstest starten',()=>startEingang(m),true,'play'),btn('Ohne Test starten',()=>startOhneTest(m))));
   if(z==='wahl')return el('section',{class:'tcard'},head,
     el('div',{class:'rowbtns'},btn('Wie möchtest du lernen?',openThema,true)));
-  const {must,doneN,go1,rows}=pfadInfo(m,z);
-  const seg=el('span',{class:'segn',role:'img','aria-label':doneN+' von '+must.length+' Pflicht-Bauteilen fertig'});
+  const {must,doneN,go1,rows}=pfadInfo(m,z),rec=recommendNote(m);
+  const seg=el('span',{class:'segn',role:'img','aria-label':doneN+' von '+must.length+' Pflicht-Stationen fertig'});
   must.forEach((r,i)=>seg.append(el('i',{class:i<doneN?'on':''})));
   return el('section',{class:'tcard'},head,
+    rec?el('p',{class:'tc-note'},'Empfohlen: erst '+rec.name+'.'):null,
     el('div',{class:'tc-prog'},seg,el('b',null,doneN+' von '+must.length)),
     el('div',{class:'rowbtns'},
       z==='pfad'&&go1?btn(startWord(rows,go1)+': '+stationTitle(go1.id),()=>openStation(go1.id),true,'play'):null,
-      btn(z==='pfad'?'Lernpfad ansehen':'Bauteile ansehen',openThema,!(z==='pfad'&&go1))));
+      btn(z==='pfad'?'Lernpfad ansehen':'Stationen ansehen',openThema,!(z==='pfad'&&go1))));
 }
 function lernenTab(home){
   home.append(el('h1',null,'Lernen'),...activeModules().map(moduleCard));
@@ -72,16 +74,19 @@ function renderHome(){
     if(thema)pfadTab(home,thema);else lernenTab(home);
   }else if(tab==='spiele'){
     home.append(el('h1',null,'Spiele'),listLevel(['S01','S02']),el('div',{class:'menu'},
-      ...['S01','S02'].map(id=>{const r=S.games[keyOf(id,levelOf(id))];return bigBtn(ICON[id],()=>openEntry(id),GAMES[id].name,GAMES[id].desc,[r?`Runden: ${r.played}`:'',id==='S02'&&lootOf().length?`Baupläne: ${lootOf().length} von ${LOOT.length}`:''].filter(Boolean).join(' · '),'',null,id==='S01'?'dots':'hatch');})));
+      ...['S01','S02'].map(id=>{const r=S.games[keyOf(id,levelOf(id))];return bigBtn(ICON[id],()=>openEntry(id),GAMES[id].name,GAMES[id].desc,[r?`Runden: ${r.played}`:'',id==='S02'&&lootOf().length?`Sammelkarten: ${lootOf().length} von ${LOOT.length}`:''].filter(Boolean).join(' · '),'',null,id==='S01'?'dots':'hatch');})));
   }else if(tab==='rang'){
     const total=Object.values(S.progress).reduce((a,p)=>a+p.done,0);
-    home.append(el('h1',null,'Ich'),rankCard(),dayCard(),
+    home.append(el('h1',null,'Ich'),
+      el('button',{type:'button',class:'btn small settingsbtn',onclick:openOptions},icon('zahnrad'),' Einstellungen'),
+      rankCard(),dayCard(),
       el('p',{class:'stats'},`Aufgaben bearbeitet: ${total} · Längste Serie: ${S.bestStreak||0}`),
       fold('Alle Ränge',rankLadder()),
-      fold('Legende: alles perfekt',perfectionList()),
+      fold('Alle Ziele',perfectionList()),
       fold('Deine Sterne',bomList(PRACTICE_ORDER)),
       el('div',{class:'rowbtns'},
-        el('button',{type:'button',class:'btn small',onclick:openOptions},icon('zahnrad'),' Optionen'),
+        el('button',{type:'button',class:'btn small',onclick:()=>{const prev=JSON.parse(JSON.stringify(S.view));go({kind:'lab',from:'opt',back:prev});}},icon('kolben'),' Bruchlabor'),
+        el('button',{type:'button',class:'btn small',onclick:()=>go(pfadView())},icon('pfad'),' Lernpfad'),
         el('button',{type:'button',class:'btn small',onclick:()=>openProblemHelp()},icon('schluessel'),' Hilfe bei Problemen')));
   }else if(!v.group||!GROUPS[v.group]){
     const last=S.last&&TASKS[S.last]?S.last:null;

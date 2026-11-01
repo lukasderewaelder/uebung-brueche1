@@ -85,7 +85,7 @@ function award(xp,label){
   checkRankUp();
 }
 /* Abwechslungsreiches Lob (nie zweimal dasselbe hintereinander) */
-const PRAISE=['Maßgenau.','Sitzt.','Sauber gerechnet.','Stimmt auf den Millimeter.','Passt.','Volltreffer.','Genau so.','Bauteil in Ordnung.'];
+const PRAISE=['Sitzt.','Sauber gerechnet.','Passt.','Volltreffer.','Genau so.','Stark.'];
 let lastPraise=-1;
 function praise(){
   let i;do{i=Math.floor(Math.random()*PRAISE.length);}while(i===lastPraise);
@@ -143,7 +143,7 @@ function makeKeypad(host,onSubmit){
   const pad=el('div',{class:'keypad hidden',role:'group','aria-label':'Zahlentastatur'});
   '1234567890'.split('').forEach(d=>pad.append(key(d,'',i=>{if(i.value.length<(i.maxLength>0?i.maxLength:99)){i.value+=d;fire(i);}})));
   pad.append(key(icon('loeschen'),'fn',i=>{i.value=i.value.slice(0,-1);fire(i);},'Löschen'));
-  const alt=el('button',{type:'button',class:'key fn','aria-label':'Nächstes Feld'},icon('tab'));
+  const alt=el('button',{type:'button',class:'key fn','aria-label':'Nächstes Feld'},'Weiter ▸');
   alt.addEventListener('pointerdown',e=>e.preventDefault());
   alt.addEventListener('click',()=>{
     const i=ensure();if(!i)return;
@@ -154,7 +154,7 @@ function makeKeypad(host,onSubmit){
   return {el:pad,refresh(){
     const l=list();
     pad.classList.toggle('hidden',!l.length||!matchMedia('(pointer:coarse)').matches);
-    const dec=!!host.querySelector('.decin');alt.replaceChildren(dec?',':icon('tab'));alt.setAttribute('aria-label',dec?'Komma':'Nächstes Feld');alt.style.visibility=(dec||l.length>1)?'visible':'hidden';
+    const dec=!!host.querySelector('.decin');alt.replaceChildren(dec?',':'Weiter ▸');alt.classList.toggle('next',!dec);alt.setAttribute('aria-label',dec?'Komma':'Nächstes Feld');alt.style.visibility=(dec||l.length>1)?'visible':'hidden';
     if(l.length)ensure();
   }};
 }
@@ -166,12 +166,27 @@ function hintBox(title,lines,open,onToggle){
   return el('div',{class:'hint'},
     el('div',{class:'hint-head'},el('b',{class:'lab'},icon('hinweis'),title),
       el('button',{type:'button',class:'hint-toggle','aria-expanded':'true','aria-label':title+' einklappen',onclick:()=>onToggle(false)},'Einklappen',icon('auf'))),
-    lines.map(x=>el('p',null,x)));
+    lines.map(x=>el('p',null,...(typeof x==='string'?introRich(x):[x])))); /* Text mit {n|d} und **fett** (wie in den Erklärungen) */
 }
 function buildDock(main,{hintBtn,noteBtn,primary,pad,msg}){
   const bar=el('div',{class:'actionbar'},msg||null,pad?pad.el:null,el('div',{class:'primaryrow'},hintBtn,noteBtn,primary));
   main.append(bar);
   return bar;
+}
+
+/* Erster Satz eines Textes (Begründung bei richtigen Antworten im Check: ein Satz) */
+const firstSentence=(s)=>(s||'').split(/(?<=[.!?])\s+/)[0];
+/* Rückfrage mit Abbrechen (Lösung ansehen, Aufgabe überspringen): Escape und Tippen neben die Karte schließen, Fokus auf „Abbrechen“ */
+function confirmModal(title,text,okLabel,onOk){
+  const close=()=>{m.remove();window.removeEventListener('keydown',onKey);};
+  const onKey=(e)=>{if(e.key==='Escape')close();};
+  const cancel=el('button',{type:'button',class:'btn alt',onclick:close},'Abbrechen');
+  const m=modal([el('h2',null,title),el('p',null,text),
+    el('div',{class:'rowbtns'},cancel,el('button',{type:'button',class:'btn',onclick:()=>{close();onOk();}},okLabel))]);
+  m.addEventListener('click',e=>{if(e.target===m)close();});
+  window.addEventListener('keydown',onKey);
+  cancel.focus();
+  return m;
 }
 
 /* mountTask: baut Aufgabe, Rückmeldung, Tipps und (auf Wunsch) Lösung in host auf */
@@ -213,14 +228,20 @@ function mountTask(host,st,cb){
       const res=validateTask(st.task,st.draft);
       if(res.invalid){showFb('info',res.feedback);return 'invalid';}
       const quick=!!T.quick;
+      if(res.unsure){ /* „Weiß ich nicht“: nichts falsch, Antwort und Begründung zeigen, keine Serie verlieren */
+        st.status='shown';showFb('info',res.feedback);
+        recordSkill(st.task.skill,false);
+        cb.done('unsure');return 'unsure';
+      }
       if(res.correct){
         st.status='correct';
-        showFb('ok',quick?praise():praise()+' '+res.feedback.replace(/^Richtig!\s*/,''));
-        awardCorrect(st.attempts===0&&st.hint===0,quick);
-        if(quick)recordSkill(st.task.skill,true);
+        const why=res.feedback.replace(/^Richtig!\s*/,'');
+        const proof=quick?null:proofText(st.task); /* Rechnung statt Floskel, wo es eine kurze gibt */
+        showFb('ok',quick?(praise()+' '+firstSentence(why)).trim():proof?'Richtig: '+proof:praise()+' '+why);
+        if(!cb.probe){awardCorrect(st.attempts===0&&st.hint===0,quick);if(quick)recordSkill(st.task.skill,true);}
         cb.done('correct');return 'correct';
       }
-      st.attempts++;breakStreak();hideToast();showFb(res.soft?'warn':'bad',res.feedback);
+      st.attempts++;if(!cb.probe)breakStreak();hideToast();showFb(res.soft?'warn':'bad',res.feedback);
       try{if(navigator.vibrate)navigator.vibrate(60);}catch(e){}
       /* Schnellcheck: eine Antwort pro Frage, danach Begründung statt zweitem Versuch */
       if(quick){recordSkill(st.task.skill,false);st.status='shown';cb.done('shown');return 'wrong';}
@@ -261,8 +282,8 @@ const openEntry=(id)=>{if(!isGame(id))S.last=id;go({kind:isGame(id)?'game':'prac
 function setLevel(id,l){S.levelByType[id]=l;persist();renderAll();}
 
 /* Symbole und Kennfarbe je Übung (erw = Erweitern/Orange, kue = Kürzen/Petrol) */
-const ICON={ZQ:'blitz',Z01:'lineal',Z02:'lupe',Z03:'lineal',Z04:'aus',Z05:'wechsel',Z06:'zahnrad',Z07:'lineal',Z08:'wechsel',Q00:'blitz',G01:'lineal',T01:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'zahnrad',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor'};
-const ACC={G02:'erw',O01:'erw',G03:'kue',G04:'kue',T01:'kue',O02:'kue',G05:'mix'};
+const ICON={QA:'plakette',ZA:'plakette',ZQ:'haken',Z01:'lineal',Z02:'lupe',Z03:'lineal',Z04:'aus',Z05:'wechsel',Z06:'zahnrad',Z07:'lineal',Z08:'wechsel',Q00:'haken',G01:'lineal',T01:'teiler',T02:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'zahnrad',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor'};
+const ACC={G02:'erw',O01:'erw',G03:'kue',G04:'kue',T01:'kue',T02:'kue',O02:'kue',G05:'mix'};
 function backTarget(){
   const v=S.view;
   if(v.from==='opt'&&v.back)return v.back;
@@ -291,7 +312,7 @@ const LEVEL_LABEL={1:'Leicht',2:'Knifflig'};
 function levelControl(id){
   const l=levelOf(id);
   const mk=(n,long,short)=>el('button',{type:'button','aria-pressed':String(l===n),onclick:()=>setLevel(id,n)},el('span',{class:'long'},long),el('span',{class:'short'},short));
-  return el('div',{class:'seg',role:'group','aria-label':'Niveau wählen'},mk(1,'Niveau 1 – Grundlagen','Niveau 1'),mk(2,'Niveau 2 – Knifflig','Niveau 2'));
+  return el('div',{class:'seg',role:'group','aria-label':'Niveau wählen'},mk(1,'Leicht','Leicht'),mk(2,'Knifflig','Knifflig'));
 }
 /* Hilfespalte: rechts auf dem Desktop, Schublade (Tablet), Bottom-Sheet (Smartphone) */
 function helpPanel(introId){
@@ -311,7 +332,16 @@ function statsBlock(key,extra){
 }
 
 /* ---------- Übungsrunde ---------- */
+/* Enter geht weiter, wenn die Aufgabe beantwortet ist (setzt renderPractice; nicht in Eingabefeldern, auf Knöpfen und hinter Fenstern) */
+let practiceEnter=null;
+window.addEventListener('keydown',e=>{
+  if(e.key!=='Enter'||!practiceEnter||S.view.kind!=='practice'||document.querySelector('.modal'))return;
+  const tag=e.target&&e.target.tagName;
+  if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||tag==='BUTTON'||tag==='A')return;
+  if(practiceEnter())e.preventDefault();
+});
 function renderPractice(id){
+  practiceEnter=null;
   const T=TASKS[id],lvl=levelOf(id),key=keyOf(id,lvl);
   const round=S.rounds[key]||(S.rounds[key]={results:[],cur:null,size:T.size});
   const root=el('div',{class:'page'});
@@ -326,12 +356,12 @@ function renderPractice(id){
   const fillStats=()=>help.setStats(statsBlock(key,el('p',null,el('button',{type:'button',class:'btn small danger',onclick:()=>{S.rounds[key]={results:[],cur:null,size:T.size};persist();renderAll();}},'Runde neu beginnen'))));
   if(round.results.length>=round.size&&!round.cur){
     help.setNotes(noteFor(id,null));fillStats();
-    (T.quick?renderQuickSummary:renderSummary)(main,id,lvl,key,round);
+    (finalModOf(id)?renderFinalSummary:T.quick?renderQuickSummary:renderSummary)(main,id,lvl,key,round);
     return;
   }
-  if(!round.cur)round.cur=newState(generateUnique(id,lvl,T.ctx?T.ctx(round):null,round));
-  const st=round.cur,quick=!!T.quick;
-  help.setNotes(noteFor(id,st.task));fillStats();
+  if(!round.cur)round.cur=newState(generateUnique(id,lvl,T.ctx?T.ctx(round,lvl):null,round));
+  const st=round.cur,quick=!!TASKS[st.task?st.task.type:id].quick; /* je Aufgabe, denn eine Runde darf Aufgaben verschiedener Arten mischen */
+  help.setNotes(noteFor(st.task.type,st.task));fillStats();
 
   main.dataset.acc=ACC[id]||'';
   const ruler=el('div',{class:'ruler',role:'img'});
@@ -341,13 +371,13 @@ function renderPractice(id){
     const ticks=[];
     for(let i=0;i<round.size;i++){
       const r=round.results[i];
-      const cls=r==='f'?'f':r==='l'?'l':r?'x':(i===round.results.length&&st.status==='open'?'cur':'');
+      const cls=r==='f'?'f':r==='l'?'l':r==='u'?'u':r?'x':(i===round.results.length&&st.status==='open'?'cur':'');
       ticks.push(el('i',{class:'tk '+cls}));
     }
     const x=Math.min(round.size,round.results.length+(st.status==='open'?1:0));
     ruler.replaceChildren(...ticks);
     ruler.setAttribute('aria-label',`Aufgabe ${x} von ${round.size}`);
-    tbBlatt.textContent=`Blatt ${x}/${round.size}`;
+    tbBlatt.textContent=`Aufgabe ${x} von ${round.size}`;
   };
   main.append(ruler);
   const card=el('div',{class:'card'});
@@ -358,8 +388,8 @@ function renderPractice(id){
   const hintBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('hinweis')),'Tipp');
   const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkkasten');
   const primary=el('button',{type:'button',class:'btn primary'},'Prüfen');
-  const solBtn=el('button',{type:'button',class:'linkbtn'},icon('auge'),'Lösung ansehen');
-  const skipBtn=el('button',{type:'button',class:'linkbtn'},icon('skip'),'Überspringen');
+  const solBtn=el('button',{type:'button',class:'btn small'},icon('auge'),'Lösung ansehen');
+  const skipBtn=el('button',{type:'button',class:'btn small'},icon('skip'),'Aufgabe überspringen (zählt nicht)');
   const pad=makeKeypad(host,()=>onPrimary());
   const links=el('div',{class:'linkrow hidden'},solBtn,skipBtn);
   main.insertBefore(links,null);
@@ -379,19 +409,22 @@ function renderPractice(id){
     afterCheck:()=>refresh(),
     done(kind){
       if(kind==='correct'){const first=st.attempts===0&&st.hint===0;round.results.push(first?'f':'l');P[first?'first':'later']++;}
+      else if(kind==='unsure')round.results.push('u'); /* „Weiß ich nicht“: weder richtig noch falsch */
       else{round.results.push('x');P.shown++;}
       if(quick)(round.sk=round.sk||[]).push(st.task.skill);
       P.done++;persist();
       ctrl=mountTask(host,st,cb);refresh();updProgress();fillStats();roundBonus();
-      if(kind==='correct')setTimeout(()=>{if(round.cur===st&&S.view.kind==='practice'&&S.view.id===id&&st.status==='correct')next();},quick?700:1500);
+      /* Übung: kein Auto-Weiter, die Begründung bleibt stehen. Check: richtige Antworten gehen nach 2,5 s weiter (Weiter geht jederzeit) */
+      if(kind==='correct'&&quick)setTimeout(()=>{if(round.cur===st&&S.view.kind==='practice'&&S.view.id===id&&st.status==='correct'&&!document.querySelector('.modal'))next();},2500);
     }
   };
   let ctrl=mountTask(host,st,cb);
   const refresh=()=>{
     const open=st.status==='open';
     const last=round.results.length>=round.size;
-    if(quick){ /* Antippen ist die Antwort; „Weiter“ erst danach */
-      primary.textContent=last?'Ergebnis':'Weiter';primary.disabled=open;
+    primary.classList.toggle('ready',!open); /* beantwortet: „Weiter“ leuchtet auf */
+    if(quick){ /* Antwort antippen, mit „Prüfen“ werten; danach „Weiter“ */
+      primary.textContent=open?'Prüfen':(last?'Ergebnis':'Weiter');primary.disabled=false;
       hintBtn.classList.add('hidden');links.classList.add('hidden');pad.refresh();return;
     }
     primary.textContent=open?'Prüfen':(last?'Runde abschließen':'Weiter');
@@ -406,14 +439,25 @@ function renderPractice(id){
   primary.addEventListener('click',onPrimary);
   hintBtn.addEventListener('click',()=>{ctrl.hint();refresh();});
   noteBtn.addEventListener('click',()=>setHelp(!helpOpen));
-  solBtn.addEventListener('click',()=>{ctrl.solution();refresh();});
+  solBtn.addEventListener('click',()=>{
+    if(st.status!=='open')return;
+    confirmModal('Lösung ansehen?','Die Aufgabe zählt dann nicht als richtig.','Lösung ansehen',()=>{ctrl.solution();refresh();});
+  });
   skipBtn.addEventListener('click',()=>{
     if(st.status!=='open')return;
-    round.results.push('s');P.skipped++;P.done++;round.cur=null;roundBonus();persist();renderAll();
+    confirmModal('Aufgabe überspringen?','Die Aufgabe zählt dann nicht als richtig.','Überspringen',()=>{
+      if(st.status!=='open')return;
+      round.results.push('s');P.skipped++;P.done++;round.cur=null;roundBonus();persist();renderAll();
+    });
   });
   main.addEventListener('keydown',e=>{
-    if(e.key==='Enter'&&e.target.tagName==='INPUT'&&e.target.type!=='radio'){e.preventDefault();onPrimary();}
+    if(e.key!=='Enter')return;
+    const tg=e.target;
+    if(tg.tagName==='INPUT'&&tg.type!=='radio'){e.preventDefault();onPrimary();return;}
+    /* Enter auf der markierten Antwort (Kachel, Ja/Nein, Weiß ich nicht) wertet wie „Prüfen“ */
+    if(st.status==='open'&&tg.tagName==='BUTTON'&&tg.getAttribute('aria-pressed')==='true'&&host.contains(tg)){e.preventDefault();onPrimary();}
   });
+  practiceEnter=()=>{if(st.status==='open')return false;onPrimary();return true;};
   updProgress();refresh();
 }
 function renderSummary(main,id,lvl,key,round){
@@ -428,14 +472,16 @@ function renderSummary(main,id,lvl,key,round){
   if(inPath){
     const nx=pathState(moduleOf(id)).find(r=>r.next);
     if(passed){
-      msg=info.firstPass?'Bauteil fertig!'+(nx?' Als Nächstes: '+stationTitle(nx.id)+'.':''):'Wieder geschafft – stark!';
+      msg=info.firstPass?'Station fertig!'+(nx?' Als Nächstes: '+stationTitle(nx.id)+'.':''):'Wieder geschafft – stark!';
       btns=[btn('Weiter im Lernpfad',toPfad,true),btn('Nochmal',again),lvlBtn];
     }else{
-      msg='Du hast '+info.right+' von '+round.size+' richtig. Für das Bauteil brauchst du '+info.need+'. Noch einmal?';
+      /* Punkte: ohne Tipp ganz, mit Tipp oder zweitem Versuch halb (Altdaten ohne info.points: nur die Treffer) */
+      const fmt=(x)=>String(x).replace('.',','),pts=info.points!=null?info.points:info.right;
+      msg='Du hast '+info.right+' von '+round.size+' richtig.'+(pts<info.right?' Aufgaben mit Tipp zählen nur halb.':'')+' Du brauchst '+fmt(info.need)+' Punkte, du hast '+fmt(pts)+'. Noch einmal?';
       btns=[btn('Nochmal',again,true),btn('Zum Lernpfad',toPfad),lvlBtn];
     }
   }else btns=[btn(`Neue Runde (${TASKS[id].size} Aufgaben)`,again,true),lvlBtn];
-  main.append(el('div',{class:'card summary'},el('div',{class:'stampbox'},passed?'Bauteil fertig':'Runde fertig'),el('p',null),bigStars(stars),
+  main.append(el('div',{class:'card summary'},el('div',{class:'stampbox'},passed?'Station fertig':'Runde fertig'),el('p',null),bigStars(stars),
     el('p',null,`${round.size} Aufgaben bearbeitet · ${LEVEL_LABEL[lvl]}`),
     el('table',null,
       el('tr',null,el('td',null,'Beim 1. Versuch ohne Tipp richtig'),el('td',null,el('b',null,String(c('f'))))),
@@ -446,7 +492,27 @@ function renderSummary(main,id,lvl,key,round){
     el('div',{class:'rowbtns'},...btns)));
 }
 
-/* Ergebnis des Eingangstests und Abschlusschecks eines Themas (QCHK[id]) */
+/* Ergebnis des Abschlusschecks (QA, ZA): Punkte, Antippfragen und Rechenaufgaben getrennt, Urkunde */
+function renderFinalSummary(main,id,lvl,key,round){
+  const info=round.info||{},fm=finalModOf(id),sc=roundScore(round.results,round.size);
+  const tapN=id==='ZA'?ZA_TAP:QA_TAP,tap=round.results.slice(0,tapN),calc=round.results.slice(tapN);
+  const good=(r)=>r.filter(x=>x==='f'||x==='l').length,fmt=(x)=>String(x).replace('.',',');
+  const again=()=>{S.rounds[key]={results:[],cur:null,size:TASKS[id].size};persist();renderAll();};
+  const btn=(label,fn,primary)=>el('button',{type:'button',class:'btn'+(primary?' primary':''),onclick:fn},label);
+  const lines=[];
+  if(info.final)lines.push('Urkunde! Du hast den Lernpfad geschafft.');
+  else if(sc.passed&&info.ready===false)lines.push('Bestanden! Für die Urkunde fehlen noch Pflicht-Stationen.');
+  else if(!sc.passed)lines.push('Du brauchst '+fmt(sc.need)+' Punkte, du hast '+fmt(sc.points)+'.'+(sc.points<sc.right?' Aufgaben mit Tipp zählen nur halb.':'')+' Noch einmal?');
+  main.append(el('div',{class:'card summary'},el('div',{class:'stampbox'},info.final?'Urkunde':sc.passed?'Bestanden':'Check fertig'),el('p',null),bigStars(sc.passed?3:sc.points>=sc.need*0.6?2:1),
+    el('p',null,`${sc.right} von ${round.size} richtig · ${LEVEL_LABEL[lvl]}`),
+    el('table',null,
+      el('tr',null,el('td',null,'Zum Antippen richtig'),el('td',null,el('b',null,good(tap)+' von '+tap.length))),
+      el('tr',null,el('td',null,id==='ZA'?'Am Zahlenstrahl richtig':'Zum Rechnen richtig'),el('td',null,el('b',null,good(calc)+' von '+calc.length)))),
+    ...lines.map(x=>el('p',null,x)),
+    el('div',{class:'rowbtns'},btn('Zum Lernpfad',()=>go(pfadView(id)),true),btn('Nochmal',again))));
+}
+
+/* Ergebnis des Eingangstests eines Themas (QCHK[id]) */
 function renderQuickSummary(main,id,lvl,key,round){
   const qc=QCHK[id],info=round.info||{};
   const right=round.results.filter(r=>r==='f'||r==='l').length,share=right/round.size;
@@ -457,7 +523,7 @@ function renderQuickSummary(main,id,lvl,key,round){
   /* Schnellcheck (Q00): Ergebnis je nach Stufe – von vorn beginnen, Themenliste oder fit */
   const ev=info.ev||qEvaluate(round.results,round.sk,round.size,true,qc.skills); /* Runden ohne info.ev: aus den Antworten rechnen */
   const per={};
-  round.results.forEach((r,i)=>{const sk=(round.sk||[])[i];if(sk)(per[sk]=per[sk]||[]).push(r==='f'||r==='l');});
+  round.results.forEach((r,i)=>{const sk=(round.sk||[])[i];if(sk)(per[sk]=per[sk]||[]).push(r==='u'?null:(r==='f'||r==='l'));}); /* null = „Weiß ich nicht“ */
   if(ev.stufe==='start'){
     main.append(el('div',{class:'card summary'},
       el('div',{class:'stampbox'},'Check fertig'),el('p',null),
@@ -473,20 +539,21 @@ function renderQuickSummary(main,id,lvl,key,round){
   const rows=order.map(sk=>{
     const x=ev.skills[sk];
     return el('tr',null,
-      el('td',null,per[sk].map(ok=>el('span',{class:'qm '+(ok?'ok':'bad'),role:'img','aria-label':ok?'richtig':'falsch'},icon(ok?'haken':'kreuz')))),
+      el('td',null,per[sk].map(ok=>ok===null
+        ?el('span',{class:'qm',role:'img','aria-label':'weiß ich nicht'},icon('frage'))
+        :el('span',{class:'qm '+(ok?'ok':'bad'),role:'img','aria-label':ok?'richtig':'falsch'},icon(ok?'haken':'kreuz')))),
       el('td',null,qc.names[sk]),
       el('td',{class:x.status==='sitzt'?'sits':'ueben'},el('b',null,x.status==='sitzt'?'sitzt':x.status==='fast'?'fast':'üben')));
   });
   const sitzt=order.filter(sk=>ev.skills[sk].status==='sitzt').map(sk=>qc.names[sk]);
   const ueben=order.filter(sk=>ev.skills[sk].status!=='sitzt').map(sk=>qc.names[sk]);
   const lines=[];
-  if(info.final)lines.push('Urkunde! Du hast den Lernpfad geschafft.');
-  else{
+  {
     if(ev.stufe==='fit')lines.push('Du bist fit!');
     if(sitzt.length)lines.push('Das sitzt schon: '+sitzt.join(', ')+'.');
     if(ueben.length)lines.push('Das solltest du noch üben: '+ueben.join(', ')+'.');
     else lines.push('Alles sitzt – stark!');
-    if(info.ready&&!info.passed)lines.push('Für die Urkunde brauchst du '+needOf(round.size)+' von '+round.size+' richtig.');
+    if(ev.unsure)lines.push('Bei „Weiß ich nicht“ steht die Fähigkeit auf „üben“.');
   }
   const btns=[btn('Weiter',toPfad,true)];
   if(order.every(sk=>ev.skills[sk].status==='sitzt')&&lvl===1)btns.push(btn('Knifflig probieren',()=>setLevel(id,2)));

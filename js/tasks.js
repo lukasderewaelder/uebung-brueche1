@@ -1,6 +1,6 @@
 'use strict';
 /* =====================================================================
-   6 Aufgabentypen: Generator, Darstellung, Prüfung, Musterlösung, Tipps
+   6 Aufgabentypen: Generator, Darstellung, Prüfung, Musterlösung (die Tipps stehen in js/tips.js)
    Antworten liegen als einfaches Objekt (draft) vor und sind serialisierbar.
    ===================================================================== */
 const MSG_FRAC_INVALID='Trage in beide Felder eine ganze Zahl ein (Nenner größer als 0).';
@@ -15,6 +15,8 @@ const wrong=(code,msg,marks)=>({correct:false,errorCode:code,feedback:msg,marks}
 /* „Fast“: Der Wert stimmt, aber die verlangte Form noch nicht (wird freundlicher angezeigt als ein Fehler) */
 const soft=(code,msg,marks)=>({correct:false,soft:true,errorCode:code,feedback:msg,marks});
 const right=(msg,norm)=>({correct:true,errorCode:null,feedback:msg,normalizedAnswer:norm});
+/* „Weiß ich nicht“ (nur Eingangstest und Abschlusscheck): weder richtig noch falsch, die Antwort wird trotzdem erklärt */
+const unsure=(msg)=>({correct:false,unsure:true,errorCode:'unsure',feedback:msg});
 
 /* ---- Eingabe-Bausteine ---- */
 function digitsOnly(i){i.value=i.value.replace(/\D/g,'');}
@@ -149,8 +151,7 @@ TASKS.G01={area:'Grundlagen',name:'Gleiche Anteile erkennen',desc:'Finde die Bil
     });
     box.push(line('Alle anderen Karten zeigen einen anderen Anteil, auch wenn der Nenner oder der Zähler gleich sein kann.'));
     return box;
-  },
-  hints(t){return HINT.equal.map(x=>[x]);}
+  }
 };
 function relationText(a,b,c,d){
   if(c%a===0&&d%b===0&&c/a===d/b&&c/a>1)return `erweitert mit ${c/a}`;
@@ -165,7 +166,7 @@ TASKS.G02={area:'Grundlagen',name:'Erweitern',desc:'Erweitere Brüche mit einer 
     if(level===1){
       if(ctx&&ctx.big){do{b=R.int(7,16);k=R.int(5,9);}while(b*k<45||b*k>100);} /* Leicht, kleiner Anteil: größere Zahlen bis 100 */
       else{b=R.pick([2,3,4,5,6,7,8,9,10,12]);k=R.pick([2,3,4,5,6]);}
-      a=R.chance(0.2)?R.int(b+1,2*b-1):R.int(1,b-1); /* auch unechte Brüche (z. B. 7/5) */
+      a=(!(ctx&&ctx.big)&&R.chance(0.2))?R.int(b+1,2*b-1):R.int(1,b-1); /* auch unechte Brüche (z. B. 7/5), nicht bei den großen Zahlen */
     }
     else{b=R.int(5,25);a=R.chance(0.2)?R.int(b+1,2*b):R.int(2,b-1);k=R.pick([6,7,8,9,10,11,12,13]);if(R.chance(0.3))mode='target';}
     return {type:'G02',level,mode,a,b,k,avoid:[redKey(a,b),redKey(a*k,b*k)]};
@@ -185,15 +186,14 @@ TASKS.G02={area:'Grundlagen',name:'Erweitern',desc:'Erweitere Brüche mit einer 
   },
   solution(t){
     return [line('Zähler und Nenner werden mit '+t.k+' multipliziert:'),eq(frac(t.a,t.b),'=',frac(t.a+' · '+t.k,t.b+' · '+t.k),'=',frac(t.a*t.k,t.b*t.k)),line('Der Wert des Bruchs ändert sich nicht.')];
-  },
-  hints(t){return HINT.expand.map(x=>[x]);}
+  }
 };
 
 /* ---------- G03 Kürzen ---------- */
 TASKS.G03={area:'Grundlagen',name:'Kürzen',desc:'Kürze Brüche mit einer Zahl oder so weit wie möglich.',notes:['M3'],size:5,
   gen(level,R,ctx){
     const big=level===1&&!!(ctx&&ctx.big); /* Leicht, kleiner Anteil: größere Zahlen bis 100, auch unechte Brüche (z. B. 54/45) */
-    const imp=R.chance(big?0.4:0.2); /* unechte Brüche (z. B. 12/9) kommen in jedem Niveau vor */
+    const imp=!big&&R.chance(0.2); /* unechte Brüche (z. B. 12/9) kommen in jedem Niveau vor, nur nicht bei den großen Zahlen */
     const pq=(qmin,qmax,imp)=>{let p,q;do{q=R.int(qmin,qmax);p=imp?R.int(q+1,2*q-1):R.int(1,q-1);}while(gcd(p,q)!==1);return [p,q];};
     const top=(p,q)=>Math.max(p,q),bigOK=(p,q,s)=>top(p,q)*s>=45&&top(p,q)*s<=100;
     if(R.chance(level===1?0.5:0.35)){
@@ -232,8 +232,7 @@ TASKS.G03={area:'Grundlagen',name:'Kürzen',desc:'Kürze Brüche mit einer Zahl 
     const g=gcd(t.a,t.b),out=[line('Zähler und Nenner lassen sich beide durch '+g+' teilen:'),eq(frac(t.a,t.b),'=',frac(t.a+' : '+g,t.b+' : '+g),'=',frac(t.p,t.q))];
     out.push(line('Der Bruch ',frac(t.p,t.q),' lässt sich nicht weiter kürzen. (Man kann auch in mehreren kleinen Schritten kürzen.)'));
     return out;
-  },
-  hints(t){return withRules(t.mode==='factor'?HINT.reduceGiven:HINT.reduce);}
+  }
 };
 
 /* ---------- U01 Bruch-Lücken ---------- */
@@ -288,10 +287,6 @@ TASKS.U01={area:'Umkehraufgaben',name:'Bruch-Lücken',desc:'Ergänze die fehlend
       out.push(line(frac(ref.n,ref.d),' → ',frac(x.n,x.d),': ',relationText(ref.n,ref.d,x.n,x.d),'. Gesuchte Zahl: ',strong(x.blank==='n'?x.n:x.d),'.'));
     });
     return out;
-  },
-  hints(t){
-    const red=t.terms.some(x=>!x.blank&&t.terms.some(y=>y.blank&&y.d<x.d));
-    return red?withRules(HINT.gaps):HINT.gaps.map(x=>[x]);
   }
 };
 
@@ -341,8 +336,7 @@ TASKS.U02={area:'Umkehraufgaben',name:'Erweiterungs- oder Kürzungszahl finden',
       out.push(line('Kürzungszahl: ',strong(t.k)));
     }
     return out;
-  },
-  hints(t){return t.mode==='reduce'?withRules(HINT.factor):HINT.factor.map(x=>[x]);}
+  }
 };
 
 /* ---------- U03 Fehler finden und berichtigen ---------- */
@@ -440,8 +434,7 @@ TASKS.U03={area:'Umkehraufgaben',name:'Fehler finden und berichtigen',desc:'Find
     else out.push(eq(frac(t.a,t.b),'=',frac(t.a+' : '+t.k,t.b+' : '+t.k),'=',frac(t.a/t.k,t.b/t.k)));
     out.push(line('Beim Erweitern und Kürzen muss mit Zähler und Nenner dieselbe Rechnung gemacht werden, dann bleibt der Wert gleich.'));
     return out;
-  },
-  hints(t){return (t.kind==='reduce'||t.fix==='full')?withRules(HINT.error):HINT.error.map(x=>[x]);}
+  }
 };
 
 /* ---------- B01 Bruchbilder verändern ---------- */
@@ -533,8 +526,7 @@ TASKS.B01={area:'Grundlagen',name:'Bruchbilder verändern',desc:'Teile ein Bild 
     const k=n/t.b;
     return [line('Aus jedem alten Teil entstehen '+k+' neue Teile. Auch die gefärbten Teile werden mit '+k+' vervielfacht:'),
       eq(frac(t.a,t.b),'=',frac(t.a+' · '+k,t.b+' · '+k),'=',frac(m,n)),svg];
-  },
-  hints(t){return HINT.picture.map(x=>[x]);}
+  }
 };
 
 /* ---------- O01 Bruchfamilien ---------- */
@@ -556,7 +548,7 @@ TASKS.O01={area:'Offene Aufgaben',name:'Bruchfamilien',desc:'Gib mehrere verschi
   },
   render(view,host){
     const t=view.task,d=view.draft;
-    if(d.rows==null)d.rows=t.need;
+    if(d.rows==null)d.rows=2; /* zwei Zeilen zum Start, weitere über „+ Bruch“ */
     const list=el('div'),btns=el('div',{class:'rowbtns'});
     const draw=()=>{
       list.replaceChildren();
@@ -565,13 +557,13 @@ TASKS.O01={area:'Offene Aufgaben',name:'Bruchfamilien',desc:'Gib mehrere verschi
         list.append(row);
       }
     };
-    const add=el('button',{type:'button',class:'btn small'},'Bruch hinzufügen');
+    const add=el('button',{type:'button',class:'btn small'},'+ Bruch');
     const rem=el('button',{type:'button',class:'btn small'},'Letzten Bruch entfernen');
     add.addEventListener('click',()=>{if(view.locked()||d.rows>=10)return;d.rows++;view.save();draw();updB();});
     rem.addEventListener('click',()=>{if(view.locked()||d.rows<=1)return;const i=d.rows-1;delete d['x'+i+'.n'];delete d['x'+i+'.d'];d.rows--;view.save();draw();updB();});
     const updB=()=>{add.disabled=view.locked()||d.rows>=10;rem.disabled=view.locked()||d.rows<=1;};
     view.inputs.add=add;view.inputs.rem=rem;
-    btns.append(add,rem);host.append(list,btns);draw();updB();
+    btns.append(add,rem);host.append(list,btns,el('p',{class:'famnote'},'Brauchst du mehr Zeilen? Tippe auf „+ Bruch“.'));draw();updB();
   },
   validate(t,d){
     const rows=d.rows==null?t.need:d.rows,seen=new Set(),marks={},issues=[];
@@ -603,8 +595,7 @@ TASKS.O01={area:'Offene Aufgaben',name:'Bruchfamilien',desc:'Gib mehrere verschi
     if(t.den){const k=t.den/t.q;out.push(line('Mit Nenner '+t.den+': ',frac(t.p*k,t.den),' (Erweiterungszahl '+k+')'));}
     if(t.numMin){const k=Math.floor(t.numMin/t.p)+1;out.push(line('Mit Zähler größer als '+t.numMin+': ',frac(t.p*k,t.q*k),' (Erweiterungszahl '+k+')'));}
     return out;
-  },
-  hints(t){return HINT.family.map(x=>[x]);}
+  }
 };
 
 /* ---------- O02 Kürzen-Maschine (verschiedene Rechenwege) ---------- */
@@ -667,16 +658,20 @@ TASKS.O02={area:'Offene Aufgaben',name:'Kürzen-Maschine',desc:'Kürze auf zwei 
   validate(t,d){
     const paths=d.paths||[];
     if(paths.length<2)return invalid('Finde noch '+(2-paths.length===2?'zwei Wege':'einen zweiten Weg')+'. Tippe die Kürzungszahlen.');
-    if(paths[0].join(',')===paths[1].join(','))return wrong('same','Beide Wege nutzen dieselben Kürzungszahlen. Suche einen anderen Weg.');
+    /* Ein Weg zählt über seine Kürzungszahlen, nicht über deren Reihenfolge: ÷2 › ÷3 und ÷3 › ÷2 sind derselbe Weg */
+    const sorted=(ks)=>ks.slice().sort((a,b)=>a-b).join(',');
+    if(sorted(paths[0])===sorted(paths[1])){
+      return paths[0].join(',')===paths[1].join(',')
+        ?wrong('same','Beide Wege nutzen dieselben Kürzungszahlen. Suche einen anderen Weg.')
+        :wrong('same','Das ist derselbe Weg in anderer Reihenfolge. Suche einen Weg mit anderen Kürzungszahlen.');
+    }
     return right('Richtig! Zwei verschiedene Wege, dasselbe Ergebnis.');
   },
   solution(t){
     const g=gcd(t.a,t.b),f=smallestPrimeFactor(g);
     return [line('Weg 1: in einem Schritt mit '+g+':'),eq(frac(t.a,t.b),'=',frac(t.a+' : '+g,t.b+' : '+g),'=',frac(t.p,t.q)),
-      line('Weg 2: erst mit '+f+', dann mit '+(g/f)+':'),eq(frac(t.a,t.b),'=',frac(t.a/f,t.b/f),'=',frac(t.p,t.q)),
-      line('Die 2 geht immer, wenn Zähler und Nenner gerade sind.')];
-  },
-  hints(t){return withRules(HINT.ways);}
+      line('Weg 2: erst mit '+f+', dann mit '+(g/f)+':'),eq(frac(t.a,t.b),'=',frac(t.a/f,t.b/f),'=',frac(t.p,t.q))];
+  }
 };
 
 /* ---------- D01 Dezimalbruch -> Dezimalzahl ---------- */
@@ -707,8 +702,7 @@ TASKS.D01={area:'Darstellungen umwandeln',name:'Dezimalbruch → Dezimalzahl',de
   solution(t){
     const places=Math.round(Math.log10(t.den));
     return [line(`Der Nenner ${t.den} bedeutet: ${places} Stelle${places>1?'n':''} nach dem Komma.`),eq(frac(t.n,t.den),'=',el('span',null,decOf(t.n,places)))];
-  },
-  hints(t){return HINT.d1.map(x=>[x]);}
+  }
 };
 
 /* ---------- D02 Dezimalzahl -> Dezimalbruch ---------- */
@@ -734,19 +728,18 @@ TASKS.D02={area:'Darstellungen umwandeln',name:'Dezimalzahl → Dezimalbruch',de
   },
   solution(t){
     return [line(`${t.places} Stelle${t.places>1?'n':''} nach dem Komma → Nenner ${t.den}. Der Zähler ist die Zahl ohne Komma.`),eq(el('span',null,t.s),'=',frac(t.n,t.den))];
-  },
-  hints(t){return HINT.d2.map(x=>[x]);}
+  }
 };
 
-/* ---------- D03 Gemischte Schreibweise -> gemeiner Bruch ---------- */
-TASKS.D03={area:'Darstellungen umwandeln',name:'Gemischte Schreibweise → gemeiner Bruch',desc:'Schreibe gemischte Zahlen als gemeinen Bruch.',notes:['M6'],size:5,
+/* ---------- D03 Gemischte Zahl -> Bruch ---------- */
+TASKS.D03={area:'Darstellungen umwandeln',name:'Gemischte Zahl → Bruch',desc:'Schreibe gemischte Zahlen als Bruch.',notes:['M6'],size:5,
   gen(level,R){
     let w,n,d;
     if(level===1){do{d=R.int(2,10);n=R.int(1,d-1);}while(gcd(n,d)!==1);w=R.int(1,6);}
     else{do{d=R.int(3,19);n=R.int(1,d-1);w=R.int(5,25);}while(gcd(n,d)!==1||w*d+n>300);}
     return {type:'D03',level,w,n,d,avoid:[w+' '+n+'/'+d,redKey(n,d)]};
   },
-  prompt(t,h){h.append(el('p',{class:'q'},'Schreibe ',mixed(t.w,t.n,t.d),' als gemeinen Bruch. Der Nenner ',strong(t.d),' bleibt gleich.'));},
+  prompt(t,h){h.append(el('p',{class:'q'},'Schreibe ',mixed(t.w,t.n,t.d),' als Bruch. Der Nenner ',strong(t.d),' bleibt gleich.'));},
   render(view,host){
     const t=view.task,box=[eq(mixed(t.w,t.n,t.d),'=',fracInput(view,'r'))];
     if(t.level===1){
@@ -769,8 +762,7 @@ TASKS.D03={area:'Darstellungen umwandeln',name:'Gemischte Schreibweise → gemei
   solution(t){
     return [line(`${t.w} Ganze sind ${t.w} · ${t.d} = ${t.w*t.d} Bruchteile (Teile mit Nenner ${t.d}).`),
       eq(mixed(t.w,t.n,t.d),'=',frac(`${t.w} · ${t.d} + ${t.n}`,t.d),'=',frac(t.w*t.d+t.n,t.d))];
-  },
-  hints(t){return HINT.mixed.map(x=>[x]);}
+  }
 };
 
 
@@ -778,7 +770,7 @@ TASKS.D03={area:'Darstellungen umwandeln',name:'Gemischte Schreibweise → gemei
 TASKS.G04=Object.assign({},TASKS.G03,{name:'Kürzen so weit wie möglich',desc:'Kürze so weit wie möglich – manchmal geht es nicht mehr!',size:5,
   gen(level,R,ctx){
     const big=level===1&&!!(ctx&&ctx.big); /* Leicht, kleiner Anteil: Zahlen bis 100 */
-    const improper=R.chance(big?0.4:level===1?0.2:0.25); /* auch unechte Brüche */
+    const improper=!big&&R.chance(level===1?0.2:0.25); /* auch unechte Brüche, nicht bei den großen Zahlen */
     let p,q,g;
     do{q=level===1?R.int(big?4:2,11):R.int(3,19);p=improper?R.int(q+1,2*q):R.int(1,q-1);}while(gcd(p,q)!==1);
     if(R.chance(0.2))return {type:'G04',level,mode:'full',a:p,b:q,p,q,irreducible:true,avoid:[redKey(p,q)]};
@@ -788,12 +780,13 @@ TASKS.G04=Object.assign({},TASKS.G03,{name:'Kürzen so weit wie möglich',desc:'
     }else g=R.int(6,24);
     return {type:'G04',level,mode:'full',a:p*g,b:q*g,p,q,avoid:[redKey(p,q)]};
   },
-  prompt(t,h){h.append(el('p',{class:'q'},'Kürze ',frac(t.a,t.b),' so weit wie möglich. ',el('small',null,'(Manchmal geht es nicht mehr.)')));},
+  prompt(t,h){h.append(el('p',{class:'q'},'Kürze ',frac(t.a,t.b),' so weit wie möglich.'));},
   render(view,host){
     const t=view.task,d=view.draft;
-    const none=el('button',{type:'button',class:'btn none','aria-pressed':String(!!d.none)},icon('stopp'),'Nicht kürzbar');
+    const none=el('button',{type:'button',class:'btn none','aria-pressed':String(!!d.none)},icon('stopp'),
+      el('span',{class:'nonetx'},el('b',null,'Geht nicht mehr'),el('small',null,'Bruch ist schon fertig gekürzt')));
     none.disabled=view.locked();
-    /* Entweder einen Bruch eintippen oder „Nicht kürzbar“ wählen – beides zugleich gibt es nicht */
+    /* Entweder einen Bruch eintippen oder „Geht nicht mehr“ wählen – beides zugleich gibt es nicht */
     none.addEventListener('click',()=>{
       if(view.locked())return;
       d.none=!d.none;
@@ -813,18 +806,13 @@ TASKS.G04=Object.assign({},TASKS.G03,{name:'Kürzen so weit wie möglich',desc:'
       if(t.irreducible)return right('Richtig! Zähler und Nenner haben keine gemeinsame Zahl außer 1. Der Bruch ist schon so weit wie möglich gekürzt.');
       return wrong('stillReducible','Doch, hier geht noch etwas: Suche eine Zahl, durch die Zähler und Nenner teilbar sind.');
     }
-    const f=f0;if(!f)return invalid('Trage zwei Zahlen ein – oder tippe „Nicht kürzbar“.');
+    const f=f0;if(!f)return invalid('Trage zwei Zahlen ein – oder tippe „Geht nicht mehr“.');
     if(t.irreducible&&f.n===t.a&&f.d===t.b)return right('Richtig! Dieser Bruch lässt sich nicht weiter kürzen.');
     return TASKS.G03.validate(t,d);
   },
   solution(t){
     if(t.irreducible)return [line('Zähler und Nenner haben keinen gemeinsamen Teiler außer 1:'),eq(frac(t.a,t.b),'  →  nicht kürzbar')];
     return TASKS.G03.solution(t);
-  },
-  hints(t){
-    const h=withRules(HINT.reduce);
-    h[1]=h[1].concat(['Achtung: Manchmal geht es nicht mehr. Dann tippe „Nicht kürzbar“.']);
-    return h;
   }
 });
 
@@ -850,9 +838,9 @@ TASKS.V01=Object.assign({},TASKS.G03,{area:'Spiele',name:'Tresortür',desc:'Kür
 function digitSum(n){return String(n).split('').reduce((s,c)=>s+Number(c),0);}
 function divisible(n,k){return n%k===0;}
 const DIV_RULE={
-  2:'Durch 2 teilbar: Die letzte Ziffer ist 0, 2, 4, 6 oder 8 (gerade Zahlen gehen IMMER).',
+  2:'Durch 2 teilbar: Die letzte Ziffer ist gerade (0, 2, 4, 6 oder 8).',
   3:'Durch 3 teilbar: Die Quersumme (alle Ziffern addieren) ist durch 3 teilbar.',
-  4:'Durch 4 teilbar: Die letzten zwei Ziffern bilden eine Zahl, die durch 4 teilbar ist.',
+  4:'Durch 4 teilbar: Die letzten zwei Ziffern sind durch 4 teilbar.',
   5:'Durch 5 teilbar: Die letzte Ziffer ist 0 oder 5.',
   6:'Durch 6 teilbar: Die Zahl ist durch 2 und durch 3 teilbar.',
   9:'Durch 9 teilbar: Die Quersumme ist durch 9 teilbar.',
@@ -867,12 +855,15 @@ function divExplain(n,k){
     case 5:return ['Letzte Ziffer von '+n+': '+last+' → '+(last===0||last===5?'0 oder 5':'weder 0 noch 5')+'.'];
     case 10:return ['Letzte Ziffer von '+n+': '+last+' → '+(last===0?'0':'nicht 0')+'.'];
     case 3:case 9:return ['Quersumme: '+sum+' = '+ds+'.',ds+' ist '+(ds%k===0?'':'nicht ')+'durch '+k+' teilbar.'];
-    case 4:{const l2=n%100;return ['Letzte zwei Ziffern: '+l2+'.',l2+' : 4 '+(l2%4===0?'geht auf ('+(l2/4)+').':'geht nicht auf.')];}
+    case 4:{
+      const l2=n%100,s2=String(l2).padStart(2,'0'); /* zweistellig zeigen: „00“, „04“ */
+      return ['Letzte zwei Ziffern: '+s2+'.',l2===0?'00 ist durch 4 teilbar.':s2+' : 4 '+(l2%4===0?'geht auf ('+(l2/4)+').':'geht nicht auf.')];
+    }
     case 6:return ['Durch 2? Letzte Ziffer '+last+' → '+yn(n%2===0)+'.','Durch 3? Quersumme '+sum+' = '+ds+' → '+yn(ds%3===0)+'.','Beides nötig: '+(n%6===0?'ja':'nein')+'.'];
   }
   return [];
 }
-TASKS.T01={area:'Grundlagen',name:'Teilbarkeit',desc:'Blitzcheck: Geht das Kürzen mit 2, 3, 4, 5, 6, 9 oder 10?',notes:['M7','M3'],size:8,
+TASKS.T01={area:'Grundlagen',name:'Teilbarkeit',desc:'Kurzcheck: Geht das Kürzen mit 2, 3, 4, 5, 6, 9 oder 10?',notes:['M7','M3'],size:8,
   gen(level,R){
     const k=R.pick([2,3,4,5,6,9,10]);
     const yes=R.chance(0.5);
@@ -886,11 +877,10 @@ TASKS.T01={area:'Grundlagen',name:'Teilbarkeit',desc:'Blitzcheck: Geht das Kürz
     [['ja','haken','Ja'],['nein','kreuz','Nein']].forEach(([v,ic,label])=>{
       const b=el('button',{type:'button',class:'btn yn','aria-pressed':String(d.ans===v)},icon(ic),label);
       b.disabled=view.locked();
-      b.addEventListener('click',()=>{
+      b.addEventListener('click',()=>{ /* Antippen markiert nur, gewertet wird mit „Prüfen“ */
         if(view.locked())return;
         d.ans=v;view.save();
         row.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
-        if(view.submit)view.submit();
       });
       view.inputs['yn'+v]=b;row.append(b);
     });
@@ -904,15 +894,68 @@ TASKS.T01={area:'Grundlagen',name:'Teilbarkeit',desc:'Blitzcheck: Geht das Kürz
   },
   solution(t){
     return [line(strong('Regel: '),DIV_RULE[t.k]),...divExplain(t.n,t.k).map(x=>line(x)),line(strong(t.n+(divisible(t.n,t.k)?' ist durch ':' ist nicht durch ')+t.k+' teilbar.'))];
+  }
+};
+
+/* ---------- T02 Gemeinsame Teiler von Zähler und Nenner ---------- */
+/* Gesucht sind alle Zahlen, die Zähler UND Nenner teilen (Vorbereitung auf das Kürzen). Genau dann teilt d beide Zahlen, wenn d den ggT teilt. */
+const T02_CAND=[2,3,4,5,6,7,8,9,10,12];
+TASKS.T02={area:'Grundlagen',name:'Gemeinsame Teiler',desc:'Durch welche Zahlen sind Zähler und Nenner beide teilbar?',notes:['M7','M3'],size:5,
+  gen(level,R){
+    const lim=level===1?60:100,gs=level===1?[2,3,4,5,6,8,9,10,12]:[2,3,4,5,6,8,9,10,12,14,15,16,18,20];
+    for(let tries=0;tries<500;tries++){
+      const g=R.pick(gs),p=R.int(2,9),q=R.int(2,9);
+      if(p===q||gcd(p,q)!==1||g*p>lim||g*q>lim)continue;
+      const a=g*p,b=g*q,correct=T02_CAND.filter(d=>g%d===0),traps=T02_CAND.filter(d=>(a%d===0)!==(b%d===0)),rest=T02_CAND.filter(d=>a%d!==0&&b%d!==0);
+      if(correct.length<1||correct.length>3||traps.length<2)continue;
+      const others=R.shuffle(traps).concat(R.shuffle(rest));
+      const opts=correct.concat(others.slice(0,6-correct.length)).sort((x,y)=>x-y);
+      return {type:'T02',level,a,b,opts,avoid:[]};
+    }
+    return {type:'T02',level,a:36,b:48,opts:[2,3,4,5,6,9],avoid:[]};
   },
-  hints(t){return [['Schau dir die Ziffern an.'],[DIV_RULE[t.k]]];}
+  prompt(t,h){h.append(el('p',{class:'q'},'Durch welche Zahlen sind ',strong(t.a),' und ',strong(t.b),' teilbar? Tippe alle an, die in beide Zahlen passen.'));},
+  render(view,host){
+    const t=view.task,d=view.draft;d.sel=d.sel||[];
+    const cards=el('div',{class:'cards',role:'group','aria-label':'Zahlen'});
+    t.opts.forEach(x=>{
+      const b=el('button',{type:'button',class:'pick numpick','aria-pressed':String(d.sel.includes(x)),'aria-label':'Zahl '+x},String(x));
+      b.disabled=view.locked();
+      b.addEventListener('click',()=>{
+        if(view.locked())return;
+        const j=d.sel.indexOf(x);if(j>=0)d.sel.splice(j,1);else d.sel.push(x);
+        b.setAttribute('aria-pressed',String(d.sel.includes(x)));view.save();
+      });
+      view.inputs['n'+x]=b;cards.append(b);
+    });
+    host.append(cards);
+  },
+  validate(t,d){
+    const sel=d.sel||[];
+    if(!sel.length)return invalid('Tippe mindestens eine Zahl an.');
+    const ok=t.opts.filter(x=>t.a%x===0&&t.b%x===0),wr=sel.filter(x=>!ok.includes(x)),miss=ok.filter(x=>!sel.includes(x));
+    if(!wr.length&&!miss.length)return right('Richtig! '+ok.join(', ')+' teilt '+t.a+' und '+t.b+'.');
+    if(wr.length){
+      const x=wr[0],one=t.a%x===0?t.a:t.b%x===0?t.b:null;
+      return wrong('wrong',one?'Die '+x+' teilt nur '+one+', aber nicht beide Zahlen.':'Die '+x+' teilt keine der beiden Zahlen.');
+    }
+    return soft('missing','Das stimmt bisher – aber es gibt noch mehr Zahlen, die beide teilen.');
+  },
+  solution(t){
+    return [line('Beide Zahlen müssen sich ohne Rest teilen lassen:'),
+      ...t.opts.map(x=>{
+        const both=t.a%x===0&&t.b%x===0;
+        return line(strong(x),both?': '+t.a+' : '+x+' = '+t.a/x+' und '+t.b+' : '+x+' = '+t.b/x+'. Passt.'
+          :': '+(t.a%x!==0?t.a:t.b)+' : '+x+' geht nicht auf. Passt nicht.');
+      })];
+  }
 };
 
 /* ---------- G05 Erweitern und Kürzen gemischt ---------- */
 TASKS.G05={area:'Grundlagen',name:'Erweitern und Kürzen gemischt',desc:'Mal erweitern, mal kürzen – entscheide selbst.',notes:['M2','M3'],size:5,
   gen(level,R,ctx){
     const big=level===1&&!!(ctx&&ctx.big); /* Leicht, kleiner Anteil: größere Zahlen bis 100 */
-    const two=R.chance(level===1?0.3:0.5),imp=R.chance(0.2); /* auch unechte Brüche (z. B. 7/4) */
+    const two=R.chance(level===1?0.3:0.5),imp=!big&&R.chance(0.2); /* auch unechte Brüche (z. B. 7/4), nicht bei den großen Zahlen */
     if(two){
       let p,q;do{q=R.int(2,level===1?7:11);p=imp?R.int(q+1,2*q-1):R.int(1,q-1);}while(gcd(p,q)!==1);
       const m=R.pick(level===1?(big?[3,4,5]:[2,3,4]):[2,3,4,5,6]);
@@ -961,9 +1004,6 @@ TASKS.G05={area:'Grundlagen',name:'Erweitern und Kürzen gemischt',desc:'Mal erw
     }
     const e1=[t.a*t.k,t.b*t.k];
     return [line('Erst mit '+t.k+' erweitern, dann mit '+t.m+' kürzen:'),eq(frac(t.a,t.b),'=',frac(t.a+' · '+t.k,t.b+' · '+t.k),'=',frac(e1[0],e1[1]),'=',frac(e1[0]+' : '+t.m,e1[1]+' : '+t.m),'=',frac(e1[0]/t.m,e1[1]/t.m))];
-  },
-  hints(t){
-    return withRules(t.mode==='denom'?['Vergleiche den alten und den neuen Nenner: Wird er größer oder kleiner? Dann musst du erweitern oder kürzen.','Finde heraus, womit sich der Nenner verändert hat. Dieselbe Rechnung gilt für den Zähler.']:['Rechne die beiden Schritte nacheinander: zuerst erweitern, dann kürzen.','Beim Erweitern multiplizierst du Zähler und Nenner, beim Kürzen teilst du beide.']);
   }
 };
 

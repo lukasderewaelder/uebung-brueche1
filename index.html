@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0d3b66">
 <meta name="color-scheme" content="dark">
-<title>Bruchwerkstatt – Erweitern und Kürzen</title>
-<link rel="stylesheet" href="css/app.css?v=8">
+<title>Bruchwerkstatt</title>
+<link rel="stylesheet" href="css/app.css?v=16">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -34,7 +34,6 @@
 <symbol id="i-karten" viewBox="0 0 24 24"><path d="M3 8h12v13H3zM9 3h12v13"/></symbol>
 <symbol id="i-zurueck" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
 <symbol id="i-weiter" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
-<symbol id="i-blitz" viewBox="0 0 24 24"><path d="M13 3 5 13h6l-1 8 8-10h-6z"/></symbol>
 <symbol id="i-skip" viewBox="0 0 24 24"><path d="M5 5l7 7-7 7M13 5l7 7-7 7"/></symbol>
 <symbol id="i-auge" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
 <symbol id="i-wechsel" viewBox="0 0 24 24"><path d="M4 8h14l-3-3M20 16H6l3 3"/></symbol>
@@ -43,6 +42,18 @@
 <symbol id="i-luecke" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M9 9h6v6H9z" stroke-dasharray="2 2"/></symbol>
 <symbol id="i-frage" viewBox="0 0 24 24"><path d="M9 9a3 3 0 1 1 4.2 2.7c-.8.5-1.2 1-1.2 2M12 17.5v.01"/></symbol>
 <symbol id="i-netz" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/><path d="M12 7v5M12 12l-6 5M12 12l6 5"/></symbol>
+<symbol id="i-loot0" viewBox="0 0 24 24"><path d="M2 11h14l3 3v3H2z"/><circle cx="7" cy="18" r="2"/><circle cx="15" cy="18" r="2"/><circle cx="9" cy="7" r="2"/><path d="M9 3v1M9 10v1M5 7h1M12 7h1"/></symbol>
+<symbol id="i-loot1" viewBox="0 0 24 24"><path d="M3 15h18l-3 5H6z"/><path d="M8 15v-5h8v5M11 10V6h3v4M13 4c1-1 2 0 3-1"/></symbol>
+<symbol id="i-loot2" viewBox="0 0 24 24"><path d="M10 21l1-10h2l1 10zM12 9l-6-4M12 9l6 4M12 9l-4 6M12 9l4-6"/><circle cx="12" cy="9" r="1"/></symbol>
+<symbol id="i-loot3" viewBox="0 0 24 24"><path d="M9 21l1.5-12h3L15 21zM10.5 9V6h3v3M10 6l2-3 2 3M7 7.5l-3-1M17 7.5l3-1M7 21h10"/></symbol>
+<symbol id="i-loot4" viewBox="0 0 24 24"><path d="M6 5v13M18 5v13M2 15h20M2 13Q6 6 6 6Q12 14 18 6Q18 6 22 13M9 11v4M12 12v3M15 11v4"/></symbol>
+<symbol id="i-loot5" viewBox="0 0 24 24"><path d="M2 11l10 2 10-2M12 13v6M10 20h4M9 11l3-3 3 3"/></symbol>
+<symbol id="i-loot6" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2M12 2v2M12 20v2M2 12h2M20 12h2"/></symbol>
+<symbol id="i-loot7" viewBox="0 0 24 24"><path d="M6 21V5M6 5h14M6 8l6-3M18 5v7M16 12h4v2h-4zM3 21h8"/></symbol>
+<symbol id="i-loot8" viewBox="0 0 24 24"><path d="M3 20h18M5 5v15M19 5v15M5 10h14M5 15h14M8 18q2-1 4 0t4 0"/></symbol>
+<symbol id="i-loot9" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="1.5"/><path d="M12 4v16M4 12h16M6.3 6.3l11.4 11.4M17.7 6.3L6.3 17.7"/></symbol>
+<symbol id="i-loot10" viewBox="0 0 24 24"><path d="M3 14l13-6 1.5 3-13 6zM17 8l3-1.5M9 17l-2 4M9 17l2 4"/></symbol>
+<symbol id="i-loot11" viewBox="0 0 24 24"><path d="M2 6l20 4M12 8v4M8 12h8v5H8zM10 14h1M13 14h1"/></symbol>
 <symbol id="i-stopp" viewBox="0 0 24 24"><path d="M8 3h8l5 5v8l-5 5H8l-5-5V8z"/><path d="M8 12h8"/></symbol>
 <symbol id="i-bleistift" viewBox="0 0 24 24"><path d="M4 20l1-5L16 4l4 4L9 19zM13 7l4 4"/></symbol>
 <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></symbol>
@@ -64,26 +75,28 @@
 </svg>
 <div id="app"></div>
 <div id="scrim" class="scrim"></div>
-<script src="js/math.js?v=8"></script>
-<script src="js/dom.js?v=8"></script>
-<script src="js/viz.js?v=8"></script>
-<script src="js/store.js?v=8"></script>
-<script src="js/notes.js?v=8"></script>
-<script src="js/tasks.js?v=8"></script>
-<script src="js/quickcheck.js?v=8"></script>
-<script src="js/linewidget.js?v=8"></script>
-<script src="js/zahlenstrahl.js?v=8"></script>
-<script src="js/zahlenstrahl-check.js?v=8"></script>
-<script src="js/modules.js?v=8"></script>
-<script src="js/lab.js?v=8"></script>
-<script src="js/path.js?v=8"></script>
-<script src="js/intro.js?v=8"></script>
-<script src="js/rank.js?v=8"></script>
-<script src="js/help.js?v=8"></script>
-<script src="js/exercise.js?v=8"></script>
-<script src="js/games.js?v=8"></script>
-<script src="js/home.js?v=8"></script>
-<script src="js/selftest.js?v=8"></script>
-<script src="js/app.js?v=8"></script>
+<script src="js/math.js?v=16"></script>
+<script src="js/dom.js?v=16"></script>
+<script src="js/viz.js?v=16"></script>
+<script src="js/store.js?v=16"></script>
+<script src="js/notes.js?v=16"></script>
+<script src="js/tasks.js?v=16"></script>
+<script src="js/quickcheck.js?v=16"></script>
+<script src="js/linewidget.js?v=16"></script>
+<script src="js/zahlenstrahl.js?v=16"></script>
+<script src="js/zahlenstrahl-check.js?v=16"></script>
+<script src="js/mix.js?v=16"></script>
+<script src="js/tips.js?v=16"></script>
+<script src="js/modules.js?v=16"></script>
+<script src="js/lab.js?v=16"></script>
+<script src="js/path.js?v=16"></script>
+<script src="js/intro.js?v=16"></script>
+<script src="js/rank.js?v=16"></script>
+<script src="js/help.js?v=16"></script>
+<script src="js/exercise.js?v=16"></script>
+<script src="js/games.js?v=16"></script>
+<script src="js/home.js?v=16"></script>
+<script src="js/selftest.js?v=16"></script>
+<script src="js/app.js?v=16"></script>
 </body>
 </html>

@@ -2,8 +2,6 @@
 /* =====================================================================
    5 Merkkästen M1–M6 und Hilfetexte
    ===================================================================== */
-const RULE2='Beide Zahlen gerade? Dann geht ÷2 – die 2 geht IMMER!';
-const RULE510='Endet beides auf 0 oder 5: ÷5. Endet beides auf 0: ÷10. Und die 2 geht IMMER, wenn beide gerade sind.';
 
 function figStrip(n,d){return el('div',{class:'fig'},frac(n,d),drawFractionStrip(n,d,{maxW:300}));}
 
@@ -23,92 +21,97 @@ const NOTES={
     const terms=e.ks.map(k=>[e.p*k,e.q*k]);
     const chain=[];terms.forEach((t,i)=>{if(i)chain.push('=');chain.push(frac(t[0],t[1]));});
     return [
-      el('p',null,'Drei Bilder können denselben Anteil einer Fläche zeigen, auch wenn sie unterschiedlich eingeteilt sind. Dieser Anteil kann durch verschiedene Brüche angegeben werden. Diese Brüche haben ',strong('denselben Wert'),'.'),
       el('div',{class:'ex'},strong('Beispiel: '),eq(...chain)),
       el('div',{class:'figrow'},terms.map(t=>figStrip(t[0],t[1]))),
-      el('p',null,strong('Merke: '),'Der Wert eines Bruchs hängt vom Anteil ab, nicht davon, in wie viele Teile die Fläche eingeteilt wurde. Es kommt nur darauf an, wie viel gefärbt ist – nicht, wo die gefärbten Teile liegen.')
+      el('p',null,'Die Bilder sind verschieden eingeteilt. Gefärbt ist aber immer gleich viel. Die Brüche haben ',strong('denselben Wert'),'.'),
+      el('p',null,strong('Merke: '),'Nur der gefärbte Anteil zählt. Die Zahl der Teile ist egal. Die Lage der Teile auch.')
     ];}},
-  M2:{title:'Erweitern eines Bruchs',build(avoid){
+  M2:{title:'Erweitern',build(avoid){
     const e=pickEx(NOTE_EX.M2,x=>redKey(x.a,x.b),avoid);
     return [
-      el('p',null,'Ein Bruch wird ',strong('erweitert'),', wenn man seinen ',strong('Zähler und seinen Nenner mit derselben natürlichen Zahl (Erweiterungszahl) multipliziert'),'.'),
-      el('p',null,strong('Der Wert des Bruchs ändert sich dabei nicht.')),
       el('div',{class:'ex'},strong('Beispiel: '),eq(frac(e.a,e.b),'=',frac(e.a+' · '+e.k,e.b+' · '+e.k),'=',frac(e.a*e.k,e.b*e.k))),
-      el('div',{class:'figrow'},figStrip(e.a,e.b),figStrip(e.a*e.k,e.b*e.k))
+      el('div',{class:'figrow'},figStrip(e.a,e.b),figStrip(e.a*e.k,e.b*e.k)),
+      el('p',null,strong('Erweitern'),' heißt: Zähler und Nenner mit derselben Zahl malnehmen. Der Wert bleibt gleich. Das Bild wird nur feiner geteilt.'),
+      el('p',null,'Die Zahl zum Malnehmen heißt ',strong('Erweiterungszahl'),'. Sie ist mindestens 2.')
     ];}},
-  M3:{title:'Kürzen eines Bruchs',build(avoid){
+  M3:{title:'Kürzen',build(avoid){
     const e=pickEx(NOTE_EX.M3,x=>redKey(x.a,x.b),avoid);
     return [
-      el('p',null,'Ein Bruch wird ',strong('gekürzt'),', wenn man seinen ',strong('Zähler und seinen Nenner durch dieselbe natürliche Zahl (Kürzungszahl) dividiert'),'.'),
-      el('p',null,strong('Der Wert des Bruchs ändert sich dabei nicht.')),
       el('div',{class:'ex'},strong('Beispiel: '),eq(frac(e.a,e.b),'=',frac(e.a+' : '+e.k,e.b+' : '+e.k),'=',frac(e.a/e.k,e.b/e.k))),
-      el('p',null,strong('So weit wie möglich gekürzt: '),'Zähler und Nenner können nicht mehr beide durch dieselbe natürliche Zahl größer als 1 geteilt werden.'),
-      el('div',{class:'rule'},strong('Schnelle Teilbarkeits-Tipps: '),RULE2,' ',el('br'),'Enden Zähler und Nenner beide auf 0 oder 5, geht auch die 5. Enden beide auf 0, geht auch die 10.')
+      el('p',null,strong('Kürzen'),' heißt: Zähler und Nenner durch dieselbe Zahl teilen. Der Wert bleibt gleich. Das Bild wird gröber geteilt.'),
+      el('p',null,'Die Zahl zum Teilen heißt ',strong('Kürzungszahl'),'. Sie ist mindestens 2.'),
+      el('p',null,strong('So weit wie möglich gekürzt: '),'Keine Zahl größer als 1 teilt noch beide.'),
+      el('div',{class:'rule'},strong('Schnelle Tipps: '),'Sind beide Zahlen gerade, kannst du durch 2 kürzen. ',el('br'),'Enden beide auf 0 oder 5, geht ÷5. Enden beide auf 0, geht auch ÷10.')
     ];}},
   M7:{title:'Teilbarkeitsregeln',build(avoid){
-    return [el('p',null,'So erkennst du schnell, ob du kürzen kannst:'),
-      ...[2,3,4,5,6,9,10].map(k=>el('p',{class:'rule'},DIV_RULE[k])),
-      el('p',null,strong('Beispiel: '),'374 → Quersumme 3 + 7 + 4 = 14, also nicht durch 3 teilbar; letzte Ziffer 4, also durch 2 teilbar.')];}},
+    return [
+      el('p',null,strong('Beispiel: '),'374 endet auf 4. Das ist gerade, also ist 374 durch 2 teilbar.'),
+      el('p',null,'Quersumme von 374: 3 + 7 + 4 = 14. 14 ist nicht durch 3 teilbar, also auch 374 nicht.'),
+      el('p',null,'Die ',strong('Quersumme'),' bekommst du, wenn du alle Ziffern addierst.'),
+      el('p',null,'So erkennst du schnell, ob du kürzen kannst:'),
+      ...[2,3,4,5,6,9,10].map(k=>el('p',{class:'rule'},DIV_RULE[k]))];}},
   M4:{title:'Vom Dezimalbruch zur Dezimalzahl',build(avoid){
     const list=NOTE_EX.M4.filter(x=>!avoid.includes(x)).slice(0,4);
     const ex=list.map(k=>{const [n,d]=k.split('/').map(Number);return eq(frac(n,d),'=',el('span',null,decOf(n,Math.round(Math.log10(d)))));});
     return [
-      el('p',null,'Ein Bruch mit dem Nenner ',strong('10, 100, 1000, …'),' heißt ',strong('Dezimalbruch'),'.'),
-      el('p',null,'Beim Schreiben als Dezimalzahl zeigt der Nenner, wie viele Stellen nach dem Komma gebraucht werden: 10 – eine Stelle, 100 – zwei Stellen, 1000 – drei Stellen.'),
       el('div',{class:'ex'},strong('Beispiele:'),ex.map(x=>x)),
-      el('table',null,el('tr',null,el('th',null,'Nenner'),el('th',null,'Stellen nach dem Komma'),el('th',null,'Name')),
+      el('p',null,'Ein Bruch mit dem Nenner 10, 100 oder 1000 heißt ',strong('Dezimalbruch'),'.'),
+      el('p',null,'Der Nenner sagt, wie viele Stellen hinter dem Komma stehen.'),
+      el('table',null,el('tr',null,el('th',null,'Nenner'),el('th',null,'Stellen hinter dem Komma'),el('th',null,'Name')),
         el('tr',null,el('td',null,'10'),el('td',null,'1'),el('td',null,'Zehntel')),
         el('tr',null,el('td',null,'100'),el('td',null,'2'),el('td',null,'Hundertstel')),
         el('tr',null,el('td',null,'1000'),el('td',null,'3'),el('td',null,'Tausendstel')))
     ];}},
-  M5:{title:'Von der Dezimalzahl zum Dezimalbruch',build(avoid){
+  M5:{title:'Von der Dezimalzahl zum Bruch',build(avoid){
     const list=NOTE_EX.M5.filter(x=>!avoid.includes(x)).slice(0,3);
     const ex=list.map(s=>{const p=parseGermanDecimal(s);return eq(el('span',null,s),'=',frac(p.num,p.den));});
     return [
-      el('p',null,'Jede Stelle nach dem Komma ist wichtig. Bei einer Stelle nach dem Komma steht ',strong('10'),' im Nenner, bei zwei Stellen ',strong('100'),', bei drei Stellen ',strong('1000'),'.'),
-      el('p',null,'Der Zähler enthält die Zahl ohne Komma. Führende Nullen nach dem Komma bestimmen trotzdem den Nenner.'),
       el('div',{class:'ex'},strong('Beispiele:'),ex),
-      el('p',null,'Bei ',el('b',null,'0,050'),' sind es drei Nachkommastellen: ',frac(50,1000),' (nicht unbemerkt auf zwei Stellen verkürzen). ',el('b',null,'0,05'),' und ',el('b',null,'0,050'),' haben denselben Wert, werden aber mit unterschiedlich vielen Stellen geschrieben.')
+      el('p',null,'Zähle alle Stellen hinter dem Komma, auch die Nullen.'),
+      el('p',null,el('b',null,'0,05'),' hat 2 Stellen, also steht 100 im Nenner: ',frac(5,100),'.'),
+      el('p',null,el('b',null,'0,050'),' hat 3 Stellen, also steht 1000 im Nenner: ',frac(50,1000),'.'),
+      el('p',null,'Der Zähler ist die Zahl ohne Komma. Beide Brüche haben denselben Wert.')
     ];}},
-  M6:{title:'Gemischte Schreibweise als gemeiner Bruch',build(avoid){
+  M6:{title:'Gemischte Zahl als Bruch',build(avoid){
     const e=pickEx(NOTE_EX.M6,x=>x[0]+' '+x[1]+'/'+x[2],avoid);
     const [w,n,d]=e;
     const figs=[];
     for(let i=0;i<w;i++)figs.push(drawFractionStrip(d,d,{maxW:150,label:'Ganzes'}));
     figs.push(drawFractionStrip(n,d,{maxW:150,label:'Bruchteil'}));
     return [
-      el('p',null,'Eine gemischte Schreibweise besteht aus einer ',strong('ganzen Zahl und einem Bruch'),'.'),
-      el('p',null,'Um sie als gemeinen Bruch zu schreiben, rechnet man: ',strong('Ganze · Nenner + Zähler'),'. Das Ergebnis wird zum neuen Zähler. ',strong('Der Nenner bleibt gleich.')),
       el('div',{class:'ex'},strong('Beispiel: '),eq(mixed(w,n,d),'=',frac(`${w} · ${d} + ${n}`,d),'=',frac(w*d+n,d))),
-      el('div',{class:'ex'},el('span',null,w+' + '),frac(n,d)),
-      el('div',{class:'figrow'},figs)
+      el('div',{class:'figrow'},figs),
+      el('p',null,'Eine ',strong('gemischte Zahl'),' besteht aus einer natürlichen Zahl und einem Bruch. Natürliche Zahlen sind 1, 2, 3 und so weiter.'),
+      el('p',null,'So wird ein Bruch daraus: ',strong('Ganze · Nenner + Zähler'),'. Das Ergebnis ist der neue Zähler. ',strong('Der Nenner bleibt gleich.'))
     ];}},
   M8:{title:'Brüche am Zahlenstrahl',build(avoid){
     return [
-      el('p',null,'Auf dem Zahlenstrahl ist ',strong('ein Ganzes die Strecke von 0 bis 1'),'. Jedes weitere Ganze ist genauso lang.'),
-      el('p',null,'Der ',strong('Nenner'),' sagt, in wie viele gleich große ',strong('Abschnitte'),' ein Ganzes geteilt ist. Der ',strong('Zähler'),' sagt, wie viele Abschnitte du von 0 aus bis zum Punkt zählst.'),
       el('div',{class:'ex'},strong('Beispiel: '),frac(3,5),': ein Ganzes hat 5 Abschnitte, der Punkt liegt nach 3 Abschnitten.'),
       el('div',{class:'figrow'},drawNumberLine({from:0,to:1,parts:5,marks:[{n:3,d:5}],strip:{n:3,d:5},maxW:360,label:'Drei Fünftel am Zahlenstrahl'})),
-      el('p',null,strong('Merke: '),'Zähle die Abschnitte, nicht die Striche. 5 Abschnitte haben 6 Striche.')
+      el('p',null,'Ein Ganzes ist die Strecke von 0 bis 1. Jedes weitere Ganze ist gleich lang.'),
+      el('p',null,'Der ',strong('Nenner'),' sagt, wie viele ',strong('Abschnitte'),' ein Ganzes hat.'),
+      el('p',null,'Der ',strong('Zähler'),' sagt, wie viele Abschnitte du von 0 aus zählst.'),
+      el('p',null,strong('Merke: '),'Zähle Abschnitte, nicht Striche. 5 Abschnitte haben 6 Striche.')
     ];}},
   M9:{title:'Zwei Wege zum Punkt',build(avoid){
     return [
-      el('p',null,'So trägst du einen Bruch ein, wenn die Einteilung nicht zum Nenner passt. Es gibt zwei Wege, und beide führen zum selben Punkt.'),
-      el('p',null,strong('Weg B: Einteilung anpassen. '),'Teile den Strahl so ein, wie der Nenner sagt, und zähle dann den Zähler ab.'),
-      el('div',{class:'ex'},frac(3,5),': ein Ganzes in 5 Abschnitte teilen, 3 Abschnitte zählen.'),
+      el('div',{class:'ex'},strong('Weg 1: Einteilung anpassen. '),frac(3,5),' mit 5 Abschnitten je Ganzem.'),
       el('div',{class:'figrow'},drawNumberLine({from:0,to:1,parts:5,marks:[{n:3,d:5}],maxW:360,label:'Drei Fünftel mit fünf Abschnitten'})),
-      el('p',null,strong('Weg A: Bruch anpassen. '),'Erweitere oder kürze den Bruch auf den Nenner der vorhandenen Einteilung.'),
-      el('div',{class:'ex'},eq(frac(3,5),'=',frac('3 · 2','5 · 2'),'=',frac(6,10))),
+      el('div',{class:'ex'},strong('Weg 2: Bruch anpassen. '),eq(frac(3,5),'=',frac('3 · 2','5 · 2'),'=',frac(6,10))),
       el('div',{class:'figrow'},drawNumberLine({from:0,to:1,parts:10,marks:[{n:6,d:10}],maxW:360,label:'Sechs Zehntel mit zehn Abschnitten'})),
-      el('p',null,strong('Merke: '),'Ein feineres Raster zeigt denselben Punkt: ',frac(3,5),' = ',frac(6,10),'. Erweitern heißt feiner teilen, Kürzen heißt gröber teilen.')
+      el('p',null,'Manchmal passt die Einteilung nicht zum Nenner. Dann gibt es zwei Wege.'),
+      el('p',null,strong('Weg 1: Einteilung anpassen. '),'Teile den Strahl so, wie der Nenner sagt.'),
+      el('p',null,strong('Weg 2: Bruch anpassen. '),'Erweitere oder kürze auf den Nenner der Einteilung.'),
+      el('p',null,strong('Merke: '),'Feiner teilen heißt erweitern. Gröber teilen heißt kürzen.')
     ];}},
   M10:{title:'Die passende Einteilung',build(avoid){
     return [
-      el('p',null,'Ein Bruch liegt ',strong('genau auf einem Strich'),', wenn sein Nenner in die Zahl der Teile je Ganzem ',strong('aufgeht'),'.'),
-      el('div',{class:'ex'},frac(1,3),' passt bei 3, 6, 9, 12 Teilen, aber nicht bei 10 Teilen.'),
-      el('p',null,'Für ',strong('mehrere Brüche'),' brauchst du eine Einteilung, in die alle Nenner aufgehen: ein gemeinsames Vielfaches. Das kleinste ist am einfachsten.'),
-      el('div',{class:'ex'},strong('Beispiel: '),frac(1,2),', ',frac(3,4),', ',frac(5,6),': 2, 4 und 6 gehen in 12 auf. Also 12 Teile je Ganzem.'),
-      el('div',{class:'figrow'},drawNumberLine({from:0,to:1,parts:12,marks:[{n:1,d:2,text:'A'},{n:3,d:4,text:'B'},{n:5,d:6,text:'C'}],maxW:360,label:'Brüche mit zwölf Abschnitten'}))
+      el('div',{class:'ex'},frac(1,3),' passt bei 3, 6, 9 und 12 Teilen, aber nicht bei 10 Teilen.'),
+      el('div',{class:'ex'},frac(1,2),', ',frac(3,4),' und ',frac(5,6),' passen alle bei 12 Teilen je Ganzem.'),
+      el('div',{class:'figrow'},drawNumberLine({from:0,to:1,parts:12,marks:[{n:1,d:2,text:'A'},{n:3,d:4,text:'B'},{n:5,d:6,text:'C'}],maxW:360,label:'Brüche mit zwölf Abschnitten'})),
+      el('p',null,'Passt der Nenner in die Zahl der Teile, liegt der Bruch auf einem Strich.'),
+      el('p',null,'Bei mehreren Brüchen suchst du eine Zahl, in die alle Nenner passen. Die kleinste solche Zahl ist am einfachsten.'),
+      el('p',null,'Das Fachwort heißt kleinstes gemeinsames Vielfaches (kgV).')
     ];}}
 };
 /* noteFor(task): Merkkästen zur Aufgabe, ohne die Aufgabe zu lösen */
@@ -133,13 +136,11 @@ const HINT={
   error:['Prüfe, ob in beiden Zeilen dieselbe Rechnung durchgeführt wurde.','Kontrolliere den Wert vor und nach dem Rechenschritt.'],
   picture:['Zähle im Vorgabebild: Wie viele Teile sind gefärbt, wie viele gibt es? Der Anteil muss gleich groß bleiben.','Überlege, wie viele neue Teile aus einem alten Teil entstehen.'],
   family:['Du kannst neue Brüche erzeugen, indem du Zähler und Nenner gleich veränderst.','Suche unterschiedliche Erweiterungszahlen und beachte die Bedingungen.'],
-  ways:['Suche verschiedene Zahlen, durch die beide Zahlen teilbar sind.','Beginne die Rechenketten nicht beide mit derselben Kürzungszahl.'],
+  ways:['Suche verschiedene Zahlen, durch die beide Zahlen teilbar sind.','Nimm für Weg 2 andere Kürzungszahlen. Dieselben Zahlen in anderer Reihenfolge sind kein neuer Weg.'],
   d1:['Achte darauf, ob der Nenner 10, 100 oder 1000 ist.','Zähle, wie viele Stellen nach dem Komma benötigt werden.'],
   d2:['Zähle zuerst die Stellen nach dem Komma.','Der Nenner hängt von der Zahl der Nachkommastellen ab.'],
   mixed:['Die ganzen Anteile müssen in Bruchteile umgerechnet werden.','Denke an Ganze · Nenner + Zähler; der Nenner bleibt gleich.'],
   memory:['Vielleicht sehen zwei Karten anders aus, zeigen aber den gleichen Anteil.','Vergleiche den Wert der Brüche, nicht nur ihre Zahlen.'],
   vault:['Lies zuerst genau, ob du erweitern oder kürzen sollst.','Der Tresor nimmt nur einen Bruch, der sich nicht weiter kürzen lässt.']
 };
-/* Kürzen-Hinweise nennen immer die 2-Regel */
-function withRules(h){return [[h[0],RULE2],[h[1],RULE510]];}
 
