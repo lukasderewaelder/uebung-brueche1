@@ -600,23 +600,48 @@ TASKS.O01={area:'Offene Aufgaben',name:'Bruchfamilien',desc:'Gib mehrere verschi
 
 /* ---------- O02 Kürzen-Maschine (verschiedene Rechenwege) ---------- */
 function pathFraction(a,b,ks){let n=a,d=b;for(const k of ks){n/=k;d/=k;}return [n,d];}
+/* Knöpfe der Maschine je Niveau. waysOf: alle Wege (Mengen von Kürzungszahlen, ohne Reihenfolge) mit Produkt g, z. B. 12 → [2,6] [3,4] [2,2,3] [12] */
+const O02_CHIPS={1:[2,3,4,5,6,7,9,10],2:[2,3,4,5,6,7,8,9,10,11,12,13]};
+function waysOf(g,chips){
+  const out=[];
+  const walk=(rest,from,cur)=>{
+    if(rest===1){if(cur.length)out.push(cur.slice());return;}
+    for(let i=from;i<chips.length;i++){const k=chips[i];if(rest%k===0){cur.push(k);walk(rest/k,i,cur);cur.pop();}}
+  };
+  walk(g,0,[]);
+  return out;
+}
+const o02Chips=(t)=>O02_CHIPS[t.level]||O02_CHIPS[2];
+/* Woran zwei Wege als gleich gelten: dieselben Zahlen, Reihenfolge egal. Gibt es gar keine zweite Zahlenmenge (Aufgabe aus einem älteren
+   Spielstand, z. B. 15/60 ohne Knopf ÷15), zählt die Reihenfolge – sonst wäre die Aufgabe unlösbar. */
+function o02Sig(t){
+  const strict=waysOf(gcd(t.a,t.b),o02Chips(t)).length<2;
+  return (ks)=>strict?ks.join(','):ks.slice().sort((x,y)=>x-y).join(',');
+}
+const o02Unique=(t,paths)=>{const sig=o02Sig(t),seen=new Set();return paths.filter(ks=>{const s=sig(ks);if(seen.has(s))return false;seen.add(s);return true;});};
+/* Wege einer Aufgabe, kürzester zuerst */
+const o02Ways=(t)=>waysOf(gcd(t.a,t.b),o02Chips(t)).sort((x,y)=>x.length-y.length||x[0]-y[0]);
 TASKS.O02={area:'Offene Aufgaben',name:'Kürzen-Maschine',desc:'Kürze auf zwei verschiedenen Wegen.',notes:['M3'],size:5,
   gen(level,R){
     let p,q;
     const imp=R.chance(0.2); /* auch unechte Brüche */
     do{q=level===1?R.int(2,8):R.int(5,13);p=imp?R.int(q+1,2*q-1):R.int(1,q-1);}while(gcd(p,q)!==1);
-    const g=level===1?R.pick([6,8,9,10,12,14,15]):R.pick([12,18,24,30,36,42,48,60]);
+    /* nur Zahlen g, die sich mit den Knöpfen auf mindestens zwei Arten zerlegen lassen (14 = 2·7 und 15 = 3·5 gehen nur auf eine) */
+    const g=R.pick((level===1?[6,6,8,8,9,10,12]:[12,18,24,30,36,42,48,60]).filter(x=>waysOf(x,O02_CHIPS[level]).length>=2));
     return {type:'O02',level,a:p*g,b:q*g,p,q,mode:level===1?'target':'full',avoid:[redKey(p,q)]};
   },
   prompt(t,h){
     h.append(el('p',{class:'q'},'Kürze ',frac(t.a,t.b),' auf ',strong('zwei verschiedenen Wegen'),t.mode==='target'?[' bis ',frac(t.p,t.q),'.']:' so weit wie möglich.'));
   },
   render(view,host){
-    const t=view.task,d=view.draft;
+    const t=view.task,d=view.draft,sig=o02Sig(t);
     d.paths=d.paths||[];d.cur=d.cur||[];
-    const chips=t.level===1?[2,3,4,5,6,7,9,10]:[2,3,4,5,6,7,8,9,10,11,12,13];
+    const clean=o02Unique(t,d.paths);
+    if(clean.length!==d.paths.length){d.paths=clean;view.save();} /* Entwurf mit doppeltem Weg (älterer Stand) bereinigen */
+    const chips=o02Chips(t);
     const box=el('div',{class:'machine'});
     const msg=el('div',{class:'machsg','aria-live':'polite'});
+    const say=(cls,text,shake)=>{msg.className='machsg'+(cls?' '+cls:'');msg.textContent=text;if(shake){void msg.offsetWidth;msg.classList.add('shake');}};
     const rebuild=()=>{
       const [n,m]=pathFraction(t.a,t.b,d.cur);
       const done=isFullyReduced(n,m);
@@ -627,15 +652,20 @@ TASKS.O02={area:'Offene Aufgaben',name:'Kürzen-Maschine',desc:'Kürze auf zwei 
         b.addEventListener('click',()=>{
           if(view.locked())return;
           if(!canReduce(n,m,k)){
-            msg.className='machsg bad';msg.textContent='Mit '+k+' geht das nicht: Zähler und Nenner müssen beide durch '+k+' teilbar sein.';
+            say('bad','Mit '+k+' geht das nicht: Zähler und Nenner müssen beide durch '+k+' teilbar sein.');
             b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake');return;
           }
           d.cur.push(k);
           const [n2,m2]=pathFraction(t.a,t.b,d.cur);
           if(isFullyReduced(n2,m2)){
+            const old=d.paths.find(ks=>sig(ks)===sig(d.cur));
+            if(old){ /* derselbe Weg: nicht speichern, das Kind soll gleich etwas anderes versuchen */
+              say('bad',(old.join(',')===d.cur.join(',')?'Diesen Weg hast du schon.':'Das ist derselbe Weg in anderer Reihenfolge.')+' Suche einen Weg mit anderen Kürzungszahlen.',true);
+              d.cur=[];view.save();rebuild();return;
+            }
             d.paths.push(d.cur.slice());d.cur=[];
-            msg.className='machsg ok';msg.textContent=d.paths.length<2?'Weg '+d.paths.length+' geschafft! Jetzt ein anderer Weg mit anderen Kürzungszahlen.':'Beide Wege geschafft! Tippe auf „Prüfen“.';
-          }else{msg.className='machsg';msg.textContent='';}
+            say('ok',d.paths.length<2?'Weg '+d.paths.length+' geschafft! Jetzt ein anderer Weg mit anderen Kürzungszahlen.':'Beide Wege geschafft! Tippe auf „Prüfen“.');
+          }else say('','');
           view.save();rebuild();
         });
         view.inputs['chip'+k]=b;row.append(b);
@@ -643,14 +673,20 @@ TASKS.O02={area:'Offene Aufgaben',name:'Kürzen-Maschine',desc:'Kürze auf zwei 
       const hist=(ks)=>ks.length?ks.map(k=>'÷'+k).join('  ›  '):'–';
       const undo=el('button',{type:'button',class:'btn small'},icon('neu'),'Weg neu starten');
       undo.disabled=view.locked()||!d.cur.length;
-      undo.addEventListener('click',()=>{d.cur=[];msg.textContent='';view.save();rebuild();});
+      undo.addEventListener('click',()=>{d.cur=[];say('','');view.save();rebuild();});
       view.inputs.undo=undo;
       box.replaceChildren(
         el('div',{class:'machhead'},d.paths.length>=2?'Fertig!':'Weg '+(d.paths.length+1)+' von 2'),
         el('div',{class:'eq machfrac'},frac(n,m)),
         el('div',{class:'machhist'},'Deine Schritte: ',hist(d.cur)),
         row,msg,
-        ...d.paths.map((ks,i)=>el('div',{class:'machdone'},icon('haken'),'Weg '+(i+1)+': '+hist(ks))),
+        ...d.paths.map((ks,i)=>{
+          const del=el('button',{type:'button',class:'btn small','aria-label':'Weg '+(i+1)+' löschen'},icon('kreuz'),'Löschen');
+          del.disabled=view.locked();
+          del.addEventListener('click',()=>{d.paths.splice(i,1);say('','');view.save();rebuild();});
+          view.inputs['del'+i]=del;
+          return el('div',{class:'machdone'},icon('haken'),'Weg '+(i+1)+': '+hist(ks),del);
+        }),
         undo);
     };
     host.append(box);rebuild();
@@ -658,9 +694,9 @@ TASKS.O02={area:'Offene Aufgaben',name:'Kürzen-Maschine',desc:'Kürze auf zwei 
   validate(t,d){
     const paths=d.paths||[];
     if(paths.length<2)return invalid('Finde noch '+(2-paths.length===2?'zwei Wege':'einen zweiten Weg')+'. Tippe die Kürzungszahlen.');
-    /* Ein Weg zählt über seine Kürzungszahlen, nicht über deren Reihenfolge: ÷2 › ÷3 und ÷3 › ÷2 sind derselbe Weg */
-    const sorted=(ks)=>ks.slice().sort((a,b)=>a-b).join(',');
-    if(sorted(paths[0])===sorted(paths[1])){
+    /* Ein Weg zählt über seine Kürzungszahlen, nicht über deren Reihenfolge: ÷2 › ÷3 und ÷3 › ÷2 sind derselbe Weg (siehe o02Sig) */
+    const sig=o02Sig(t);
+    if(sig(paths[0])===sig(paths[1])){
       return paths[0].join(',')===paths[1].join(',')
         ?wrong('same','Beide Wege nutzen dieselben Kürzungszahlen. Suche einen anderen Weg.')
         :wrong('same','Das ist derselbe Weg in anderer Reihenfolge. Suche einen Weg mit anderen Kürzungszahlen.');
@@ -668,9 +704,18 @@ TASKS.O02={area:'Offene Aufgaben',name:'Kürzen-Maschine',desc:'Kürze auf zwei 
     return right('Richtig! Zwei verschiedene Wege, dasselbe Ergebnis.');
   },
   solution(t){
-    const g=gcd(t.a,t.b),f=smallestPrimeFactor(g);
-    return [line('Weg 1: in einem Schritt mit '+g+':'),eq(frac(t.a,t.b),'=',frac(t.a+' : '+g,t.b+' : '+g),'=',frac(t.p,t.q)),
-      line('Weg 2: erst mit '+f+', dann mit '+(g/f)+':'),eq(frac(t.a,t.b),'=',frac(t.a/f,t.b/f),'=',frac(t.p,t.q))];
+    /* zwei verschiedene Wege mit vorhandenen Knöpfen: der kürzeste und der längste; gibt es nur eine Zahlenmenge (älterer Spielstand),
+       ihre beiden Reihenfolgen */
+    const all=o02Ways(t);
+    if(!all.length)return [line('Kürze mit '+gcd(t.a,t.b)+':'),eq(frac(t.a,t.b),'=',frac(t.p,t.q))];
+    const w1=all[0],w2=all.length>1?all[all.length-1]:w1.slice().reverse();
+    const show=(ks,i)=>{
+      let n=t.a,d=t.b;const mid=[];
+      ks.forEach(k=>{n/=k;d/=k;mid.push(frac(n,d));});
+      const calc=ks.length===1?eq(frac(t.a,t.b),'=',frac(t.a+' : '+ks[0],t.b+' : '+ks[0]),'=',frac(t.p,t.q)):eq(frac(t.a,t.b),...mid.flatMap(f=>['=',f]));
+      return [line('Weg '+i+': '+(ks.length===1?'in einem Schritt mit ÷'+ks[0]:ks.map(k=>'÷'+k).join(' › '))+':'),calc];
+    };
+    return [...show(w1,1),...show(w2,2)];
   }
 };
 

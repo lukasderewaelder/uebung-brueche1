@@ -50,7 +50,7 @@ TASKS.U04={area:'Umkehraufgaben',name:'Stimmt das?',desc:'Stimmt die Rechnung? W
       else{ /* full: „so weit wie möglich gekürzt“ */
         const [p,q]=uFrac(R,3,level===1?9:17);
         if(R.chance(0.5)){a=p;b=q;truth=true;badKey='fullYes';okTxt='Keine Zahl größer als 1 teilt beide Zahlen.';}
-        else{const g=R.int(2,level===1?6:12);a=p*g;b=q*g;truth=false;badKey='fullNo';okTxt=`Beide Zahlen sind noch durch ${g} teilbar.`;}
+        else{const g=R.int(2,Math.min(level===1?6:12,Math.floor(300/Math.max(p,q))));a=p*g;b=q*g;truth=false;badKey='fullNo';okTxt=`Beide Zahlen sind noch durch ${g} teilbar.`;}
         c=d=null;
       }
       if(c==null||(c>=1&&d>=2&&equivalent(a,b,c,d)===truth&&!(a===c&&b===d)))break;
