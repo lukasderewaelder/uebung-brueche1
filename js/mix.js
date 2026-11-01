@@ -67,15 +67,17 @@ TASKS.U04={area:'Umkehraufgaben',name:'Stimmt das?',desc:'Stimmt die Rechnung? W
   },
   render(view,host){
     const t=view.task,d=view.draft;
-    host.append(el('p',null,strong('1. Stimmt das?')));
+    const stg=twoStage(view,host,{isDone:()=>!!d.j,summary:()=>'1. '+(d.j==='ja'?'Stimmt':'Stimmt nicht')});
+    stg.box1.append(el('p',null,strong('1. Stimmt das?')));
     const row=el('div',{class:'yesno'});
     [['ja','haken','Stimmt'],['nein','kreuz','Stimmt nicht']].forEach(([v,ic,label])=>{
       const b=el('button',{type:'button',class:'btn yn','aria-pressed':String(d.j===v)},icon(ic),label);
       b.disabled=view.locked();
-      b.addEventListener('click',()=>{if(view.locked())return;d.j=v;view.save();row.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));});
+      b.addEventListener('click',()=>{if(view.locked())return;d.j=v;view.save();row.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));stg.advance();});
       view.inputs['j'+v]=b;row.append(b);
     });
-    host.append(row,el('p',null,strong('2. Welche Begründung passt?')));
+    stg.box1.append(row);
+    stg.box2.append(el('p',null,strong('2. Welche Begründung passt?')));
     const grid=el('div',{class:'tiles tiles-3',role:'group','aria-label':'Begründungen'});
     t.opts.forEach(o=>{
       const b=el('button',{type:'button',class:'tile tile-txt','aria-pressed':String(d.r===o.id)},el('span',{class:'ltr','aria-hidden':'true'},o.id),el('span',{class:'tv'},o.txt));
@@ -83,7 +85,8 @@ TASKS.U04={area:'Umkehraufgaben',name:'Stimmt das?',desc:'Stimmt die Rechnung? W
       b.addEventListener('click',()=>{if(view.locked())return;d.r=o.id;view.save();grid.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));});
       view.inputs['r'+o.id]=b;grid.append(b);
     });
-    host.append(grid);
+    stg.box2.append(grid);
+    stg.upd();
   },
   validate(t,d){
     if(!d.j)return invalid('Wähle zuerst: Stimmt das oder stimmt das nicht?');
@@ -148,22 +151,25 @@ TASKS.U06={area:'Umkehraufgaben',name:'Zwei Schritte prüfen',desc:'Finde die fa
     return {type:'U06',level,a,b,k,op,m,type1,err,c,d,e,f,right1,right2:err===2?right2:right2,avoid:[redKey(a,b)]};
   },
   prompt(t,h){
-    h.append(el('p',{class:'q'},'Eine Rechnung hat zwei Zeilen. Eine Zeile ist falsch.'),
+    h.append(el('p',{class:'q'},'Eine der zwei Zeilen ist falsch.'),
       el('div',{class:'wrongclaim'},
         eq('1.',frac(t.a,t.b),'=',frac(t.a+' · '+t.k,t.b+' · '+t.k),'=',frac(t.c,t.d)),
         eq('2.',frac(t.c,t.d),'=',frac(t.c+(t.op==='x'?' · ':' : ')+t.m,t.d+(t.op==='x'?' · ':' : ')+t.m),'=',frac(t.e,t.f))));
   },
   render(view,host){
     const t=view.task,d=view.draft;
-    host.append(el('p',null,strong('1. Welche Zeile ist falsch?')));
+    const stg=twoStage(view,host,{isDone:()=>!!d.s,summary:()=>'1. Falsch ist Zeile '+d.s});
+    stg.box1.append(el('p',null,strong('1. Welche Zeile ist falsch?')));
     const row=el('div',{class:'yesno'});
     [[1,'Zeile 1'],[2,'Zeile 2']].forEach(([v,label])=>{
       const b=el('button',{type:'button',class:'btn yn','aria-pressed':String(d.s===v)},label);
       b.disabled=view.locked();
-      b.addEventListener('click',()=>{if(view.locked())return;d.s=v;view.save();row.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));});
+      b.addEventListener('click',()=>{if(view.locked())return;d.s=v;view.save();row.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));stg.advance();});
       view.inputs['s'+v]=b;row.append(b);
     });
-    host.append(row,el('p',null,strong('2. Wie lautet die richtige Zeile?')),eq('=',fracInput(view,'r')));
+    stg.box1.append(row);
+    stg.box2.append(el('p',null,strong('2. Wie lautet die richtige Zeile?')),eq('=',fracInput(view,'r')));
+    stg.upd();
   },
   validate(t,d){
     if(!d.s)return invalid('Wähle zuerst die falsche Zeile.');

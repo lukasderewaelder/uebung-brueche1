@@ -343,10 +343,25 @@ TASKS.U02={area:'Umkehraufgaben',name:'Erweiterungs- oder Kürzungszahl finden',
 const ERR_TEXT={
   onlyNum:'Nur der Zähler wurde verändert.',
   onlyDen:'Nur der Nenner wurde verändert.',
-  diff:'Zähler und Nenner wurden mit verschiedenen Zahlen multipliziert bzw. geteilt.',
-  add:'Zu Zähler und Nenner wurde etwas addiert, statt zu multiplizieren.',
+  diff:'Zähler und Nenner wurden mit verschiedenen Zahlen verändert.',
+  add:'Es wurde addiert statt multipliziert.',
   notFull:'Der Bruch ist noch nicht so weit wie möglich gekürzt.'
 };
+/* Zweiteilige Aufgaben in zwei Etappen: Teil 1 klappt nach der Antwort zu einer Zeile zusammen, dann erscheint Teil 2 –
+   so passen beide Teile samt Zahlentasten auf einen Handybildschirm. Ein Tipp auf die Zeile öffnet Teil 1 wieder.
+   o.isDone(): Teil 1 beantwortet? o.summary(): Text der Zeile. Die Aufgabe ruft advance() nach der Antwort in Teil 1. */
+function twoStage(view,host,o){
+  const d=view.draft,box1=el('div',{class:'etappe'}),box2=el('div',{class:'etappe'}),sum=el('button',{type:'button',class:'etsum'});
+  const upd=()=>{
+    const done=!!o.isDone(),open1=!done||d.edit1===true;
+    box1.hidden=!open1;sum.hidden=open1;box2.hidden=open1;
+    if(!open1){sum.replaceChildren(icon('haken'),el('span',{class:'ets'},o.summary()),view.locked()?null:el('span',{class:'etc'},'ändern'));sum.disabled=view.locked();}
+    (view.changed&&view.changed());
+  };
+  sum.addEventListener('click',()=>{if(view.locked())return;d.edit1=true;view.save();upd();});
+  host.append(box1,sum,box2);
+  return {box1,box2,upd,advance(){d.edit1=false;view.save();upd();}};
+}
 TASKS.U03={area:'Umkehraufgaben',name:'Fehler finden und berichtigen',desc:'Finde den Fehler im Rechenweg und gib die richtige Lösung an.',notes:['M2','M3'],size:5,
   gen(level,R){
     for(let tries=0;tries<50;tries++){
@@ -400,18 +415,20 @@ TASKS.U03={area:'Umkehraufgaben',name:'Fehler finden und berichtigen',desc:'Find
   render(view,host){
     const t=view.task,d=view.draft;
     host.append(el('div',{class:'wrongclaim'},eq('',frac(t.a,t.b),'=',frac(t.shown[0],t.shown[1]))));
-    host.append(el('p',null,strong('1. Was ist falsch?')));
+    const stg=twoStage(view,host,{isDone:()=>!!d.err,summary:()=>'Fehler: '+ERR_TEXT[d.err]});
+    stg.box1.append(el('p',null,strong('1. Was ist falsch?')));
     const opts=el('div',{class:'opts',role:'radiogroup'});
     this.options(t).forEach(o=>{
       const r=el('input',{type:'radio',name:'err',value:o});
       r.checked=d.err===o;r.disabled=view.locked();
-      r.addEventListener('change',()=>{d.err=o;view.save();});
+      r.addEventListener('change',()=>{d.err=o;view.save();stg.advance();});
       view.inputs['err'+o]=r;
       opts.append(el('label',{class:'opt'},r,el('span',null,ERR_TEXT[o])));
     });
-    host.append(opts);
-    host.append(el('p',null,strong('2. '),t.fix==='full'?'Kürze richtig so weit wie möglich:':(t.kind==='expand'?`Erweitere richtig mit ${t.k}:`:`Kürze richtig mit ${t.k}:`)));
-    host.append(eq(frac(t.a,t.b),'=',fracInput(view,'r')));
+    stg.box1.append(opts);
+    stg.box2.append(el('p',null,strong('2. '),t.fix==='full'?'Kürze richtig so weit wie möglich:':(t.kind==='expand'?`Erweitere richtig mit ${t.k}:`:`Kürze richtig mit ${t.k}:`)),
+      eq(frac(t.a,t.b),'=',fracInput(view,'r')));
+    stg.upd();
   },
   validate(t,d){
     if(!d.err)return invalid('Wähle zuerst aus, welcher Fehler gemacht wurde.');
@@ -453,7 +470,7 @@ TASKS.B01={area:'Grundlagen',name:'Bruchbilder verändern',desc:'Teile ein Bild 
   },
   prompt(t,h){
     if(t.level===1)h.append(el('p',{class:'q'},'Zeige ',frac(t.a,t.b),' mit ',strong(t.target),' Teilen: färbe die passenden Teile.'));
-    else h.append(el('p',{class:'q'},'Zeige ',frac(t.a,t.b),' mit mindestens ',strong(t.minTotal),' Feldern. Wähle Zeilen und Spalten, färbe und schreibe den Bruch.'));
+    else h.append(el('p',{class:'q'},'Zeige ',frac(t.a,t.b),' mit mindestens ',strong(t.minTotal),' Feldern: wähle Zeilen und Spalten, färbe, schreibe den Bruch.'));
   },
   render(view,host){
     const t=view.task,d=view.draft,L1=t.level===1;
@@ -490,7 +507,7 @@ TASKS.B01={area:'Grundlagen',name:'Bruchbilder verändern',desc:'Teile ein Bild 
       view.save();redraw();
     },0,()=>total()));
     steppers.forEach(s=>controls.append(s));
-    const reset=el('button',{type:'button',class:'btn small'},icon('neu'),'Neu färben');
+    const reset=el('button',{type:'button',class:'btn small','aria-label':'Neu färben'},icon('neu'),el('span',{class:'btxt'},'Neu färben'));
     reset.addEventListener('click',()=>{if(view.locked())return;d.col=[];view.save();redraw();});
     view.inputs.reset=reset;controls.append(reset);
     host.append(el('div',{class:'figpair'},orig,el('div',{class:'edit fig erw'},editBox,el('div',{class:'cap'},'Tippe zum Färben'))),info,controls);
@@ -549,7 +566,7 @@ TASKS.O01={area:'Offene Aufgaben',name:'Bruchfamilien',desc:'Gib mehrere verschi
   render(view,host){
     const t=view.task,d=view.draft;
     if(d.rows==null)d.rows=2; /* zwei Zeilen zum Start, weitere über „+ Bruch“ */
-    const list=el('div'),btns=el('div',{class:'rowbtns'});
+    const list=el('div',{class:'famlist'}),btns=el('div',{class:'rowbtns'});
     const draw=()=>{
       list.replaceChildren();
       for(let i=0;i<d.rows;i++){
@@ -559,8 +576,8 @@ TASKS.O01={area:'Offene Aufgaben',name:'Bruchfamilien',desc:'Gib mehrere verschi
     };
     const add=el('button',{type:'button',class:'btn small'},'+ Bruch');
     const rem=el('button',{type:'button',class:'btn small'},'Letzten Bruch entfernen');
-    add.addEventListener('click',()=>{if(view.locked()||d.rows>=10)return;d.rows++;view.save();draw();updB();});
-    rem.addEventListener('click',()=>{if(view.locked()||d.rows<=1)return;const i=d.rows-1;delete d['x'+i+'.n'];delete d['x'+i+'.d'];d.rows--;view.save();draw();updB();});
+    add.addEventListener('click',()=>{if(view.locked()||d.rows>=10)return;d.rows++;view.save();draw();updB();(view.changed&&view.changed());});
+    rem.addEventListener('click',()=>{if(view.locked()||d.rows<=1)return;const i=d.rows-1;delete d['x'+i+'.n'];delete d['x'+i+'.d'];d.rows--;view.save();draw();updB();(view.changed&&view.changed());});
     const updB=()=>{add.disabled=view.locked()||d.rows>=10;rem.disabled=view.locked()||d.rows<=1;};
     view.inputs.add=add;view.inputs.rem=rem;
     btns.append(add,rem);host.append(list,btns,el('p',{class:'famnote'},'Brauchst du mehr Zeilen? Tippe auf „+ Bruch“.'));draw();updB();

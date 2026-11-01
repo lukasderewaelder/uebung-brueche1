@@ -127,7 +127,7 @@ function bigStars(n){
    ===================================================================== */
 function makeKeypad(host,onSubmit){
   let cur=null;
-  const list=()=>[...host.querySelectorAll('input[type=text]:not([disabled])')];
+  const list=()=>[...host.querySelectorAll('input[type=text]:not([disabled])')].filter(i=>i.offsetParent!==null); /* nur sichtbare Felder (Etappen) */
   host.addEventListener('focusin',e=>{if(e.target.matches&&e.target.matches('input[type=text]'))cur=e.target;});
   const ensure=()=>{
     const l=list();if(!l.length)return null;
@@ -155,24 +155,70 @@ function makeKeypad(host,onSubmit){
   return {el:pad,refresh(){
     const l=list();
     pad.classList.toggle('hidden',!l.length||!matchMedia('(pointer:coarse)').matches);
-    const dec=!!host.querySelector('.decin');alt.replaceChildren(dec?',':'Weiter ▸');alt.classList.toggle('next',!dec);alt.setAttribute('aria-label',dec?'Komma':'Nächstes Feld');alt.style.visibility=(dec||l.length>1)?'visible':'hidden';
+    const dec=!!host.querySelector('.decin');alt.replaceChildren(dec?',':'Weiter ▸');alt.classList.toggle('next',!dec);alt.setAttribute('aria-label',dec?'Komma':'Nächstes Feld');alt.classList.toggle('invis',!(dec||l.length>1));
     if(l.length)ensure();
   }};
 }
 function setHintLabel(btn,text){btn.replaceChildren(el('span',{class:'emo'},icon('hinweis')),text);}
 /* Tipp als einklappbarer Zettel: offen = Text sichtbar, zu = schmale Leiste zum Aufklappen */
-function hintBox(title,lines,open,onToggle){
+function hintBox(title,lines,open,onToggle,compact){
   if(!open)return el('button',{type:'button',class:'hint hint-closed','aria-expanded':'false',onclick:()=>onToggle(true)},
     icon('hinweis'),el('span',{class:'ht'},title),el('span',{class:'hs'},'anzeigen'),icon('ab'));
+  /* im Bedienpult: Überschrift steht vor dem ersten Satz, ohne eigene Zeile und ohne „Einklappen“ */
+  if(compact)return el('div',{class:'hint compact'},...lines.map((x,i)=>el('p',null,...(i===0?[el('b',{class:'hl'},icon('hinweis'),title+': ')]:[]),...(typeof x==='string'?introRich(x):[x]))));
   return el('div',{class:'hint'},
     el('div',{class:'hint-head'},el('b',{class:'lab'},icon('hinweis'),title),
       el('button',{type:'button',class:'hint-toggle','aria-expanded':'true','aria-label':title+' einklappen',onclick:()=>onToggle(false)},'Einklappen',icon('auf'))),
     lines.map(x=>el('p',null,...(typeof x==='string'?introRich(x):[x])))); /* Text mit {n|d} und **fett** (wie in den Erklärungen) */
 }
-function buildDock(main,{hintBtn,noteBtn,primary,pad,msg}){
-  const bar=el('div',{class:'actionbar'},msg||null,pad?pad.el:null,el('div',{class:'primaryrow'},hintBtn,noteBtn,primary));
+/* Bedienpult: oben ein Platz für die Zahlentasten ODER die Meldung/den Tipp (nie beides, die Aufgabe darüber bleibt unverändert),
+   darunter die Knöpfe an festen Plätzen: links Hilfe, Mitte Nebenaktion, rechts der eine gelbe Hauptknopf */
+function dockPanel(msg,pad,host){
+  const panel=el('div',{class:'dockpanel'},msg||null,pad?pad.el:null);
+  const dp={el:panel};
+  /* Hat die Aufgabe Zahlenfelder (auch erst in Teil 2), bleibt der Platz für Tasten oder Meldung immer gleich groß */
+  dp.reserve=(small)=>{
+    const touch=matchMedia('(pointer:coarse)').matches,inputs=!!host&&!!host.querySelector('input[type=text]');
+    panel.classList.toggle('reserve',touch&&inputs);              /* Zahlenfelder: Platz der Zahlentasten */
+    panel.classList.toggle('reserve-s',touch&&!inputs&&!!small);  /* sonst: Platz für eine kurze Meldung oder einen Tipp */
+  };
+  dp.showMsg=(what)=>{panel.classList.add('msgmode');if(msg&&what)msg.dataset.show=what;};
+  dp.showPad=()=>panel.classList.remove('msgmode');
+  /* ein Tipp auf ein Eingabefeld bringt die Zahlentasten zurück (Fokus per Programm zählt nicht) */
+  if(host)host.addEventListener('pointerdown',e=>{if(e.target.closest&&e.target.closest('input[type=text]'))dp.showPad();});
+  return dp;
+}
+function buildDock(main,{hintBtn,noteBtn,primary,pad,msg,host}){
+  const dp=dockPanel(msg,pad,host);
+  const bar=el('div',{class:'actionbar'},dp.el,el('div',{class:'primaryrow'},hintBtn,noteBtn,primary));
   main.append(bar);
+  bar.reserve=dp.reserve;bar.showMsg=dp.showMsg;bar.showPad=dp.showPad;
   return bar;
+}
+/* Bilder an die Höhe anpassen: ist die Seite höher als der Bildschirm, werden die Bilder der Karte (SVG ohne Symbole) so weit
+   verkleinert, wie es fehlt (nie unter FIT_MIN). Läuft nach jedem Zustandswechsel und beim Drehen des Geräts. */
+const FIT_MIN=0.4;
+function fitPage(){
+  const card=document.querySelector('.page .card');if(!card)return;
+  const doc=document.documentElement,figs=[...card.querySelectorAll('svg:not(.ic)')];
+  figs.forEach(s=>{s.style.zoom='';});
+  let over=doc.scrollHeight-innerHeight;
+  if(over<=0||!figs.length)return;
+  const total=figs.reduce((a,s)=>a+s.getBoundingClientRect().height,0);
+  if(total<=0)return;
+  let f=Math.max(FIT_MIN,1-over/total);
+  figs.forEach(s=>{s.style.zoom=String(f);});
+  over=doc.scrollHeight-innerHeight;
+  if(over>0&&f>FIT_MIN){f=Math.max(FIT_MIN,f*(1-over/Math.max(1,total*f)));figs.forEach(s=>{s.style.zoom=String(f);});}
+}
+window.addEventListener('resize',()=>fitPage());
+/* Musterlösung in einem eigenen Fenster (scrollt dort, nicht auf der Aufgabenseite) */
+function openSolutionSheet(task){
+  const m=modal([el('h2',null,icon('auge'),'Musterlösung'),el('div',{class:'solbody'},...buildWorkedSolution(task)),
+    el('button',{type:'button',class:'btn primary',onclick:()=>m.remove()},'Schließen')]);
+  m.classList.add('solsheet');
+  m.addEventListener('click',e=>{if(e.target===m)m.remove();});
+  return m;
 }
 
 /* Erster Satz eines Textes (Begründung bei richtigen Antworten im Check: ein Satz) */
@@ -193,31 +239,38 @@ function confirmModal(title,text,okLabel,onOk){
 /* mountTask: baut Aufgabe, Rückmeldung, Tipps und (auf Wunsch) Lösung in host auf */
 function mountTask(host,st,cb){
   const T=TASKS[st.task.type];
-  const view={task:st.task,draft:st.draft,inputs:{},st,save:()=>cb.save(),locked:()=>st.status!=='open'};
+  const view={task:st.task,draft:st.draft,inputs:{},st,save:()=>cb.save(),locked:()=>st.status!=='open',changed:()=>{if(cb.changed)cb.changed();}}; /* changed: die Aufgabe hat ihr Aussehen geändert (Etappe, Zeilen) */
   const allHints=()=>(cb.prefixHints||[]).concat(T.hints(st.task));
   host.replaceChildren();
   const prompt=el('div',{class:'prompt'});T.prompt(st.task,prompt);
   const stage=el('div',{class:'stage'});T.render(view,stage);
   const fb=el('div',{class:'feedback','aria-live':'polite'});
   const hints=el('div',{class:'hints'});
-  const sol=el('div',{class:'solution'});
-  host.append(prompt,stage,sol);
-  if(cb.msgHost)cb.msgHost.replaceChildren(fb,hints);else host.append(fb,hints);
-  const showFb=(kind,text)=>{st.fb={kind,text};fb.replaceChildren(el('div',{class:'msg '+kind},text));};
+  const sol=el('div',{class:'solution'}); /* nur ohne Bedienpult (Tests, ältere Aufrufer): Lösung in der Karte */
+  host.append(prompt,stage);
+  if(cb.msgHost)cb.msgHost.replaceChildren(fb,hints);else host.append(sol,fb,hints);
+  const onMsg=(what)=>{if(cb.onMsg)cb.onMsg(what);}; /* das Bedienpult zeigt dann Meldung oder Tipp statt der Zahlentasten */
+  const showFb=(kind,text)=>{st.fb={kind,text};fb.replaceChildren(el('div',{class:'msg '+kind},text));onMsg('fb');};
   const hideToast=()=>{const tt=document.getElementById('toast');if(tt)tt.classList.remove('show');}; /* alte Einblendung nicht über die Meldung legen */
   const renderHints=()=>{
     hints.replaceChildren();
     const hs=allHints(),i=Math.min(st.hint,hs.length)-1;
-    if(i>=0)hints.append(hintBox(`Tipp ${i+1} von ${hs.length}`,hs[i],st.hintOpen!==false,(o)=>{st.hintOpen=o;cb.save();renderHints();}));
+    if(i>=0)hints.append(hintBox(`Tipp ${i+1} von ${hs.length}`,hs[i],cb.msgHost?true:st.hintOpen!==false,(o)=>{st.hintOpen=o;cb.save();renderHints();},!!cb.msgHost));
   };
-  const showSolution=()=>{sol.replaceChildren(el('div',{class:'solbox'},el('h4',null,icon('auge'),'Musterlösung'),...buildWorkedSolution(st.task)));setTimeout(()=>sol.scrollIntoView({block:'nearest',behavior:'smooth'}),50);};
+  /* Musterlösung: Hinweis in der Meldung und ein Knopf, der sie in einem eigenen Fenster zeigt */
+  const solMsg=()=>{
+    const info=el('div',{class:'msg info'},'Schau dir die Lösung genau an. Dann geht es weiter.');
+    if(!cb.msgHost){sol.replaceChildren(el('div',{class:'solbox'},el('h4',null,icon('auge'),'Musterlösung'),...buildWorkedSolution(st.task)));fb.replaceChildren(info);return;}
+    fb.replaceChildren(info,el('button',{type:'button',class:'btn small sollink',onclick:()=>openSolutionSheet(st.task)},icon('auge'),'Lösung ansehen'));
+    onMsg('fb');
+  };
   const applyMarks=(marks)=>{
     for(const k in view.inputs){const i=view.inputs[k];if(i&&i.classList)i.classList.remove('bad','good');}
     for(const k in marks){const i=view.inputs[k];if(i&&i.classList)i.classList.add(marks[k]?'good':'bad');}
   };
   if(st.fb)showFb(st.fb.kind,st.fb.text);
   renderHints();
-  if(st.status==='shown'&&!T.quick)showSolution();
+  if(st.status==='shown'&&!T.quick)solMsg();
   const api={
     view,
     hintCount:()=>allHints().length,
@@ -250,12 +303,12 @@ function mountTask(host,st,cb){
       host.classList.remove('shake');void host.offsetWidth;host.classList.add('shake');return 'wrong';
     },
     hint(){
-      if(st.hint<allHints().length){st.hint++;st.hintOpen=true;cb.save();renderHints();if(view.onHint)view.onHint(st.hint);} /* z. B. der Bruchstreifen am Zahlenstrahl erscheint mit dem Tipp */
+      if(st.hint<allHints().length){st.hint++;st.hintOpen=true;cb.save();renderHints();onMsg('hint');if(view.onHint)view.onHint(st.hint);} /* z. B. der Bruchstreifen am Zahlenstrahl erscheint mit dem Tipp */
       return st.hint>=allHints().length;
     },
     solution(){
       if(st.status!=='open')return;
-      st.status='shown';st.fb=null;fb.replaceChildren(el('div',{class:'msg info'},'Schau dir die Lösung genau an. Dann geht es weiter.'));showSolution();cb.done('shown');
+      st.status='shown';st.fb=null;if(!cb.msgHost)solMsg();cb.done('shown');if(cb.msgHost)openSolutionSheet(st.task);
     }
   };
   view.submit=()=>api.check();
@@ -390,12 +443,11 @@ function renderPractice(id){
   const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkkasten');
   const primary=el('button',{type:'button',class:'btn primary'},'Prüfen');
   const solBtn=el('button',{type:'button',class:'btn small'},icon('auge'),'Lösung ansehen');
-  const skipBtn=el('button',{type:'button',class:'btn small'},icon('skip'),'Aufgabe überspringen (zählt nicht)');
+  const skipBtn=el('button',{type:'button',class:'btn small'},icon('skip'),'Überspringen');
   const pad=makeKeypad(host,()=>onPrimary());
-  const links=el('div',{class:'linkrow hidden'},solBtn,skipBtn);
-  main.insertBefore(links,null);
+  const links=el('div',{class:'linkrow hidden'},solBtn,skipBtn); /* liegt in der Meldung unten, nach einem Fehlversuch */
   const msg=el('div',{class:'dockmsg'});
-  buildDock(main,{hintBtn,noteBtn,primary,pad,msg});
+  const bar=buildDock(main,{hintBtn,noteBtn,primary,pad,msg,host});
 
   const P=prog(key);
   const roundBonus=()=>{
@@ -407,6 +459,8 @@ function renderPractice(id){
   const cb={
     save:()=>persist(),
     msgHost:msg,
+    onMsg:(what)=>bar.showMsg(what),
+    changed:()=>{pad.refresh();bar.reserve(!quick);fitPage();},
     afterCheck:()=>refresh(),
     done(kind){
       if(kind==='correct'){const first=st.attempts===0&&st.hint===0;round.results.push(first?'f':'l');P[first?'first':'later']++;}
@@ -414,36 +468,40 @@ function renderPractice(id){
       else{round.results.push('x');P.shown++;}
       if(quick)(round.sk=round.sk||[]).push(st.task.skill);
       P.done++;persist();
-      ctrl=mountTask(host,st,cb);refresh();updProgress();fillStats();roundBonus();
+      ctrl=mountTask(host,st,cb);msg.append(links);refresh();updProgress();fillStats();roundBonus();
       /* Übung: kein Auto-Weiter, die Begründung bleibt stehen. Check: richtige Antworten gehen nach 2,5 s weiter (Weiter geht jederzeit) */
       if(kind==='correct'&&quick)setTimeout(()=>{if(round.cur===st&&S.view.kind==='practice'&&S.view.id===id&&st.status==='correct'&&!document.querySelector('.modal'))next();},2500);
     }
   };
-  let ctrl=mountTask(host,st,cb);
+  let ctrl=mountTask(host,st,cb);msg.append(links);
   const refresh=()=>{
     const open=st.status==='open';
     const last=round.results.length>=round.size;
     primary.classList.toggle('ready',!open); /* beantwortet: „Weiter“ leuchtet auf */
     if(quick){ /* Antwort antippen, mit „Prüfen“ werten; danach „Weiter“ */
       primary.textContent=open?'Prüfen':(last?'Ergebnis':'Weiter');primary.disabled=false;
-      hintBtn.classList.add('hidden');links.classList.add('hidden');pad.refresh();return;
+      hintBtn.classList.add('hidden');links.classList.add('hidden');pad.refresh();fitPage();return;
     }
     primary.textContent=open?'Prüfen':(last?'Runde abschließen':'Weiter');
-    links.classList.toggle('hidden',!(open&&(st.attempts>0||st.hint>0)));
-    const all=ctrl.hintCount();
-    hintBtn.disabled=st.hint>=all;
-    setHintLabel(hintBtn,st.hint>=all?'Alle Tipps':(st.hint?`Tipp ${st.hint+1}`:'Tipp'));
-    pad.refresh();
+    links.classList.toggle('hidden',!(open&&st.attempts>0));
+    /* links: Hilfe. Sind alle Tipps gezeigt, wird aus „Tipp“ der Weg zur Lösung */
+    const all=ctrl.hintCount(),tipsDone=st.hint>=all;
+    hintBtn.dataset.mode=tipsDone?'sol':'';
+    hintBtn.disabled=!open;
+    if(tipsDone)hintBtn.replaceChildren(el('span',{class:'emo'},icon('auge')),'Lösung');
+    else setHintLabel(hintBtn,st.hint?`Tipp ${st.hint+1}`:'Tipp');
+    pad.refresh();bar.reserve(!quick);fitPage();
   };
   const next=()=>{round.cur=null;persist();renderAll();};
   const onPrimary=()=>{if(st.status==='open'){ctrl.check();refresh();}else next();};
   primary.addEventListener('click',onPrimary);
-  hintBtn.addEventListener('click',()=>{ctrl.hint();refresh();});
-  noteBtn.addEventListener('click',()=>setHelp(!helpOpen));
-  solBtn.addEventListener('click',()=>{
+  const askSolution=()=>{
     if(st.status!=='open')return;
     confirmModal('Lösung ansehen?','Die Aufgabe zählt dann nicht als richtig.','Lösung ansehen',()=>{ctrl.solution();refresh();});
-  });
+  };
+  hintBtn.addEventListener('click',()=>{if(hintBtn.dataset.mode==='sol'){askSolution();return;}ctrl.hint();refresh();});
+  noteBtn.addEventListener('click',()=>setHelp(!helpOpen));
+  solBtn.addEventListener('click',askSolution);
   skipBtn.addEventListener('click',()=>{
     if(st.status!=='open')return;
     confirmModal('Aufgabe überspringen?','Die Aufgabe zählt dann nicht als richtig.','Überspringen',()=>{
