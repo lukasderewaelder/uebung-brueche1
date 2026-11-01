@@ -95,12 +95,12 @@ const NOTES={
     ];}},
   M9:{title:'Zwei Wege zum Punkt',build(avoid){
     return [
-      el('div',{class:'ex'},strong('Weg 1: Einteilung anpassen. '),frac(3,5),' mit 5 Abschnitten je Ganzem.'),
-      el('div',{class:'figrow'},drawNumberLine({from:0,to:1,parts:5,marks:[{n:3,d:5}],maxW:360,label:'Drei Fünftel mit fünf Abschnitten'})),
-      el('div',{class:'ex'},strong('Weg 2: Bruch anpassen. '),eq(frac(3,5),'=',frac('3 · 2','5 · 2'),'=',frac(6,10))),
-      el('div',{class:'figrow'},drawNumberLine({from:0,to:1,parts:10,marks:[{n:6,d:10}],maxW:360,label:'Sechs Zehntel mit zehn Abschnitten'})),
+      el('div',{class:'ex'},'Beispiel: ',frac(3,5),' auf einem Strahl mit 5 oder mit 10 Abschnitten.'),
       el('p',null,'Manchmal passt die Einteilung nicht zum Nenner. Dann gibt es zwei Wege.'),
+      el('div',{class:'figrow'},drawNumberLine({from:0,to:1,parts:5,marks:[{n:3,d:5}],maxW:360,label:'Drei Fünftel mit fünf Abschnitten'})),
       el('p',null,strong('Weg 1: Einteilung anpassen. '),'Teile den Strahl so, wie der Nenner sagt.'),
+      el('div',{class:'ex'},eq(frac(3,5),'=',frac('3 · 2','5 · 2'),'=',frac(6,10))),
+      el('div',{class:'figrow'},drawNumberLine({from:0,to:1,parts:10,marks:[{n:6,d:10}],maxW:360,label:'Sechs Zehntel mit zehn Abschnitten'})),
       el('p',null,strong('Weg 2: Bruch anpassen. '),'Erweitere oder kürze auf den Nenner der Einteilung.'),
       el('p',null,strong('Merke: '),'Feiner teilen heißt erweitern. Gröber teilen heißt kürzen.')
     ];}},

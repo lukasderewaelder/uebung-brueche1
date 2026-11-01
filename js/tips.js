@@ -159,11 +159,11 @@ TIPS.O01=(t)=>{
     out];
 };
 TIPS.O02=(t)=>{
-  const g=gcd(t.a,t.b),f=smallestPrimeFactor(g);
+  const ways=o02Ways(t),lng=ways[ways.length-1]||[gcd(t.a,t.b)],sht=ways[0]||lng,f=lng[0];
   return [
     [`Welche Zahlen teilen ${t.a} und ${t.b}? Der zweite Weg braucht andere Zahlen als der erste.`,...divRules(t.a,t.b)],
     [`Ein Weg: erst durch ${f}. ${t.a} : ${f} = ${t.a/f} und ${t.b} : ${f} = ${t.b/f}.`],
-    [`Ein anderer Weg: gleich durch ${g}. Dann steht da ${tf(t.p,t.q)}.`]];
+    [ways.length>1?`Ein anderer Weg nimmt ${sht.map(k=>'÷'+k).join(' und ')}. Am Ende steht ${tf(t.p,t.q)}.`:`Dieselben Zahlen gehen auch in anderer Reihenfolge. Am Ende steht ${tf(t.p,t.q)}.`]];
 };
 
 /* ---------- Gemischte Runden (js/mix.js) ---------- */

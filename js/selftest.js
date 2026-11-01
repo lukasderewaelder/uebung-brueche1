@@ -931,7 +931,7 @@ function runSelfTests(){
       const body=app.textContent;
       t('Meine Übersicht: heißt so (nicht mehr „Selbst aussuchen“), erklärt „Grün = schon gekonnt, grau = noch gesperrt“ und bietet „Alles freischalten“',/Meine Übersicht/.test(body)&&!/Selbst aussuchen/.test(body)&&/Grün = schon gekonnt, grau = noch gesperrt/.test(body)&&[...app.querySelectorAll('button')].some(b=>b.textContent.includes('Alles freischalten')));
       [...app.querySelectorAll('button')].find(b=>b.textContent.includes('Alles freischalten')).click();
-      const dlg=document.querySelector('.modal');
+      const dlg=[...document.querySelectorAll('.modal')].find(m=>m.textContent.includes('Alles freischalten?')); /* nicht das erste .modal: die Karte „Neuer Rang“ geht verzögert auf */
       t('Alles freischalten: fragt vorher nach und erklärt, dass die Urkunde trotzdem alle Pflicht-Stationen braucht',!!dlg&&dlg.textContent.includes('Alles freischalten?')&&dlg.textContent.includes('Urkunde')&&!S.unlocked.veraendern);
       [...dlg.querySelectorAll('button')].find(b=>b.textContent==='Alles freischalten').click();
       t('Alles freischalten: danach ist alles offen, nur dieses Thema, die Anzeige sagt es',S.unlocked.veraendern===true&&!S.unlocked.zahlenstrahl&&pathState(vm5,'frei').every(r=>r.open)&&pathState(vm5,'pfad').every(r=>r.open)&&/Alles ist freigeschaltet/.test(app.textContent));
@@ -1130,6 +1130,47 @@ function runSelfTests(){
     const lc=levelControl('G02').textContent;
     t('Niveau heißt überall „Leicht“ und „Knifflig“ (Niveau-Schalter), nie „Niveau 1“',lc.includes('Leicht')&&lc.includes('Knifflig')&&!lc.includes('Niveau'));
     t('Thema heißt „Erweitern und Kürzen“, Seitentitel „Bruchwerkstatt“',moduleById('veraendern').name==='Erweitern und Kürzen'&&document.title==='Bruchwerkstatt');
+  }
+  /* Hotfix: Kürzen-Maschine (O02) immer lösbar, gleicher Weg wird sofort abgewiesen, nie sind alle Bedienelemente ausgegraut */
+  {
+    const o02View=(task,draft)=>{const v={task,draft:draft||{},inputs:{},saved:0,locked:()=>false,save(){v.saved++;}};const host=el('div');TASKS.O02.render(v,host);return {v,host};};
+    const chipsOn=(h)=>[...h.querySelectorAll('.chip')].filter(b=>!b.disabled).length;
+    const click=(v,ks)=>ks.forEach(k=>v.inputs['chip'+k].click());
+    const solvBad=[];
+    [1,2].forEach(lvl=>{for(let i=0;i<400;i++){
+      const k=generateTask('O02',lvl),ways=o02Ways(k);
+      if(ways.length<2||ways.some(w=>w.reduce((x,y)=>x*y,1)!==gcd(k.a,k.b))||!o02Chips(k).includes(ways[0][0]))solvBad.push('L'+lvl+' '+k.a+'/'+k.b);
+    }});
+    t('Kürzen-Maschine: 800 Aufgaben lassen sich auf mindestens zwei verschiedene Arten (Zahlenmengen) mit den vorhandenen Knöpfen lösen',solvBad.length===0||(console.log(solvBad.slice(0,5)),false));
+    t('Kürzen-Maschine: waysOf zählt Mengen ohne Reihenfolge (12 → ÷2÷2÷3, ÷2÷6, ÷3÷4); 14 und 15 gehen mit den Knöpfen nur auf eine Art',waysOf(12,O02_CHIPS[1]).length===3&&waysOf(14,O02_CHIPS[1]).length===1&&waysOf(15,O02_CHIPS[1]).length===1&&waysOf(60,O02_CHIPS[2]).length>=4);
+    const t12={type:'O02',level:1,a:12,b:18,p:2,q:3,mode:'target'};
+    const A=o02View(t12);
+    click(A.v,[2,3]);const one=A.v.draft.paths.length===1;
+    click(A.v,[3,2]);const m1=A.host.querySelector('.machsg');
+    const rejected=A.v.draft.paths.length===1&&A.v.draft.cur.length===0&&/anderer Reihenfolge/.test(m1.textContent)&&m1.classList.contains('bad')&&chipsOn(A.host)===8;
+    click(A.v,[2,3]);const again=A.v.draft.paths.length===1&&/Diesen Weg hast du schon/.test(A.host.querySelector('.machsg').textContent);
+    t('Kürzen-Maschine: derselbe Weg (auch in anderer Reihenfolge) wird sofort abgewiesen und nicht gespeichert, die Knöpfe bleiben bedienbar',one&&rejected&&again);
+    click(A.v,[6]);
+    const dels=[...A.host.querySelectorAll('.machdone button')];
+    t('Kürzen-Maschine: zwei verschiedene Wege → „Prüfen“ ist richtig; jeder Weg hat einen aktiven Knopf „Löschen“',A.v.draft.paths.length===2&&/Beide Wege geschafft/.test(A.host.querySelector('.machsg').textContent)&&validateTask(t12,A.v.draft).correct&&dels.length===2&&dels.every(b=>!b.disabled&&b.textContent.includes('Löschen')));
+    A.v.inputs.del0.click();
+    t('Kürzen-Maschine: „Löschen“ nimmt den Weg zurück, die Knöpfe sind wieder frei',A.v.draft.paths.length===1&&A.v.draft.paths[0].join()==='6'&&chipsOn(A.host)===8&&A.host.querySelector('.machsg').textContent==='');
+    const dup=o02View(t12,{paths:[[2,3],[3,2]],cur:[]});
+    t('Kürzen-Maschine: ein älterer Entwurf mit zwei gleichen Wegen wird beim Öffnen bereinigt (wie im Screenshot)',dup.v.draft.paths.length===1&&dup.v.saved>=1&&chipsOn(dup.host)===8);
+    const t15={type:'O02',level:1,a:15,b:60,p:1,q:4,mode:'target'};
+    const L=o02View(t15);click(L.v,[3,5]);click(L.v,[5,3]);
+    t('Kürzen-Maschine: eine ältere Aufgabe ohne zweite Zahlenmenge (15/60) bleibt lösbar, dort zählen die beiden Reihenfolgen',L.v.draft.paths.length===2&&validateTask(t15,L.v.draft).correct&&!validateTask(t15,{paths:[[3,5],[3,5]]}).correct);
+    const solBad=[];
+    [t12,t15].concat(Array.from({length:80},(_,i)=>generateTask('O02',1+i%2))).forEach(k=>{
+      const txt=buildWorkedSolution(k).map(n=>n.textContent).join(' ')+JSON.stringify(TASKS.O02.hints(k));
+      const nums=(txt.match(/÷(\d+)/g)||[]).map(x=>+x.slice(1));
+      if(!txt.includes('Weg 1')||!txt.includes('Weg 2')||nums.some(x=>!o02Chips(k).includes(x))||TASKS.O02.hints(k).length!==3)solBad.push(k.a+'/'+k.b+' '+nums);
+    });
+    t('Kürzen-Maschine: Musterlösung und Tipps nennen zwei Wege und nur Zahlen, die es als Knopf gibt (kein ÷15)',solBad.length===0||(console.log(solBad.slice(0,4)),false));
+    const sol15=buildWorkedSolution(t15).map(n=>n.textContent).join(' ');
+    t('Kürzen-Maschine: Musterlösung für 15/60 zeigt die beiden Reihenfolgen ÷3 › ÷5 und ÷5 › ÷3',sol15.includes('÷3 › ÷5')&&sol15.includes('÷5 › ÷3'));
+    const m9=NOTES.M9.build([]).map(n=>n.textContent).join(' ');
+    t('Merkkasten M9: „Weg 1: Einteilung anpassen“ und „Weg 2: Bruch anpassen“ stehen je genau einmal',(m9.match(/Weg 1: Einteilung anpassen/g)||[]).length===1&&(m9.match(/Weg 2: Bruch anpassen/g)||[]).length===1);
   }
   const bad=res.filter(r=>!r.ok);
   console.log(`Selbsttest: ${res.length-bad.length}/${res.length} bestanden`);
