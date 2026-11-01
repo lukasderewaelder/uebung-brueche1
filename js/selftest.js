@@ -207,8 +207,8 @@ function runSelfTests(){
   t('G04: nur „Nicht kürzbar“ bei kürzbarem Bruch ist falsch',!validateTask({type:'G04',level:1,mode:'full',a:6,b:9,p:2,q:3},{none:true}).correct);
   t('„Fast“-Meldung: richtiger Wert, aber andere Form',validateTask({type:'G03',level:1,mode:'factor',a:12,b:18,k:3},{'r.n':'2','r.d':'3'}).soft===true&&!validateTask({type:'G03',level:1,mode:'factor',a:12,b:18,k:3},{'r.n':'3','r.d':'5'}).soft);
   /* Lernpfad */
-  const keepP={passed:S.passed,checked:S.checked,final:S.final,placed:S.placed,days:S.days,lab:S.lab,einstufung:S.einstufung,modus:S.modus,perfect:Object.assign({},S.perfect)};
-  const freshP=()=>{S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;S.einstufung=null;S.modus={};S.perfect={};};
+  const keepP={passed:S.passed,checked:S.checked,final:S.final,placed:S.placed,days:S.days,lab:S.lab,einstufung:S.einstufung,modus:S.modus,unlocked:S.unlocked,perfect:Object.assign({},S.perfect)};
+  const freshP=()=>{S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;S.einstufung=null;S.modus={};S.unlocked={};S.perfect={};};
   const R_=(id)=>pathState(moduleById("veraendern")).find(r=>r.id===id);
   freshP();
   t('Pfad: Start – nächstes Bauteil G01, Labor offen, G02/B01/Abschluss gesperrt',pathState(moduleById("veraendern")).find(r=>r.next).id==='G01'&&R_('LAB').open&&R_('G02').locked&&R_('G02').blocker==='G01'&&R_('B01').locked&&R_('QA').locked);
@@ -601,8 +601,8 @@ function runSelfTests(){
   /* Thema Zahlenstrahl im Lernpfad (zwei Themen): eigener Pfad ohne Eingangstest, Pfad und Urkunde der Brüche-Werkstatt bleiben unabhängig */
   {
     const zs=moduleById('zahlenstrahl'),vm=moduleById('veraendern');
-    const snap={passed:S.passed,checked:S.checked,final:S.final,placed:S.placed,days:S.days,lab:S.lab,einstufung:S.einstufung,modus:S.modus,perfect:S.perfect,mq:S.mq};
-    const fresh=()=>{S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;S.einstufung=null;S.modus={};S.perfect={};S.mq={};};
+    const snap={passed:S.passed,checked:S.checked,final:S.final,placed:S.placed,days:S.days,lab:S.lab,einstufung:S.einstufung,modus:S.modus,unlocked:S.unlocked,perfect:S.perfect,mq:S.mq};
+    const fresh=()=>{S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;S.einstufung=null;S.modus={};S.unlocked={};S.perfect={};S.mq={};};
     fresh();
     t('Thema Zahlenstrahl: aktiv, mit Eingangstest ZQ, nicht im Rang, acht Pflicht-Bauteile Z01–Z08 und der Abschlusscheck ZQ, Pfad erst nach dem Eingangstest',zs.status==='aktiv'&&zs.quickcheck&&zs.qid==='ZQ'&&!zs.rank&&zs.path.length===9&&zs.path.slice(0,8).every((p,i)=>p.must&&p.id===('Z0'+(i+1)))&&zs.path[8].id==='ZA'&&zs.path[8].final&&lernenZustand(zs)==='gate'&&PRACTICE_ORDER.includes('Z08')&&PRACTICE_ORDER.includes('ZQ')&&PRACTICE_ORDER.includes('ZA')&&!rankPractice().includes('Z01')&&!rankPath().some(p=>p.id==='Z01')&&moduleOf('Z05').id==='zahlenstrahl'&&moduleOf('Eintragen').id==='zahlenstrahl'&&moduleOf('ZQ').id==='zahlenstrahl');
     const rows=()=>pathState(zs);
@@ -1221,6 +1221,56 @@ function runSelfTests(){
       S.view={kind:'home',tab:'rang'};renderAll();
       t('Statistik auf der Seite Ich: „Höchstes Treffer-Konto“ statt „Längste Serie“',/Höchstes Treffer-Konto: \d+/.test(app.textContent)&&!/Längste Serie/.test(app.textContent));
     }finally{Object.assign(S,keepC);persist();renderAll();}
+  }
+  /* Paket D: Heller Modus (Tokens, Kontraste, Schalter in den Einstellungen, Start ohne Aufblitzen) */
+  {
+    const rules=[];
+    const walk=(list,media)=>[...list].forEach(r=>{
+      if(r.cssRules&&r.media)walk(r.cssRules,r.media.mediaText);
+      else if(r.selectorText)rules.push({sel:r.selectorText,media,style:r.style});
+    });
+    [...document.styleSheets].forEach(sh=>{try{walk(sh.cssRules,'');}catch(e){}});
+    const tokensOf=(rule)=>{const o={};for(let i=0;i<rule.style.length;i++){const k=rule.style[i];if(k.startsWith('--'))o[k]=rule.style.getPropertyValue(k).trim();}return o;};
+    const darkRule=rules.find(r=>r.sel===':root'&&!r.media&&r.style.getPropertyValue('--bp'));
+    const hellRule=rules.find(r=>r.sel.includes('data-theme="hell"')),autoRule=rules.find(r=>r.sel.includes(':not([data-theme])')&&/light/.test(r.media));
+    const dark=darkRule?tokensOf(darkRule):{},hell=hellRule?tokensOf(hellRule):{},auto=autoRule?tokensOf(autoRule):{};
+    const sorted=(o)=>JSON.stringify(Object.keys(o).sort().map(k=>[k,o[k]]));
+    t('Heller Modus: „Hell“ und „Automatisch bei hellem Gerät“ haben genau dieselben Werte; alles, was sie ändern, gibt es im dunklen Grundsatz',Object.keys(hell).length>=20&&sorted(hell)===sorted(auto)&&Object.keys(hell).every(k=>k in dark)&&hell['--bp']==='#ffffff'&&dark['--bp']==='#0d3b66');
+    const lumOf=(h)=>{const m=h.replace('#','');const v=[0,2,4].map(i=>parseInt(m.slice(i,i+2),16)/255).map(x=>x<=0.03928?x/12.92:Math.pow((x+0.055)/1.055,2.4));return 0.2126*v[0]+0.7152*v[1]+0.0722*v[2];};
+    const cr=(a,b)=>{const x=lumOf(a),y=lumOf(b);return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05);};
+    const pairs=[['--chalk','--bp'],['--chalk','--bp-2'],['--chalk','--bp-3'],['--chalk-dim','--bp'],['--chalk-dim','--bp-2'],['--amber','--bp'],['--amber','--bp-2'],['--erw','--bp'],['--erw','--bp-2'],['--kue','--bp'],['--kue','--bp-2'],['--ok','--bp'],['--ok','--bp-2'],['--bad','--bp'],['--bad','--bp-2'],['--ink','--paper'],['--ink-dim','--paper'],['--on-amber','--amber-fill']];
+    const low=(set)=>pairs.filter(([a,b])=>!/^#[0-9a-f]{6}$/i.test(set[a]||'')||!/^#[0-9a-f]{6}$/i.test(set[b]||'')||cr(set[a],set[b])<4.5).map(([a,b])=>a+' auf '+b+(set[a]&&set[b]&&/^#/.test(set[a]+set[b])?' '+cr(set[a],set[b]).toFixed(2):''));
+    const lowDark=low(dark),lowHell=low(Object.assign({},dark,hell));
+    t('Kontrast (WCAG ≥ 4,5 : 1) für '+pairs.length+' Text-/Hintergrund-Paare, dunkel und hell',lowDark.length===0&&lowHell.length===0||(console.log(lowDark,lowHell),false));
+    const root=document.documentElement,metaTc=()=>document.querySelector('meta[name="theme-color"]').content;
+    const keepD={ui:S.ui,view:S.view};
+    try{
+      S.ui={size:'m',theme:'hell'};applyUi();
+      const h=[root.dataset.theme,getComputedStyle(root).backgroundColor,metaTc(),getComputedStyle(root).colorScheme];
+      S.ui={size:'m',theme:'dunkel'};applyUi();
+      const d=[root.dataset.theme,getComputedStyle(root).backgroundColor,metaTc(),getComputedStyle(root).colorScheme];
+      S.ui={size:'m'};applyUi();
+      t('Darstellung: „Hell“ = weißer Grund und weiße Adressleiste, „Dunkel“ = Blaupausen-Blau, „Automatisch“ (nichts gewählt) setzt kein Attribut',h[0]==='hell'&&h[1]==='rgb(255, 255, 255)'&&h[2]==='#ffffff'&&h[3]==='light'&&d[0]==='dunkel'&&d[1]==='rgb(13, 59, 102)'&&d[2]==='#0d3b66'&&d[3]==='dark'&&root.dataset.theme===undefined&&themeOf()==='auto');
+      S.ui={size:'m',theme:'dunkel'};applyUi();openOptions();
+      const seg=[...document.querySelectorAll('.optmodal .optseg')].find(x=>x.getAttribute('aria-label')==='Darstellung wählen');
+      const btns=seg?[...seg.querySelectorAll('button')]:[],pressed=()=>btns.filter(b=>b.getAttribute('aria-pressed')==='true').map(b=>b.textContent).join();
+      const names=btns.map(b=>b.textContent).join(),first=pressed();
+      if(btns[1])btns[1].click();const afterHell=[S.ui.theme,root.dataset.theme,pressed()].join();
+      if(btns[0])btns[0].click();const afterAuto=[S.ui.theme,String(root.dataset.theme),pressed()].join();
+      closeOptions();
+      t('Einstellungen: Zeile „Darstellung“ mit Automatisch, Hell, Dunkel; die gewählte ist markiert; Tippen speichert und wendet sofort an',names==='Automatisch,Hell,Dunkel'&&first==='Dunkel'&&afterHell==='hell,hell,Hell'&&afterAuto==='auto,undefined,Automatisch'&&defaultState().ui.theme==='auto'&&techInfo().textContent.includes('Darstellung'));
+    }finally{S.ui=keepD.ui;applyUi();persist();}
+    const pats=[...document.querySelectorAll('pattern[id^="hatch-"]')];
+    t('Schraffuren (Bruchbilder) nehmen ihre Farben aus den Tokens, keine festen Farben; Seite meldet „dark light“',pats.length===4&&pats.every(p=>!/#[0-9a-f]{3,6}|rgba?\(/i.test(p.innerHTML)&&p.querySelectorAll('[style*="var(--hatch-"]').length===2)&&document.querySelector('meta[name="color-scheme"]').content==='dark light');
+    /* Start ohne Aufblitzen: das kleine Skript im <head> liest die Wahl aus dem Speicher */
+    const boot=[...document.scripts].find(s=>!s.src&&s.textContent.includes('data-theme'));
+    let bootOK=false;const keepRaw=(()=>{try{return localStorage.getItem(KEY);}catch(e){return null;}})();
+    try{
+      const run=(raw)=>{root.removeAttribute('data-theme');if(raw===null)localStorage.removeItem(KEY);else localStorage.setItem(KEY,raw);new Function(boot.textContent)();return root.dataset.theme;};
+      bootOK=run(JSON.stringify({v:1,ui:{theme:'hell'}}))==='hell'&&run(JSON.stringify({v:1,ui:{theme:'dunkel'}}))==='dunkel'&&run(JSON.stringify({v:1,ui:{theme:'auto'}}))===undefined&&run('kaputt')===undefined&&run(null)===undefined;
+    }catch(e){bootOK=false;}
+    finally{try{if(keepRaw===null)localStorage.removeItem(KEY);else localStorage.setItem(KEY,keepRaw);}catch(e){}applyUi();}
+    t('Start: das Skript im <head> setzt „Hell“ oder „Dunkel“ aus dem Speicher vor dem ersten Zeichnen; kaputter oder leerer Speicher stört nicht',!!boot&&bootOK);
   }
   const bad=res.filter(r=>!r.ok);
   console.log(`Selbsttest: ${res.length-bad.length}/${res.length} bestanden`);

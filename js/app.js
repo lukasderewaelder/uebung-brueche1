@@ -11,7 +11,7 @@
   if(!S.modus||typeof S.modus!=='object'||Array.isArray(S.modus))S.modus={};
   if(!S.perfect)S.perfect={};
   if(!S.intro||typeof S.intro!=='object'||Array.isArray(S.intro))S.intro={};
-  if(!S.ui)S.ui={size:'m'};
+  if(!S.ui)S.ui={size:'m',theme:'auto'};
   applyUi();
   if(S.rankSeen==null){S.rankSeen=rankState().i;persist();}
   if(!S.view||(S.view.kind==='home'&&S.view.tab==='aufgaben'))S.view={kind:'home',tab:'ueben',group:S.view&&S.view.group};

@@ -16,6 +16,12 @@
   --erw:#ff9248;--kue:#45e0d4;
   --ok:#8be3a9;--bad:#ff8c8c;
   --paper:#eef5fb;--ink:#0b2a4a;--ink-dim:#3d5a78;--mark:#ffe58a;
+  --amber-fill:#ffc53d;                         /* Fläche von Hauptknöpfen; --amber ist die Schriftfarbe (im hellen Modus dunkler) */
+  --track:rgba(184,212,238,.22);--tick:rgba(184,212,238,.35);  /* leere Balken, Strichmarken */
+  --nl-sec:rgba(173,216,255,.1);--nl-on:rgba(120,190,255,.55); /* Zahlenstrahl: Abschnitt, gefärbter Abschnitt */
+  --hatch-amber:#ffc53d;--hatch-erw:#ff9248;--hatch-kue:#45e0d4;--hatch-ink:#0b2a4a; /* Schraffur (Streifen) */
+  --hatch-amber-bg:rgba(255,197,61,.16);--hatch-erw-bg:rgba(255,146,72,.16);--hatch-kue-bg:rgba(69,224,212,.16);--hatch-ink-bg:rgba(11,42,74,.08);
+  color-scheme:dark;
   --acc:var(--amber);
   --cell-stroke:var(--chalk);--cell-on:url(#hatch-amber);
   --fs:clamp(15px,calc(13.6px + .55vw),22px); /* Grundschrift wächst mit dem Display */
@@ -23,6 +29,36 @@
   --tap:max(44px,2.75rem);                     /* Mindestgröße für Tippflächen */
   --font-mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
   --font-body:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+/* Heller Modus („Blaupause getauscht“): weißer Grund, blaue Linien. Gilt bei Wahl „Hell“ und bei „Automatisch“, wenn das Gerät hell eingestellt ist.
+   Beide Blöcke müssen dieselben Werte haben (der Selbsttest vergleicht sie und prüft die Kontraste). */
+:root[data-theme="hell"]{
+  --bp:#ffffff;--bp-2:#edf4fb;--bp-3:#d9e8f6;
+  --chalk:#0d3b66;--chalk-dim:#3f6a94;
+  --grid:rgba(13,59,102,.07);--grid-2:rgba(13,59,102,.16);
+  --amber:#8a5a00;--on-amber:#0b2a4a;
+  --erw:#b34700;--kue:#00706a;
+  --ok:#17703c;--bad:#b3261e;
+  --paper:#e3eef9;--ink:#0b2a4a;--ink-dim:#3d5a78;--mark:#ffe58a;
+  --track:rgba(13,59,102,.14);--tick:rgba(13,59,102,.3);
+  --nl-sec:rgba(13,59,102,.06);--nl-on:rgba(20,110,200,.3);
+  --hatch-amber:#d99a00;--hatch-erw:#e8731a;--hatch-kue:#0aa59b;--hatch-ink:#0b2a4a;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:light){
+  :root:not([data-theme]){
+    --bp:#ffffff;--bp-2:#edf4fb;--bp-3:#d9e8f6;
+    --chalk:#0d3b66;--chalk-dim:#3f6a94;
+    --grid:rgba(13,59,102,.07);--grid-2:rgba(13,59,102,.16);
+    --amber:#8a5a00;--on-amber:#0b2a4a;
+    --erw:#b34700;--kue:#00706a;
+    --ok:#17703c;--bad:#b3261e;
+    --paper:#e3eef9;--ink:#0b2a4a;--ink-dim:#3d5a78;--mark:#ffe58a;
+    --track:rgba(13,59,102,.14);--tick:rgba(13,59,102,.3);
+    --nl-sec:rgba(13,59,102,.06);--nl-on:rgba(20,110,200,.3);
+    --hatch-amber:#d99a00;--hatch-erw:#e8731a;--hatch-kue:#0aa59b;--hatch-ink:#0b2a4a;
+    color-scheme:light;
+  }
 }
 
 /* ---------- 2 Grund ---------- */
@@ -104,11 +140,11 @@ input:disabled{opacity:.8}
 .gtext{display:flex;flex-direction:column;gap:0.1875rem;min-width:5.25rem}
 .gname{font:700 .64rem/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase}
 .gseg{display:flex;gap:0.125rem}
-.gseg i{width:0.4375rem;height:0.5625rem;background:rgba(184,212,238,.22)}
+.gseg i{width:0.4375rem;height:0.5625rem;background:var(--track)}
 .gseg i.on{background:var(--amber)}
 .gxp{font:700 .9rem var(--font-mono);color:var(--amber)}
 .gstreak{font:700 .78rem var(--font-mono);color:var(--erw);letter-spacing:.05em}
-.gbar{display:block;height:0.625rem;background:rgba(184,212,238,.22)}
+.gbar{display:block;height:0.625rem;background:var(--track)}
 .gbar i{display:block;height:100%;background:var(--amber)}
 
 /* Werkzeugleiste unten */
@@ -150,7 +186,7 @@ input:disabled{opacity:.8}
 
 /* Lineal-Fortschritt */
 .ruler{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:0.25rem;align-items:end;margin:0 0 0.75rem}
-.ruler .tk{height:1.375rem;border:2px solid var(--chalk-dim);background:linear-gradient(90deg,transparent 0 4px,rgba(184,212,238,.35) 4px 5px) left bottom/6px 7px repeat-x}
+.ruler .tk{height:1.375rem;border:2px solid var(--chalk-dim);background:linear-gradient(90deg,transparent 0 4px,var(--tick) 4px 5px) left bottom/6px 7px repeat-x}
 .ruler .tk.f{background:var(--ok);border-color:var(--ok)}
 .ruler .tk.l{background:repeating-linear-gradient(45deg,var(--ok) 0 3px,transparent 3px 7px);border-color:var(--ok)}
 .ruler .tk.x{background:repeating-linear-gradient(-45deg,var(--bad) 0 1px,transparent 1px 6px);border-color:var(--bad)}
@@ -161,7 +197,7 @@ input:disabled{opacity:.8}
 .btn:hover:not(:disabled){background:var(--bp-3)}
 .btn:active:not(:disabled){transform:translateY(3px);box-shadow:none}
 .btn:disabled{border-style:dashed;opacity:.5;cursor:default;box-shadow:none}
-.btn.primary{background:var(--amber);border-color:var(--amber);color:var(--on-amber)}
+.btn.primary{background:var(--amber-fill);border-color:var(--amber);color:var(--on-amber)}
 .btn.primary:hover:not(:disabled){background:#ffd166}
 .btn.small{min-height:max(44px,2.75rem);padding:0 0.75rem;font-size:.95rem}
 .btn.danger{border-color:var(--bad);color:var(--bad)}
@@ -174,7 +210,7 @@ input:disabled{opacity:.8}
 .seg{display:inline-flex;border:2px solid var(--chalk)}
 .seg button{border:0;background:var(--bp-2);color:var(--chalk);min-height:max(48px,3rem);padding:0 0.875rem;cursor:pointer;font:700 .8rem var(--font-mono);letter-spacing:.1em;text-transform:uppercase;display:inline-flex;align-items:center;gap:0.375rem}
 .seg button+button{border-left:2px solid var(--chalk)}
-.seg button[aria-pressed="true"]{background:var(--amber);color:var(--on-amber)}
+.seg button[aria-pressed="true"]{background:var(--amber-fill);color:var(--on-amber)}
 .levelrow{display:flex;gap:0.625rem;align-items:center;justify-content:flex-start;margin:0.375rem 0 0.875rem}
 
 /* Stepper */
@@ -339,7 +375,7 @@ svg.interactive{touch-action:none}
 .yesno{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin:0.875rem 0}
 .btn.yn{min-height:5.25rem;font:700 1.3rem var(--font-mono);letter-spacing:.1em;text-transform:uppercase;border-width:3px}
 .btn.yn .ic{width:1.6em;height:1.6em}
-.btn.yn[aria-pressed="true"],.btn.none[aria-pressed="true"]{background:var(--amber);color:var(--on-amber);border-color:var(--amber)}
+.btn.yn[aria-pressed="true"],.btn.none[aria-pressed="true"]{background:var(--amber-fill);color:var(--on-amber);border-color:var(--amber)}
 
 /* Schnellcheck: Normteil-Karten A–D und Auswertung */
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:0.625rem;margin:0.75rem 0 0.375rem}
@@ -509,7 +545,7 @@ svg.interactive{touch-action:none}
 .bigbtn[data-pat="dash"] .ico{background-image:repeating-linear-gradient(0deg,transparent 0 8px,var(--grid-2) 8px 9px)}
 .bigbtn[data-pat="hatch"] .ico{background-image:repeating-linear-gradient(45deg,var(--grid-2) 0 1.5px,transparent 1.5px 7px)}
 .home>.bigbtn{width:100%}
-.bigbtn.go{background:var(--amber);color:var(--on-amber);border-color:var(--amber);--acc:var(--on-amber)}
+.bigbtn.go{background:var(--amber-fill);color:var(--on-amber);border-color:var(--amber);--acc:var(--on-amber)}
 .bigbtn.go .ico{border-color:var(--on-amber);color:var(--on-amber)}
 .bigbtn.go small{color:var(--on-amber)}
 .bigbtn[data-acc="erw"]{--acc:var(--erw)}
@@ -560,7 +596,7 @@ svg.interactive{touch-action:none}
 .pm{color:var(--chalk-dim)}
 .prow.done .pm{color:var(--ok)}
 .pt{display:flex;flex-direction:column;gap:0.3125rem;font-size:.92rem}
-.pbar{display:block;height:0.5rem;background:rgba(184,212,238,.22)}
+.pbar{display:block;height:0.5rem;background:var(--track)}
 .pbar i{display:block;height:100%;background:var(--amber)}
 .prow.done .pbar i{background:var(--ok)}
 .pn{min-width:3.6rem;text-align:right;font:700 .85rem var(--font-mono);color:var(--chalk-dim)}
@@ -780,8 +816,8 @@ svg.nline .nl-mark.good{fill:var(--ok)}
 svg.nline .nl-mark.bad{fill:var(--bad)}
 svg.nline .nl-cell{fill:transparent;stroke:var(--chalk);stroke-width:1.5}
 svg.nline .nl-cell.on{fill:var(--cell-on)}
-svg.nline .nl-sec{fill:rgba(173,216,255,.1);stroke:var(--chalk-dim);stroke-width:1.5}
-svg.nline .nl-sec.on{fill:rgba(120,190,255,.55)}
+svg.nline .nl-sec{fill:var(--nl-sec);stroke:var(--chalk-dim);stroke-width:1.5}
+svg.nline .nl-sec.on{fill:var(--nl-on)}
 svg.nline .nl-sec[role="button"]{cursor:pointer}
 svg.nline .nl-frame{fill:rgba(255,197,61,.12);stroke:var(--amber);stroke-width:2}
 svg.nline .nl-cap{fill:transparent;cursor:pointer}
@@ -855,7 +891,7 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 .qopts{display:flex;flex-direction:column}
 .btn.unsure{align-self:stretch;min-height:max(44px,2.75rem);margin:0.375rem 0 0.25rem;font-size:.95rem;font-weight:600;background:transparent;border-style:dashed;gap:0.5rem}
 .btn.unsure .ic{width:1.1em;height:1.1em}
-.btn.unsure[aria-pressed="true"]{background:var(--amber);color:var(--on-amber);border-color:var(--amber);border-style:solid}
+.btn.unsure[aria-pressed="true"]{background:var(--amber-fill);color:var(--on-amber);border-color:var(--amber);border-style:solid}
 .btn.unsure:disabled:not([aria-pressed="true"]){opacity:.4}
 .btn.unsure:disabled[aria-pressed="true"]{opacity:1;box-shadow:none}
 .key.fn.next{font:700 .8rem/1.05 var(--font-body);letter-spacing:0;padding:0 0.125rem}
@@ -899,3 +935,6 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 /* Paket B: Hinweis in der Erklärung, wenn die Station im Eingangstest schon saß */
 .introknown{display:flex;align-items:center;gap:.375rem;margin:.25rem 0 .5rem;color:var(--ok);font-weight:600}
 .introknown .ic{width:1.25rem;height:1.25rem;flex:none}
+/* Paket D: Darstellung (Hell / Dunkel / Automatisch) in den Einstellungen */
+.optseg3{grid-template-columns:repeat(3,1fr)}
+.opthint{display:block;margin-top:.4rem;color:var(--ink-dim)}

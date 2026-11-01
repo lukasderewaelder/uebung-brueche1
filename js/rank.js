@@ -116,6 +116,7 @@ function openOptions(){
   const m=modal([
     el('h2',null,'Einstellungen'),
     optionsExtra(),
+    themeOptions(),
     el('div',{class:'optlist'},
       optRow('schluessel','Hilfe bei Problemen','Wenn etwas nicht klappt',()=>{closeOptions();openProblemHelp();})),
     el('div',{class:'optfoot'},
@@ -127,7 +128,21 @@ function openOptions(){
 }
 /* Textgröße: „Normal“ passt sich automatisch dem Display an, die anderen Stufen vergrößern oder verkleinern dazu */
 const TEXT_SIZES=[['s','Klein'],['m','Normal'],['l','Groß'],['xl','Sehr groß']];
-function applyUi(){document.documentElement.dataset.size=(S.ui&&S.ui.size)||'m';}
+/* Darstellung: „Automatisch“ folgt dem Gerät (hell oder dunkel), „Hell“ und „Dunkel“ gelten immer. Ohne Wahl kein Attribut data-theme. */
+const THEMES=[['auto','Automatisch'],['hell','Hell'],['dunkel','Dunkel']];
+const themeOf=()=>(S.ui&&S.ui.theme)||'auto';
+/* Farbe der Adressleiste passend zum Hintergrund */
+function syncThemeColor(){
+  const m=document.querySelector('meta[name="theme-color"]'),bp=getComputedStyle(document.documentElement).getPropertyValue('--bp').trim();
+  if(m&&bp)m.setAttribute('content',bp);
+}
+function applyUi(){
+  const root=document.documentElement,th=themeOf();
+  root.dataset.size=(S.ui&&S.ui.size)||'m';
+  if(th==='hell'||th==='dunkel')root.dataset.theme=th;else delete root.dataset.theme;
+  syncThemeColor();
+}
+try{const mq=matchMedia('(prefers-color-scheme: light)'),on=()=>setTimeout(syncThemeColor,0);if(mq.addEventListener)mq.addEventListener('change',on);else if(mq.addListener)mq.addListener(on);}catch(e){}
 function optionsExtra(){
   const cur=(S.ui&&S.ui.size)||'m';
   const seg=el('div',{class:'seg optseg',role:'group','aria-label':'Textgröße wählen'});
@@ -139,5 +154,17 @@ function optionsExtra(){
     seg.append(b);
   });
   return el('div',{class:'optsec'},el('span',{class:'lblm'},'Textgröße'),seg);
+}
+function themeOptions(){
+  const cur=themeOf();
+  const seg=el('div',{class:'seg optseg optseg3',role:'group','aria-label':'Darstellung wählen'});
+  THEMES.forEach(([k,label])=>{
+    const b=el('button',{type:'button','aria-pressed':String(cur===k),onclick:()=>{
+      S.ui=S.ui||{};S.ui.theme=k;persist();applyUi();
+      seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+    }},el('span',{class:'azl'},label));
+    seg.append(b);
+  });
+  return el('div',{class:'optsec'},el('span',{class:'lblm'},'Darstellung'),seg,el('small',{class:'opthint'},'Automatisch folgt der Einstellung deines Geräts.'));
 }
 
