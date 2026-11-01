@@ -25,8 +25,8 @@ function perfection(){
     {id:'path',label:'Lernpfad komplett, mit Urkunde',have:path,need:rp.length},
     {id:'lab',label:'Bruchlabor: Entdeckerauftrag',have:(S.lab&&S.lab.done)?1:0,need:1},
     {id:'games',label:'Memory und Tresor, leicht und knifflig',have:games,need:4},
-    {id:'streak',label:'30 richtige Antworten in Folge',have:Math.min(30,S.bestStreak||0),need:30},
-    {id:'days',label:'7 Tage in Folge geübt',have:Math.min(7,S.bestDays||0),need:7}
+    {id:'streak',label:'Treffer-Konto 30 erreicht',have:Math.min(30,S.bestStreak||0),need:30},
+    {id:'days',label:'An 7 Tagen geübt',have:Math.min(7,Object.keys(S.days||{}).length),need:7}
   ];
   return {items,all:items.every(i=>i.have>=i.need),done:items.filter(i=>i.have>=i.need).length};
 }
@@ -60,7 +60,7 @@ function chipNode(){
     el('span',{class:'gicon','aria-hidden':'true'},icon(st.cur[2])),
     el('span',{class:'gtext'},el('b',{class:'gname'},st.cur[1]),segBar(st.pct)),
     el('span',{class:'gxp'},xp+' XP'),
-    (S.streak||0)>1?el('span',{class:'gstreak','aria-hidden':'true'},'SERIE '+S.streak):null,
+    (S.streak||0)>1?el('span',{class:'gstreak','aria-hidden':'true'},'TREFFER '+S.streak):null,
     el('span',{class:'gchev','aria-hidden':'true'},icon('ab')));
 }
 function updateChip(){document.querySelectorAll('.gchip').forEach(c=>c.replaceWith(chipNode()));}
@@ -70,8 +70,9 @@ function rankCard(){
   const st=rankState();
   return el('div',{class:'rankcard'},el('span',{class:'ico','aria-hidden':'true'},icon(st.cur[2])),
     el('div',{class:'rk'},el('b',null,st.cur[1]),segBar(st.pct,'big'),
-      el('small',null,st.xp+' XP · '+rankHint(st)),el('small',null,'Rang '+(st.i+1)+' von '+RANKS.length)),
-    (S.streak||0)>1?el('span',{class:'gstreak'},'SERIE '+S.streak):null);
+      el('small',null,st.xp+' XP · '+rankHint(st)),el('small',null,'Rang '+(st.i+1)+' von '+RANKS.length),
+      el('small',{class:'kontohelp'},'Treffer-Konto: Jede richtige Antwort zählt +1. Ein Fehler halbiert es.')),
+    (S.streak||0)>1?el('span',{class:'gstreak'},'TREFFER '+S.streak):null);
 }
 function rankLadder(){
   const st=rankState();
@@ -115,6 +116,7 @@ function openOptions(){
   const m=modal([
     el('h2',null,'Einstellungen'),
     optionsExtra(),
+    themeOptions(),
     el('div',{class:'optlist'},
       optRow('schluessel','Hilfe bei Problemen','Wenn etwas nicht klappt',()=>{closeOptions();openProblemHelp();})),
     el('div',{class:'optfoot'},
@@ -126,7 +128,21 @@ function openOptions(){
 }
 /* Textgröße: „Normal“ passt sich automatisch dem Display an, die anderen Stufen vergrößern oder verkleinern dazu */
 const TEXT_SIZES=[['s','Klein'],['m','Normal'],['l','Groß'],['xl','Sehr groß']];
-function applyUi(){document.documentElement.dataset.size=(S.ui&&S.ui.size)||'m';}
+/* Darstellung: „Automatisch“ folgt dem Gerät (hell oder dunkel), „Hell“ und „Dunkel“ gelten immer. Ohne Wahl kein Attribut data-theme. */
+const THEMES=[['auto','Automatisch'],['hell','Hell'],['dunkel','Dunkel']];
+const themeOf=()=>(S.ui&&S.ui.theme)||'auto';
+/* Farbe der Adressleiste passend zum Hintergrund */
+function syncThemeColor(){
+  const m=document.querySelector('meta[name="theme-color"]'),bp=getComputedStyle(document.documentElement).getPropertyValue('--bp').trim();
+  if(m&&bp)m.setAttribute('content',bp);
+}
+function applyUi(){
+  const root=document.documentElement,th=themeOf();
+  root.dataset.size=(S.ui&&S.ui.size)||'m';
+  if(th==='hell'||th==='dunkel')root.dataset.theme=th;else delete root.dataset.theme;
+  syncThemeColor();
+}
+try{const mq=matchMedia('(prefers-color-scheme: light)'),on=()=>setTimeout(syncThemeColor,0);if(mq.addEventListener)mq.addEventListener('change',on);else if(mq.addListener)mq.addListener(on);}catch(e){}
 function optionsExtra(){
   const cur=(S.ui&&S.ui.size)||'m';
   const seg=el('div',{class:'seg optseg',role:'group','aria-label':'Textgröße wählen'});
@@ -138,5 +154,17 @@ function optionsExtra(){
     seg.append(b);
   });
   return el('div',{class:'optsec'},el('span',{class:'lblm'},'Textgröße'),seg);
+}
+function themeOptions(){
+  const cur=themeOf();
+  const seg=el('div',{class:'seg optseg optseg3',role:'group','aria-label':'Darstellung wählen'});
+  THEMES.forEach(([k,label])=>{
+    const b=el('button',{type:'button','aria-pressed':String(cur===k),onclick:()=>{
+      S.ui=S.ui||{};S.ui.theme=k;persist();applyUi();
+      seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+    }},el('span',{class:'azl'},label));
+    seg.append(b);
+  });
+  return el('div',{class:'optsec'},el('span',{class:'lblm'},'Darstellung'),seg,el('small',{class:'opthint'},'Automatisch folgt der Einstellung deines Geräts.'));
 }
 

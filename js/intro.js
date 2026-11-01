@@ -505,6 +505,7 @@ function buildProbe(id){
 /* ---------- Ansicht: Erklärung ---------- */
 function renderIntro(id){
   const I=INTRO[id],steps=introHasProbe(id)?[PROBE_STEP].concat(I.steps):I.steps,total=steps.length,again=!!(S.view&&S.view.intro);
+  const known=!again&&!stationPassed(id)&&checkMark(id)==='sitzt'; /* im Eingangstest schon gezeigt: „Kenne ich schon“ ist der Hauptknopf */
   let probeEl=null; /* die Probeaufgabe bleibt beim Blättern erhalten */
   let i=0;
   const root=el('div',{class:'page'});root.append(topbar(I.title));
@@ -513,8 +514,8 @@ function renderIntro(id){
   shell.append(main);root.append(shell);app.append(root);
   const card=el('div',{class:'card'});
   const backB=el('button',{type:'button',class:'btn introback','aria-label':'Zurück zum vorigen Schritt'},icon('zurueck'),'Zurück');
-  const skipB=el('button',{type:'button',class:'btn introskip'},again?'Schließen':'Kenne ich schon');
-  const nextB=el('button',{type:'button',class:'btn primary intronext'});
+  const skipB=el('button',{type:'button',class:'btn introskip'+(known?' primary':'')},again?'Schließen':'Kenne ich schon');
+  const nextB=el('button',{type:'button',class:'btn intronext'+(known?'':' primary')});
   main.append(card,el('div',{class:'actionbar'},el('div',{class:'primaryrow'},backB,skipB,nextB)));
   /* „Los geht’s“ und „Kenne ich schon“: Erklärung gilt als gesehen, es geht zur eigentlichen Ansicht.
      Ausdrücklich geöffnet (Merkkasten): das Kennzeichen view.intro verschwindet, der Verlaufseintrag wird ersetzt. */
@@ -533,6 +534,7 @@ function renderIntro(id){
     const h=el('h2',{class:'introh',tabindex:'-1'},s.h);
     card.replaceChildren(...[ruler,
       el('p',{class:'introstep'},'Schritt '+(i+1)+' von '+total),
+      known?el('p',{class:'introknown'},icon('haken'),'Das konntest du schon im Eingangstest.'):null,
       h,
       el('div',{class:'introtxt'},s.say.map(t=>el('p',null,introRich(t)))),
       s.lab?el('div',{class:'introstage'},labFigure({mode:'strip',base:s.lab.base.slice(),cur:s.lab.cur.slice(),last:{op:s.lab.op,k:s.lab.k}})):null,

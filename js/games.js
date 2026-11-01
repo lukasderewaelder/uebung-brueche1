@@ -155,7 +155,7 @@ function vaultKey(t){
 }
 /* Eine Aufgabe, deren Schlüsselzahl auf die gesuchte Ziffer endet (null, wenn der Typ so etwas nicht hergibt) */
 function vaultTask(type,level,digit){
-  for(let i=0;i<500;i++){
+  for(let i=0;i<1500;i++){ /* manche Ziffern sind selten (Leicht, G03: die 0 in unter 1 % der Aufgaben) */
     const t=generateTask(type,level),k=vaultKey(t);
     if(Number.isInteger(k)&&k>=0&&k%10===digit)return t;
   }
