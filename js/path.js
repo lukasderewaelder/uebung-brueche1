@@ -90,7 +90,7 @@ function dayCard(){
   return el('div',{class:'daycard'},
     el('span',{class:'lamp'+(today?' on':''),role:'img','aria-label':today?'Tagesziel erreicht':'Tagesziel noch offen'},today?icon('haken'):null),
     el('span',{class:'dc-tx'},el('b',null,'Tagesziel'),el('small',null,today?'geschafft':'1 Runde')),
-    streak>1?el('small',{class:'gstreak'},'Serie '+streak+' Tage'):null);
+    streak>1?el('small',{class:'gstreak'},streak+' Tage in Folge'):null);
 }
 function dayStreak(){
   const d=new Date();let n=0;

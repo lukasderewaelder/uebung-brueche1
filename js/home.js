@@ -80,7 +80,7 @@ function renderHome(){
     home.append(el('h1',null,'Ich'),
       el('button',{type:'button',class:'btn small settingsbtn',onclick:openOptions},icon('zahnrad'),' Einstellungen'),
       rankCard(),dayCard(),
-      el('p',{class:'stats'},`Aufgaben bearbeitet: ${total} · Längste Serie: ${S.bestStreak||0}`),
+      el('p',{class:'stats'},`Aufgaben bearbeitet: ${total} · Höchstes Treffer-Konto: ${S.bestStreak||0}`),
       fold('Alle Ränge',rankLadder()),
       fold('Alle Ziele',perfectionList()),
       fold('Deine Sterne',bomList(PRACTICE_ORDER)),

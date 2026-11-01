@@ -94,11 +94,12 @@ function praise(){
 function awardCorrect(first,quick){
   S.streak=(S.streak||0)+1;
   S.bestStreak=Math.max(S.bestStreak||0,S.streak);
-  if(quick){award(3,S.streak>=3?S.streak+' in Folge':'');return;}
+  if(quick){award(3,S.streak>=3?S.streak+' Treffer':'');return;}
   const bonus=first?Math.min(S.streak-1,5):0;
-  award((first?10:5)+bonus,S.streak>=3?S.streak+' in Folge':(first?'Sauber':'Richtig'));
+  award((first?10:5)+bonus,S.streak>=3?S.streak+' Treffer':(first?'Sauber':'Richtig'));
 }
-function breakStreak(){if(S.streak){S.streak=0;persist();updateChip();}}
+/* Treffer-Konto: jede richtige Antwort +1, ein Fehler halbiert es (S.streak, der Feldname bleibt für alte Spielstände) */
+function halveStreak(){if(S.streak){S.streak=Math.floor(S.streak/2);persist();updateChip();}}
 /* Fähigkeiten-Protokoll: letzte 10 Antworten je Fähigkeit; „sicher“ = mind. 4 Antworten, mind. 80 % richtig */
 function recordSkill(skill,ok){
   if(!skill)return;
@@ -241,7 +242,7 @@ function mountTask(host,st,cb){
         if(!cb.probe){awardCorrect(st.attempts===0&&st.hint===0,quick);if(quick)recordSkill(st.task.skill,true);}
         cb.done('correct');return 'correct';
       }
-      st.attempts++;if(!cb.probe)breakStreak();hideToast();showFb(res.soft?'warn':'bad',res.feedback);
+      st.attempts++;if(!cb.probe)halveStreak();hideToast();showFb(res.soft?'warn':'bad',res.feedback);
       try{if(navigator.vibrate)navigator.vibrate(60);}catch(e){}
       /* Schnellcheck: eine Antwort pro Frage, danach Begründung statt zweitem Versuch */
       if(quick){recordSkill(st.task.skill,false);st.status='shown';cb.done('shown');return 'wrong';}

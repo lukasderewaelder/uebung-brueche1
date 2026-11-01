@@ -1194,6 +1194,34 @@ function runSelfTests(){
       t('Erklärung nach „sitzt“: „Kenne ich schon“ öffnet die Übung',S.intro.G02===true&&!app.querySelector('.introwork'));
     }finally{Object.assign(S,keepB);persist();renderAll();}
   }
+  /* Paket C: Treffer-Konto (ein Fehler halbiert es), Legende „An 7 Tagen geübt“ */
+  {
+    const keepC={streak:S.streak,bestStreak:S.bestStreak,xp:S.xp,days:S.days,rankSeen:S.rankSeen,view:S.view};
+    try{
+      S.streak=9;halveStreak();const a=S.streak;S.streak=1;halveStreak();const b=S.streak;S.streak=0;halveStreak();const c=S.streak;
+      t('Treffer-Konto: ein Fehler halbiert es (9 → 4, 1 → 0), bei 0 bleibt es 0',a===4&&b===0&&c===0);
+      S.streak=8;S.xp=45;S.rankSeen=rankState().i;
+      const host=el('div'),st=newState(generateTask('G02',1)),api=mountTask(host,st,{save(){},done(){},msgHost:el('div')});
+      st.draft['r.n']='1';st.draft['r.d']='1';api.check();
+      t('Treffer-Konto: eine falsche Antwort in der Übung halbiert es (8 → 4), ein Tipp nicht',S.streak===4&&st.status!=='correct');
+      S.streak=8;
+      const chip=chipNode().textContent,card=rankCard().textContent;
+      t('Treffer-Konto: Chip und Rang-Karte zeigen „TREFFER 8“ und erklären es; „Serie“ kommt dort nicht mehr vor',/TREFFER 8/.test(chip)&&/TREFFER 8/.test(card)&&card.includes('Jede richtige Antwort zählt +1. Ein Fehler halbiert es.')&&!/SERIE|Serie/.test(chip+card));
+      S.streak=2;S.bestStreak=2;awardCorrect(true,false);
+      const toastTxt=(document.getElementById('toast')||{}).textContent||'';
+      t('Lob nennt das Treffer-Konto („3 Treffer“), nicht „in Folge“',S.streak===3&&/3 Treffer/.test(toastTxt)&&!/in Folge/.test(toastTxt));
+      const dk=(n)=>{const d=new Date();d.setDate(d.getDate()-n);return dayKey(d);};
+      S.days={'2026-01-01':1,'2026-01-05':2,'2026-02-10':1};
+      const d3=perfection().items.find(i=>i.id==='days');
+      S.days=Object.fromEntries(Array.from({length:9},(_,i)=>['2026-03-'+String(i+1).padStart(2,'0'),1]));
+      const d7=perfection().items.find(i=>i.id==='days'),sk=perfection().items.find(i=>i.id==='streak');
+      t('Legende: „An 7 Tagen geübt“ zählt verschiedene Tage (auch nicht am Stück, höchstens 7); „Treffer-Konto 30 erreicht“',d3.label==='An 7 Tagen geübt'&&d3.have===3&&d3.need===7&&d7.have===7&&sk.label==='Treffer-Konto 30 erreicht'&&sk.need===30);
+      S.days={[dk(0)]:1,[dk(1)]:1,[dk(2)]:2};
+      t('Tagesanzeige heißt „3 Tage in Folge“ (nicht „Serie“)',/3 Tage in Folge/.test(dayCard().textContent)&&!/Serie/.test(dayCard().textContent));
+      S.view={kind:'home',tab:'rang'};renderAll();
+      t('Statistik auf der Seite Ich: „Höchstes Treffer-Konto“ statt „Längste Serie“',/Höchstes Treffer-Konto: \d+/.test(app.textContent)&&!/Längste Serie/.test(app.textContent));
+    }finally{Object.assign(S,keepC);persist();renderAll();}
+  }
   const bad=res.filter(r=>!r.ok);
   console.log(`Selbsttest: ${res.length-bad.length}/${res.length} bestanden`);
   bad.forEach(b=>console.error('FEHLER:',b.name));

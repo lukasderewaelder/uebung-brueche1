@@ -25,8 +25,8 @@ function perfection(){
     {id:'path',label:'Lernpfad komplett, mit Urkunde',have:path,need:rp.length},
     {id:'lab',label:'Bruchlabor: Entdeckerauftrag',have:(S.lab&&S.lab.done)?1:0,need:1},
     {id:'games',label:'Memory und Tresor, leicht und knifflig',have:games,need:4},
-    {id:'streak',label:'30 richtige Antworten in Folge',have:Math.min(30,S.bestStreak||0),need:30},
-    {id:'days',label:'7 Tage in Folge geübt',have:Math.min(7,S.bestDays||0),need:7}
+    {id:'streak',label:'Treffer-Konto 30 erreicht',have:Math.min(30,S.bestStreak||0),need:30},
+    {id:'days',label:'An 7 Tagen geübt',have:Math.min(7,Object.keys(S.days||{}).length),need:7}
   ];
   return {items,all:items.every(i=>i.have>=i.need),done:items.filter(i=>i.have>=i.need).length};
 }
@@ -60,7 +60,7 @@ function chipNode(){
     el('span',{class:'gicon','aria-hidden':'true'},icon(st.cur[2])),
     el('span',{class:'gtext'},el('b',{class:'gname'},st.cur[1]),segBar(st.pct)),
     el('span',{class:'gxp'},xp+' XP'),
-    (S.streak||0)>1?el('span',{class:'gstreak','aria-hidden':'true'},'SERIE '+S.streak):null,
+    (S.streak||0)>1?el('span',{class:'gstreak','aria-hidden':'true'},'TREFFER '+S.streak):null,
     el('span',{class:'gchev','aria-hidden':'true'},icon('ab')));
 }
 function updateChip(){document.querySelectorAll('.gchip').forEach(c=>c.replaceWith(chipNode()));}
@@ -70,8 +70,9 @@ function rankCard(){
   const st=rankState();
   return el('div',{class:'rankcard'},el('span',{class:'ico','aria-hidden':'true'},icon(st.cur[2])),
     el('div',{class:'rk'},el('b',null,st.cur[1]),segBar(st.pct,'big'),
-      el('small',null,st.xp+' XP · '+rankHint(st)),el('small',null,'Rang '+(st.i+1)+' von '+RANKS.length)),
-    (S.streak||0)>1?el('span',{class:'gstreak'},'SERIE '+S.streak):null);
+      el('small',null,st.xp+' XP · '+rankHint(st)),el('small',null,'Rang '+(st.i+1)+' von '+RANKS.length),
+      el('small',{class:'kontohelp'},'Treffer-Konto: Jede richtige Antwort zählt +1. Ein Fehler halbiert es.')),
+    (S.streak||0)>1?el('span',{class:'gstreak'},'TREFFER '+S.streak):null);
 }
 function rankLadder(){
   const st=rankState();
