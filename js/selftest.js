@@ -1172,6 +1172,28 @@ function runSelfTests(){
     const m9=NOTES.M9.build([]).map(n=>n.textContent).join(' ');
     t('Merkkasten M9: „Weg 1: Einteilung anpassen“ und „Weg 2: Bruch anpassen“ stehen je genau einmal',(m9.match(/Weg 1: Einteilung anpassen/g)||[]).length===1&&(m9.match(/Weg 2: Bruch anpassen/g)||[]).length===1);
   }
+  /* Paket B: „natürliche Zahl“ mit Beispiel in der Frage, Erklärung nach „sitzt“ im Eingangstest */
+  {
+    const hz=el('div'),hq=el('div');
+    ZQUICK.prompt(zqNat(1,RNG),hq);TASKS.Z08.prompt({kind:'nat',n:8,d:4},hz);
+    t('„Natürliche Zahl“ steht in den Fragen nie allein: Eingangstest/Abschlusscheck und Z08 nennen „(1, 2, 3 …)“',/eine natürliche Zahl \(1, 2, 3 …\)\?/.test(hq.textContent)&&/natürliche Zahlen \(1, 2, 3 …\)\?/.test(hz.textContent));
+    const keepB={view:S.view,intro:S.intro,einstufung:S.einstufung,checked:S.checked,passed:S.passed};
+    try{
+      S.intro={};S.passed={};S.checked={};S.einstufung=null;
+      S.view={kind:'practice',id:'G02'};renderAll();
+      const plain=!app.querySelector('.introknown')&&app.querySelector('.intronext').classList.contains('primary')&&!app.querySelector('.introskip').classList.contains('primary');
+      S.einstufung={at:1,right:15,size:15,skills:{erweitern:{status:'sitzt'}}};S.checked={G02:true};renderAll();
+      const hint=app.querySelector('.introknown'),skip=app.querySelector('.introskip'),next=app.querySelector('.intronext');
+      t('Erklärung nach „sitzt“ im Eingangstest: Hinweis „Das konntest du schon im Eingangstest“, „Kenne ich schon“ ist der Hauptknopf, „Weiter“ der zweite; ohne Eingangstest bleibt alles wie vorher',plain&&!!hint&&/Das konntest du schon im Eingangstest\./.test(hint.textContent)&&skip.classList.contains('primary')&&!next.classList.contains('primary')&&next.textContent.includes('Weiter')&&skip.textContent.includes('Kenne ich schon'));
+      S.einstufung={at:1,right:10,size:15,skills:{erweitern:{status:'fast'}}};S.checked={};renderAll();
+      const fastNo=!app.querySelector('.introknown');
+      S.einstufung={at:1,right:15,size:15,skills:{erweitern:{status:'sitzt'}}};S.checked={G02:true};S.view={kind:'practice',id:'G02',intro:true};renderAll();
+      t('Erklärung: bei „fast“ und beim Aufruf aus dem Merkkasten kein Hinweis, „Weiter“ bleibt der Hauptknopf',fastNo&&!app.querySelector('.introknown')&&app.querySelector('.intronext').classList.contains('primary'));
+      S.view={kind:'practice',id:'G02'};renderAll();
+      app.querySelector('.introskip').click();
+      t('Erklärung nach „sitzt“: „Kenne ich schon“ öffnet die Übung',S.intro.G02===true&&!app.querySelector('.introwork'));
+    }finally{Object.assign(S,keepB);persist();renderAll();}
+  }
   const bad=res.filter(r=>!r.ok);
   console.log(`Selbsttest: ${res.length-bad.length}/${res.length} bestanden`);
   bad.forEach(b=>console.error('FEHLER:',b.name));

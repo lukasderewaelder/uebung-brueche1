@@ -439,7 +439,7 @@ TASKS.Z08={area:'Zahlenstrahl',name:'Größer als 1',desc:'Zwischen welchen ganz
   prompt(t,h){
     if(t.kind==='between')h.append(el('p',{class:'q'},'Zwischen welchen zwei ganzen Zahlen liegt ',frac(t.n,t.d),'?'));
     else if(t.kind==='mixed')h.append(el('p',{class:'q'},'Schreibe ',frac(t.n,t.d),' als gemischte Zahl.'));
-    else h.append(el('p',{class:'q'},'Welche Brüche sind natürliche Zahlen? ',el('b',null,'(Tippe alle richtigen an.)')));
+    else h.append(el('p',{class:'q'},'Welche Brüche sind natürliche Zahlen (1, 2, 3 …)? ',el('b',null,'(Tippe alle richtigen an.)')));
   },
   render(view,host){
     const t=view.task,d=view.draft;

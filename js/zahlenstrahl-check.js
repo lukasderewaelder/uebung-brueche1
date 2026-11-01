@@ -235,7 +235,7 @@ const ZQUICK={
       case 'unit':c=['Welcher Punkt gehört zu ',f(t.p,t.q),'?'];break;
       case 'between':c=['Zwischen welchen ganzen Zahlen liegt ',f(t.n,t.d),'?'];break;
       case 'mixed':c=['Wie schreibst du ',f(t.n,t.d),' als gemischte Zahl?'];break;
-      default:c=['Ist ',f(t.n,t.d),' eine natürliche Zahl?'];
+      default:c=['Ist ',f(t.n,t.d),' eine natürliche Zahl (1, 2, 3 …)?'];
     }
     h.append(el('p',{class:'q'},...c));
   },
