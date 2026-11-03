@@ -52,7 +52,7 @@ const decOf=(n,places)=>fractionToDecimalString(n,Math.pow(10,places));
 
 
 /* ---------- Bruchrechnung (Grundlage für spätere Themen; Brüche als [Zähler, Nenner], Nenner > 0) ----------
-   Ergebnisse sind nicht gekürzt – gekürzt wird mit simplify(). Noch in keiner Aufgabe verwendet, nur getestet. */
+   Ergebnisse sind nicht gekürzt – gekürzt wird mit simplify(). compareFrac, sortFracs, isImproper und toMixed tragen den Baustein „Brüche vergleichen und ordnen“ (js/vergleichen.js); addFrac … divFrac sind noch in keiner Aufgabe verwendet, nur getestet. */
 const lcm=(a,b)=>(a&&b)?Math.abs(a/gcd(a,b)*b):0;
 const addFrac=(a,b,c,d)=>{const m=lcm(b,d);return [a*(m/b)+c*(m/d),m];};
 const subFrac=(a,b,c,d)=>{const m=lcm(b,d);return [a*(m/b)-c*(m/d),m];};
@@ -71,3 +71,61 @@ const fitsDivision=(d,m)=>d>0&&m>0&&m%d===0;
 const commonDenominator=(ds)=>ds.reduce((a,d)=>lcm(a,d),1);
 /* Nummer des Strichs für n/d bei m Teilen je Ganzem (ab dem Strich 0 der Zahl 0); null, wenn der Bruch zwischen zwei Strichen liegt */
 const tickOf=(n,d,m)=>fitsDivision(d,m)?n*(m/d):null;
+
+/* ---------- Vergleichen: Welche Wege tragen? ----------
+   Reine Funktionen ohne DOM für den Baustein „Brüche vergleichen und ordnen“ (js/vergleichen.js). Brüche a/b und c/d, Nenner > 0.
+   nenner  gleicher Nenner, verschiedene Zähler: mehr gleich große Stücke sind mehr
+   zaehler gleicher Zähler, verschiedene Nenner: gleich viele Stücke, aber der größere Nenner macht kleinere Stücke
+   fehlt   beide echt, verschiedene Nenner, es fehlen gleich viele Stücke zum Ganzen (1 bis FEHLT_MAX): das kleinere fehlende Stück gehört zum größeren Bruch
+   zahl    ½ oder 1 liegt zwischen den Brüchen (oder ein Bruch liegt genau darauf)
+   erw     geht immer: auf einen Nenner erweitern (kgV)
+   Die Reihenfolge von CMP_WAYS ist der Vorrang für „am schnellsten“. */
+const FEHLT_MAX=3;
+const CMP_WAYS=['nenner','zaehler','fehlt','zahl','erw'];
+const cmpSignOf=(c)=>c<0?'<':c>0?'>':'=';
+function strategiesFor(a,b,c,d){
+  const cmp=compareFrac(a,b,c,d),gleich=cmp===0;
+  const nenner=b===d&&a!==c,zaehler=a===c&&b!==d;
+  const mA=b-a,mC=d-c;
+  const fehlt=(a<b&&c<d&&b!==d&&mA===mC&&mA<=FEHLT_MAX)?mA:0;
+  let zahl=null;
+  if(!gleich){
+    if(compareFrac(a,b,1,2)*compareFrac(c,d,1,2)<=0)zahl='half';
+    else if(compareFrac(a,b,1,1)*compareFrac(c,d,1,1)<=0)zahl='one';
+  }
+  const m=lcm(b,d),mz=(a>0&&c>0)?lcm(a,c):0;
+  const erw={m,fa:m/b,fb:m/d,einfach:b%d===0||d%b===0};
+  const erwZ=mz?{m:mz,fa:mz/a,fc:mz/c,einfach:a%c===0||c%a===0}:null;
+  const special=[];
+  if(nenner)special.push('nenner');
+  if(zaehler)special.push('zaehler');
+  if(fehlt)special.push('fehlt');
+  if(zahl)special.push('zahl');
+  return {cmp,gleich,nenner,zaehler,fehlt,zahl,erw,erwZ,special,fastest:special[0]||'erw'};
+}
+/* Faustregel „weniger Stücke fehlen = größer“, nur für echte Brüche (−1, 0, 1 wie compareFrac). Sie stimmt, wenn gleich viele Stücke fehlen
+   (größerer Nenner = kleineres fehlendes Stück = größerer Bruch). Bei verschieden vielen fehlenden Stücken kann sie falsch liegen. */
+function fehltRule(a,b,c,d){
+  const mA=b-a,mC=d-c;
+  return mA===mC?Math.sign(b-d):(mA<mC?1:-1);
+}
+const fehltConflict=(a,b,c,d)=>a<b&&c<d&&fehltRule(a,b,c,d)!==compareFrac(a,b,c,d);
+/* Welche Fehlvorstellung steckt hinter einem falschen Zeichen? kid ist '<', '=' oder '>'; null, wenn es stimmt.
+   gleichwertig: die Brüche sind gleich groß (nicht erkannt) · gleichNenner / gleichZahl / gleichAbstand: „=“ wegen gleichem Nenner, Zähler oder gleich vielen fehlenden Stücken ·
+   beide: Zähler und Nenner einzeln verglichen · nurZaehler · nurNenner (größerer Nenner = größer) · sign: Zeichen verdreht */
+function cmpDiagnose(a,b,c,d,kid){
+  const truth=cmpSignOf(compareFrac(a,b,c,d));
+  if(kid===truth)return null;
+  if(truth==='=')return 'gleichwertig';
+  if(kid==='='){
+    if(b===d)return 'gleichNenner';
+    if(a===c)return 'gleichZahl';
+    if(a<b&&c<d&&b-a===d-c)return 'gleichAbstand';
+    return 'gleich';
+  }
+  const sa=cmpSignOf(a-c),sb=cmpSignOf(b-d);
+  if(sa===sb&&sa!=='='&&kid===sa)return 'beide';
+  if(sa!=='='&&kid===sa)return 'nurZaehler';
+  if(sb!=='='&&kid===sb)return 'nurNenner';
+  return 'sign';
+}

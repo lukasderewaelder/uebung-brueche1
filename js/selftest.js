@@ -451,6 +451,20 @@ function runSelfTests(){
   t('Vergleich: 3/4 > 2/3, 2/4 = 1/2, 1/3 < 3/8',compareFrac(3,4,2,3)===1&&compareFrac(2,4,1,2)===0&&compareFrac(1,3,3,8)===-1);
   t('Ordnen: 3/4, 1/2, 2/3, 5/6 → 1/2, 2/3, 3/4, 5/6',JSON.stringify(sortFracs([[3,4],[1,2],[2,3],[5,6]]))==='[[1,2],[2,3],[3,4],[5,6]]');
   t('Unechter Bruch: 7/4 ja, 4/4 ja, 3/4 nein; 7/4 = 1 3/4, 8/4 = 2 0/4',isImproper(7,4)&&isImproper(4,4)&&!isImproper(3,4)&&toMixed(7,4).w===1&&toMixed(7,4).n===3&&toMixed(8,4).w===2&&toMixed(8,4).n===0);
+  /* Vergleichen: Wege, Faustregel „fehlt zum Ganzen“, Diagnose des Zeichens */
+  {
+    const sf=(a,b,c,d)=>strategiesFor(a,b,c,d);
+    t('Wege: 3/8 gegen 5/8 trägt der gleiche Nenner (auch ½ trennt), 1/5 gegen 1/8 der gleiche Zähler',sf(3,8,5,8).nenner&&sf(3,8,5,8).fastest==='nenner'&&sf(3,8,5,8).zahl==='half'&&sf(1,5,1,8).zaehler&&sf(1,5,1,8).fastest==='zaehler'&&!sf(1,5,1,8).nenner);
+    t('Wege: 8/9 gegen 11/12 und 3/4 gegen 5/6 tragen „fehlt zum Ganzen“ (je 1), 7/10 gegen 4/5 (3 gegen 1) nicht',sf(8,9,11,12).fehlt===1&&sf(8,9,11,12).fastest==='fehlt'&&sf(3,4,5,6).fehlt===1&&sf(7,10,4,5).fehlt===0&&sf(9,12,13,16).fehlt===3&&sf(9,13,13,17).fehlt===0&&sf(8,9,11,12).zahl===null);
+    t('Wege: 5/7 gegen 3/8 trägt ½ (am schnellsten), 7/5 gegen 5/6 trägt die 1, 2/3 gegen 4/7 nur Erweitern (Zähler 2 und 4 gehen leicht)',sf(5,7,3,8).zahl==='half'&&sf(5,7,3,8).fastest==='zahl'&&sf(7,5,5,6).zahl==='one'&&sf(2,3,4,7).fastest==='erw'&&sf(2,3,4,7).erwZ.einfach&&sf(2,3,4,7).erwZ.m===4&&sf(2,3,4,7).erw.m===21&&!sf(2,3,4,7).erw.einfach);
+    t('Wege: gleich große Brüche (2/3 und 4/6) tragen nur Erweitern, ein Nenner Vielfaches (3/4 und 7/12) ist „einfach“, kgV 4 und 6 → 12',sf(2,3,4,6).gleich&&sf(2,3,4,6).fastest==='erw'&&sf(3,4,7,12).erw.einfach&&sf(3,4,7,12).erw.m===12&&sf(3,4,7,12).erw.fa===3&&sf(3,4,7,12).erw.fb===1&&sf(5,6,7,8).erw.m===24&&!sf(5,6,7,8).erw.einfach);
+    t('Faustregel „fehlt“: 8/9 gegen 11/12 stimmt, 7/9 gegen 3/4, 9/11 gegen 4/5 und 10/13 gegen 3/4 liegen falsch (Konflikt), 5/6 gegen 9/11 liegt zufällig richtig',!fehltConflict(8,9,11,12)&&fehltConflict(7,9,3,4)&&fehltConflict(9,11,4,5)&&fehltConflict(10,13,3,4)&&!fehltConflict(5,6,9,11)&&fehltRule(3,4,5,6)===-1&&compareFrac(3,4,5,6)===-1);
+    t('Faustregel „fehlt“: bei gleich vielen fehlenden Stücken stimmt sie immer (1 bis 3 Stücke, alle Nenner bis 30)',(()=>{for(let k=1;k<=FEHLT_MAX;k++)for(let b=k+1;b<=30;b++)for(let d=k+1;d<=30;d++)if(b!==d&&fehltConflict(b-k,b,d-k,d))return false;return true;})());
+    t('Diagnose: 3/5 gegen 3/8 mit „<“ ist „größerer Nenner = größer“, mit „=“ gleicher Zähler',cmpDiagnose(3,5,3,8,'<')==='nurNenner'&&cmpDiagnose(3,5,3,8,'=')==='gleichZahl'&&cmpDiagnose(3,5,3,8,'>')===null);
+    t('Diagnose: 3/8 gegen 5/8 mit „=“ ist „gleicher Nenner = gleich groß“, mit „>“ ist das Zeichen verdreht',cmpDiagnose(3,8,5,8,'=')==='gleichNenner'&&cmpDiagnose(3,8,5,8,'>')==='sign'&&cmpDiagnose(3,8,5,8,'<')===null);
+    t('Diagnose: 3/4 gegen 5/6 mit „=“ ist „gleicher Abstand = gleich groß“; 5/12 gegen 2/3 mit „>“ ist Zähler und Nenner einzeln verglichen; 2/3 gegen 4/6 mit „<“ ist „gleichwertig nicht erkannt“',cmpDiagnose(3,4,5,6,'=')==='gleichAbstand'&&cmpDiagnose(5,12,2,3,'>')==='beide'&&cmpDiagnose(2,3,4,6,'<')==='gleichwertig'&&cmpDiagnose(2,3,4,6,'=')===null);
+    t('Diagnose: Wenn der größere Nenner den „größeren“ Bruch macht (2/5 gegen 3/4 mit „>“, 5/7 gegen 3/8 mit „<“, 2/9 gegen 4/5 mit „>“), heißt der Fehler „nurNenner“',cmpDiagnose(2,5,3,4,'>')==='nurNenner'&&cmpDiagnose(5,7,3,8,'<')==='nurNenner'&&cmpDiagnose(2,9,4,5,'>')==='nurNenner');
+  }
   /* Zahlengerade: Geometrie (ohne DOM) und Zeichnung */
   const ng=numberLineGeometry(0,2,4,[{n:3,d:4},{n:5,d:4,text:''},{n:9,d:4},{n:1,d:0}]);
   t('Zahlengerade: 0 bis 2 mit Viertelteilung hat 9 Teilstriche, 3 Hauptstriche',ng.ticks.length===9&&ng.ticks.filter(x=>x.major).length===3);
