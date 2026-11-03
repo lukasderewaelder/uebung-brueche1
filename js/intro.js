@@ -366,6 +366,38 @@ const INTRO={
     {h:'Verschieden viele fehlen',
       say:['Fehlen verschieden viele Stücke, hilft die Regel nicht.','Bei {7|9} fehlen 2 Stücke, bei {3|4} nur eins.','Trotzdem ist {7|9} größer.'],
       calc:[[[3,4],'<',[7,9]]]}
+  ]},
+  W05:{title:'Auf einen Nenner bringen',steps:[
+    {h:'Verschieden eingeteilt',
+      say:['Zwei Brüche mit verschiedenen Nennern sind schwer zu vergleichen.','Die Streifen sind verschieden eingeteilt.'],
+      fig:[{n:2,d:3},{n:5,d:12}]},
+    {h:'Feiner einteilen',
+      say:['Wir teilen jedes Drittel in 4 kleinere Teile.','Dann hat auch der obere Streifen 12 Teile.','Der gefärbte Anteil bleibt gleich groß.'],
+      fig:[{n:2,d:3},{n:8,d:12,acc:'erw'}]},
+    {h:'Das ist Erweitern',
+      say:['Wir erweitern mit 4.','Zähler und Nenner werden mit 4 malgenommen.'],
+      calc:[[[2,3],'=',[2,3,'x',4],'=',[8,12]]]},
+    {h:'Jetzt vergleichen',
+      say:['Beide Brüche haben den Nenner 12.','Jetzt zählt nur noch der Zähler.','Darum ist {8|12} größer als {5|12}.'],
+      calc:[[[5,12],'<',[8,12]]]},
+    {h:'Gleicher Zähler geht auch',
+      say:['Manchmal passt ein gleicher Zähler besser.','Erweitere {2|3} mit 2, dann vergleichst du {4|6} mit {4|7}.'],
+      calc:[[[2,3],'=',[2,3,'x',2],'=',[4,6]],[[4,7],'<',[4,6]]]}
+  ]},
+  W06:{title:'Vergleichszahl',steps:[
+    {h:'Die Hälfte als Maß',
+      say:['{1|2} ist die Hälfte vom Ganzen.','Ein Bruch unter {1|2} ist kleiner als die Hälfte.','Ein Bruch darüber ist größer.'],
+      fig:{mode:'strip',rows:[{n:3,d:8,half:true},{n:5,d:8,half:true}]}},
+    {h:'Zähler verdoppeln',
+      say:['So prüfst du schnell, ob ein Bruch über {1|2} liegt.','Verdopple den Zähler und vergleiche mit dem Nenner.','Bei {5|8} ist der doppelte Zähler 10. Das ist mehr als 8.'],
+      calc:[[[5,8],'>',[1,2]]]},
+    {h:'Einer darunter, einer darüber',
+      say:['Bei {3|8} und {5|7} liegt {1|2} dazwischen.','Dann ist {5|7} der größere Bruch.'],
+      fig:{mode:'strip',rows:[{n:3,d:8,half:true},{n:5,d:7,half:true}]},
+      calc:[[[3,8],'<',[5,7]]]},
+    {h:'Auch die 1 hilft',
+      say:['Ist der Zähler größer als der Nenner, liegt der Bruch über 1.','{7|5} liegt über 1 und {5|6} darunter.','Darum ist {7|5} größer als {5|6}.'],
+      calc:[[[5,6],'<',[7,5]]]}
   ]}
 };
 const hasIntro=(id)=>Object.prototype.hasOwnProperty.call(INTRO,id);
@@ -443,7 +475,7 @@ function introFigNode(spec){
   const box=el('div',{class:'introfigs'+(circ?' circ':'')});
   f.rows.forEach(r=>{
     const rest=r.rest?Array.from({length:r.d-r.n},(_,i)=>r.n+i):null;
-    const svg=drawMode(f.mode,r.n,r.d,{maxW:circ?130:460,fill:r.fill,rest,label:r.n+' von '+r.d+' Teilen gefärbt'});
+    const svg=drawMode(f.mode,r.n,r.d,{maxW:circ?130:460,fill:r.fill,rest,half:r.half,label:r.n+' von '+r.d+' Teilen gefärbt'});
     box.append(el('div',{class:'fig'+(r.acc?' '+r.acc:'')},...(circ?[svg,frac(r.n,r.d)]:[frac(r.n,r.d),svg])));
   });
   return box;

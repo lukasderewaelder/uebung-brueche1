@@ -136,6 +136,24 @@ const NOTES={
       el('p',null,strong('Regel: '),'Fehlen gleich viele Stücke, gehört das kleinere fehlende Stück zum größeren Bruch.'),
       el('p',null,'Das gilt nur bei gleich vielen fehlenden Stücken. Zähle immer zuerst.'),
       el('p',null,strong('Merke: '),'Gleich viel fehlt heißt nicht gleich groß.')
+    ];}},
+  M13:{title:'Auf einen Nenner bringen',build(avoid){
+    return [
+      el('div',{class:'ex'},strong('Beispiel: '),eq(frac(2,3),'=',frac('2 · 4','3 · 4'),'=',frac(8,12))),
+      cmpStack([{n:2,d:3},{n:8,d:12}]),
+      el('p',null,'Erweitere beide Brüche auf denselben Nenner. Dann zählt nur der Zähler.'),
+      el('p',null,'Der gemeinsame Nenner ist ein Vielfaches beider Nenner. Der kleinste ist am einfachsten (siehe M10).'),
+      el('p',null,strong('Gleicher Zähler: '),'Erweitere einen Bruch, bis beide Zähler gleich sind. Dann zählt der Nenner.'),
+      el('p',null,strong('Merke: '),'Erweitern ändert nur die Einteilung, nicht den Wert.')
+    ];}},
+  M14:{title:'Vergleichszahl ½ und 1',build(avoid){
+    return [
+      el('div',{class:'ex'},strong('Beispiel: '),eq(frac(3,8),'<',frac(1,2),'<',frac(5,7))),
+      cmpStack([{n:3,d:8},{n:5,d:7}],{half:true}),
+      el('p',null,'Liegt ein Bruch unter ',frac(1,2),' und einer darüber, ist die Sache klar.'),
+      el('p',null,strong('So prüfst du: '),'Verdopple den Zähler und vergleiche mit dem Nenner. Ist er größer, liegt der Bruch über ',frac(1,2),'.'),
+      el('p',null,'Ist der Zähler größer als der Nenner, liegt der Bruch über 1.'),
+      el('p',null,strong('Merke: '),'Das hilft nur, wenn die Vergleichszahl zwischen den Brüchen liegt.')
     ];}}
 };
 /* noteFor(task): Merkkästen zur Aufgabe, ohne die Aufgabe zu lösen */

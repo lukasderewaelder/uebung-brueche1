@@ -12,7 +12,8 @@
    ===================================================================== */
 const CMP_SIGNS=[['<','kleiner'],['=','gleich'],['>','größer']];
 
-/* Zeichen wählen: oben die Zeile „a/b ▢ c/d“, unten drei Kacheln. Entwurf: draft[key] = '<' | '=' | '>'. Eingaben für Markierungen: key+Zeichen. */
+/* Zeichen wählen: oben die Zeile „a/b ▢ c/d“, unten drei Kacheln. Entwurf: draft[key] = '<' | '=' | '>'. Eingaben für Markierungen: key+Zeichen.
+   o.noEq: ohne die Zeile (die Brüche stehen schon darüber) · o.second: Knoten statt des zweiten Bruchs (z. B. die Zahl 1) · o.onPick */
 function cmpSign(view,host,key,f,o){
   o=o||{};
   const d=view.draft,slot=el('span',{class:'cmpslot','aria-live':'polite'},d[key]||'');
@@ -28,7 +29,8 @@ function cmpSign(view,host,key,f,o){
     });
     view.inputs[key+s]=b;row.append(b);
   });
-  host.append(el('div',{class:'cmpeq',role:'group','aria-label':'Welches Zeichen passt?'},frac(f[0],f[1]),slot,frac(f[2],f[3])),row);
+  if(!o.noEq)host.append(el('div',{class:'cmpeq',role:'group','aria-label':'Welches Zeichen passt?'},frac(f[0],f[1]),slot,o.second||frac(f[2],f[3])));
+  host.append(row);
 }
 
 /* Ein Streifen: Zellen (bis Nenner 24) oder glatter Balken (ab 25). r = {n,d,rest,filled,onToggle,aria}; o = {flat,h,half} */
@@ -51,6 +53,10 @@ function cmpStack(rows,o){
 function cmpPairPic(f,o){
   o=o||{};
   const [a,b,c,d]=f;
+  if(o.single){ /* nur der Bruch a/b (Vergleich mit ½ oder 1) */
+    if(a>b||o.line)return el('div',{class:'cmppic'},drawNumberLine({from:0,to:Math.max(2,Math.ceil(a/b)),parts:1,labels:'wholes',marks:[{n:a,d:b}],maxW:460,label:'Zahlenstrahl mit dem Bruch'}));
+    return el('div',{class:'cmppic'},cmpStack([{n:a,d:b}],{half:o.half,flat:o.flat}));
+  }
   if(a>b||c>d){
     const to=Math.max(2,Math.ceil(Math.max(a/b,c/d)));
     return el('div',{class:'cmppic'},drawNumberLine({from:0,to,parts:1,labels:'wholes',marks:[{n:a,d:b},{n:c,d:d}],maxW:460,label:'Zahlenstrahl mit beiden Brüchen'}));
@@ -162,4 +168,23 @@ function cmpReasons(R,ok,bad){
   const all=R.shuffle([{txt:ok,ok:true}].concat(R.shuffle(bad).slice(0,2).map(x=>({txt:x,ok:false}))));
   const letters=['A','B','C'];
   return {opts:all.map((o,i)=>({id:letters[i],txt:o.txt})),answerR:letters[all.findIndex(o=>o.ok)]};
+}
+
+/* Zeile „a/b = ▢/N“: der neue Zähler wird eingetragen (Eingabe key), der Nenner N steht fest */
+function cmpExpandRow(view,key,a,b,N){
+  const inp=intInput(view,key,'neuer Zähler');
+  return eq(frac(a,b),'=',el('span',{class:'frac inp',role:'group','aria-label':'Bruch mit dem Nenner '+N},el('span',{class:'num'},inp),el('span',{class:'den'},String(N))));
+}
+/* Zeile „a/b = c/▢“: der neue Nenner wird eingetragen (Eingabe key), der Zähler c steht fest (gleicher Zähler) */
+function cmpExpandDenRow(view,key,a,b,c){
+  const inp=intInput(view,key,'neuer Nenner');
+  return eq(frac(a,b),'=',el('span',{class:'frac inp',role:'group','aria-label':'Bruch mit dem Zähler '+c},el('span',{class:'num'},String(c)),el('span',{class:'den'},inp)));
+}
+/* Einen Block erst zeigen, wenn alle Felder keys (Eingaben der Aufgabe) gefüllt sind: build(box) füllt ihn. So bleibt die Aufgabe am Anfang kurz. */
+function cmpAfterInputs(view,host,keys,build){
+  const box=el('div');box.hidden=true;host.append(box);build(box);
+  const full=()=>keys.every(k=>{const v=view.draft[k];return v!=null&&String(v)!=='';});
+  const upd=()=>{const f=full();if(box.hidden===f){box.hidden=!f;view.changed();}};
+  keys.forEach(k=>{if(view.inputs[k])view.inputs[k].addEventListener('input',upd);});
+  box.hidden=!full();
 }

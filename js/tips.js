@@ -333,6 +333,42 @@ TIPS.W04=(t)=>{
     ['Bei beiden fehlen gleich viele Stücke. Bei welchem Bruch ist das fehlende Stück kleiner?']];
 };
 
+TIPS.W05=(t)=>{
+  if(t.kind==='zaehler'){
+    const e=t.ex===0?[t.a,t.b]:[t.c,t.d],o=t.ex===0?[t.c,t.d]:[t.a,t.b];
+    return [
+      [`Die Zähler sind ${t.a} und ${t.c}. Wie kommst du vom kleineren zum größeren?`],
+      [`${o[0]} geteilt durch ${e[0]} ergibt ${t.k}. Erweitere ${tf(e[0],e[1])} mit ${t.k}.`],
+      [`Der neue Nenner ist ${e[1]} mal ${t.k}.`]];
+  }
+  const N=t.kind==='ziel'?t.N:lcm(t.b,t.d);
+  if(t.kind==='frei')return [
+    ['Suche eine Zahl, in die beide Nenner aufgehen.'],
+    [`Teste Vielfache des größeren Nenners ${Math.max(t.b,t.d)}. Geht auch ${Math.min(t.b,t.d)} auf?`],
+    [`Der kleinste gemeinsame Nenner ist ${N}. Erweitere beide Brüche darauf.`]];
+  const ex=cmpExpansions(t,N);
+  return [
+    [ex.length===1?`Der Nenner ${ex[0].den} soll zu ${N} werden. Mit welcher Zahl erweiterst du?`:`Die Nenner ${t.b} und ${t.d} sollen beide zu ${N} werden. Mit welchen Zahlen erweiterst du?`],
+    [ex.map(x=>`${N} geteilt durch ${x.den} ergibt ${x.k}.`).join(' ')],
+    [ex.length===1?`Rechne den Zähler: ${ex[0].n} mal ${ex[0].k}.`:`Rechne beide Zähler: ${ex.map(x=>`${x.n} mal ${x.k}`).join(' und ')}.`]];
+};
+TIPS.W06=(t)=>{
+  const rel=(x,y)=>x<y?'kleiner als':x===y?'gleich':'größer als';
+  if(t.kind==='sign')return [
+    [`Liegt ${t.ref==='half'?'die Hälfte':'die 1'} zwischen den beiden Brüchen?`],
+    [`Prüfe jeden Bruch einzeln: ${tf(t.a,t.b)} und ${tf(t.c,t.d)} gegen ${t.ref==='half'?tf(1,2):'1'}.`],
+    [t.ref==='half'?`Doppelter Zähler gegen Nenner: ${2*t.a} zu ${t.b} und ${2*t.c} zu ${t.d}.`:`Vergleiche jeden Zähler mit seinem Nenner: ${t.a} zu ${t.b} und ${t.c} zu ${t.d}.`]];
+  const pos=cmpSignOf(compareFrac(t.a,t.b,t.c,t.d))==='<'?'unter':cmpSignOf(compareFrac(t.a,t.b,t.c,t.d))==='='?'genau auf':'über';
+  if(t.ref==='half')return [
+    ['Die Hälfte eines Ganzen sind halb so viele Stücke wie der Nenner.'],
+    [`Verdopple den Zähler: ${t.a} mal 2 ergibt ${2*t.a}. Vergleiche mit dem Nenner ${t.b}.`],
+    [`${2*t.a} ist ${rel(2*t.a,t.b)} ${t.b}. Also liegt der Bruch ${pos} ${tf(1,2)}.`]];
+  return [
+    ['Ein Bruch ist größer als 1, wenn er mehr als ein Ganzes ist.'],
+    [`Vergleiche den Zähler ${t.a} mit dem Nenner ${t.b}.`],
+    [`${t.a} ist ${rel(t.a,t.b)} ${t.b}. Also liegt der Bruch ${pos} 1.`]];
+};
+
 /* ---------- Rückmeldung bei „richtig“: die Rechnung statt einer Floskel ----------
    proofText(task) liefert den Satz nach „Richtig: “ (null = die Aufgabe hat keine kurze Rechenprobe, dann gilt Lob + Begründung) */
 const PROOF={

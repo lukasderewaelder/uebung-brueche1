@@ -81,7 +81,9 @@ const CMP_PLAN={
   W01:{1:['sign','sign','sign','paint','sign'],2:['sign','sign','claim','sign','sign']},
   W02:{1:['stamm','stamm','sign','claim','paint'],2:['stamm','sign','sign','claim','sign']},
   W03:{1:(R)=>['nenner','zaehler','nenner','zaehler',R.pick(['nenner','zaehler'])],2:(R)=>['nenner','zaehler','keins',R.pick(['nenner','zaehler']),R.pick(['nenner','zaehler'])]},
-  W04:{1:['check','rest','rest','claim','check'],2:['check','conflict','rest','claim','conflict']}
+  W04:{1:['check','rest','rest','claim','check'],2:['check','conflict','rest','claim','conflict']},
+  W05:{1:['ziel','ziel','ziel','ziel','ziel'],2:['ziel','frei','frei','zaehler','ziel']},
+  W06:{1:['halb','halb','sign','sign','sign'],2:['halb','eins','sign','sign','sign']}
 };
 /* alle Aufgabenarten einer Station (für den Layout-Test, layoutKinds) */
 const cmpKindsOf=(id,lvl)=>{const src=CMP_PLAN[id][lvl];return Array.from(new Set(typeof src==='function'?src(RNG):src));};
@@ -367,5 +369,194 @@ TASKS.W04={area:'Vergleichen',name:'Gleich viele Teile fehlen zum Ganzen',desc:'
     if(t.kind==='claim'||t.kind==='conflict')return [counts].concat(cmpClaimSolution(t));
     if(t.kind==='check'&&!t.equal)return [counts,line('Das sind verschieden viele. Diese Regel hilft hier nicht.'),cmpPairPic(f,{rest:true})];
     return [counts,line(`Das fehlende Stück bei ${bigDen} ist kleiner. Dieser Bruch ist größer.`),cmpPairPic(f,{rest:true}),cmpSolEq(t)];
+  }
+};
+
+/* ---------- W05 Auf einen Nenner bringen ---------- */
+const CMP_FRIENDLY=[2,3,4,5,6,8,9,10,12,15,16,18,20,24,25,30,36,40,45,48,50,60,72,75,80,90,100];
+/* Zwei Nenner b ≠ d mit gemeinsamem Nenner (kgV) höchstens lim; both: keiner geht im anderen auf, beide Brüche werden erweitert */
+function cmpDenPair(R,pool,lim,both){
+  for(let i=0;i<600;i++){
+    const b=R.pick(pool),d=R.pick(pool);
+    if(b===d)continue;
+    const m=lcm(b,d);
+    if(m>lim||(both&&(m===b||m===d)))continue;
+    return [b,d,m];
+  }
+  return both?[4,6,12]:[3,6,6];
+}
+/* Paare für W05. ziel (Leicht): ein Nenner ist ein Vielfaches des anderen, N = der größere, etwa jedes fünfte Paar ist gleich groß;
+   ziel (Knifflig) und frei: beide Brüche werden erweitert, N = kgV (höchstens 300); zaehler: c = k · a, der kleinere Zähler wird auf den größeren erweitert */
+function cmpErw(R,level,kind){
+  if(kind==='zaehler'){
+    const pool=CMP_FRIENDLY.filter(x=>x>=3&&x<=60);
+    for(let i=0;i<800;i++){
+      const a=R.int(1,9),k=R.int(2,5),c=a*k,big=CMP_FRIENDLY.filter(x=>x>c&&x<=100);
+      if(!big.length)continue;
+      const b=R.pick(pool),d=R.pick(big);
+      if(b<=a||d===b*k||b===d||cmpDelta(a,b,c,d)<0.01)continue;
+      return R.chance(0.5)?{f:[a,b,c,d],ex:0,k}:{f:[c,d,a,b],ex:1,k};
+    }
+    return {f:[2,3,4,7],ex:0,k:2};
+  }
+  if(kind==='ziel'&&level===1){
+    for(let i=0;i<300;i++){
+      const k=R.pick([2,3,4]),b=R.int(2,Math.floor(24/k)),d=b*k,a=R.int(1,b-1),equal=R.chance(0.2),c=equal?a*k:R.int(1,d-1);
+      if(c<1||c>=d||(!equal&&(c===a*k||Math.abs(a/b-c/d)<0.02)))continue;
+      return {f:R.chance(0.5)?[a,b,c,d]:[c,d,a,b],N:d};
+    }
+    return {f:[1,3,5,12],N:12};
+  }
+  for(let i=0;i<600;i++){
+    const [b,d,m]=cmpDenPair(R,CMP_FRIENDLY.filter(x=>x>=4),300,true),a=R.int(1,b-1),c=R.int(1,d-1);
+    if(a*m/b===c*m/d||cmpDelta(a,b,c,d)<0.005)continue;
+    return {f:[a,b,c,d],N:m};
+  }
+  return {f:[1,4,1,6],N:12};
+}
+/* erweiterte Brüche auf den Nenner N: [{i,n,den,k,v}] für jeden Bruch, dessen Nenner nicht schon N ist */
+const cmpExpansions=(t,N)=>[[t.a,t.b],[t.c,t.d]].map(([n,den],i)=>({i,n,den,k:N/den,v:n*N/den})).filter(x=>x.den!==N);
+TASKS.W05={area:'Vergleichen',name:'Auf einen Nenner bringen',desc:'Erweitere, bis beide Brüche denselben Nenner haben. Dann vergleichst du.',notes:['M13','M10'],size:5,
+  ctx:cmpCtx('W05'),layoutKinds:(lvl)=>cmpKindsOf('W05',lvl),
+  gen(level,R,ctx){
+    const kind=(ctx&&ctx.kind)||'ziel',r=cmpErw(R,level,kind);
+    const t={type:'W05',level,kind,a:r.f[0],b:r.f[1],c:r.f[2],d:r.f[3],avoid:cmpAvoid(...r.f)};
+    if(r.N)t.N=r.N;
+    if(kind==='zaehler'){t.ex=r.ex;t.k=r.k;}
+    return t;
+  },
+  prompt(t,h){
+    const q=t.kind==='ziel'?`Bringe beide Brüche auf den Nenner ${t.N}. Welches Zeichen passt?`:t.kind==='frei'?'Bringe beide Brüche auf denselben Nenner. Welches Zeichen passt?':'Bringe beide Brüche auf denselben Zähler. Welches Zeichen passt?';
+    h.append(el('p',{class:'q'},q)); /* die Brüche stehen in den Zeilen darunter */
+  },
+  render(view,host){
+    const t=view.task,f=[t.a,t.b,t.c,t.d],rows=el('div'),keys=[];
+    if(t.kind!=='frei')cmpPicBox(view,host,f,t.level===1&&t.kind==='ziel'); /* beim freien Nenner hilft ein Bild nicht (Nenner bis 100) */
+    host.append(rows);
+    if(t.kind==='ziel'){
+      [[t.a,t.b],[t.c,t.d]].forEach(([n,den],i)=>{
+        if(den===t.N)rows.append(eq(frac(n,den)));
+        else{rows.append(cmpExpandRow(view,'x'+i,n,den,t.N));keys.push('x'+i);}
+      });
+    }else if(t.kind==='frei'){
+      [[t.a,t.b],[t.c,t.d]].forEach(([n,den],i)=>{rows.append(eq(frac(n,den),'=',fracInput(view,'x'+i)));keys.push('x'+i+'.n','x'+i+'.d');});
+    }else{
+      const e=t.ex===0?[t.a,t.b]:[t.c,t.d],o=t.ex===0?[t.c,t.d]:[t.a,t.b];
+      rows.append(cmpExpandDenRow(view,'x0',e[0],e[1],o[0]),eq(frac(o[0],o[1])));keys.push('x0');
+    }
+    cmpAfterInputs(view,host,keys,(box)=>cmpSign(view,box,'sign',f,{noEq:true}));
+  },
+  validate(t,d){
+    if(t.kind==='ziel'){
+      const ex=cmpExpansions(t,t.N),vals=ex.map(x=>getInt(d,'x'+x.i));
+      if(vals.some(v=>v===null))return invalid('Trage die neuen Zähler ein.');
+      const marks={};let bad=null;
+      ex.forEach((x,j)=>{if(vals[j]!==x.v){marks['x'+x.i]=false;bad=bad||{x,v:vals[j]};}});
+      if(bad)return wrong(bad.v===bad.x.n?'onlyDen':'factor',bad.v===bad.x.n?`Beim Erweitern wird auch der Zähler mit ${bad.x.k} malgenommen.`:`Du erweiterst ${ft(bad.x.n,bad.x.den)} mit ${bad.x.k}. Rechne ${bad.x.n} mal ${bad.x.k}.`,marks);
+    }else if(t.kind==='frei'){
+      const x0=getFrac(d,'x0'),x1=getFrac(d,'x1');
+      if(!x0||!x1)return invalid(MSG_FRAC_INVALID);
+      if(x0.d!==x1.d)return wrong('gemeinsam','Beide Brüche brauchen denselben Nenner.',{'x0.d':false,'x1.d':false});
+      if(x0.d%t.b!==0||x0.d%t.d!==0)return wrong('nenner',`In den Nenner ${x0.d} muss ${t.b} und ${t.d} aufgehen.`,{'x0.d':false,'x1.d':false});
+      const m={};
+      if(!equivalent(t.a,t.b,x0.n,x0.d))m['x0.n']=false;
+      if(!equivalent(t.c,t.d,x1.n,x1.d))m['x1.n']=false;
+      if(Object.keys(m).length)return wrong('wert','Ein neuer Bruch hat einen anderen Wert. Erweitere Zähler und Nenner mit derselben Zahl.',m);
+    }else{
+      const x=getInt(d,'x0'),e=t.ex===0?[t.a,t.b]:[t.c,t.d];
+      if(x===null)return invalid('Trage den neuen Nenner ein.');
+      if(x!==e[1]*t.k)return wrong('factor',`Du erweiterst ${ft(e[0],e[1])} mit ${t.k}. Rechne ${e[1]} mal ${t.k}.`,{x0:false});
+    }
+    if(!d.sign)return invalid('Wähle auch ein Zeichen.');
+    const same=cmpSigned(t)==='=';
+    const ok=same?'Richtig! Beide Brüche sind gleich groß.':t.kind==='zaehler'?'Richtig! Bei gleichem Zähler macht der kleinere Nenner den größeren Bruch.':'Richtig! Bei gleichem Nenner zählt der Zähler.';
+    return cmpSignCheck(t,d,'sign',ok,{sign:t.kind==='zaehler'?'Bei gleichem Zähler macht der größere Nenner den kleineren Bruch.':'Mit gleichem Nenner zählt der Zähler. Vergleiche die neuen Zähler.'});
+  },
+  solution(t){
+    const f=[t.a,t.b,t.c,t.d];
+    if(t.kind==='zaehler'){
+      const e=t.ex===0?[t.a,t.b]:[t.c,t.d],o=t.ex===0?[t.c,t.d]:[t.a,t.b],E=[e[0]*t.k,e[1]*t.k];
+      return [line(`Erweitere ${ft(e[0],e[1])} mit ${t.k}. Dann haben beide den Zähler ${o[0]}.`),eq(frac(e[0],e[1]),'=',frac(e[0]+' · '+t.k,e[1]+' · '+t.k),'=',frac(E[0],E[1])),
+        eq(frac(E[0],E[1]),cmpSignOf(compareFrac(E[0],E[1],o[0],o[1])),frac(o[0],o[1]))];
+    }
+    const N=t.kind==='ziel'?t.N:lcm(t.b,t.d),ex=cmpExpansions(t,N),v=[t.a*N/t.b,t.c*N/t.d];
+    return [line(`Erweitere beide Brüche auf den Nenner ${N}.`),...ex.map(x=>eq(frac(x.n,x.den),'=',frac(x.n+' · '+x.k,x.den+' · '+x.k),'=',frac(x.v,N))),
+      eq(frac(v[0],N),cmpSigned(t),frac(v[1],N)),cmpPairPic(f)];
+  }
+};
+
+/* ---------- W06 Vergleichszahl ---------- */
+/* Vergleich mit ½ (halb) oder 1 (eins): ein Bruch a/b gegen die Vergleichszahl (c/d = 1/2 bzw. 1/1); sign: zwei Brüche, die Vergleichszahl liegt dazwischen */
+function cmpOne(R,level,ref){
+  const pool=level===1?[3,4,5,6,7,8,9,10,12,14,15,16,18,20,24]:[7,8,9,10,12,13,15,16,17,18,20,24,25,30,40,50,60,75,100];
+  const pos=R.pick(level===1?['unter','unter','genau','ueber','ueber']:['unter','ueber','ueber','unter','genau']);
+  for(let i=0;i<400;i++){
+    const b=R.pick(pool);let a;
+    if(ref==='half'){
+      if(pos==='genau'){if(b%2)continue;a=b/2;}
+      else a=pos==='unter'?R.int(1,Math.ceil(b/2)-1):R.int(Math.floor(b/2)+1,b-1);
+      if(a<1||(pos!=='genau'&&2*a===b))continue;
+    }else a=pos==='genau'?b:pos==='unter'?R.int(1,b-1):R.int(b+1,2*b-1);
+    return [a,b];
+  }
+  return ref==='half'?[3,8]:[5,4];
+}
+/* zwei Brüche, bei denen ½ (Leicht) oder ½ oder 1 (Knifflig) die schnellste Hilfe ist: nur diese Vergleichszahl trägt, kein anderer Weg */
+function cmpZahl(R,level){
+  const pool=level===1?[3,4,5,6,7,8,9,10,12,14,15,16,18,20,24]:[7,8,9,10,12,13,15,16,17,18,20,24,25,30,40,50,60,75,100];
+  for(let i=0;i<2000;i++){
+    const b=R.pick(pool),d=R.pick(pool);
+    if(b===d)continue;
+    const one=level===2&&R.chance(0.4),a=R.int(1,one?2*b-1:b-1),c=R.int(1,one?2*d-1:d-1),s=strategiesFor(a,b,c,d);
+    if(s.fastest!=='zahl'||s.gleich||s.zahl!==(one?'one':'half')||cmpDelta(a,b,c,d)<(level===1?0.05:0.01))continue;
+    return {f:[a,b,c,d],ref:s.zahl};
+  }
+  return {f:[3,8,5,7],ref:'half'};
+}
+const CMP_REF={half:'1/2',one:'1'};
+const cmpRefNode=(ref)=>ref==='half'?frac(1,2):el('span',{class:'icn'},'1');
+TASKS.W06={area:'Vergleichen',name:'Vergleichszahl',desc:'Liegt ein Bruch unter oder über 1/2 oder 1? So vergleichst du schnell.',notes:['M14'],size:5,
+  ctx:cmpCtx('W06'),layoutKinds:(lvl)=>cmpKindsOf('W06',lvl),
+  gen(level,R,ctx){
+    const kind=(ctx&&ctx.kind)||'halb';
+    if(kind==='sign'){
+      const r=cmpZahl(R,level);
+      return {type:'W06',level,kind,ref:r.ref,a:r.f[0],b:r.f[1],c:r.f[2],d:r.f[3],avoid:cmpAvoid(...r.f)};
+    }
+    const ref=kind==='eins'?'one':'half',[a,b]=cmpOne(R,level,ref);
+    return {type:'W06',level,kind,ref,a,b,c:1,d:ref==='half'?2:1,avoid:[redKey(a,b)]};
+  },
+  prompt(t,h){
+    if(t.kind==='sign')h.append(el('p',{class:'q'},t.level===1?['Ein Bruch liegt unter ',frac(1,2),', einer darüber. Welches Zeichen passt?']:'Welches Zeichen passt?'));
+    else h.append(el('p',{class:'q'},'Vergleiche ',frac(t.a,t.b),' mit ',cmpRefNode(t.ref),'. Welches Zeichen passt?'));
+  },
+  render(view,host){
+    const t=view.task,f=[t.a,t.b,t.c,t.d];
+    if(t.kind==='sign'){cmpPicSign(view,host,f,t.level===1&&t.a<=t.b&&t.c<=t.d,{half:t.ref==='half'});return;}
+    const box=el('div');host.append(box);
+    const draw=()=>{
+      const on=t.level===1||(view.st&&view.st.hint>=2);
+      box.replaceChildren(...(on?[cmpPairPic(f,{single:true,half:t.ref==='half',line:t.ref==='one'})]:[]));
+      view.changed();
+    };
+    const prev=view.onHint;view.onHint=()=>{if(prev)prev();draw();};
+    draw();
+    cmpSign(view,host,'sign',f,{second:cmpRefNode(t.ref)});
+  },
+  validate(t,d){
+    if(t.kind==='sign'){
+      const lessFirst=compareFrac(t.a,t.b,t.c,t.d)<0,lo=lessFirst?[t.a,t.b]:[t.c,t.d],hi=lessFirst?[t.c,t.d]:[t.a,t.b];
+      return cmpSignCheck(t,d,'sign',`Richtig! ${ft(lo[0],lo[1])} liegt unter ${CMP_REF[t.ref]}, ${ft(hi[0],hi[1])} liegt darüber.`,{sign:`Ein Bruch liegt unter ${CMP_REF[t.ref]}, der andere darüber. Der Bruch über ${CMP_REF[t.ref]} ist größer.`});
+    }
+    if(!d.sign)return invalid('Wähle ein Zeichen: kleiner, gleich oder größer.');
+    const real=cmpSigned(t),pos=real==='<'?'unter':real==='='?'genau auf':'über',rel=real==='<'?'kleiner als':real==='='?'gleich':'größer als';
+    const how=t.ref==='half'?`${2*t.a} ist ${rel} ${t.b}`:`${t.a} ist ${rel} ${t.b}`;
+    if(d.sign===real)return right(`Richtig! ${how}, also liegt ${ft(t.a,t.b)} ${pos} ${CMP_REF[t.ref]}.`);
+    return wrong(t.ref==='half'?'halb':'eins',t.ref==='half'?`Verdopple den Zähler: ${2*t.a}. Vergleiche mit dem Nenner ${t.b}.`:`Vergleiche den Zähler ${t.a} mit dem Nenner ${t.b}.`,{['sign'+d.sign]:false});
+  },
+  solution(t){
+    const f=[t.a,t.b,t.c,t.d];
+    if(t.kind==='sign')return [line(`Vergleiche jeden Bruch mit ${CMP_REF[t.ref]}.`),cmpPairPic(f,{half:t.ref==='half'}),cmpSolEq(t)];
+    return [line(t.ref==='half'?`Verdopple den Zähler: ${2*t.a}. Vergleiche mit dem Nenner ${t.b}.`:`Vergleiche den Zähler ${t.a} mit dem Nenner ${t.b}.`),cmpPairPic(f,{single:true,half:t.ref==='half',line:t.ref==='one'}),eq(frac(t.a,t.b),cmpSigned(t),cmpRefNode(t.ref))];
   }
 };
