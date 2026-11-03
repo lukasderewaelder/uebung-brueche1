@@ -4,7 +4,7 @@
    Ein Thema bringt mit: Übungsgruppen (Üben), Lernpfad-Bauteile. Die Aufgabentypen selbst stehen in TASKS (js/tasks.js).
    status 'aktiv': erscheint in Lernen und Üben. status 'geplant': nur ein Hinweis
    „Bald“ ohne Link, ohne Aufgaben (keine Platzhalterseiten).
-   quickcheck: das Thema hat einen Eingangstest (Aufgabe qid; Fähigkeiten und Stationen in QCHK) vor dem Lernpfad (Knopf „Ohne Test starten“ überspringt ihn);
+   quickcheck: das Thema hat einen Eingangstest (Aufgabe qid; Fähigkeiten und Stationen in QCHK) vor dem Lernpfad (der Textlink „Ohne Test beginnen“ überspringt ihn);
    finalId: der eigene Abschlusscheck (letzte Station des Pfads, Urkunde, Text finalText). recommends: Thema, das man vorher machen sollte (nur ein Hinweis, keine Sperre).
    rank: Aufgaben und Lernpfad des Themas zählen für „alles perfekt“ (höchster Rang).
    Neues Thema: Eintrag hier, Aufgabentypen in eigener Datei vor modules.js, Symbole in ICON/ACC (exercise.js).

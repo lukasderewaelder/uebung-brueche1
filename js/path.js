@@ -1,11 +1,11 @@
 'use strict';
 /* =====================================================================
-   Lernpfad: Eingangstest, Pfad oder Selbst aussuchen, Bauteile freischalten, Tagesziel
+   Lernpfad: Eingangstest, Pfad, Stationen freischalten, Tagesziel
    „Fertig“ = bestanden (mind. 80 % der Runde richtig). Der Eingangstest (Q00) schaltet nichts
    als fertig, er merkt nur, was sitzt (S.checked, S.einstufung):
-   · Pfad: jeder geht alle Bauteile der Reihe nach; Pflicht-Bauteile schalten das jeweils nächste frei.
-   · Meine Übersicht (früher „Selbst aussuchen“): alles ist sichtbar, offen ist nur Bestandenes und im Check Beherrschtes
-     (dazu Freiwilliges vor der ersten Lücke); die erste Lücke und alles dahinter bleibt gesperrt.
+   · Es gibt einen Pfad: jeder geht alle Stationen der Reihe nach; Pflicht-Stationen schalten die jeweils nächste frei.
+     Was der Eingangstest als „sitzt“ markiert, steht als Markierung in der Liste; die Erklärung bietet dann „Kenne ich schon“.
+   · Die frühere „Meine Übersicht“ (und die Wahl „Wie möchtest du lernen?“) gibt es nicht mehr.
    ===================================================================== */
 const PATH_ACC={LAB:'mix',Q00:'ok',ZQ:'ok',QA:'ok',ZA:'ok',WQ:'ok',WA:'ok'};
 /* Thema, zu dem ein Abschlusscheck (finalId) gehört */
@@ -32,28 +32,23 @@ function stationDone(id){
 }
 /* im Eingangstest beherrscht, aber noch nicht selbst bestanden */
 const stationChecked=(id)=>!!S.checked[id]&&!stationPassed(id);
-/* Reihenfolge, Freischaltung eines Themas (modus 'pfad' oder 'frei', Standard 'pfad'; ohne Thema das erste aktive).
-   Je Zeile: done, checked, open, locked, blocker, next */
-function pathState(mod,modus){
-  const rows=[];let blocker=null,allDone=true;
-  const frei=modus==='frei',um=mod||activeModules()[0],allOpen=isUnlocked(um);
+/* Reihenfolge und Freischaltung eines Themas (ohne Thema das erste aktive): Pflicht-Stationen schalten das jeweils nächste frei.
+   Je Zeile: done, checked, open, locked, blocker, next (die erste Pflicht-Station, die noch nicht fertig ist). Das zweite Argument ist
+   nur ein Überbleibsel der früheren „Meine Übersicht“ und wird ignoriert. */
+function pathState(mod){
+  const rows=[];let blocker=null;
+  const um=mod||activeModules()[0],allOpen=isUnlocked(um);
   um.path.forEach(m=>{
     const done=stationDone(m.id),checked=stationChecked(m.id);
-    let open;
-    if(allOpen)open=true; /* „Alles freischalten“: alles offen (die Urkunde gibt es trotzdem nur nach allen Pflicht-Stationen) */
-    else if(frei){
-      /* beherrscht oder bestanden = offen; Freiwilliges nur vor der ersten Lücke; der Abschluss, wenn alles davor bestanden ist */
-      open=done||checked||(!m.must&&!blocker)||(!!m.final&&allDone);
-    }else open=!blocker;
+    const open=allOpen||!blocker; /* S.unlocked (nur noch für Tests und alte Speicherstände): alles offen, die Urkunde gibt es trotzdem nur nach allen Pflicht-Stationen */
     rows.push({m,id:m.id,must:!!m.must,done,checked,open,locked:!done&&!open,blocker:open?null:blocker,next:false});
-    if(m.must&&!done){allDone=false;if(!blocker&&!(frei&&checked))blocker=m.id;}
+    if(m.must&&!done&&!blocker)blocker=m.id;
   });
-  if(!frei){const nx=rows.find(r=>r.must&&!r.done);if(nx)nx.next=true;}
+  const nx=rows.find(r=>r.must&&!r.done);if(nx)nx.next=true;
   return rows;
 }
-/* „Alles freischalten“ (Meine Übersicht): je Thema, nur auf diesem Gerät */
+/* „Alles freischalten“: nur noch intern je Thema (kein Knopf mehr), auf diesem Gerät */
 const isUnlocked=(mod)=>!!(S.unlocked&&S.unlocked[mod.id]);
-function unlockAll(mod){S.unlocked=(S.unlocked&&typeof S.unlocked==='object'&&!Array.isArray(S.unlocked))?S.unlocked:{};S.unlocked[mod.id]=true;persist();renderAll();}
 /* Eingestuft = den Eingangstest gemacht oder schon im Lernpfad dieses Themas gearbeitet (Üben allein zählt nicht;
    Bestandenes aus anderen Themen auch nicht) */
 function eingestuft(mod){
@@ -62,17 +57,16 @@ function eingestuft(mod){
   return !!(!!modusOf(mod)||(q&&(q.placed||q.final))||(ids.includes('LAB')&&S.lab&&S.lab.done)||mine(S.passed)||mine(S.checked));
 }
 const modusOf=(mod)=>{const m=S.modus&&S.modus[mod.id];return m==='pfad'||m==='frei'?m:null;};
-/* 'gate' (erst der Eingangstest), 'wahl' (Pfad oder Meine Übersicht), sonst der gewählte Modus */
+/* 'gate' (erst der Eingangstest, Block auf der Themenseite) oder 'pfad'. Es gibt nur einen Pfad: Was der Eingangstest als „sitzt“ markiert,
+   steht als Markierung in der Liste, und die Erklärung bietet „Kenne ich schon“. (Früher gab es zusätzlich „Meine Übersicht“; alte Werte in S.modus gelten nur noch als „Einstieg gewählt“.) */
 function lernenZustand(mod){
-  if(!mod.quickcheck)return 'pfad'; /* Themen ohne Eingangstest: gleich der Pfad, es gibt nichts „Beherrschtes“ zum Aussuchen */
-  if(!eingestuft(mod))return 'gate';
-  return modusOf(mod)||'wahl';
+  if(!mod.quickcheck)return 'pfad'; /* Themen ohne Eingangstest: gleich der Pfad */
+  return eingestuft(mod)?'pfad':'gate';
 }
 function ensureModus(mod,m){
   if(!S.modus||typeof S.modus!=='object'||Array.isArray(S.modus))S.modus={};
   S.modus[mod.id]=m;
 }
-function setModus(mod,m){ensureModus(mod,m);persist();renderAll();}
 
 /* ---------- Tagesziel: mindestens eine Runde pro Tag ---------- */
 const dayKey=(d)=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -209,16 +203,7 @@ function resetSheet(id){
       el('button',{type:'button',class:'btn danger',onclick:()=>{m.remove();clearStation(id);persist();renderAll();toast('Zurückgesetzt: '+title);}},'Zurücksetzen'),
       el('button',{type:'button',class:'btn alt',onclick:()=>m.remove()},'Abbrechen'))]);
 }
-function lockSheet(row,modus){
-  const mod=moduleOf(row.id);
-  if(modus==='frei'){
-    const m=modal([icon('schloss','big'),el('h2',null,'Noch nicht offen'),
-      el('p',null,'Offen ist, was du im Eingangstest schon konntest. Das hier schaltet der Pfad frei.'),
-      el('div',{class:'modalbtns'},
-        el('button',{type:'button',class:'btn',onclick:()=>{m.remove();if(mod)setModus(mod,'pfad');}},'Zum Pfad wechseln'),
-        el('button',{type:'button',class:'btn alt',onclick:()=>m.remove()},'Schließen'))]);
-    return;
-  }
+function lockSheet(row){
   const b=row.blocker,name=stationTitle(b);
   const m=modal([icon('schloss','big'),el('h2',null,'Noch gesperrt'),
     el('p',null,'Erst dran: ',el('b',null,name),'.'),
@@ -227,7 +212,7 @@ function lockSheet(row,modus){
       el('button',{type:'button',class:'btn alt',onclick:()=>m.remove()},'Schließen'))]);
 }
 
-/* ---------- Ansicht: Eingangstest, Wahl, Pfad und Selbst aussuchen ---------- */
+/* ---------- Ansicht: Themenseite mit Eingangstest-Block, nächster Station und Stationenliste ---------- */
 /* Marke aus dem Eingangstest: sitzt, fast oder üben (nur wo der Test das Bauteil prüft) */
 const CHECK_TEXT={sitzt:'sitzt',fast:'fast',ueben:'üben'};
 function checkMark(id){
@@ -239,33 +224,33 @@ function checkMark(id){
   if(x)return x.status;
   return (qc.allSure||[]).includes(id)&&S.checked[id]?'sitzt':null;
 }
-function modNode(r,pos,modus){
+function modNode(r,pos){
   const id=r.id,m=r.m,title=stationTitle(id),desc=m.desc||(TASKS[id]&&TASKS[id].desc)||'';
-  const next=modus==='pfad'&&r.next;
+  const next=r.next;
   const state=r.done?'done':next?'next':r.locked?'locked':'open';
   const tag=r.done?'Fertig':next?'Als Nächstes':r.locked?'Gesperrt':r.must?'Offen':'Freiwillig';
   const chk=checkMark(id);
   const stars=(id==='LAB'||m.final)?null:starNodes((S.passed[id+'-L1']?1:0)+(S.passed[id+'-L2']?1:0),2);
   const li=el('li',{class:'mod '+state+(r.must?'':' frei'),'data-acc':ACC[id]||PATH_ACC[id]||null});
   li.append(el('span',{class:'lamp','aria-hidden':'true'},r.done?icon('haken'):r.locked?icon('schloss'):null),
-    el('button',{type:'button',class:'modbtn','aria-label':title+': '+tag.toLowerCase()+(chk?', Eingangstest: '+CHECK_TEXT[chk]:'')+(r.must||tag==='Freiwillig'?'':', freiwillig'),onclick:()=>r.locked?lockSheet(r,modus):openStation(id)},
+    el('button',{type:'button',class:'modbtn','aria-label':title+': '+tag.toLowerCase()+(chk?', Eingangstest: '+CHECK_TEXT[chk]:'')+(r.must||tag==='Freiwillig'?'':', freiwillig'),onclick:()=>r.locked?lockSheet(r):openStation(id)},
       el('span',{class:'mpos'},String(pos+1).padStart(2,'0')),
       el('span',{class:'mnm'},el('b',null,title),el('small',null,desc+(m.note&&recommendNote(moduleOf(id))?' '+m.note:''))),
       el('span',{class:'mside'},chk?el('span',{class:'mchk '+chk},'Check: '+CHECK_TEXT[chk]):null,el('span',{class:'mtag'},tag),stars)));
   if(stationResettable(id))li.append(el('button',{type:'button',class:'modreset','aria-label':title+' zurücksetzen',title:'Zurücksetzen',onclick:()=>resetSheet(id)},icon('neu')));
   return li;
 }
-function pfadMap(rows,modus){
+function pfadMap(rows){
   const ol=el('ol',{class:'rail'});let last=null;
   rows.forEach((r,i)=>{
     if(r.m.grp!==last){last=r.m.grp;ol.append(el('li',{class:'pgrp'},icon(PATH_GROUPS[last]),last));}
-    ol.append(modNode(r,i,modus));
+    ol.append(modNode(r,i));
   });
   return ol;
 }
-/* Stand eines Themas: Zeilen, Pflicht-Bauteile, nächstes Bauteil (nur im Pfad-Modus) */
-function pfadInfo(mod,modus){
-  const rows=pathState(mod,modus),must=rows.filter(r=>r.must),doneN=must.filter(r=>r.done).length,next=rows.find(r=>r.next)||null;
+/* Stand eines Themas: Zeilen, Pflicht-Stationen, nächste Station */
+function pfadInfo(mod){
+  const rows=pathState(mod),must=rows.filter(r=>r.must),doneN=must.filter(r=>r.done).length,next=rows.find(r=>r.next)||null;
   return {rows,must,doneN,next,go1:next};
 }
 /* „Start“, solange noch nichts begonnen ist, danach „Weiter“ */
@@ -286,50 +271,33 @@ function pfadLine(doneN,total){
   for(let i=0;i<total;i++)seg.append(el('i',{class:i<doneN?'on':''}));
   return el('div',{class:'pfadline'},seg,el('b',null,doneN+' von '+total+' geschafft'));
 }
-function modusSwitch(mod,modus){
-  const mk=(m,label)=>el('button',{type:'button','aria-pressed':String(modus===m),onclick:()=>{if(modus!==m)setModus(mod,m);}},label);
-  return el('div',{class:'modusrow'},el('div',{class:'seg',role:'group','aria-label':'So lernst du'},mk('pfad','Pfad'),mk('frei','Meine Übersicht')));
-}
 /* Eingangstest überspringen: gleich im Pfad bei der ersten Station beginnen (den Test kann man später nachholen) */
 function startOhneTest(mod){
   ensureModus(mod,'pfad');persist();
-  const nx=pathState(mod,'pfad').find(r=>r.next);
+  const nx=pathState(mod).find(r=>r.next);
   if(nx)openStation(nx.id);else renderAll();
 }
+/* Block „Eingangstest“ auf der Themenseite, solange das Thema nicht eingestuft ist: ein Hauptknopf, dazu ein Textlink */
 function gateCard(mod){
   return el('section',{class:'gate'},
     el('div',{class:'gate-ic','aria-hidden':'true'},icon('haken')),
     el('h2',null,'Eingangstest'),
     el('p',null,'Willst du testen, was du schon kannst? Das dauert etwa 5 Minuten.'),
     el('p',null,TASKS[mod.qid].size+' kurze Fragen. Es gibt keine Zeitnot und keine Note.'),
-    el('div',{class:'rowbtns gatebtns'},
-      el('button',{type:'button',class:'btn primary',onclick:()=>startEingang(mod)},icon('play'),'Eingangstest starten'),
-      el('button',{type:'button',class:'btn',onclick:()=>startOhneTest(mod)},'Ohne Test starten')),
-    el('p',{class:'gatehint'},'Du kannst auch gleich im Reiter „Üben“ üben.'));
+    el('button',{type:'button',class:'btn primary gatego',onclick:()=>startEingang(mod)},icon('play'),'Eingangstest starten'),
+    linkBtn('Ohne Test beginnen',()=>startOhneTest(mod)));
 }
-function wahlCards(mod){
-  return el('section',{class:'wahl'},
-    el('h2',null,'Wie möchtest du lernen?'),
-    bigBtn('pfad',()=>setModus(mod,'pfad'),'Dem Pfad folgen','Alle Stationen der Reihe nach. Empfohlen.',null,'go'),
-    bigBtn('heft',()=>setModus(mod,'frei'),'Meine Übersicht','Grün = schon gekonnt, grau = noch gesperrt.'));
-}
+/* Themenseite: Name, Fortschritt, ein Block je Zustand (Eingangstest oder „Weiter“), die Stationen eingeklappt, zuletzt der Textlink zum Wiederholen des Tests */
 function pfadTab(home,mod){
-  const z=lernenZustand(mod);
-  home.append(el('h1',null,'Lernpfad'));
-  if(z==='gate'){home.append(gateCard(mod));return;}
-  if(z==='wahl'){home.append(wahlCards(mod));return;}
-  const info=pfadInfo(mod,z),rec=recommendNote(mod);
-  home.append(...(mod.quickcheck?[modusSwitch(mod,z)]:[]),pfadLine(info.doneN,info.must.length),rec?el('p',{class:'modushint'},'Empfohlen: erst '+rec.name+'. Du kannst aber auch gleich anfangen.'):null); /* Pfad oder Selbst aussuchen gibt es nur mit Eingangstest */
-  if(z==='pfad'){
+  const z=lernenZustand(mod),info=pfadInfo(mod),rec=recommendNote(mod);
+  home.append(el('h1',null,mod.name),pfadLine(info.doneN,info.must.length));
+  if(z==='gate')home.append(gateCard(mod));
+  else{
+    if(rec)home.append(el('p',{class:'modushint'},'Empfohlen: erst '+rec.name+'. Du kannst aber auch gleich anfangen.'));
     const go1=info.go1;
     if(go1)home.append(bigBtn('play',()=>openStation(go1.id),startWord(info.rows,go1)+': '+stationTitle(go1.id),go1.m.final||go1.id==='LAB'?null:LEVEL_LABEL[levelOf(go1.id)],null,'go'));
     else home.append(el('div',{class:'msg ok'},'Alle Pflicht-Stationen sind fertig – stark! '+(info.rows.some(r=>!r.must)?'Probiere die freiwilligen Stationen oder ein Spiel.':'Probiere ein Spiel oder ein anderes Thema.')));
-    home.append(fold('Alle Stationen',pfadMap(info.rows,z)));
-  }else{
-    home.append(el('p',{class:'modushint'},'Grün = schon gekonnt, grau = noch gesperrt. Den Rest schaltet der Pfad frei.'),
-      isUnlocked(mod)?el('p',{class:'modushint'},'Alles ist freigeschaltet.')
-        :el('p',{class:'retake'},el('button',{type:'button',class:'btn small alt',onclick:()=>confirmModal('Alles freischalten?','Dann sind alle Stationen offen. Die Urkunde gibt es erst, wenn alle Pflicht-Stationen fertig sind.','Alles freischalten',()=>unlockAll(mod))},icon('schloss'),'Alles freischalten')),
-      pfadMap(info.rows,z));
   }
-  if(mod.quickcheck){const done=qstate(mod).placed;home.append(el('p',{class:'retake'},el('button',{type:'button',class:'btn small alt',onclick:()=>startEingang(mod,done)},done?'Eingangstest wiederholen':'Eingangstest machen')));}
+  home.append(fold('Alle Stationen',pfadMap(info.rows)));
+  if(mod.quickcheck&&z!=='gate')home.append(el('p',{class:'retake'},linkBtn(qstate(mod).placed?'Eingangstest wiederholen':'Eingangstest machen',()=>startEingang(mod,qstate(mod).placed))));
 }

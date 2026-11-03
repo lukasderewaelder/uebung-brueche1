@@ -505,18 +505,18 @@ svg.interactive{touch-action:none}
 .mod[data-acc="kue"]{--acc:var(--kue)}
 .mod[data-acc="mix"]{--acc:var(--erw)}
 .mod[data-acc="ok"]{--acc:var(--ok)}
-.modbtn{width:100%;display:grid;grid-template-columns:2rem minmax(0,1fr) auto;gap:0.625rem;align-items:center;min-height:4.125rem;padding:0.625rem 0.75rem 0.625rem 1.25rem;text-align:left;background:var(--bp-2);color:var(--chalk);border:2px solid var(--chalk);box-shadow:inset 8px 0 0 var(--acc,var(--amber)),0 3px 0 rgba(0,0,0,.35);cursor:pointer}
+.modbtn{width:100%;display:grid;grid-template-columns:2rem minmax(0,1fr);grid-template-areas:"pos nm" "pos side";gap:0.125rem 0.625rem;align-items:center;min-height:4.125rem;padding:0.625rem 0.75rem 0.625rem 1.25rem;text-align:left;background:var(--bp-2);color:var(--chalk);border:2px solid var(--chalk);box-shadow:inset 8px 0 0 var(--acc,var(--amber)),0 3px 0 rgba(0,0,0,.35);cursor:pointer}
 .rail .mod{display:flex;gap:0.375rem;align-items:stretch}
 .rail .mod .modbtn{flex:1;width:auto;min-width:0}
 .modreset{flex:none;width:max(44px,2.75rem);display:grid;place-items:center;background:var(--bp-2);color:var(--chalk-dim);border:2px solid var(--chalk-dim);border-radius:2px;box-shadow:0 3px 0 rgba(0,0,0,.35);cursor:pointer}
 .modreset .ic{width:1.25rem;height:1.25rem}
 .modreset:active{transform:translateY(2px);box-shadow:none;color:var(--amber);border-color:var(--amber)}
 .modbtn:active{transform:translateY(2px);box-shadow:inset 8px 0 0 var(--acc,var(--amber))}
-.mpos{font:700 .85rem var(--font-mono);color:var(--acc,var(--amber))}
-.mnm{display:flex;flex-direction:column;min-width:0}
+.mpos{grid-area:pos;font:700 .85rem var(--font-mono);color:var(--acc,var(--amber))}
+.mnm{grid-area:nm;display:flex;flex-direction:column;min-width:0}
 .mnm b{font-size:1rem}
 .mnm small{color:var(--chalk-dim);font-size:.8rem;line-height:1.25}
-.mside{display:flex;flex-direction:column;align-items:flex-end;gap:0.1875rem}
+.mside{grid-area:side;display:flex;flex-wrap:wrap;align-items:center;gap:0.1875rem 0.625rem}
 .mtag{font:700 .62rem var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--chalk-dim)}
 .mod.frei .modbtn{border-style:dotted}
 .mod.done .mtag{color:var(--ok)}
@@ -852,12 +852,19 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 
 /* Reiter „Lernen“: Themenkarten und geplante Themen */
 .tcard{margin:0.75rem 0;padding:0.875rem;background:var(--bp-2);border:3px double var(--chalk)}
-.tc-head{display:flex;gap:0.75rem;align-items:flex-start}
-.tc-head .ico{flex:none;width:2.5rem;height:2.5rem;color:var(--amber)}
-.tc-head h2{margin:0 0 0.125rem;font-size:1.15rem}
-.tc-head p{margin:0;color:var(--chalk-dim)}
+/* Kopf der Themenkarte: eine ganze Zeile zur Themenseite (Pfeil rechts), kein Rahmenknopf */
+.tc-head{display:grid;grid-template-columns:2.5rem minmax(0,1fr) auto;gap:0.75rem;align-items:center;width:100%;min-height:max(48px,3rem);padding:0;background:none;border:0;color:var(--chalk);font:inherit;text-align:left;cursor:pointer}
+.tc-head .ico{width:2.5rem;height:2.5rem;color:var(--amber)}
+.tc-head .ico .ic{width:100%;height:100%}
+.tc-tx{display:flex;flex-direction:column;gap:0.125rem;min-width:0}
+.tc-name{font-size:1.15rem;overflow-wrap:anywhere}
+.tc-tx small{color:var(--chalk-dim);font-size:.95rem}
+.tc-head>.ic{width:1.1rem;height:1.1rem;color:var(--chalk-dim)}
+.tc-head:active .tc-name{color:var(--amber)}
+.tcard>.btn{width:100%;margin-top:0.25rem}
+.tc-done{display:flex;align-items:center;gap:0.5rem;margin:0.25rem 0 0;font-weight:700;color:var(--ok)}
+.tc-done .ic{width:1.25rem;height:1.25rem;flex:none}
 .tc-prog{display:flex;align-items:center;gap:0.75rem;margin:0.75rem 0}
-.tcard .rowbtns{display:flex;flex-wrap:wrap;gap:0.5rem}
 .soon{margin-top:1.25rem}
 .soon ul{list-style:none;margin:0;padding:0}
 .soon li{display:flex;align-items:center;gap:0.75rem;padding:0.625rem 0.75rem;margin:0.375rem 0;border:2px dashed var(--chalk-dim);color:var(--chalk-dim)}
@@ -867,21 +874,17 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 .soon li em{font:700 .68rem var(--font-mono);letter-spacing:.12em;text-transform:uppercase;font-style:normal}
 
 /* Lernen: Eingangstest, Wahl, Schalter, Fortschrittszeile */
-.gate,.wahl{margin:0.75rem 0;padding:1rem;background:var(--bp-2);border:3px double var(--chalk)}
-.gate h2,.wahl h2{margin:0 0 0.5rem;font-size:1.2rem}
+.gate{margin:0.75rem 0;padding:1rem;background:var(--bp-2);border:3px double var(--chalk)}
+.gate h2{margin:0 0 0.5rem;font-size:1.2rem}
 .gate p{margin:0 0 0.625rem}
-.gate .btn{margin:0.25rem 0 0.75rem}
+.gate .btn{width:100%;margin:0.25rem 0 0.25rem}
+.gate .linkbtn{display:flex;margin:0 auto}
 .gate-ic{width:2.5rem;height:2.5rem;margin-bottom:0.5rem;color:var(--amber)}
 .gate-ic .ic{width:100%;height:100%}
-.gatehint{color:var(--chalk-dim);margin:0}
-.wahl .bigbtn{width:100%;margin:0.5rem 0}
-.modusrow{margin:0.25rem 0 0.75rem}
-.modusrow .seg{display:flex;width:100%}
-.modusrow .seg button{flex:1;justify-content:center}
 .pfadline{display:flex;align-items:center;gap:0.75rem;margin:0.5rem 0 0.875rem}
 .pfadline .segn,.tc-prog .segn{flex:1;max-width:14rem}
 .modushint{margin:0 0 0.75rem;color:var(--chalk-dim)}
-.retake{margin:1.25rem 0 0}
+.retake{margin:0.75rem 0 0;text-align:center}
 .tc-note{margin:0.75rem 0 0;color:var(--chalk-dim)}
 .mchk{font:700 .62rem var(--font-mono);letter-spacing:.08em;text-transform:uppercase;padding:0.0625rem 0.375rem;border:1.5px solid var(--chalk-dim);color:var(--chalk-dim)}
 .mchk.sitzt{border-color:var(--ok);color:var(--ok)}
@@ -915,7 +918,6 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 .gstreak{font-size:max(16px,.78rem)}
 
 /* Paket 5: Eingangstest-Knöpfe gleich groß, Einstellungen im Reiter „Ich“ */
-.gatebtns .btn{flex:1 1 12rem}
 .settingsbtn{margin:0 0 .75rem}
 
 /* Paket 7: Probeaufgabe in der Erklärung, Zahlenkarten */

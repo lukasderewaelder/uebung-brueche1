@@ -23,7 +23,7 @@ const Q_START_SHARE=0.3;                    /* höchstens dieser Anteil richtig 
 const Q_UNSURE_START=0.5;                   /* mindestens dieser Anteil „Weiß ich nicht“ = ebenfalls direkt in den Pfad (bei 15 Fragen: 8) */
 /* Eingangstests je Thema (Schlüssel = Aufgaben-ID des Tests, steht im Thema als qid):
    skills: Fähigkeiten (je 3 Fragen), names: Anzeigenamen, stations: zu welchen Lernpfad-Bauteilen eine Fähigkeit gehört
-   (3 von 3 richtig ⇒ diese Bauteile sind in „Meine Übersicht“ offen), allSure: Bauteile, die erst aufgehen, wenn alles sitzt,
+   (3 von 3 richtig ⇒ diese Bauteile stehen im Lernpfad mit „Check: sitzt“), allSure: Bauteile, die erst aufgehen, wenn alles sitzt,
    startText: Satz bei „fast alles falsch“. Der Test ist zugleich der Abschlusscheck des Themas (Urkunde). */
 const QCHK={
   Q00:{skills:Q_SKILLS,names:Q_SKILL_NAME,stations:{gleich:['G01'],teilbar:['T01','T02'],erweitern:['G02'],kuerzen:['G03'],vollstaendig:['G04']},allSure:['G05'],

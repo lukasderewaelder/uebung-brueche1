@@ -284,7 +284,7 @@ function runSelfTests(){
   const old={progress:{'G03-L1':{first:5},'G02-L2':{first:3},'D01-L1':{first:9},'G01-L1':{first:4}}};
   migrate4(old);
   t('Migration: mind. 4 Treffer ⇒ bestanden; Rest und Nicht-Pfad-Übungen nicht',old.passed['G03-L1']&&old.passed['G01-L1']&&!old.passed['G02-L2']&&!old.passed['D01-L1']&&!!old.checked&&!!old.days);
-  /* Lernen: Eingangstest, Wahl, Pfad und Selbst aussuchen */
+  /* Lernen: Themenkarte, Eingangstest-Block und ein Pfad (keine Wahl „Wie möchtest du lernen?“, kein „Meine Übersicht“) */
   {
     const mod=moduleById('veraendern'),Z=()=>lernenZustand(mod);
     const view=()=>{const d=el('div');pfadTab(d,mod);return d;};
@@ -292,33 +292,42 @@ function runSelfTests(){
     freshP();
     t('Lernen: Neuling → erst der Eingangstest; Üben-Runden allein ändern das nicht',Z()==='gate'&&(()=>{S.progress['G02-L1']={done:3,first:2,later:1,skipped:0,shown:0};const z=Z();delete S.progress['G02-L1'];return z==='gate';})());
     const gv=view();
-    t('Lernen: Eingangstest-Ansicht hat nur den Startknopf, keine Bauteil-Liste, keinen Schalter',/Eingangstest starten/.test(gv.textContent)&&!gv.querySelector('.rail')&&!gv.querySelector('.seg')&&/Üben/.test(gv.textContent));
+    t('Themenseite eines Neulings: Name als Überschrift, ein Block „Eingangstest“ mit einem Hauptknopf und dem Textlink „Ohne Test beginnen“, Stationen eingeklappt, kein Umschalter, keine Wahl',
+      gv.querySelector('h1').textContent===mod.name&&/Eingangstest starten/.test(gv.textContent)&&gv.querySelectorAll('.btn.primary').length===1&&/Ohne Test beginnen/.test((gv.querySelector('.gate .linkbtn')||{}).textContent||'')&&!!gv.querySelector('details.fold:not([open]) .rail')&&!gv.querySelector('.seg')&&!/Wie möchtest du lernen|Meine Übersicht|Alles freischalten|Lernpfad/.test(gv.textContent)&&gv.querySelectorAll('.gate').length===1);
     onRoundEnd('Q00',1,rnd(qres([1,3,8]),qplan));
-    t('Lernen: nach dem Check (fit) kommt die Wahl mit zwei Karten, noch kein Modus gespeichert',Z()==='wahl'&&!S.modus.veraendern&&view().querySelectorAll('.wahl .bigbtn').length===2);
+    t('Lernen: nach dem Check (fit) gleich der Pfad – keine Wahl, nichts als „Modus“ gespeichert',Z()==='pfad'&&!S.modus.veraendern);
     freshP();onRoundEnd('Q00',1,rnd(qres(qplan.map((_,i)=>i).filter(i=>i>=4)),qplan));
-    t('Lernen: höchstens 4 von 15 richtig → direkt der Pfad, keine Wahl',Z()==='pfad'&&S.modus.veraendern==='pfad');
+    t('Lernen: höchstens 4 von 15 richtig → direkt der Pfad',Z()==='pfad'&&S.modus.veraendern==='pfad');
     freshP();S.passed['G02-L1']=true;
-    t('Lernen: Bestandsnutzer (schon Fortschritt, noch keine Wahl) → einmal die Wahl',Z()==='wahl');
+    t('Lernen: Bestandsnutzer (schon Fortschritt) → der Pfad, ohne Eingangstest-Block',Z()==='pfad'&&!view().querySelector('.gate'));
+    freshP();S.modus.veraendern='frei';
+    t('Lernen: alte Werte in S.modus („frei“) gelten nur noch als „Einstieg gewählt“ → der Pfad, nie eine Wahl',Z()==='pfad'&&!view().querySelector('.seg')&&!/Meine Übersicht/.test(view().textContent));
     S.modus.veraendern='irgendwas';
-    t('Lernen: unbekannter Modus gilt als „keine Wahl“',Z()==='wahl'&&lernenZustand({id:'x',path:[]})==='pfad');
+    t('Lernen: unbekannter Wert in S.modus zählt nicht; Thema ohne Eingangstest gleich der Pfad',Z()==='gate'&&lernenZustand({id:'x',path:[]})==='pfad');
     beispiel();
     t('Beispiel-Check: Gleiche Anteile und Erweitern beherrscht, Teilbarkeit „fast“, Kürzen „üben“',S.checked.G01&&S.checked.G02&&!S.checked.T01&&!S.checked.G03&&!S.checked.G04&&S.einstufung.skills.teilbar.status==='fast'&&S.einstufung.skills.kuerzen.status==='ueben');
-    const P=pathState(mod,'pfad'),F=pathState(mod,'frei');
-    const rP=(id)=>P.find(r=>r.id===id),rF=(id)=>F.find(r=>r.id===id);
-    t('Pfad-Modus: der Check überspringt nichts – Gleiche Anteile als Nächstes, Erweitern noch gesperrt',rP('G01').next&&!rP('G01').done&&rP('G01').checked&&rP('G02').locked);
-    t('Selbst aussuchen: Beherrschtes offen (G01, G02), dazu Labor und Bruchbilder vor der Lücke',rF('G01').open&&rF('G02').open&&rF('LAB').open&&rF('B01').open&&!rF('G01').done);
-    t('Selbst aussuchen: die Lücke (Teilbarkeit) und alles danach gesperrt, auch Knobeln, Mischen, Abschluss',['T01','G03','G04','G05','U01','U02','U03','O02','QA'].every(id=>rF(id).locked)&&!F.some(r=>r.next));
+    const P=pathState(mod),rP=(id)=>P.find(r=>r.id===id);
+    t('Pfad: der Check überspringt nichts – Gleiche Anteile als Nächstes, Erweitern noch gesperrt',rP('G01').next&&!rP('G01').done&&rP('G01').checked&&rP('G02').locked);
     S.passed['G01-L1']=true;
-    t('Fortschritt gilt in beiden Modi: G01 fertig, im Pfad ist Erweitern dran',pathState(mod,'frei').find(r=>r.id==='G01').done&&pathState(mod,'pfad').find(r=>r.id==='G01').done&&pathState(mod,'pfad').find(r=>r.next).id==='G02');
-    beispiel();S.modus.veraendern='pfad';
+    t('Fortschritt: G01 fertig, im Pfad ist Erweitern dran',pathState(mod).find(r=>r.id==='G01').done&&pathState(mod).find(r=>r.next).id==='G02');
+    beispiel();
     const pv=view();
-    t('Pfad-Ansicht: Schalter, Fortschrittszeile, „Start: Gleiche Anteile erkennen“, Liste eingeklappt, Check-Marken',!!pv.querySelector('.seg')&&!!pv.querySelector('.pfadline')&&/^Start: Gleiche Anteile erkennen/.test(pv.querySelector('.bigbtn').textContent)&&!!pv.querySelector('details.fold:not([open]) .rail')&&pv.querySelectorAll('.mchk.sitzt').length===2&&pv.querySelectorAll('.mchk.fast').length===2&&/Als Nächstes/.test(pv.textContent)&&!/Weiter geht/.test(pv.textContent)&&/Eingangstest wiederholen/.test(pv.textContent));
+    t('Themenseite im Pfad: Name, Fortschrittszeile, genau ein Hauptknopf „Start: Gleiche Anteile erkennen“, Liste eingeklappt, Check-Marken, Textlink „Eingangstest wiederholen“, kein Umschalter',pv.querySelector('h1').textContent===mod.name&&!!pv.querySelector('.pfadline')&&/^Start: Gleiche Anteile erkennen/.test(pv.querySelector('.bigbtn').textContent)&&pv.querySelectorAll('.bigbtn,.btn.primary').length===1&&!pv.querySelector('.seg')&&!!pv.querySelector('details.fold:not([open]) .rail')&&pv.querySelectorAll('.mchk.sitzt').length===2&&pv.querySelectorAll('.mchk.fast').length===2&&/Als Nächstes/.test(pv.textContent)&&!/Weiter geht/.test(pv.textContent)&&/Eingangstest wiederholen/.test((pv.querySelector('.retake .linkbtn')||{}).textContent||''));
     S.passed['G01-L1']=true;
-    t('Pfad-Ansicht: nach dem ersten bestandenen Bauteil heißt der Knopf „Weiter“',/^Weiter: Gleiche Anteile erkennen|^Weiter: Erweitern/.test(view().querySelector('.bigbtn').textContent));
-    S.modus.veraendern='frei';
-    const fv=view();
-    t('Selbst-aussuchen-Ansicht: Liste offen (nicht eingeklappt), Hinweis, keine Hauptkarte, offene und gesperrte Bauteile',!!fv.querySelector('.rail')&&!fv.querySelector('details')&&!!fv.querySelector('.modushint')&&!fv.querySelector('.bigbtn')&&fv.querySelectorAll('li.mod.locked').length>=8&&fv.querySelectorAll('li.mod.open, li.mod.done').length>=3);
+    t('Themenseite: nach der ersten bestandenen Station heißt der Knopf „Weiter“',/^Weiter: Gleiche Anteile erkennen|^Weiter: Erweitern/.test(view().querySelector('.bigbtn').textContent));
     t('Tagesziel und Serie stehen im Reiter Ich (dayCard), nicht mehr im Lernpfad',/Tagesziel/.test(dayCard().textContent)&&!/Tagesziel/.test(view().textContent));
+    /* Themenkarte im Reiter Lernen: immer Kopf-Zeile, Fortschritt und höchstens ein Hauptknopf */
+    freshP();
+    const c1=moduleCard(mod);
+    t('Themenkarte (neu): Kopf als Zeile zur Themenseite, Fortschritt, genau ein Hauptknopf „Starten“, sonst keine Schaltfläche',!!c1.querySelector('button.tc-head')&&c1.querySelectorAll('button').length===2&&c1.querySelectorAll('.btn.primary').length===1&&c1.querySelector('.btn.primary').textContent.trim()==='Starten'&&!!c1.querySelector('.segn')&&!/Willst du testen|Ohne Test|Lernpfad ansehen|Eingangstest starten/.test(c1.textContent));
+    beispiel();
+    const c2=moduleCard(mod);
+    t('Themenkarte (läuft): ein Hauptknopf „Start: Gleiche Anteile erkennen“ öffnet die Station',c2.querySelectorAll('.btn.primary').length===1&&c2.querySelectorAll('button').length===2&&/^Start: Gleiche Anteile erkennen/.test(c2.querySelector('.btn.primary').textContent.trim()));
+    freshP();mod.path.filter(m=>m.must&&!m.final).forEach(m=>{S.passed[m.id+'-L1']=true;});S.placed=true;S.final=true;
+    const c3=moduleCard(mod);
+    t('Themenkarte (Urkunde): „Urkunde geschafft“, kein Hauptknopf, nur die Kopfzeile ist ein Knopf',/Urkunde geschafft/.test(c3.textContent)&&!c3.querySelector('.btn.primary')&&c3.querySelectorAll('button').length===1);
+    freshP();
+    t('Alle Themenkarten (neu): höchstens ein Hauptknopf und höchstens zwei Knöpfe (Kopfzeile, Hauptknopf); Empfehlung nur als Text',activeModules().every(m=>{const c=moduleCard(m);return c.querySelectorAll('.btn.primary').length===1&&c.querySelectorAll('button').length===2;}));
     freshP();
   }
   /* Bruch-Tresor: Code-Bruch, Schlösser, Tür */
@@ -627,7 +636,7 @@ function runSelfTests(){
     t('Pfad Zahlenstrahl: Start bei Z01, Z02 gesperrt (wartet auf Z01), alles andere gesperrt',rows().find(r=>r.next).id==='Z01'&&rows().find(r=>r.id==='Z02').locked&&rows().find(r=>r.id==='Z02').blocker==='Z01'&&rows().find(r=>r.id==='Z08').locked);
     onRoundEnd('Z01',1,{results:['f','f','f','f','x'],size:5});
     t('Pfad Zahlenstrahl: Z01 mit 4 von 5 bestanden ⇒ gespeichert, Z02 nächstes',S.passed['Z01-L1']===true&&rows().find(r=>r.next).id==='Z02'&&stationDone('Z01'));
-    t('Eingangstest von „Brüche verändern“ bleibt Pflicht, auch wenn Zahlenstrahl-Bauteile bestanden sind; erst Bauteile dieses Themas zählen als Einstieg',lernenZustand(vm)==='gate'&&(S.passed['G01-L1']=true,lernenZustand(vm)==='wahl'));
+    t('Eingangstest von „Brüche verändern“ bleibt Pflicht, auch wenn Zahlenstrahl-Bauteile bestanden sind; erst Bauteile dieses Themas zählen als Einstieg',lernenZustand(vm)==='gate'&&(S.passed['G01-L1']=true,lernenZustand(vm)==='pfad'));
     fresh();
     ['Z01','Z02','Z03','Z04','Z05','Z06','Z07','Z08'].forEach(x=>{S.passed[x+'-L1']=true;});
     t('Pfad Zahlenstrahl: alle acht bestanden ⇒ nächstes ist der Abschlusscheck ZA, noch keine Urkunde (S.final unberührt)',rows().find(r=>r.next).id==='ZA'&&rows().filter(r=>r.id!=='ZA').every(r=>r.done)&&!stationDone('ZA')&&!S.final);
@@ -637,14 +646,13 @@ function runSelfTests(){
     fresh();
     t('Eingangstest Zahlenstrahl: 15 Fragen, 5 Fähigkeiten; der Test gehört zum Thema (qmodOf), Q00 bleibt bei Brüche verändern; Zustand getrennt',TASKS.ZQ.size===15&&QCHK.ZQ.skills.length===5&&Object.values(QCHK.ZQ.stations).flat().join()==='Z01,Z02,Z03,Z04,Z05,Z06,Z07,Z08'&&qmodOf('ZQ').id==='zahlenstrahl'&&qmodOf('Q00').id==='veraendern'&&qstate(vm)===S&&qstate(zs)!==S&&lernenZustand(zs)==='gate'&&lernenZustand(vm)==='gate');
     let zi=onRoundEnd('ZQ',1,zr(zplan.map(()=>'f'),zplan));
-    t('Eingangstest Zahlenstrahl: 15 von 15 ⇒ alle acht Bauteile als beherrscht gemerkt, nichts fertig, noch keine Urkunde; Brüche verändern unberührt; danach die Wahl',['Z01','Z02','Z03','Z04','Z05','Z06','Z07','Z08'].every(x=>S.checked[x]&&!stationDone(x))&&!zi.final&&zi.qmod==='zahlenstrahl'&&qstate(zs).placed&&!qstate(zs).final&&!!qstate(zs).einstufung&&!S.placed&&!S.final&&!S.einstufung&&lernenZustand(zs)==='wahl'&&lernenZustand(vm)==='gate'&&checkMark('Z03')==='sitzt');
+    t('Eingangstest Zahlenstrahl: 15 von 15 ⇒ alle acht Bauteile als beherrscht gemerkt, nichts fertig, noch keine Urkunde; Brüche verändern unberührt; danach gleich der Pfad',['Z01','Z02','Z03','Z04','Z05','Z06','Z07','Z08'].every(x=>S.checked[x]&&!stationDone(x))&&!zi.final&&zi.qmod==='zahlenstrahl'&&qstate(zs).placed&&!qstate(zs).final&&!!qstate(zs).einstufung&&!S.placed&&!S.final&&!S.einstufung&&lernenZustand(zs)==='pfad'&&lernenZustand(vm)==='gate'&&checkMark('Z03')==='sitzt');
     fresh();
     const ip=zplan.indexOf('ablesen');
     onRoundEnd('ZQ',1,zr(zplan.map((s,i)=>i===ip?'x':'f'),zplan));
-    const F=pathState(zs,'frei'),P=pathState(zs,'pfad'),fr=(id)=>F.find(r=>r.id===id),pf=(id)=>P.find(r=>r.id===id);
+    const P=pathState(zs),pf=(id)=>P.find(r=>r.id===id);
     t('Eingangstest Zahlenstrahl: Fähigkeit „Ablesen und Eintragen“ 2 von 3 ⇒ Z02 und Z03 nicht offen (Check „fast“), alle anderen Bauteile sitzen',!S.checked.Z02&&!S.checked.Z03&&['Z01','Z04','Z05','Z06','Z07','Z08'].every(x=>S.checked[x])&&checkMark('Z02')==='fast'&&checkMark('Z03')==='fast'&&checkMark('Z04')==='sitzt');
-    t('Selbst aussuchen: Bauteile mit 3 von 3 sind offen und überspringen die Lücke (Z04 offen trotz Z02), Z02 bleibt gesperrt, der Abschlusscheck erst nach allen',fr('Z01').open&&fr('Z02').locked&&fr('Z03').locked&&fr('Z04').open&&fr('Z08').open&&fr('ZA').locked);
-    t('Dem Pfad folgen: der Check überspringt nichts – alles wartet auf Z01, Z04 bleibt gesperrt, Z01 ist als Nächstes dran',pf('Z01').next&&pf('Z04').locked&&pf('Z04').blocker==='Z01');
+    t('Pfad: der Check überspringt nichts – alles wartet auf Z01, Z04 bleibt gesperrt, Z01 ist als Nächstes dran',pf('Z01').next&&pf('Z04').locked&&pf('Z04').blocker==='Z01');
     fresh();
     onRoundEnd('ZQ',1,zr(zplan.map((s,i)=>i<4?'f':'x'),zplan));
     t('Eingangstest Zahlenstrahl: höchstens 4 von 15 richtig ⇒ nichts als beherrscht gemerkt, direkt in den Pfad ohne Wahl',Object.keys(S.checked).length===0&&S.modus.zahlenstrahl==='pfad'&&lernenZustand(zs)==='pfad'&&qstate(zs).einstufung.stufe==='start');
@@ -915,21 +923,21 @@ function runSelfTests(){
     Object.assign(S,keepX);persist();
     t('Anteil im Text: Rückmeldung mit Rechnung („Richtig: … : … = …“)',/Richtig: \d+ : \d+ = \d+ und \d+ : \d+ = \d+\./.test(txt5));
   }
-  /* Paket 5: Eingangstest überspringen, Gruppen, Meine Übersicht, Einstellungen im Reiter „Ich“ */
+  /* Paket 5: Eingangstest überspringen, Gruppen, Einstellungen im Reiter „Ich“ */
   {
     const vm5=moduleById('veraendern'),zs5=moduleById('zahlenstrahl');
     const keep5={modus:S.modus,unlocked:S.unlocked,view:S.view,passed:S.passed,checked:S.checked,placed:S.placed,final:S.final,lab:S.lab,mq:S.mq,last:S.last,rounds:S.rounds,intro:S.intro,einstufung:S.einstufung,days:S.days,perfect:S.perfect};
     try{
       S.passed={};S.checked={};S.placed=false;S.final=false;S.lab=null;S.mq={};S.modus={};S.unlocked={};S.rounds={};S.einstufung=null;S.days={};S.perfect={};S.intro={G01:true,Z01:true};
       t('Einstieg: ohne Fortschritt steht der Eingangstest vor dem Pfad (beide Themen)',lernenZustand(vm5)==='gate'&&lernenZustand(zs5)==='gate');
-      const gate=gateCard(vm5),btns=[...gate.querySelectorAll('button')].map(b=>b.textContent.trim());
-      t('Einstieg: Karte fragt „Willst du testen, was du schon kannst? Das dauert etwa 5 Minuten.“ und bietet „Eingangstest starten“ und „Ohne Test starten“ gleich groß nebeneinander',gate.textContent.includes('Willst du testen, was du schon kannst? Das dauert etwa 5 Minuten.')&&btns.includes('Eingangstest starten')&&btns.includes('Ohne Test starten')&&!!gate.querySelector('.gatebtns'));
+      const gate=gateCard(vm5),gbtn=[...gate.querySelectorAll('button')].map(b=>b.textContent.trim());
+      t('Einstieg: Eingangstest-Block fragt „Willst du testen, was du schon kannst? Das dauert etwa 5 Minuten.“; „Eingangstest starten“ ist der Hauptknopf, „Ohne Test beginnen“ ein Textlink',gate.textContent.includes('Willst du testen, was du schon kannst? Das dauert etwa 5 Minuten.')&&gbtn.length===2&&gbtn[0]==='Eingangstest starten'&&gbtn[1]==='Ohne Test beginnen'&&gate.querySelectorAll('.btn.primary').length===1&&gate.querySelectorAll('.linkbtn').length===1);
       const mc=moduleCard(vm5);
-      t('Einstieg: auch die Themenkarte im Reiter Lernen hat beide Knöpfe',[...mc.querySelectorAll('button')].some(b=>b.textContent.includes('Ohne Test starten'))&&[...mc.querySelectorAll('button')].some(b=>b.textContent.includes('Eingangstest starten')));
+      t('Einstieg: die Themenkarte im Reiter Lernen hat nur „Starten“; der Test steht erst auf der Themenseite',[...mc.querySelectorAll('button')].some(b=>b.textContent.trim()==='Starten')&&![...mc.querySelectorAll('button')].some(b=>/Ohne Test|Eingangstest/.test(b.textContent)));
       startOhneTest(vm5);
-      t('Ohne Test starten: Pfad ist gewählt, der Pfad ist sichtbar (kein Eingangstest davor) und die erste Station G01 öffnet sich',S.modus.veraendern==='pfad'&&lernenZustand(vm5)==='pfad'&&S.view.kind==='practice'&&S.view.id==='G01'&&!qstate(vm5).placed);
+      t('Ohne Test beginnen: Pfad ist gewählt, der Pfad ist sichtbar (kein Eingangstest davor) und die erste Station G01 öffnet sich',S.modus.veraendern==='pfad'&&lernenZustand(vm5)==='pfad'&&S.view.kind==='practice'&&S.view.id==='G01'&&!qstate(vm5).placed);
       startOhneTest(zs5);
-      t('Ohne Test starten gilt auch für den Zahlenstrahl (Z01)',S.modus.zahlenstrahl==='pfad'&&lernenZustand(zs5)==='pfad'&&S.view.id==='Z01'&&lernenZustand(vm5)==='pfad');
+      t('Ohne Test beginnen gilt auch für den Zahlenstrahl (Z01)',S.modus.zahlenstrahl==='pfad'&&lernenZustand(zs5)==='pfad'&&S.view.id==='Z01'&&lernenZustand(vm5)==='pfad');
       S.view={kind:'home',tab:'pfad',thema:'veraendern'};renderAll();
       t('Pfad ohne Test: der Eingangstest bleibt nachholbar („Eingangstest machen“)',/Eingangstest machen/.test(app.textContent)&&!/Eingangstest wiederholen/.test(app.textContent));
       /* Gruppen in Üben = Gruppen im Lernpfad */
@@ -943,20 +951,16 @@ function runSelfTests(){
       t('Gruppen: jede Station des Pfads steht im Üben in derselben Gruppe, jede Aufgabe in genau einer Gruppe, Gruppennamen sind eindeutig',(bad.length===0&&Object.keys(GROUPS).length===activeModules().reduce((n,m)=>n+Object.keys(m.groups).length,0))||(console.log(bad),false));
       t('Gruppen Erweitern und Kürzen: Entdecken, Erweitern, Kürzen, Mischen, Knobeln, Umwandeln, Abschluss; Teilbarkeit (T01) bei Kürzen, Eingangstest (Q00) und Abschlusscheck (QA) bei Abschluss',Object.keys(vm5.groups).join()==='Entdecken,Erweitern,Kürzen,Mischen,Knobeln,Umwandeln,Abschluss'&&vm5.groups['Kürzen'].ids.join()==='T01,T02,G03,G04'&&vm5.groups.Abschluss.ids.join()==='Q00,QA'&&!vm5.groups.Entdecken.ids.includes('T01')&&!vm5.groups.Entdecken.ids.includes('Q00'));
       t('Gruppen Zahlenstrahl: Einteilung, Eintragen, Zwei Wege, Weiter, Abschlusscheck wie im Lernpfad',Object.keys(zs5.groups).join()==='Einteilung,Eintragen,Zwei Wege,Weiter,Abschlusscheck'&&zs5.groups['Zwei Wege'].ids.join()==='Z04,Z05,Z06'&&zs5.groups.Abschlusscheck.ids.join()==='ZQ,ZA');
-      /* Meine Übersicht, Alles freischalten */
-      S.modus={veraendern:'frei'};S.checked={G01:true};S.unlocked={};
-      const row5=(id)=>pathState(vm5,'frei').find(r=>r.id===id);
-      t('Meine Übersicht: ohne Freischaltung bleibt gesperrt, was gesperrt ist (G03, Abschluss)',row5('G03').locked&&row5('QA').locked&&row5('G01').open);
+      /* Es gibt keinen Knopf „Alles freischalten“ und keine „Meine Übersicht“ mehr; S.unlocked öffnet intern noch alles (Tests, alte Speicherstände) */
+      S.modus={veraendern:'pfad'};S.checked={G01:true};S.unlocked={};
+      const row5=(id)=>pathState(vm5).find(r=>r.id===id);
+      t('Pfad: ohne Freischaltung bleibt gesperrt, was gesperrt ist (G03, Abschluss); G01 ist offen und dran',row5('G03').locked&&row5('QA').locked&&row5('G01').open&&row5('G01').next);
       S.view={kind:'home',tab:'pfad',thema:'veraendern'};renderAll();
-      const body=app.textContent;
-      t('Meine Übersicht: heißt so (nicht mehr „Selbst aussuchen“), erklärt „Grün = schon gekonnt, grau = noch gesperrt“ und bietet „Alles freischalten“',/Meine Übersicht/.test(body)&&!/Selbst aussuchen/.test(body)&&/Grün = schon gekonnt, grau = noch gesperrt/.test(body)&&[...app.querySelectorAll('button')].some(b=>b.textContent.includes('Alles freischalten')));
-      [...app.querySelectorAll('button')].find(b=>b.textContent.includes('Alles freischalten')).click();
-      const dlg=[...document.querySelectorAll('.modal')].find(m=>m.textContent.includes('Alles freischalten?')); /* nicht das erste .modal: die Karte „Neuer Rang“ geht verzögert auf */
-      t('Alles freischalten: fragt vorher nach und erklärt, dass die Urkunde trotzdem alle Pflicht-Stationen braucht',!!dlg&&dlg.textContent.includes('Alles freischalten?')&&dlg.textContent.includes('Urkunde')&&!S.unlocked.veraendern);
-      [...dlg.querySelectorAll('button')].find(b=>b.textContent==='Alles freischalten').click();
-      t('Alles freischalten: danach ist alles offen, nur dieses Thema, die Anzeige sagt es',S.unlocked.veraendern===true&&!S.unlocked.zahlenstrahl&&pathState(vm5,'frei').every(r=>r.open)&&pathState(vm5,'pfad').every(r=>r.open)&&/Alles ist freigeschaltet/.test(app.textContent));
+      t('Themenseite: kein „Alles freischalten“, kein „Meine Übersicht“, kein „Selbst aussuchen“, keine Wahl',!/Alles freischalten|Meine Übersicht|Selbst aussuchen|Wie möchtest du lernen/.test(app.textContent)&&![...app.querySelectorAll('button')].some(b=>/freischalten/.test(b.textContent)));
+      S.unlocked={veraendern:true};
+      t('S.unlocked (nur intern): alles offen, nur dieses Thema',pathState(vm5).every(r=>r.open)&&pathState(zs5).find(r=>r.id==='Z02').locked);
       const info5=onRoundEnd('QA',1,{results:Array(15).fill('f'),size:15});
-      t('Alles freischalten: der Abschlusscheck ist offen, die Urkunde gibt es trotzdem nur nach allen Pflicht-Stationen',pathState(vm5,'frei').find(r=>r.id==='QA').open&&info5.passed&&!info5.ready&&!info5.final&&!S.final);
+      t('S.unlocked: der Abschlusscheck ist offen, die Urkunde gibt es trotzdem nur nach allen Pflicht-Stationen',pathState(vm5).find(r=>r.id==='QA').open&&info5.passed&&!info5.ready&&!info5.final&&!S.final);
       /* Einstellungen im Reiter Ich */
       const chip=chipNode();
       t('Rang-Chip: führt zur Seite „Ich“ (kein Dialog mehr)',!chip.hasAttribute('aria-haspopup')&&/Zur Seite Ich/.test(chip.getAttribute('aria-label')));
@@ -1741,6 +1745,10 @@ async function runLayoutTests(w=375,h=600,samples=3,ids,intro=true,opts={}){
     const summary=(id,ok)=>{const T=TASKS[id],qc=QCHK[id];const sk=qc?`Array(${T.size}).fill(0).map((_,i)=>QCHK['${id}'].skills[i%QCHK['${id}'].skills.length])`:'[]';
       return `const key=keyOf('${id}',1);S.levelByType['${id}']=1;S.rounds={[key]:{results:Array(${T.size}).fill('${ok?'f':'x'}'),sk:${sk},cur:null,size:${T.size},bonus:true,info:${ok?`{passed:true,firstPass:true,right:${T.size},need:${T.size},points:${T.size}}`:`{passed:false,right:0,need:${T.size},points:0}`}}};S.view={kind:'practice',id:'${id}'};renderAll();window.scrollTo(0,0);const x=__ovx();return {breit:x,wo:x?__off():''};`;};
     [['G01',true],['G01',false],['Q00',true],['ZQ',false],['WQ',true],['WQ',false],['QA',true],['WA',false]].forEach(([id,ok])=>{if(TASKS[id])wide('Ergebnis '+id+(ok?' gut':' schwach'),summary(id,ok));});
+    /* Neuling (nichts gestartet, Eingangstest-Block und „Starten“ auf den Karten); zuletzt, weil der Rahmen danach zurückgesetzt ist */
+    cw.eval("S.modus={};S.unlocked={};S.passed={};S.checked={};S.placed=false;S.final=false;S.mq={};S.lab=null;S.einstufung=null;S.rounds={};");
+    wide('Seite Lernen (neu)',page("{kind:'home',tab:'pfad'}"));
+    activeModules().forEach(m=>wide('Seite Thema '+m.name+' (neu)',page(`{kind:'home',tab:'pfad',thema:'${m.id}'}`)));
   }
   f.remove();
   const nums=(v)=>Math.max(v.neu,v.teil2,v.pruefen,v.tipps);

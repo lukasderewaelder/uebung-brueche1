@@ -7,6 +7,10 @@ function bigBtn(ic,onclick,title,text,extra,cls,acc,pat){
     el('span',{class:'ico','aria-hidden':'true'},icon(ic)),
     el('span',{class:'tx'},el('b',null,title),text?el('small',null,text):null,extra?el('small',{class:'pg'},extra):null));
 }
+/* Textlink: Nebenhandlung ohne Rahmen (der eine Hauptknopf je Bildschirm ist .btn.primary) */
+function linkBtn(label,onclick,ic,cls){
+  return el('button',{type:'button',class:'linkbtn'+(cls?' '+cls:''),onclick},ic?icon(ic):null,label);
+}
 function listLevel(ids){
   const tids=ids.filter(i=>TASKS[i]||GAMES[i]);
   const l=levelOf(tids[0]);
@@ -33,26 +37,24 @@ function bomList(ids){
   });
   return el('div',{class:'bom'},head,...rows);
 }
-/* Reiter „Lernen“: ein Thema wählen. Geplante Themen sind nur ein Hinweis, kein Link. */
+/* Reiter „Lernen“: eine Karte je Thema. Die Karte hat immer dieselben Teile: Kopf (eine Zeile, die zur Themenseite führt), Fortschritt, höchstens
+   ein Hauptknopf („Starten“ führt zum Eingangstest-Block der Themenseite, „Start/Weiter: Station“ öffnet die Station). Geplante Themen sind nur ein Hinweis, kein Link. */
 function moduleCard(m){
-  const z=lernenZustand(m),rec0=recommendNote(m),openThema=()=>go({kind:'home',tab:'pfad',thema:m.id});
-  const head=el('div',{class:'tc-head'},el('span',{class:'ico','aria-hidden':'true'},icon(m.icon)),el('div',null,el('h2',null,m.name),el('p',null,m.desc)));
-  const btn=(label,fn,primary,ic)=>el('button',{type:'button',class:'btn'+(primary?' primary':''),onclick:fn},ic?icon(ic):null,label);
-  if(z==='gate')return el('section',{class:'tcard'},head,
-    rec0?el('p',{class:'tc-note'},'Empfohlen: erst '+rec0.name+'.'):null,
-    el('p',{class:'tc-note'},'Willst du testen, was du schon kannst? Das dauert etwa 5 Minuten.'),
-    el('div',{class:'rowbtns gatebtns'},btn('Eingangstest starten',()=>startEingang(m),true,'play'),btn('Ohne Test starten',()=>startOhneTest(m))));
-  if(z==='wahl')return el('section',{class:'tcard'},head,
-    el('div',{class:'rowbtns'},btn('Wie möchtest du lernen?',openThema,true)));
-  const {must,doneN,go1,rows}=pfadInfo(m,z),rec=recommendNote(m);
+  const z=lernenZustand(m),rec=recommendNote(m),openThema=()=>go({kind:'home',tab:'pfad',thema:m.id});
+  const {must,doneN,go1,rows}=pfadInfo(m);
+  const head=el('button',{type:'button',class:'tc-head','aria-label':m.name+': Stationen ansehen',onclick:openThema},
+    el('span',{class:'ico','aria-hidden':'true'},icon(m.icon)),
+    el('span',{class:'tc-tx'},el('b',{class:'tc-name'},m.name),el('small',null,m.desc)),
+    icon('weiter'));
   const seg=el('span',{class:'segn',role:'img','aria-label':doneN+' von '+must.length+' Pflicht-Stationen fertig'});
   must.forEach((r,i)=>seg.append(el('i',{class:i<doneN?'on':''})));
+  const act=z==='gate'?el('button',{type:'button',class:'btn primary',onclick:openThema},icon('play'),'Starten')
+    :go1?el('button',{type:'button',class:'btn primary',onclick:()=>openStation(go1.id)},icon('play'),startWord(rows,go1)+': '+stationTitle(go1.id))
+    :el('p',{class:'tc-done'},icon('haken'),'Urkunde geschafft');
   return el('section',{class:'tcard'},head,
     rec?el('p',{class:'tc-note'},'Empfohlen: erst '+rec.name+'.'):null,
     el('div',{class:'tc-prog'},seg,el('b',null,doneN+' von '+must.length)),
-    el('div',{class:'rowbtns'},
-      z==='pfad'&&go1?btn(startWord(rows,go1)+': '+stationTitle(go1.id),()=>openStation(go1.id),true,'play'):null,
-      btn(z==='pfad'?'Lernpfad ansehen':'Stationen ansehen',openThema,!(z==='pfad'&&go1))));
+    act);
 }
 function lernenTab(home){
   home.append(el('h1',null,'Lernen'),...activeModules().map(moduleCard));
@@ -68,7 +70,7 @@ function renderHome(){
   const v=S.view,tab=homeTab(),root=el('div');
   const thema=tab==='pfad'&&v.thema?activeModules().find(m=>m.id===v.thema):null;
   const gmod=tab==='ueben'&&v.group?moduleOf(v.group):null;
-  root.append(topbar(thema?thema.name:gmod?gmod.name+' › '+v.group:''));
+  root.append(topbar(thema?'':gmod?gmod.name+' › '+v.group:'')); /* auf der Themenseite steht der Name als Überschrift */
   const home=el('div',{class:'home'});
   if(tab==='pfad'){
     if(thema)pfadTab(home,thema);else lernenTab(home);
