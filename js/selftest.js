@@ -1567,6 +1567,28 @@ function runSelfTests(){
       return a.type==='W04'&&a.kind==='claim'&&b.type==='W07'&&b.kind==='konflikt'&&c.type==='W08'&&c.fr.length===4&&TASKS.WA.hints(a).length===3&&TASKS.WA.hints(c).length===3;
     })());
   }
+  /* Breite: Wörter nie in der großen Zahlenschrift der Kachel (.tile, 1,7 rem Monospace). Ein langes Wort („Vergleichszahl“) schob sonst
+     die Spalte über den Bildschirmrand (Knöpfe neben dem Bildschirm). Wörter gehören in tile-txt, Brüche in tile-fs. Pixel misst runLayoutTests. */
+  {
+    const keepW={view:S.view,rounds:S.rounds,intro:S.intro,lv:Object.assign({},S.levelByType)};
+    try{
+      S.intro=Object.assign({},keepW.intro);Object.keys(INTRO).forEach(k=>{S.intro[k]=true;});
+      const bad=[];let seen=0;
+      for(const id of Object.keys(TASKS))for(const lvl of [1,2]){
+        const T=TASKS[id],runs=T.quick?[...Array(T.size).keys()]:[0,0,0];
+        for(const pos of runs){
+          S.levelByType[id]=lvl;S.rounds=T.quick?{[keyOf(id,lvl)]:{results:Array(pos).fill('f'),sk:[],cur:null,size:T.size}}:{};S.view={kind:'practice',id};
+          try{renderAll();}catch(e){continue;}
+          app.querySelectorAll('.tile').forEach(b=>{
+            seen++;
+            const txt=((b.querySelector('.tv')||b).textContent||'').replace(/\s+/g,' ').trim();
+            if(/[A-Za-zÄÖÜäöüß]{4,}/.test(txt)&&!/\btile-(txt|fs|sign|ic)\b/.test(b.className))bad.push(id+': '+txt.slice(0,30));
+          });
+        }
+      }
+      t('Breite: Kacheln mit Wörtern (ab vier Buchstaben) tragen tile-txt, tile-fs, tile-sign oder tile-ic, nie die große Zahlenschrift ('+seen+' Kacheln geprüft)',seen>200&&bad.length===0||(console.log([...new Set(bad)].slice(0,6)),false));
+    }finally{S.view=keepW.view;S.rounds=keepW.rounds;S.intro=keepW.intro;S.levelByType=keepW.lv;persist();renderAll();}
+  }
   /* Vergleichen: Spiel S03 Bruch-Duell (Duell und Ordnen-Rätsel) */
   {
     const keepG={view:S.view,games:S.games,levelByType:S.levelByType,xp:S.xp,streak:S.streak};
@@ -1619,7 +1641,12 @@ window.runSelfTests=runSelfTests;
    Gemessen wird in einem unsichtbaren Rahmen genau dieser Größe, mit Zahlentasten (Touch), in vier Zuständen:
    neue Aufgabe · Teil 2 (zweiteilige Aufgaben) · nach „Prüfen“ · nach drei Tipps.
    ===================================================================== */
-async function runLayoutTests(w=375,h=600,samples=3,ids,intro=true){
+/* Layout-Test im Rahmen: misst je Aufgabe, Erklärkarte und Seite die Höhe (Pixel über dem Rand, ohne Scrollen) und die Breite
+   (Pixel, die ein Element seitlich über den Rand ragt: „Knöpfe neben dem Bildschirm“).
+   opts.textSize: 's' | 'm' | 'l' | 'xl' (Einstellung „Textgröße“); opts.screens: auch Tabs, Themenseiten, Spiele, Einstellungen und Zusammenfassungen messen
+   (Standard: ja, solange keine ids vorgegeben sind). Eingangstests (quick) werden an allen Positionen gemessen. */
+async function runLayoutTests(w=375,h=600,samples=3,ids,intro=true,opts={}){
+  const screens=opts.screens!==undefined?opts.screens:!ids;
   ids=ids||Object.keys(TASKS).filter(id=>!['QA','ZA','WA'].includes(id));
   const f=document.createElement('iframe');
   f.style.cssText='position:fixed;left:0;top:0;width:'+w+'px;height:'+h+'px;border:0;visibility:hidden;pointer-events:none';
@@ -1631,6 +1658,10 @@ async function runLayoutTests(w=375,h=600,samples=3,ids,intro=true){
   cw.eval(`persist=function(){};
     const _mm=window.matchMedia.bind(window);window.matchMedia=(q)=>/pointer:\s*coarse/.test(q)?{matches:true,media:q,addEventListener(){},removeEventListener(){},addListener(){},removeListener(){}}:_mm(q);
     window.__ov=()=>document.documentElement.scrollHeight-window.innerHeight;
+    window.__ovx=()=>Math.max(0,document.documentElement.scrollWidth-window.innerWidth);
+    window.__off=()=>{const W=window.innerWidth,o=[];document.querySelectorAll('#app *').forEach(e=>{if(e.closest('svg,.ordghost,.help:not(.open)'))return;const r=e.getBoundingClientRect();if(r.width>0&&r.right>W+1)o.push(e.tagName.toLowerCase()+'.'+String(e.className).split(' ')[0]+'@'+Math.round(r.right));});return [...new Set(o)].slice(0,3).join(' ');};
+    S.ui=S.ui||{};S.ui.size='${opts.textSize||'m'}';applyUi();
+    S.xp=Math.max(S.xp||0,1234);S.streak=12; /* Kopfzeile im ungünstigsten Fall: vierstellige XP und Treffer-Konto */
     window.__btn=(t)=>[...document.querySelectorAll('.actionbar button, .card button')].find(b=>b.textContent.trim().startsWith(t)&&!b.disabled);
     S.modus={veraendern:'frei',zahlenstrahl:'frei',vergleichen:'frei'};S.unlocked={veraendern:true,zahlenstrahl:true,vergleichen:true};Object.keys(INTRO).forEach(k=>S.intro[k]=true);`);
   const out={};
@@ -1640,22 +1671,31 @@ async function runLayoutTests(w=375,h=600,samples=3,ids,intro=true){
       const kinds=(TASKS[id].layoutKinds&&TASKS[id].layoutKinds(lvl))||[null];
       for(const kind of kinds){
       const okey=id+'-L'+lvl+(kind?' '+kind:''),rs=kind?`{'${keyOf(id,lvl)}':{results:[],cur:null,size:${TASKS[id].size},cmp:Array(${TASKS[id].size}).fill('${kind}')}}`:'{}';
-      const worst={neu:-1,teil2:-1,pruefen:-1,tipps:-1};
-      for(let i=0;i<samples;i++){
-        const r=cw.eval(`(()=>{
-          S.levelByType['${id}']=${lvl};S.rounds=${rs};S.view={kind:'practice',id:'${id}'};
-          try{renderAll();}catch(e){return {err:e.message};}
-          window.scrollTo(0,0);
-          const a=__ov();
-          let e2=-1;const first=document.querySelector('.etappe:not([hidden]) input[type=radio], .etappe:not([hidden]) button.yn');
-          if(first){first.click();if(first.type==='radio'){first.checked=true;first.dispatchEvent(new Event('change',{bubbles:true}));}e2=__ov();}
-          const b=__btn('Prüfen');if(b)b.click();const w2=__ov();
-          S.rounds=${rs};renderAll();
-          for(let k=0;k<3;k++){const t=__btn('Tipp');if(t)t.click();}
-          return {neu:a,teil2:e2,pruefen:w2,tipps:__ov()};
-        })()`);
-        if(r.err){out[okey]='FEHLER '+r.err;break;}
-        for(const k of Object.keys(worst))worst[k]=Math.max(worst[k],r[k]);
+      const worst={neu:-1,teil2:-1,pruefen:-1,tipps:-1,breit:-1,wo:''};
+      const quick=!!TASKS[id].quick,poss=quick?[...Array(TASKS[id].size).keys()]:[null]; /* Eingangstests: jede Position (jede Art von Frage kommt vor) */
+      for(const pos of poss){
+        const rsP=quick?`{'${keyOf(id,lvl)}':{results:Array(${pos}).fill('f'),sk:[],cur:null,size:${TASKS[id].size}}}`:rs;
+        for(let i=0;i<samples;i++){
+          const r=cw.eval(`(()=>{
+            S.levelByType['${id}']=${lvl};S.rounds=${rsP};S.view={kind:'practice',id:'${id}'};
+            try{renderAll();}catch(e){return {err:e.message};}
+            window.scrollTo(0,0);
+            const kd=()=>{const c=(S.rounds['${keyOf(id,lvl)}']||{}).cur;return c&&c.task&&c.task.kind?c.task.kind+': ':'';};
+            let bx=0,wo='';const chk=()=>{const x=__ovx();if(x>bx){bx=x;wo=kd()+__off();}};
+            const a=__ov();chk();
+            let e2=-1;const first=document.querySelector('.etappe:not([hidden]) input[type=radio], .etappe:not([hidden]) button.yn');
+            if(first){first.click();if(first.type==='radio'){first.checked=true;first.dispatchEvent(new Event('change',{bubbles:true}));}e2=__ov();chk();}
+            const b=__btn('Prüfen');if(b)b.click();const w2=__ov();chk();
+            S.rounds=${rsP};renderAll();
+            for(let k=0;k<3;k++){const t=__btn('Tipp');if(t)t.click();}
+            chk();
+            return {neu:a,teil2:e2,pruefen:w2,tipps:__ov(),breit:bx,wo};
+          })()`);
+          if(r.err){out[okey]='FEHLER '+r.err;break;}
+          for(const k of ['neu','teil2','pruefen','tipps'])worst[k]=Math.max(worst[k],r[k]);
+          if(r.breit>worst.breit){worst.breit=r.breit;worst.wo=r.wo;}
+        }
+        if(out[okey])break;
       }
       if(!out[okey])out[okey]=worst;
       }
@@ -1667,21 +1707,48 @@ async function runLayoutTests(w=375,h=600,samples=3,ids,intro=true){
       const r=cw.eval(`(()=>{
         S.intro={};S.rounds={};S.view=${id==='LAB'?"{kind:'lab'}":`{kind:'practice',id:'${id}'}`};
         try{renderAll();}catch(e){return {err:e.message};}
-        let worst=-1,n=0,tipps=-1,g=0;
+        let worst=-1,n=0,tipps=-1,g=0,bx=0,wo='';
+        const chk=()=>{const x=__ovx();if(x>bx){bx=x;wo='Karte '+(n)+': '+__off();}};
         while(document.querySelector('.introwork')&&g++<14){
-          window.scrollTo(0,0);worst=Math.max(worst,__ov());n++;
-          if(n===1&&document.querySelector('.introrow.probe')){for(let k=0;k<3;k++){const t=__btn('Tipp');if(t)t.click();}tipps=__ov();window.scrollTo(0,0);}
+          window.scrollTo(0,0);worst=Math.max(worst,__ov());n++;chk();
+          if(n===1&&document.querySelector('.introrow.probe')){for(let k=0;k<3;k++){const t=__btn('Tipp');if(t)t.click();}tipps=__ov();chk();window.scrollTo(0,0);}
           document.querySelector('.page').introApi.next();
         }
-        return {karten:worst,tippsProbe:tipps};
+        return {karten:worst,tippsProbe:tipps,breit:bx,wo};
       })()`);
-      out['Erklärung '+id]=r.err?'FEHLER '+r.err:{neu:r.karten,teil2:-1,pruefen:-1,tipps:r.tippsProbe};
+      out['Erklärung '+id]=r.err?'FEHLER '+r.err:{neu:r.karten,teil2:-1,pruefen:-1,tipps:r.tippsProbe,breit:r.breit,wo:r.wo};
     }
   }
+  /* Seiten, Spiele, Fenster und Zusammenfassungen: nur die Breite (Seiten dürfen scrollen) */
+  if(screens){
+    const wide=(name,js)=>{
+      const r=cw.eval(`(()=>{try{${js}}catch(e){return {err:e.message};}})()`);
+      out[name]=r&&r.err?'FEHLER '+r.err:{neu:-1,teil2:-1,pruefen:-1,tipps:-1,breit:r?r.breit:0,wo:r?r.wo:''};
+    };
+    const page=(v)=>`S.view=${v};renderAll();window.scrollTo(0,0);const x=__ovx();return {breit:x,wo:x?__off():''};`;
+    const views=[['Seite Lernen',"{kind:'home',tab:'pfad'}"],['Seite Üben',"{kind:'home',tab:'ueben'}"],['Seite Spiele',"{kind:'home',tab:'spiele'}"],['Seite Ich',"{kind:'home',tab:'rang'}"],['Seite Labor',"{kind:'lab'}"]];
+    activeModules().forEach(m=>views.push(['Seite Thema '+m.name,`{kind:'home',tab:'pfad',thema:'${m.id}'}`]));
+    Object.keys(GROUPS).forEach(g=>views.push(['Seite Gruppe '+g,`{kind:'home',tab:'ueben',group:${JSON.stringify(g)}}`]));
+    Object.keys(GAMES).forEach(g=>[1,2].forEach(l=>views.push(['Spiel '+g+' '+LEVEL_LABEL[l],`S.levelByType['${g}']=${l};{kind:'game',id:'${g}'}`])));
+    views.forEach(([name,v])=>wide(name,v.startsWith('S.levelByType')?`${v.split(';')[0]};${page(v.split(';')[1])}`:page(v)));
+    /* Fenster (liegen außerhalb von #app) */
+    const dlg=(open,close)=>`S.view={kind:'home',tab:'rang'};renderAll();${open};const W=innerWidth,o=[];document.querySelectorAll('.modal *').forEach(e=>{const r=e.getBoundingClientRect();if(r.width>0&&r.right>W+1)o.push(e.tagName.toLowerCase()+'.'+String(e.className).split(' ')[0]+'@'+Math.round(r.right));});${close};return {breit:o.length?Math.max(1,__ovx()):__ovx(),wo:[...new Set(o)].slice(0,3).join(' ')};`;
+    wide('Fenster Einstellungen',dlg('openOptions()','closeOptions()'));
+    wide('Fenster Hilfe bei Problemen',dlg('openProblemHelp()','closeProblemHelp()'));
+    /* Merkkasten geöffnet (Schublade oder Bottom-Sheet) */
+    ['G01','W07','WQ'].forEach(id=>wide('Merkkasten '+id,`S.levelByType['${id}']=1;S.rounds={};S.view={kind:'practice',id:'${id}'};renderAll();setHelp(true);const x=__ovx();const o=__off();setHelp(false);return {breit:x,wo:o};`));
+    /* Zusammenfassungen: bestanden, nicht bestanden, Eingangstest, Abschlusscheck */
+    const summary=(id,ok)=>{const T=TASKS[id],qc=QCHK[id];const sk=qc?`Array(${T.size}).fill(0).map((_,i)=>QCHK['${id}'].skills[i%QCHK['${id}'].skills.length])`:'[]';
+      return `const key=keyOf('${id}',1);S.levelByType['${id}']=1;S.rounds={[key]:{results:Array(${T.size}).fill('${ok?'f':'x'}'),sk:${sk},cur:null,size:${T.size},bonus:true,info:${ok?`{passed:true,firstPass:true,right:${T.size},need:${T.size},points:${T.size}}`:`{passed:false,right:0,need:${T.size},points:0}`}}};S.view={kind:'practice',id:'${id}'};renderAll();window.scrollTo(0,0);const x=__ovx();return {breit:x,wo:x?__off():''};`;};
+    [['G01',true],['G01',false],['Q00',true],['ZQ',false],['WQ',true],['WQ',false],['QA',true],['WA',false]].forEach(([id,ok])=>{if(TASKS[id])wide('Ergebnis '+id+(ok?' gut':' schwach'),summary(id,ok));});
+  }
   f.remove();
-  const bad=Object.entries(out).filter(([k,v])=>typeof v==='string'||Math.max(v.neu,v.teil2,v.pruefen,v.tipps)>0)
+  const nums=(v)=>Math.max(v.neu,v.teil2,v.pruefen,v.tipps);
+  const bad=Object.entries(out).filter(([k,v])=>typeof v==='string'||nums(v)>0)
     .map(([k,v])=>k+' '+(typeof v==='string'?v:'neu '+Math.max(0,v.neu)+', Teil 2 '+Math.max(0,v.teil2)+', Prüfen '+Math.max(0,v.pruefen)+', Tipps '+Math.max(0,v.tipps)));
-  console.log('Layout '+w+' × '+h+': '+(Object.keys(out).length-bad.length)+' von '+Object.keys(out).length+' Aufgaben passen ohne Scrollen');
+  const wideList=Object.entries(out).filter(([k,v])=>typeof v!=='string'&&v.breit>0).map(([k,v])=>k+' '+v.breit+' px'+(v.wo?' ('+v.wo+')':''));
+  console.log('Layout '+w+' × '+h+(opts.textSize&&opts.textSize!=='m'?' (Textgröße '+opts.textSize+')':'')+': '+(Object.keys(out).length-bad.length)+' von '+Object.keys(out).length+' Ansichten passen ohne Scrollen, '+wideList.length+' zu breit');
   if(bad.length)console.log('Zu hoch (Pixel über dem Rand):\n'+bad.join('\n'));
-  return {total:Object.keys(out).length,tooHigh:bad,detail:out};
+  if(wideList.length)console.log('Zu breit (Pixel über dem Rand):\n'+wideList.join('\n'));
+  return {total:Object.keys(out).length,tooHigh:bad,tooWide:wideList,detail:out};
 }
