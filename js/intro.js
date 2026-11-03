@@ -170,7 +170,7 @@ const INTRO={
     {h:'Sofort eine Rückmeldung',
       say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Dann geht es mit der nächsten Frage weiter.']},
     {h:'Danach siehst du, was fehlt',
-      say:['Am Ende siehst du, was du schon kannst.','Danach wählst du: dem Pfad folgen oder Meine Übersicht.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
+      say:['Am Ende siehst du, was du schon kannst.','Bekannte Stationen sind dann im Lernpfad markiert.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
     {h:'Der Abschlusscheck',
       say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat '+TASKS.QA.size+' Aufgaben: '+QA_TAP+' zum Antippen und '+QA_CALC.length+' zum Rechnen.','Ab '+needOf(TASKS.Q00.size)+' richtigen Antworten gibt es die Urkunde.']}
   ]},
@@ -189,7 +189,7 @@ const INTRO={
     {h:'Sofort eine Rückmeldung',
       say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Es gibt keine Zeitmessung.']},
     {h:'Danach siehst du, was fehlt',
-      say:['Am Ende siehst du, was du schon kannst.','Danach wählst du: dem Pfad folgen oder Meine Übersicht.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
+      say:['Am Ende siehst du, was du schon kannst.','Bekannte Stationen sind dann im Lernpfad markiert.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
     {h:'Der Abschlusscheck',
       say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat '+TASKS.ZA.size+' Aufgaben: '+ZA_TAP+' zum Antippen und '+ZA_LINE.length+' am Zahlenstrahl.','Ab '+needOf(TASKS.ZQ.size)+' richtigen Antworten gibt es die Urkunde.']}
   ]},
@@ -316,7 +316,7 @@ const INTRO={
     {h:'Sofort eine Rückmeldung',
       say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Es gibt keine Zeitmessung.']},
     {h:'Danach siehst du, was fehlt',
-      say:['Am Ende siehst du, was du schon kannst.','Danach wählst du: dem Pfad folgen oder Meine Übersicht.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
+      say:['Am Ende siehst du, was du schon kannst.','Bekannte Stationen sind dann im Lernpfad markiert.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
     {h:'Der Abschlusscheck',
       say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat '+TASKS.WA.size+' Aufgaben: '+WA_TAP+' zum Antippen und '+WA_LINE.length+' zum Lösen.','Ab '+needOf(TASKS.WQ.size)+' richtigen Antworten gibt es die Urkunde.']}
   ]},
@@ -653,7 +653,7 @@ function renderIntro(id){
   const known=!again&&!stationPassed(id)&&checkMark(id)==='sitzt'; /* im Eingangstest schon gezeigt: „Kenne ich schon“ ist der Hauptknopf */
   let P=null; /* die Probeaufgabe bleibt beim Blättern erhalten */
   let i=0;
-  const root=el('div',{class:'page'});root.append(topbar(I.title));
+  const root=el('div',{class:'page'});root.append(topbar('')); /* der Titel steht im Schriftfeld der Karte */
   const shell=el('div',{class:'shell'}),main=el('main',{class:'work introwork'});
   main.dataset.acc=ACC[id]||PATH_ACC[id]||'';
   shell.append(main);root.append(shell);app.append(root);

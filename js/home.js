@@ -7,6 +7,10 @@ function bigBtn(ic,onclick,title,text,extra,cls,acc,pat){
     el('span',{class:'ico','aria-hidden':'true'},icon(ic)),
     el('span',{class:'tx'},el('b',null,title),text?el('small',null,text):null,extra?el('small',{class:'pg'},extra):null));
 }
+/* Textlink: Nebenhandlung ohne Rahmen (der eine Hauptknopf je Bildschirm ist .btn.primary) */
+function linkBtn(label,onclick,ic,cls){
+  return el('button',{type:'button',class:'linkbtn'+(cls?' '+cls:''),onclick},ic?icon(ic):null,label);
+}
 function listLevel(ids){
   const tids=ids.filter(i=>TASKS[i]||GAMES[i]);
   const l=levelOf(tids[0]);
@@ -14,61 +18,74 @@ function listLevel(ids){
   const mk=(n)=>el('button',{type:'button','aria-pressed':String(l===n),onclick:()=>set(n)},LEVEL_LABEL[n]);
   return el('div',{class:'levelrow'},el('span',{class:'lblm'},'Schwierigkeit'),el('div',{class:'seg',role:'group','aria-label':'Schwierigkeit wählen'},mk(1),mk(2)));
 }
-/* Stückliste: Nr. · Bezeichnung · Sterne leicht/knifflig */
-function bomList(ids){
+/* Stückliste: Nr. · Bezeichnung · Sterne leicht/knifflig (opts.head=false: ohne Kopfzeile, opts.start: so viele Nummern schon vergeben) */
+function bomList(ids,opts={}){
   const head=el('div',{class:'bomhead'},el('span',null,'Nr.'),el('span',null,'Bezeichnung'),el('span',null,'Leicht'),el('span',null,'Knifflig'),el('span'));
+  const no=(i)=>String((opts.start||0)+i+1).padStart(2,'0');
   const rows=ids.map((id,i)=>{
     if(id==='LAB'){
       const done=!!(S.lab&&S.lab.done);
       return el('button',{type:'button',class:'bomrow','data-acc':'mix',onclick:()=>go({kind:'lab'})},
-        el('span',{class:'pos'},String(i+1).padStart(2,'0')),
+        el('span',{class:'pos'},no(i)),
         el('span',{class:'nm'},el('b',null,'Bruchlabor'),el('small',null,'Erweitern und Kürzen ausprobieren – mit Streifen oder Kreis.')),
         el('span',{class:'labstat'+(done?' done':'')},done?icon('haken'):null,done?'Geschafft':'Neu'),icon('weiter'));
     }
     const [s1,s2]=starCols(id);
     return el('button',{type:'button',class:'bomrow','data-acc':ACC[id]||null,onclick:()=>openEntry(id)},
-      el('span',{class:'pos'},String(i+1).padStart(2,'0')),
+      el('span',{class:'pos'},no(i)),
       el('span',{class:'nm'},el('b',null,TASKS[id].name),el('small',null,TASKS[id].desc)),
       s1,s2,icon('weiter'));
   });
-  return el('div',{class:'bom'},head,...rows);
+  return el('div',{class:'bom'},...(opts.head===false?[]:[head]),...rows);
 }
-/* Reiter „Lernen“: ein Thema wählen. Geplante Themen sind nur ein Hinweis, kein Link. */
-function moduleCard(m){
-  const z=lernenZustand(m),rec0=recommendNote(m),openThema=()=>go({kind:'home',tab:'pfad',thema:m.id});
-  const head=el('div',{class:'tc-head'},el('span',{class:'ico','aria-hidden':'true'},icon(m.icon)),el('div',null,el('h2',null,m.name),el('p',null,m.desc)));
-  const btn=(label,fn,primary,ic)=>el('button',{type:'button',class:'btn'+(primary?' primary':''),onclick:fn},ic?icon(ic):null,label);
-  if(z==='gate')return el('section',{class:'tcard'},head,
-    rec0?el('p',{class:'tc-note'},'Empfohlen: erst '+rec0.name+'.'):null,
-    el('p',{class:'tc-note'},'Willst du testen, was du schon kannst? Das dauert etwa 5 Minuten.'),
-    el('div',{class:'rowbtns gatebtns'},btn('Eingangstest starten',()=>startEingang(m),true,'play'),btn('Ohne Test starten',()=>startOhneTest(m))));
-  if(z==='wahl')return el('section',{class:'tcard'},head,
-    el('div',{class:'rowbtns'},btn('Wie möchtest du lernen?',openThema,true)));
-  const {must,doneN,go1,rows}=pfadInfo(m,z),rec=recommendNote(m);
+/* Üben: alle Aufgaben eines Themas, nach Gruppen, in einer fortlaufenden Liste */
+function uebenBody(m){
+  const body=el('div',{class:'uebenbody'});let n=0,first=true;
+  Object.keys(m.groups).forEach(g=>{
+    const ids=m.groups[g].ids;
+    body.append(el('h3',{class:'grp'},icon(m.groups[g].icon),g),bomList(ids,{head:first,start:n}));
+    n+=ids.length;first=false;
+  });
+  return body;
+}
+/* Reiter „Lernen“: eine Karte je Thema. Die Karte hat immer dieselben Teile: Kopf (eine Zeile, die zur Themenseite führt), Fortschritt, höchstens
+   eine Aktion („Starten“ führt zum Eingangstest-Block der Themenseite, „Start/Weiter: Station“ öffnet die Station). Gelb (primary) ist nur die Aktion
+   der Karte, bei der es weitergeht: ein gelber Knopf je Bildschirm. Geplante Themen sind nur ein Hinweis, kein Link. */
+function moduleCard(m,primary=true){
+  const z=lernenZustand(m),rec=recommendNote(m),openThema=()=>go({kind:'home',tab:'pfad',thema:m.id});
+  const {must,doneN,go1,rows}=pfadInfo(m);
+  const head=el('button',{type:'button',class:'tc-head','aria-label':m.name+': Stationen ansehen',onclick:openThema},
+    el('span',{class:'ico','aria-hidden':'true'},icon(m.icon)),
+    el('span',{class:'tc-tx'},el('b',{class:'tc-name'},m.name),el('small',null,m.desc)),
+    icon('weiter'));
   const seg=el('span',{class:'segn',role:'img','aria-label':doneN+' von '+must.length+' Pflicht-Stationen fertig'});
   must.forEach((r,i)=>seg.append(el('i',{class:i<doneN?'on':''})));
+  const cls='btn'+(primary?' primary':'');
+  const act=z==='gate'?el('button',{type:'button',class:cls,onclick:openThema},icon('play'),'Starten')
+    :go1?el('button',{type:'button',class:cls,onclick:()=>openStation(go1.id)},icon('play'),startWord(rows,go1)+': '+stationTitle(go1.id))
+    :el('p',{class:'tc-done'},icon('haken'),'Urkunde geschafft');
   return el('section',{class:'tcard'},head,
     rec?el('p',{class:'tc-note'},'Empfohlen: erst '+rec.name+'.'):null,
     el('div',{class:'tc-prog'},seg,el('b',null,doneN+' von '+must.length)),
-    el('div',{class:'rowbtns'},
-      z==='pfad'&&go1?btn(startWord(rows,go1)+': '+stationTitle(go1.id),()=>openStation(go1.id),true,'play'):null,
-      btn(z==='pfad'?'Lernpfad ansehen':'Stationen ansehen',openThema,!(z==='pfad'&&go1))));
+    act);
 }
 function lernenTab(home){
-  home.append(el('h1',null,'Lernen'),...activeModules().map(moduleCard));
+  const focus=activeModules().find(m=>lernenZustand(m)==='gate'||pfadInfo(m).go1); /* das Thema, bei dem es weitergeht */
+  home.append(el('h1',null,'Lernen'),...activeModules().map(m=>moduleCard(m,m===focus)));
   const soon=plannedModules();
   if(soon.length)home.append(el('section',{class:'soon','aria-label':'Geplante Themen'},el('h2',{class:'area'},'Bald'),
     el('ul',null,...soon.map(m=>el('li',null,icon(m.icon),el('span',null,el('b',null,m.name),el('small',null,m.desc)),el('em',null,'geplant'))))));
 }
-/* Einklappbarer Abschnitt: hält lange Listen aus dem ersten Blick heraus */
-function fold(title,content){
-  return el('details',{class:'fold'},el('summary',null,title),content);
+/* Einklappbarer Abschnitt: hält lange Listen aus dem ersten Blick heraus (open: gleich aufgeklappt) */
+function fold(title,content,open){
+  const d=el('details',{class:'fold'},el('summary',null,title),content);
+  if(open)d.open=true;
+  return d;
 }
 function renderHome(){
   const v=S.view,tab=homeTab(),root=el('div');
   const thema=tab==='pfad'&&v.thema?activeModules().find(m=>m.id===v.thema):null;
-  const gmod=tab==='ueben'&&v.group?moduleOf(v.group):null;
-  root.append(topbar(thema?thema.name:gmod?gmod.name+' › '+v.group:''));
+  root.append(topbar('')); /* Themenseite, Üben und die anderen Reiter tragen ihren Namen als Überschrift */
   const home=el('div',{class:'home'});
   if(tab==='pfad'){
     if(thema)pfadTab(home,thema);else lernenTab(home);
@@ -77,29 +94,17 @@ function renderHome(){
       ...['S01','S02','S03'].map(id=>{const r=S.games[keyOf(id,levelOf(id))];return bigBtn(ICON[id],()=>openEntry(id),GAMES[id].name,GAMES[id].desc,[r?`Runden: ${r.played}`:'',id==='S02'&&lootOf().length?`Sammelkarten: ${lootOf().length} von ${LOOT.length}`:''].filter(Boolean).join(' · '),'',null,id==='S01'?'dots':id==='S02'?'hatch':'dash');})));
   }else if(tab==='rang'){
     const total=Object.values(S.progress).reduce((a,p)=>a+p.done,0);
-    home.append(el('h1',null,'Ich'),
-      el('button',{type:'button',class:'btn small settingsbtn',onclick:openOptions},icon('zahnrad'),' Einstellungen'),
+    home.append(el('div',{class:'ichhead'},el('h1',null,'Ich'),linkBtn('Einstellungen',openOptions,'zahnrad')),
       rankCard(),dayCard(),
       el('p',{class:'stats'},`Aufgaben bearbeitet: ${total} · Höchstes Treffer-Konto: ${S.bestStreak||0}`),
       fold('Alle Ränge',rankLadder()),
-      fold('Alle Ziele',perfectionList()),
-      fold('Deine Sterne',bomList(PRACTICE_ORDER)),
-      el('div',{class:'rowbtns'},
-        el('button',{type:'button',class:'btn small',onclick:()=>{const prev=JSON.parse(JSON.stringify(S.view));go({kind:'lab',from:'opt',back:prev});}},icon('kolben'),' Bruchlabor'),
-        el('button',{type:'button',class:'btn small',onclick:()=>go(pfadView())},icon('pfad'),' Lernpfad'),
-        el('button',{type:'button',class:'btn small',onclick:()=>openProblemHelp()},icon('schluessel'),' Hilfe bei Problemen')));
-  }else if(!v.group||!GROUPS[v.group]){
-    const last=S.last&&TASKS[S.last]?S.last:null;
-    if(last)home.append(bigBtn('play',()=>openEntry(last),'Weiter üben',TASKS[last].name,LEVEL_LABEL[levelOf(last)],'go'));
-    home.append(el('h1',null,'Üben'));
-    /* Mit mehr als einem aktiven Thema steht über den Gruppen der Name des Themas */
-    activeModules().forEach(m=>{
-      if(activeModules().length>1)home.append(el('h2',{class:'area'},m.name));
-      home.append(el('div',{class:'menu'},...Object.keys(m.groups).map(g=>bigBtn(m.groups[g].icon,()=>go({kind:'home',tab:'ueben',group:g}),g,m.groups[g].text,null,'',null,m.groups[g].pat))));
-    });
+      fold('Alle Ziele',perfectionList()));
   }else{
-    const g=GROUPS[v.group];
-    home.append(el('h1',null,v.group),listLevel(g.ids),bomList(g.ids));
+    /* Üben: frei wählen. Ein Umschalter für alle, je Thema eine aufklappbare Liste (das Thema der letzten Aufgabe ist offen) */
+    const last=S.last&&TASKS[S.last]?S.last:null,lastMod=last?moduleOf(last):null,mods=activeModules();
+    if(last)home.append(bigBtn('play',()=>openEntry(last),'Weiter üben',TASKS[last].name,LEVEL_LABEL[levelOf(last)],'go'));
+    home.append(el('h1',null,'Üben'),listLevel(PRACTICE_ORDER));
+    mods.forEach(m=>home.append(fold(m.name,uebenBody(m),lastMod?lastMod.id===m.id:m===mods[0])));
   }
   root.append(home,bottomNav());app.append(root);
 }

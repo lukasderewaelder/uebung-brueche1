@@ -2,7 +2,7 @@
 /* =====================================================================
    Eingangstest WQ und Abschlusscheck WA zum Thema „Brüche vergleichen“ (15 Fragen: 5 Fähigkeiten à 3)
    Wie Q00 und ZQ nur Antipp-Fragen (A–D, Ja/Nein, „Weiß ich nicht“); jede Frage trägt ein skill-Etikett.
-   3 von 3 richtig = „sitzt“: die Stationen der Fähigkeit sind in „Meine Übersicht“ offen (stations). Jede Frage enthält eine typische Falle
+   3 von 3 richtig = „sitzt“: die Stationen der Fähigkeit stehen im Lernpfad mit „Check: sitzt“ (stations). Jede Frage enthält eine typische Falle
    (z. B. „gleicher Nenner = gleich groß“, „gleich viele fehlen = gleich groß“, „größerer Nenner = größer“, nur nach den Zählern ordnen).
    Antworten: opts mit txt (immer), dazu f (Bruch), mx (gemischte Zahl), pt (Text mit Brüchen: Liste aus Text und [n,d]) oder fs (Liste von Brüchen).
    ===================================================================== */

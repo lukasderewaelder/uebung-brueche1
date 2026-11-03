@@ -262,7 +262,7 @@ function mountTask(host,st,cb){
   const solMsg=()=>{
     const info=el('div',{class:'msg info'},'Schau dir die Lösung genau an. Dann geht es weiter.');
     if(!cb.msgHost){sol.replaceChildren(el('div',{class:'solbox'},el('h4',null,icon('auge'),'Musterlösung'),...buildWorkedSolution(st.task)));fb.replaceChildren(info);return;}
-    fb.replaceChildren(info,el('button',{type:'button',class:'btn small sollink',onclick:()=>openSolutionSheet(st.task)},icon('auge'),'Lösung ansehen'));
+    fb.replaceChildren(info,el('button',{type:'button',class:'linkbtn sollink',onclick:()=>openSolutionSheet(st.task)},icon('auge'),'Lösung ansehen'));
     onMsg('fb');
   };
   const applyMarks=(marks)=>{
@@ -337,23 +337,22 @@ const openEntry=(id)=>{if(!isGame(id))S.last=id;go({kind:isGame(id)?'game':'prac
 function setLevel(id,l){S.levelByType[id]=l;persist();renderAll();}
 
 /* Symbole und Kennfarbe je Übung (erw = Erweitern/Orange, kue = Kürzen/Petrol) */
-const ICON={QA:'plakette',ZA:'plakette',ZQ:'haken',Z01:'lineal',Z02:'lupe',Z03:'lineal',Z04:'aus',Z05:'wechsel',Z06:'zahnrad',Z07:'lineal',Z08:'wechsel',Q00:'haken',G01:'lineal',T01:'teiler',T02:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'zahnrad',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor',W01:'balken',W02:'balken',W03:'wechsel',W04:'luecke',W05:'aus',W06:'lineal',W07:'frage',W08:'netz',W09:'lineal',W10:'lupe',WQ:'haken',WA:'plakette',S03:'wechsel'};
+const ICON={QA:'plakette',ZA:'plakette',ZQ:'haken',Z01:'lineal',Z02:'lupe',Z03:'lineal',Z04:'aus',Z05:'wechsel',Z06:'netz',Z07:'lineal',Z08:'wechsel',Q00:'haken',G01:'lineal',T01:'teiler',T02:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'wechsel',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor',W01:'balken',W02:'balken',W03:'wechsel',W04:'luecke',W05:'aus',W06:'lineal',W07:'frage',W08:'netz',W09:'lineal',W10:'lupe',WQ:'haken',WA:'plakette',S03:'wechsel'};
 const ACC={G02:'erw',O01:'erw',G03:'kue',G04:'kue',T01:'kue',T02:'kue',O02:'kue',G05:'mix'};
 function backTarget(){
   const v=S.view;
   if(v.from==='opt'&&v.back)return v.back;
   if(v.from==='pfad'&&(v.kind==='practice'||v.kind==='lab'))return pfadView(v.kind==='lab'?'LAB':v.id);
   if(v.kind==='home'&&v.tab==='pfad'&&v.thema)return {kind:'home',tab:'pfad'};
-  if(v.kind==='practice'){const g=Object.keys(GROUPS).find(k=>GROUPS[k].ids.includes(v.id));return {kind:'home',tab:'ueben',group:g};}
+  if(v.kind==='practice')return {kind:'home',tab:'ueben'};
   if(v.kind==='game')return {kind:'home',tab:'spiele'};
-  if(v.kind==='lab')return {kind:'home',tab:'ueben',group:'Entdecken'};
-  if(v.kind==='home'&&v.group)return {kind:'home',tab:'ueben'};
+  if(v.kind==='lab')return {kind:'home',tab:'ueben'};
   return null;
 }
 function topbar(title){
   const bt=backTarget();
   return el('header',{class:'topbar'},
-    bt?el('button',{type:'button',class:'btn small backbtn',onclick:()=>go(bt)},icon('zurueck'),'Zurück'):el('span',{class:'brand'},icon('zahnrad'),el('span',{class:'bt'},'Bruchwerkstatt')),
+    bt?el('button',{type:'button',class:'btn small backbtn',onclick:()=>go(bt)},icon('zurueck'),'Zurück'):el('span',{class:'brand'},el('span',{class:'bt'},'Bruchwerkstatt')), /* nur die Wortmarke: ein Zahnrad sähe wie der Knopf „Einstellungen“ aus */
     el('span',{class:'title'},title||''),
     chipNode());
 }
@@ -400,7 +399,7 @@ function renderPractice(id){
   const T=TASKS[id],lvl=levelOf(id),key=keyOf(id,lvl);
   const round=S.rounds[key]||(S.rounds[key]={results:[],cur:null,size:T.size});
   const root=el('div',{class:'page'});
-  root.append(topbar(T.name));
+  root.append(topbar('')); /* der Name steht im Schriftfeld der Karte */
   const shell=el('div',{class:'shell'});
   const help=helpPanel(id);
   const main=el('main',{class:'work'});
@@ -443,8 +442,8 @@ function renderPractice(id){
   const hintBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('hinweis')),'Tipp');
   const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkkasten');
   const primary=el('button',{type:'button',class:'btn primary'},'Prüfen');
-  const solBtn=el('button',{type:'button',class:'btn small'},icon('auge'),'Lösung ansehen');
-  const skipBtn=el('button',{type:'button',class:'btn small'},icon('skip'),'Überspringen');
+  const solBtn=el('button',{type:'button',class:'linkbtn'},icon('auge'),'Lösung ansehen');
+  const skipBtn=el('button',{type:'button',class:'linkbtn'},icon('skip'),'Überspringen');
   const pad=makeKeypad(host,()=>onPrimary());
   const links=el('div',{class:'linkrow hidden'},solBtn,skipBtn); /* liegt in der Meldung unten, nach einem Fehlversuch */
   const msg=el('div',{class:'dockmsg'});
@@ -527,20 +526,23 @@ function renderSummary(main,id,lvl,key,round){
   const again=()=>{S.rounds[key]={results:[],cur:null,size:TASKS[id].size};persist();renderAll();};
   const toPfad=()=>go(pfadView(id));
   const btn=(label,fn,primary)=>el('button',{type:'button',class:'btn'+(primary?' primary':''),onclick:fn},label);
-  const lvlBtn=btn(lvl===1?'Knifflig probieren':'Zurück zu Leicht',()=>setLevel(id,lvl===1?2:1));
-  let msg=null,btns;
+  /* Ein Hauptknopf, alles andere sind Textlinks. Was der Hauptknopf ist, hängt davon ab, woher die Runde kam (Lernpfad oder Üben). */
+  const fromPfad=!!(S.view&&S.view.from==='pfad'),toList=()=>go({kind:'home',tab:'ueben'});
+  const lvlLink=linkBtn(lvl===1?'Knifflig probieren':'Zurück zu Leicht',()=>setLevel(id,lvl===1?2:1));
+  let msg=null,mainBtn,links;
   if(inPath){
     const nx=pathState(moduleOf(id)).find(r=>r.next);
     if(passed){
       msg=info.firstPass?'Station fertig!'+(nx?' Als Nächstes: '+stationTitle(nx.id)+'.':''):'Wieder geschafft – stark!';
-      btns=[btn('Weiter im Lernpfad',toPfad,true),btn('Nochmal',again),lvlBtn];
     }else{
       /* Punkte: ohne Tipp ganz, mit Tipp oder zweitem Versuch halb (Altdaten ohne info.points: nur die Treffer) */
       const fmt=(x)=>String(x).replace('.',','),pts=info.points!=null?info.points:info.right;
       msg='Du hast '+info.right+' von '+round.size+' richtig.'+(pts<info.right?' Aufgaben mit Tipp zählen nur halb.':'')+' Du brauchst '+fmt(info.need)+' Punkte, du hast '+fmt(pts)+'. Noch einmal?';
-      btns=[btn('Nochmal',again,true),btn('Zum Lernpfad',toPfad),lvlBtn];
     }
-  }else btns=[btn(`Neue Runde (${TASKS[id].size} Aufgaben)`,again,true),lvlBtn];
+  }
+  if(fromPfad&&passed){mainBtn=btn('Weiter im Lernpfad',toPfad,true);links=[linkBtn('Nochmal',again),lvlLink];}
+  else if(fromPfad&&inPath){mainBtn=btn('Nochmal',again,true);links=[linkBtn('Zum Lernpfad',toPfad),lvlLink];}
+  else{mainBtn=btn(`Neue Runde (${TASKS[id].size} Aufgaben)`,again,true);links=[lvlLink,linkBtn('Zur Liste',toList)].concat(inPath?[linkBtn('Zum Lernpfad',toPfad)]:[]);}
   main.append(el('div',{class:'card summary'},el('div',{class:'stampbox'},passed?'Station fertig':'Runde fertig'),el('p',null),bigStars(stars),
     el('p',null,`${round.size} Aufgaben bearbeitet · ${LEVEL_LABEL[lvl]}`),
     el('table',null,
@@ -549,7 +551,7 @@ function renderSummary(main,id,lvl,key,round){
       el('tr',null,el('td',null,'Übersprungen'),el('td',null,el('b',null,String(c('s'))))),
       el('tr',null,el('td',null,'Lösung angezeigt'),el('td',null,el('b',null,String(c('x')))))),
     msg?el('p',null,msg):null,
-    el('div',{class:'rowbtns'},...btns)));
+    el('div',{class:'sumact'},mainBtn,el('div',{class:'linkrow'},...links))));
 }
 
 /* Ergebnis des Abschlusschecks (QA, ZA): Punkte, Antippfragen und Rechenaufgaben getrennt, Urkunde */
@@ -569,7 +571,7 @@ function renderFinalSummary(main,id,lvl,key,round){
       el('tr',null,el('td',null,'Zum Antippen richtig'),el('td',null,el('b',null,good(tap)+' von '+tap.length))),
       el('tr',null,el('td',null,TASKS[id].finalLabel||(id==='ZA'?'Am Zahlenstrahl richtig':'Zum Rechnen richtig')),el('td',null,el('b',null,good(calc)+' von '+calc.length)))),
     ...lines.map(x=>el('p',null,x)),
-    el('div',{class:'rowbtns'},btn('Zum Lernpfad',()=>go(pfadView(id)),true),btn('Nochmal',again))));
+    el('div',{class:'sumact'},btn('Zum Lernpfad',()=>go(pfadView(id)),true),el('div',{class:'linkrow'},linkBtn('Nochmal',again)))));
 }
 
 /* Ergebnis des Eingangstests eines Themas (QCHK[id]) */
@@ -590,7 +592,7 @@ function renderQuickSummary(main,id,lvl,key,round){
       el('p',null,`${right} von ${round.size} richtig`),
       el('p',null,'Das war noch schwer. Das ist ganz normal.'),
       el('p',null,qc.startText),
-      el('div',{class:'rowbtns'},btn('Zum Lernpfad',toPfad,true),btn('Nochmal',again))));
+      el('div',{class:'sumact'},btn('Zum Lernpfad',toPfad,true),el('div',{class:'linkrow'},linkBtn('Nochmal',again)))));
     return;
   }
   /* Fähigkeiten in Lernpfad-Reihenfolge */
@@ -615,14 +617,14 @@ function renderQuickSummary(main,id,lvl,key,round){
     else lines.push('Alles sitzt – stark!');
     if(ev.unsure)lines.push('Bei „Weiß ich nicht“ steht die Fähigkeit auf „üben“.');
   }
-  const btns=[btn('Weiter',toPfad,true)];
-  if(order.every(sk=>ev.skills[sk].status==='sitzt')&&lvl===1)btns.push(btn('Knifflig probieren',()=>setLevel(id,2)));
-  btns.push(btn('Nochmal',again));
+  const links=[];
+  if(order.every(sk=>ev.skills[sk].status==='sitzt')&&lvl===1)links.push(linkBtn('Knifflig probieren',()=>setLevel(id,2)));
+  links.push(linkBtn('Nochmal',again));
   main.append(el('div',{class:'card summary'},
     el('div',{class:'stampbox'},'Check fertig'),el('p',null),stars,
     el('p',null,`${right} von ${round.size} richtig · ${LEVEL_LABEL[lvl]}`),
     el('table',{class:'qsum'},...rows),
     ...lines.map(x=>el('p',null,x)),
-    el('div',{class:'rowbtns'},...btns)));
+    el('div',{class:'sumact'},btn('Zum Lernpfad',toPfad,true),el('div',{class:'linkrow'},...links))));
 }
 
