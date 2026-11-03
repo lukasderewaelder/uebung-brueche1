@@ -12,7 +12,8 @@ const NOTE_EX={
   M4:['7/10','35/100','7/1000','125/100','3/10','9/100','43/1000','205/100'],
   M5:['0,6','0,04','1,25','0,9','0,07','2,5','0,125','3,05'],
   M6:[[2,3,4],[3,1,2],[1,2,5],[4,3,7]],
-  M11:{nenner:[[3,8,5,8],[2,7,5,7],[4,9,7,9],[3,10,9,10]],zaehler:[[1,5,1,8],[3,4,3,7],[2,5,2,9],[1,3,1,6]]} /* Paare a/b, c/d */
+  M11:{nenner:[[3,8,5,8],[2,7,5,7],[4,9,7,9],[3,10,9,10]],zaehler:[[1,5,1,8],[3,4,3,7],[2,5,2,9],[1,3,1,6]]}, /* Paare a/b, c/d */
+  M12:[[8,9,11,12],[5,6,9,10],[7,8,11,12],[4,5,7,8]] /* je Bruch fehlt ein Stück: a/b < c/d */
 };
 const pickEx=(list,keyFn,avoid)=>list.find(x=>!avoid.includes(keyFn(x)))||list[list.length-1];
 
@@ -125,6 +126,16 @@ const NOTES={
       cmpStack([{n:z[0],d:z[1]},{n:z[2],d:z[3]}]),
       el('p',null,strong('Zähler gleich: '),'Es sind gleich viele Stücke. Ein größerer Nenner macht kleinere Stücke.'),
       el('p',null,strong('Merke: '),'Gleicher Nenner oder Zähler heißt nicht gleich groß. Vergleiche Zahl und Größe der Stücke.')
+    ];}},
+  M12:{title:'Gleich viele Teile fehlen zum Ganzen',build(avoid){
+    const e=NOTE_EX.M12.find(x=>!avoid.includes(redKey(x[0],x[1]))&&!avoid.includes(redKey(x[2],x[3])))||NOTE_EX.M12[0];
+    return [
+      el('div',{class:'ex'},strong('Beispiel: '),eq(frac(e[0],e[1]),'<',frac(e[2],e[3]))),
+      cmpStack([{n:e[0],d:e[1],rest:true},{n:e[2],d:e[3],rest:true}]),
+      el('p',null,'Bei beiden fehlt ein Stück zum Ganzen. Das Gestrichelte ist der Rest.'),
+      el('p',null,strong('Regel: '),'Fehlen gleich viele Stücke, gehört das kleinere fehlende Stück zum größeren Bruch.'),
+      el('p',null,'Das gilt nur bei gleich vielen fehlenden Stücken. Zähle immer zuerst.'),
+      el('p',null,strong('Merke: '),'Gleich viel fehlt heißt nicht gleich groß.')
     ];}}
 };
 /* noteFor(task): Merkkästen zur Aufgabe, ohne die Aufgabe zu lösen */

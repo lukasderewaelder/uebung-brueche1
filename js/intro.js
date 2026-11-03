@@ -348,6 +348,24 @@ const INTRO={
       calc:[[[3,8],'<',[3,5]]]},
     {h:'Keins von beiden',
       say:['Manchmal ist weder der Nenner noch der Zähler gleich.','Dann wählst du **Keins von beiden**.','Eine Regel dafür kommt später.']}
+  ]},
+  /* rest:true zeichnet die fehlenden Teile gestrichelt */
+  W04:{title:'Gleich viele Teile fehlen zum Ganzen',steps:[
+    {h:'Was fehlt zum Ganzen?',
+      say:['Das Ganze sind alle Stücke zusammen.','Bei {8|9} fehlt noch ein Stück.','Bei {11|12} fehlt auch ein Stück.'],
+      fig:[{n:8,d:9,rest:true},{n:11,d:12,rest:true}]},
+    {h:'Das fehlende Stück',
+      say:['Bei beiden fehlt genau ein Stück.','Ein Zwölftel ist kleiner als ein Neuntel.','Bei {11|12} fehlt also weniger.'],
+      fig:[{n:8,d:9,rest:true},{n:11,d:12,rest:true}]},
+    {h:'Der kleinere Rest gewinnt',
+      say:['Fehlt weniger zum Ganzen, ist der Bruch größer.','Das gilt nur, wenn gleich viele Stücke fehlen.','Darum ist {11|12} größer als {8|9}.'],
+      calc:[[[8,9],'<',[11,12]]]},
+    {h:'Vorsicht',
+      say:['Gleich viele fehlende Stücke heißt nicht gleich groß.','Bei {3|4} und {5|6} fehlt je ein Stück.','Trotzdem ist {5|6} größer.'],
+      calc:[[[3,4],'<',[5,6]]]},
+    {h:'Verschieden viele fehlen',
+      say:['Fehlen verschieden viele Stücke, hilft die Regel nicht.','Bei {7|9} fehlen 2 Stücke, bei {3|4} nur eins.','Trotzdem ist {7|9} größer.'],
+      calc:[[[3,4],'<',[7,9]]]}
   ]}
 };
 const hasIntro=(id)=>Object.prototype.hasOwnProperty.call(INTRO,id);
@@ -424,7 +442,8 @@ function introFigNode(spec){
   const f=Array.isArray(spec)?{mode:'strip',rows:spec}:spec,circ=f.mode==='circle';
   const box=el('div',{class:'introfigs'+(circ?' circ':'')});
   f.rows.forEach(r=>{
-    const svg=drawMode(f.mode,r.n,r.d,{maxW:circ?130:460,fill:r.fill,label:r.n+' von '+r.d+' Teilen gefärbt'});
+    const rest=r.rest?Array.from({length:r.d-r.n},(_,i)=>r.n+i):null;
+    const svg=drawMode(f.mode,r.n,r.d,{maxW:circ?130:460,fill:r.fill,rest,label:r.n+' von '+r.d+' Teilen gefärbt'});
     box.append(el('div',{class:'fig'+(r.acc?' '+r.acc:'')},...(circ?[svg,frac(r.n,r.d)]:[frac(r.n,r.d),svg])));
   });
   return box;

@@ -315,6 +315,24 @@ TIPS.W03=(t)=>{
     [n?'Bei gleich großen Stücken zählt der Zähler: Mehr Stücke sind mehr.':'Bei gleich vielen Stücken zählt der Nenner: Größere Stücke sind mehr.']];
 };
 
+TIPS.W04=(t)=>{
+  const mA=t.b-t.a,mC=t.d-t.c,eqm=mA===mC;
+  const counts=`Bei ${tf(t.a,t.b)} ${cmpMissMain(mA)}, bei ${tf(t.c,t.d)} ${cmpMissMain(mC)}.`;
+  const pic=t.level===1?'':'Jetzt siehst du ein Bild. Das Gestrichelte fehlt noch. ';
+  if(t.kind==='claim'||t.kind==='conflict')return [
+    ['Zähle, wie viele Stücke bei jedem Bruch bis zum Ganzen fehlen.'],
+    [counts],
+    [eqm?'Fehlen gleich viele Stücke, zählt die Größe der fehlenden Stücke.':'Fehlen verschieden viele Stücke, reicht diese Regel nicht.']];
+  if(t.kind==='check')return [
+    ['Zähle bei jedem Bruch, wie viele Stücke bis zum Ganzen fehlen.'],
+    [pic+counts],
+    [t.equal?'Es sind gleich viele. Wähle **Ja**. Dann vergleichst du die fehlenden Stücke.':'Es sind verschieden viele. Wähle **Nein**.']];
+  return [
+    ['Wie viele Stücke fehlen bei jedem Bruch bis zum Ganzen?'],
+    [pic+counts],
+    ['Bei beiden fehlen gleich viele Stücke. Bei welchem Bruch ist das fehlende Stück kleiner?']];
+};
+
 /* ---------- Rückmeldung bei „richtig“: die Rechnung statt einer Floskel ----------
    proofText(task) liefert den Satz nach „Richtig: “ (null = die Aufgabe hat keine kurze Rechenprobe, dann gilt Lob + Begründung) */
 const PROOF={

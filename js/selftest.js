@@ -1013,7 +1013,7 @@ function runSelfTests(){
       const f=nodes[0];if(f.classList.contains('ex')||/^Beispiel/.test(f.textContent))firstOK++;
       nodes.filter(n=>n.tagName==='P'||n.classList.contains('rule')).forEach(n=>n.textContent.split(/[.!?]\s+/).forEach(s=>{longest=Math.max(longest,words(s));}));
     });
-    t('Merkkästen: alle 11 (M1–M11) bauen sich, beginnen mit dem Beispiel, Sätze höchstens 14 Wörter (längster: '+longest+')',ids.length===11&&bad.length===0&&firstOK===11&&longest<=14);
+    t('Merkkästen: alle 12 (M1–M12) bauen sich, beginnen mit dem Beispiel, Sätze höchstens 14 Wörter (längster: '+longest+')',ids.length===12&&bad.length===0&&firstOK===12&&longest<=14);
     const txt=(id)=>NOTES[id].build([]).map(n=>n.textContent).join(' ');
     t('Merkkästen: Fachwörter kommen nach dem Beispiel mit Erklärung (Erweiterungszahl, Kürzungszahl, Quersumme, Dezimalbruch, gemischte Zahl, kgV)',txt('M2').includes('Erweiterungszahl. Sie ist mindestens 2')&&txt('M3').includes('Kürzungszahl. Sie ist mindestens 2')&&txt('M7').includes('Quersumme bekommst du, wenn du alle Ziffern addierst')&&txt('M4').includes('heißt Dezimalbruch')&&txt('M6').includes('Natürliche Zahlen sind 1, 2, 3')&&txt('M10').includes('kleinstes gemeinsames Vielfaches (kgV)'));
     /* Schrift: Menü und Rang-Chip mindestens 16 px */
@@ -1333,14 +1333,16 @@ function runSelfTests(){
   /* Vergleichen W01–W03: Zahlenraum, Lösbarkeit, Fehlercodes, Rundenplan, Ansicht, Tipps */
   {
     const real=(tk)=>cmpSignOf(compareFrac(tk.a,tk.b,tk.c,tk.d));
+    const isClaim=(k)=>k==='claim'||k==='conflict';
     const okDraft=(tk)=>{
-      if(tk.kind==='claim')return {j:tk.truth?'ja':'nein',r:tk.answerR};
+      if(isClaim(tk.kind))return {j:tk.truth?'ja':'nein',r:tk.answerR};
+      if(tk.type==='W04'&&tk.kind==='check')return tk.equal?{eq:'ja',sign:real(tk)}:{eq:'nein'};
       if(tk.type==='W03')return tk.same==='keins'?{same:'keins'}:{same:tk.same,sign:real(tk)};
       if(tk.kind==='paint')return {p0:Array.from({length:tk.a},(_,i)=>i),p1:Array.from({length:tk.c},(_,i)=>i),sign:real(tk)};
       return {sign:real(tk)};
     };
     const problems=[],codes=new Set(),signs={};let n=0,tipN=0;
-    for(const id of ['W01','W02','W03'])for(const lvl of [1,2])for(const kind of TASKS[id].layoutKinds(lvl))for(let i=0;i<60;i++){
+    for(const id of ['W01','W02','W03','W04'])for(const lvl of [1,2])for(const kind of TASKS[id].layoutKinds(lvl))for(let i=0;i<60;i++){
       const tk=TASKS[id].gen(lvl,RNG,{kind});n++;
       const lim=lvl===1?24:100,tag=id+'-L'+lvl+' '+kind;
       if(![tk.b,tk.d].every(x=>Number.isInteger(x)&&x>=2&&x<=lim)||![tk.a,tk.c].every(x=>Number.isInteger(x)&&x>=1))problems.push(tag+' Zahlenraum');
@@ -1350,16 +1352,23 @@ function runSelfTests(){
       if(id==='W02'&&(tk.a!==tk.c||tk.b===tk.d||(kind==='stamm'&&tk.a!==1)))problems.push(tag+' Zähler');
       if(id==='W03'&&((tk.same==='nenner'&&(tk.b!==tk.d||tk.a===tk.c))||(tk.same==='zaehler'&&(tk.a!==tk.c||tk.b===tk.d))||(tk.same==='keins'&&(tk.a===tk.c||tk.b===tk.d))))problems.push(tag+' gleich?');
       if(kind==='paint'&&(tk.a>=tk.b||tk.c>=tk.d||Math.max(tk.b,tk.d)>12))problems.push(tag+' Färben');
-      if(kind==='claim'&&(tk.opts.length!==3||new Set(tk.opts.map(o=>o.id)).size!==3||!tk.opts.some(o=>o.id===tk.answerR)||tk.truth!==(tk.shown===real(tk))))problems.push(tag+' Behauptung');
+      if(id==='W04'){
+        const mA=tk.b-tk.a,mC=tk.d-tk.c,km=lvl===1?2:3,wantEq=kind==='check'?tk.equal:kind!=='conflict';
+        if(tk.a>=tk.b||tk.c>=tk.d||tk.b===tk.d||mA>km||mC>km||(mA===mC)!==wantEq||(kind==='conflict'&&!fehltConflict(tk.a,tk.b,tk.c,tk.d)))problems.push(tag+' Fehlt-Paar');
+        if(kind==='conflict'&&(tk.truth||tk.shown!==cmpSignOf(fehltRule(tk.a,tk.b,tk.c,tk.d))))problems.push(tag+' Konflikt-Behauptung');
+        if(kind==='check'&&tk.equal&&validateTask(tk,{eq:'nein'}).errorCode!=='eq')problems.push(tag+' Prüffrage');
+        if(kind==='check'&&!tk.equal&&validateTask(tk,{eq:'ja',sign:real(tk)}).errorCode!=='eq')problems.push(tag+' Prüffrage 2');
+      }
+      if(isClaim(kind)&&(tk.opts.length!==3||new Set(tk.opts.map(o=>o.id)).size!==3||!tk.opts.some(o=>o.id===tk.answerR)||tk.truth!==(tk.shown===real(tk))))problems.push(tag+' Behauptung');
       if(id==='W01'&&kind==='sign'&&lvl===1)signs[real(tk)]=(signs[real(tk)]||0)+1;
       const ok=validateTask(tk,okDraft(tk));
       if(!ok.correct)problems.push(tag+' richtige Antwort abgelehnt: '+ok.feedback);
-      if(kind!=='claim'&&!(id==='W03'&&tk.same==='keins'))['<','=','>'].filter(s=>s!==real(tk)).forEach(s=>{
+      if(!isClaim(kind)&&!(id==='W03'&&tk.same==='keins')&&!(id==='W04'&&kind==='check'&&!tk.equal))['<','=','>'].filter(s=>s!==real(tk)).forEach(s=>{
         const r=validateTask(tk,Object.assign({},okDraft(tk),{sign:s}));
         if(r.correct||!r.errorCode||!r.marks||r.marks['sign'+s]!==false)problems.push(tag+' falsches Zeichen '+s+' nicht erkannt');
         else codes.add(r.errorCode);
       });
-      if(kind==='claim'){const r=validateTask(tk,{j:tk.truth?'nein':'ja',r:tk.answerR}),r2=validateTask(tk,{j:tk.truth?'ja':'nein',r:tk.opts.find(o=>o.id!==tk.answerR).id});if(r.errorCode!=='judge'||r2.errorCode!=='reason')problems.push(tag+' Urteil/Begründung');}
+      if(isClaim(kind)){const r=validateTask(tk,{j:tk.truth?'nein':'ja',r:tk.answerR}),r2=validateTask(tk,{j:tk.truth?'ja':'nein',r:tk.opts.find(o=>o.id!==tk.answerR).id});if(r.errorCode!=='judge'||r2.errorCode!=='reason')problems.push(tag+' Urteil/Begründung');}
       if(id==='W03'&&tk.same!=='keins'&&validateTask(tk,{same:tk.same==='nenner'?'zaehler':'nenner',sign:real(tk)}).errorCode!=='same')problems.push(tag+' falsch erkannt');
       if(i<8){
         const h=TASKS[id].hints(tk),txt=h.flat().join(' ');tipN++;
@@ -1368,17 +1377,17 @@ function runSelfTests(){
         try{const host=el('div');mountTask(host,newState(tk),{save(){},done(){}});const sol=buildWorkedSolution(tk);if(!sol.length||!host.querySelector('.stage'))problems.push(tag+' Ansicht leer');}catch(e){problems.push(tag+' Ansicht: '+e.message);}
       }
     }
-    t('Vergleichen W01–W03: '+n+' Aufgaben in Zahlenraum (Leicht bis 24, Knifflig bis 100), Art und Lösbarkeit, falsche Zeichen und Urteile benannt, Tipps (3 Stufen, kurz), Ansicht und Lösung bauen sich',problems.length===0||(console.log(problems.slice(0,6)),false));
+    t('Vergleichen W01–W04: '+n+' Aufgaben in Zahlenraum (Leicht bis 24, Knifflig bis 100), Art und Lösbarkeit, falsche Zeichen und Urteile benannt, Tipps (3 Stufen, kurz), Ansicht und Lösung bauen sich',problems.length===0||(console.log(problems.slice(0,6)),false));
     t('Vergleichen: Fehlercodes gleichNenner, gleichZahl, nurNenner kommen vor; die Zeichen < und > sind in Leicht ausgewogen (W01)',['gleichNenner','gleichZahl','nurNenner','sign'].every(c=>codes.has(c))&&signs['<']>signs['>']*0.5&&signs['>']>signs['<']*0.5&&!signs['=']);
     const plan=(id,lvl)=>{const r={results:[],cur:null},ks=[];for(let i=0;i<5;i++){r.results=Array(i).fill('f');ks.push(TASKS[id].ctx(r,lvl).kind);}return {r,ks};};
     let planBad=0;
-    for(const id of ['W01','W02','W03'])for(const lvl of [1,2])for(let i=0;i<40;i++){
+    for(const id of ['W01','W02','W03','W04'])for(const lvl of [1,2])for(let i=0;i<40;i++){
       const {r,ks}=plan(id,lvl),again=[];for(let k=0;k<5;k++){r.results=Array(k).fill('f');again.push(TASKS[id].ctx(r,lvl).kind);}
-      if(ks.length!==5||ks.join()!==again.join()||ks[0]==='claim'||(id==='W03'&&lvl===1&&ks.includes('keins'))||(id==='W03'&&lvl===2&&!ks.includes('keins'))||(id==='W01'&&lvl===1&&!ks.includes('paint'))||(id==='W01'&&lvl===2&&!ks.includes('claim'))||(id==='W02'&&!ks.includes('stamm')))planBad++;
+      if(ks.length!==5||ks.join()!==again.join()||ks[0]==='claim'||ks[0]==='conflict'||(id==='W03'&&lvl===1&&ks.includes('keins'))||(id==='W03'&&lvl===2&&!ks.includes('keins'))||(id==='W01'&&lvl===1&&!ks.includes('paint'))||(id==='W01'&&lvl===2&&!ks.includes('claim'))||(id==='W02'&&!ks.includes('stamm'))||(id==='W04'&&(!ks.includes('check')||!ks.includes('claim')||(lvl===2&&!ks.includes('conflict'))||(lvl===1&&ks.includes('conflict')))))planBad++;
     }
     t('Vergleichen: Rundenplan hat 5 Arten, bleibt in der Runde gleich, beginnt nie mit einer Behauptung; W01 hat Färben (Leicht) und Behauptung (Knifflig), W02 beginnt mit Stammbrüchen, W03 hat „Keins von beiden“ nur in Knifflig',planBad===0);
     const g0=TASKS.W01.gen(1,RNG),g1=TASKS.W02.gen(1,RNG),g2=TASKS.W03.gen(1,RNG);
-    t('Vergleichen: ohne Plan (Probeaufgabe) gilt die einfachste Art; die Stationen stehen im Pfad von „Brüche vergleichen“ (Pflicht, kein Abschluss)',g0.kind==='sign'&&g1.kind==='stamm'&&g2.kind==='which'&&moduleById('vergleichen').path.map(m=>m.id).join()==='W01,W02,W03'&&moduleById('vergleichen').path.every(m=>m.must)&&moduleById('vergleichen').rank===false&&moduleOf('W02').id==='vergleichen');
+    t('Vergleichen: ohne Plan (Probeaufgabe) gilt die einfachste Art; die Stationen stehen im Pfad von „Brüche vergleichen“ (Pflicht, kein Abschluss)',g0.kind==='sign'&&g1.kind==='stamm'&&g2.kind==='which'&&moduleById('vergleichen').path.map(m=>m.id).join()==='W01,W02,W03,W04'&&moduleById('vergleichen').path.every(m=>m.must)&&moduleById('vergleichen').rank===false&&moduleOf('W02').id==='vergleichen');
   }
   const bad=res.filter(r=>!r.ok);
   console.log(`Selbsttest: ${res.length-bad.length}/${res.length} bestanden`);

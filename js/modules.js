@@ -62,14 +62,16 @@ const MODULES=[
   },
   {id:'vergleichen',name:'Brüche vergleichen',desc:'Brüche vergleichen und ordnen.',icon:'wechsel',status:'aktiv',rank:false,recommends:'veraendern',
     groups:{
-      'Zwei Regeln':{pat:'dots',icon:'balken',text:'Nenner gleich, Zähler gleich und beides im Vergleich',ids:['W01','W02','W03']}
+      'Zwei Regeln':{pat:'dots',icon:'balken',text:'Nenner gleich, Zähler gleich und beides im Vergleich',ids:['W01','W02','W03']},
+      'Fehlt zum Ganzen':{pat:'dash',icon:'luecke',text:'Gleich viele Teile fehlen zum Ganzen',ids:['W04']}
     },
-    practice:['W01','W02','W03'],
+    practice:['W01','W02','W03','W04'],
     /* Lernpfad: alle Bauteile sind Pflicht */
     path:[
-      {id:'W01',grp:'Zwei Regeln',must:true},{id:'W02',grp:'Zwei Regeln',must:true},{id:'W03',grp:'Zwei Regeln',must:true}
+      {id:'W01',grp:'Zwei Regeln',must:true},{id:'W02',grp:'Zwei Regeln',must:true},{id:'W03',grp:'Zwei Regeln',must:true},
+      {id:'W04',grp:'Fehlt zum Ganzen',must:true}
     ],
-    pathGroups:{'Zwei Regeln':'balken'}
+    pathGroups:{'Zwei Regeln':'balken','Fehlt zum Ganzen':'luecke'}
   },
   {id:'rechnen',name:'Mit Brüchen rechnen',desc:'Addieren, subtrahieren, multiplizieren, dividieren.',icon:'zahnrad',status:'geplant'}
 ];

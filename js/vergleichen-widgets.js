@@ -97,6 +97,23 @@ function cmpTiles(view,host,key,opts,o){
   return grid;
 }
 
+/* Ja/Nein-Knöpfe: Antippen markiert nur (Entwurf draft[key] = 'ja' | 'nein'), onPick folgt danach. Eingaben: key+'ja', key+'nein' */
+function cmpYesNo(view,host,key,onPick){
+  const d=view.draft,row=el('div',{class:'yesno'});
+  [['ja','haken','Ja'],['nein','kreuz','Nein']].forEach(([v,ic,label])=>{
+    const b=el('button',{type:'button',class:'btn yn','aria-pressed':String(d[key]===v)},icon(ic),label);
+    b.disabled=view.locked();
+    b.addEventListener('click',()=>{
+      if(view.locked())return;
+      d[key]=v;view.save();
+      row.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+      if(onPick)onPick(v);
+    });
+    view.inputs[key+v]=b;row.append(b);
+  });
+  host.append(row);
+}
+
 /* Behauptung prüfen (wie U04): Teil 1 „Stimmt das?“, Teil 2 „Welche Begründung passt?“.
    Aufgabe: t.opts = [{id,txt}] (A, B, C), t.answerR = richtige Kennung, t.truth = stimmt die Behauptung. Entwurf: draft.j ('ja'/'nein'), draft.r. */
 function cmpClaim(view,host){

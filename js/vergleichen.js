@@ -59,13 +59,29 @@ function cmpKeins(R,level){
   }
   return [3,8,2,5];
 }
+/* beide Brüche echt, es fehlen k Stücke zum Ganzen (Leicht 1–2, Knifflig 1–3).
+   mode 'gleich': bei beiden fehlen gleich viele · 'verschieden': verschieden viele · 'konflikt': verschieden viele, und die Faustregel „weniger fehlt = größer“ liegt falsch */
+function cmpFehlt(R,level,mode){
+  const pool=level===1?[3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,24]:[5,6,7,8,9,10,11,12,13,15,16,17,18,20,24,25,30,40,50,60,75,100],kmax=level===1?2:3;
+  for(let i=0;i<800;i++){
+    const b=R.pick(pool),d=R.pick(pool);
+    if(b===d)continue;
+    const k1=R.int(1,kmax),k2=mode==='gleich'?k1:R.int(1,kmax);
+    if(b<=k1||d<=k2||(mode!=='gleich'&&k1===k2))continue;
+    const a=b-k1,c=d-k2;
+    if(compareFrac(a,b,c,d)===0||(mode==='konflikt'&&!fehltConflict(a,b,c,d)))continue;
+    return cmpSwap(R,a,b,c,d);
+  }
+  return mode==='gleich'?[3,4,5,6]:mode==='konflikt'?[7,9,3,4]:[2,3,7,10];
+}
 
 /* ---------- Rundenplan ---------- */
 /* Aufgabenarten je Runde und Niveau (Reihenfolge wird gemischt; eine Behauptung nie als Erste). Funktion = Plan mit Zufall. */
 const CMP_PLAN={
   W01:{1:['sign','sign','sign','paint','sign'],2:['sign','sign','claim','sign','sign']},
   W02:{1:['stamm','stamm','sign','claim','paint'],2:['stamm','sign','sign','claim','sign']},
-  W03:{1:(R)=>['nenner','zaehler','nenner','zaehler',R.pick(['nenner','zaehler'])],2:(R)=>['nenner','zaehler','keins',R.pick(['nenner','zaehler']),R.pick(['nenner','zaehler'])]}
+  W03:{1:(R)=>['nenner','zaehler','nenner','zaehler',R.pick(['nenner','zaehler'])],2:(R)=>['nenner','zaehler','keins',R.pick(['nenner','zaehler']),R.pick(['nenner','zaehler'])]},
+  W04:{1:['check','rest','rest','claim','check'],2:['check','conflict','rest','claim','conflict']}
 };
 /* alle Aufgabenarten einer Station (für den Layout-Test, layoutKinds) */
 const cmpKindsOf=(id,lvl)=>{const src=CMP_PLAN[id][lvl];return Array.from(new Set(typeof src==='function'?src(RNG):src));};
@@ -73,7 +89,7 @@ function cmpCtx(id){
   return (round,level)=>{
     if(!Array.isArray(round.cmp)||round.cmp.length!==TASKS[id].size){
       const src=CMP_PLAN[id][level];let p;
-      for(let i=0;i<20;i++){p=RNG.shuffle(typeof src==='function'?src(RNG):src);if(p[0]!=='claim')break;}
+      for(let i=0;i<20;i++){p=RNG.shuffle(typeof src==='function'?src(RNG):src);if(p[0]!=='claim'&&p[0]!=='conflict')break;}
       round.cmp=p;
     }
     return {kind:round.cmp[Math.min(round.results.length,round.cmp.length-1)]};
@@ -120,7 +136,12 @@ const CMP_WHY={
   W01:{ok:'Beide haben gleich große Stücke. Mehr Stücke sind mehr.',
     bad:['Gleicher Nenner heißt: Beide Brüche sind gleich groß.','Der Bruch mit dem kleineren Zähler ist größer.','Ein größerer Zähler macht die Stücke kleiner.']},
   W02:{ok:'Beide haben gleich viele Stücke. Ein größerer Nenner macht kleinere Stücke.',
-    bad:['Der größere Nenner macht den Bruch größer.','Gleicher Zähler heißt: Beide Brüche sind gleich groß.','Der Nenner zählt nicht. Nur der Zähler entscheidet.']}
+    bad:['Der größere Nenner macht den Bruch größer.','Gleicher Zähler heißt: Beide Brüche sind gleich groß.','Der Nenner zählt nicht. Nur der Zähler entscheidet.']},
+  /* W04: gleich viele Stücke fehlen · konflikt: verschieden viele fehlen (die Regel „weniger fehlt = größer“ trägt dann nicht) */
+  W04:{ok:'Das kleinere fehlende Stück gehört zum größeren Bruch.',
+    bad:['Fehlen gleich viele Stücke, sind beide Brüche gleich groß.','Das kleinere fehlende Stück gehört zum kleineren Bruch.','Das Ganze ist verschieden eingeteilt, also kann man nicht vergleichen.']},
+  W04konflikt:{ok:'Es fehlen verschieden viele Stücke. Zählen allein reicht nicht.',
+    bad:['Wo mehr Stücke fehlen, ist der Bruch kleiner. Das gilt immer.','Es fehlt bei beiden etwas, darum sind beide gleich groß.','Der Bruch mit dem kleineren Nenner ist immer kleiner.']}
 };
 /* Name, gezeigtes Zeichen (richtig oder falsch), Begründungen */
 function cmpClaimData(R,f,why){
@@ -130,11 +151,12 @@ function cmpClaimData(R,f,why){
 }
 function cmpClaimPrompt(t,h){
   h.append(el('p',{class:'q'},t.who+' sagt:'),el('div',{class:'wrongclaim'},eq(frac(t.a,t.b),t.shown,frac(t.c,t.d))));
+  if(t.lead)h.append(el('p',{class:'q sm'},t.lead+'.'));
 }
 const cmpClaimSolution=(t)=>[line(strong(t.truth?'Das stimmt. ':'Das stimmt nicht. '),t.opts.find(o=>o.id===t.answerR).txt),cmpSolEq(t)];
 
-/* Bild (Leicht sofort, Knifflig und unechte Brüche erst mit dem zweiten Tipp) und darunter die Zeichen */
-function cmpPicSign(view,host,f,always,o){
+/* Bild zu zwei Brüchen: Leicht sofort, Knifflig und unechte Brüche erst mit dem zweiten Tipp */
+function cmpPicBox(view,host,f,always,o){
   const box=el('div');host.append(box);
   const draw=()=>{
     const on=always||(view.st&&view.st.hint>=2);
@@ -144,6 +166,10 @@ function cmpPicSign(view,host,f,always,o){
   const prev=view.onHint;
   view.onHint=()=>{if(prev)prev();draw();};
   draw();
+}
+/* Bild und darunter die Zeichen */
+function cmpPicSign(view,host,f,always,o){
+  cmpPicBox(view,host,f,always,o);
   cmpSign(view,host,'sign',f);
 }
 
@@ -276,5 +302,70 @@ TASKS.W03={area:'Vergleichen',name:'Nenner oder Zähler?',desc:'Erst erkennen, w
     if(t.same==='keins')return [line('Nenner und Zähler sind verschieden. Hier hilft keine der beiden einfachen Regeln.'),line('Du lernst gleich einen anderen Weg.')];
     return [line(t.same==='nenner'?`Beide Brüche haben den Nenner ${t.b}. Die Stücke sind gleich groß.`:`Beide Brüche haben den Zähler ${t.a}. Es sind gleich viele Stücke.`),
       line(t.same==='nenner'?`${Math.max(t.a,t.c)} Stücke sind mehr als ${Math.min(t.a,t.c)} Stücke.`:`Mit dem Nenner ${Math.min(t.b,t.d)} sind die Stücke größer.`),cmpPairPic(f),cmpSolEq(t)];
+  }
+};
+
+/* ---------- W04 Gleich viele Teile fehlen zum Ganzen ---------- */
+/* Satzbausteine: „Bei beiden fehlt 1 Stück“ (Hauptsatz) und „weil bei beiden 1 Stück fehlt“ (Nebensatz) */
+const cmpMissMain=(m)=>m===1?'fehlt 1 Stück':'fehlen '+m+' Stücke';
+const cmpMissSub=(m)=>m===1?'1 Stück fehlt':m+' Stücke fehlen';
+const cmpMissN=(m)=>m===1?'1 Stück':m+' Stücke';
+/* Behauptung zu W04: gleich viele fehlen („=“ oder richtiges Zeichen) oder Konflikt (die Faustregel „weniger fehlt = größer“ liegt falsch) */
+function cmpFehltClaim(R,t,conflict){
+  const f=[t.a,t.b,t.c,t.d],real=cmpSignOf(compareFrac(f[0],f[1],f[2],f[3])),mA=t.b-t.a,mC=t.d-t.c,why=conflict?CMP_WHY.W04konflikt:CMP_WHY.W04;
+  let shown,truth,lead;
+  if(conflict){shown=cmpSignOf(fehltRule(f[0],f[1],f[2],f[3]));truth=false;lead='weil bei '+(mA>mC?ft(t.a,t.b):ft(t.c,t.d))+' mehr Stücke fehlen';}
+  else{truth=R.chance(0.5);shown=truth?real:'=';lead='weil bei beiden '+cmpMissSub(mA);}
+  return Object.assign({who:R.pick(CMP_NAMES),shown,truth,lead},cmpReasons(R,why.ok,why.bad));
+}
+TASKS.W04={area:'Vergleichen',name:'Gleich viele Teile fehlen zum Ganzen',desc:'Was fehlt zum Ganzen? Das kleinere fehlende Stück gehört zum größeren Bruch.',notes:['M12','M11'],size:5,
+  ctx:cmpCtx('W04'),layoutKinds:(lvl)=>cmpKindsOf('W04',lvl),
+  gen(level,R,ctx){
+    const kind=(ctx&&ctx.kind)||'rest';
+    const equal=kind==='check'?R.chance(0.5):kind!=='conflict';
+    const f=cmpFehlt(R,level,kind==='conflict'?'konflikt':equal?'gleich':'verschieden');
+    const t={type:'W04',level,kind,a:f[0],b:f[1],c:f[2],d:f[3],avoid:cmpAvoid(...f)};
+    if(kind==='check')t.equal=equal;
+    if(kind==='claim'||kind==='conflict')Object.assign(t,cmpFehltClaim(R,t,kind==='conflict'));
+    return t;
+  },
+  prompt(t,h){
+    if(t.kind==='claim'||t.kind==='conflict')cmpClaimPrompt(t,h);
+    else if(t.kind==='check')h.append(el('p',{class:'q'},'Vergleiche, was bei jedem Bruch bis zum Ganzen fehlt.'),t.level===1?null:eq(frac(t.a,t.b),'und',frac(t.c,t.d))); /* Leicht: die Brüche stehen schon an den Streifen */
+    else h.append(el('p',{class:'q'},'Bei beiden fehlt etwas zum Ganzen. Welches Zeichen passt?'));
+  },
+  render(view,host){
+    const t=view.task,d=view.draft,f=[t.a,t.b,t.c,t.d],always=t.level===1;
+    if(t.kind==='claim'||t.kind==='conflict'){cmpClaim(view,host);return;}
+    if(t.kind==='rest'){cmpPicSign(view,host,f,always,{rest:true});return;}
+    cmpPicBox(view,host,f,always,{rest:true});
+    const stg=twoStage(view,host,{isDone:()=>!!d.eq,summary:()=>'1. '+(d.eq==='ja'?'Es fehlen gleich viele':'Es fehlen verschieden viele')});
+    stg.box1.append(el('p',null,strong('1. Fehlen bei beiden gleich viele Stücke zum Ganzen?')));
+    const fill2=()=>{
+      stg.box2.replaceChildren();
+      if(d.eq==='nein')stg.box2.append(el('p',null,'Hier fehlen verschieden viele Stücke. Diese Regel hilft hier nicht.'));
+      else if(d.eq){stg.box2.append(el('p',null,strong('2. Welches Zeichen passt?')));cmpSign(view,stg.box2,'sign',f);}
+      stg.upd();
+    };
+    cmpYesNo(view,stg.box1,'eq',()=>{fill2();stg.advance();});
+    fill2();
+  },
+  validate(t,d){
+    if(t.kind==='claim')return cmpClaimCheck(t,d,'Es fehlt bei beiden gleich viel. Prüfe, ob dann beide gleich groß sind.');
+    if(t.kind==='conflict')return cmpClaimCheck(t,d,'Zähle, wie viele Stücke bei jedem Bruch fehlen. Sind es gleich viele?');
+    const mA=t.b-t.a,mC=t.d-t.c,bigDen=t.b>t.d?ft(t.a,t.b):ft(t.c,t.d),counts=`Bei ${ft(t.a,t.b)} ${cmpMissMain(mA)}, bei ${ft(t.c,t.d)} ${cmpMissMain(mC)}.`;
+    if(t.kind==='check'){
+      if(!d.eq)return invalid('Wähle zuerst: Fehlen bei beiden gleich viele Stücke?');
+      if((d.eq==='ja')!==t.equal)return wrong('eq',t.equal?`Zähle noch einmal: Bei beiden ${cmpMissMain(mA)}.`:counts,{['eq'+d.eq]:false});
+      if(!t.equal)return right(`Richtig! ${counts} Das sind verschieden viele.`);
+      if(!d.sign)return invalid('Wähle auch ein Zeichen.');
+    }
+    return cmpSignCheck(t,d,'sign',`Richtig! Bei beiden ${cmpMissMain(mA)}. Bei ${bigDen} ist das fehlende Stück kleiner.`,{sign:'Das kleinere fehlende Stück gehört zum größeren Bruch.'});
+  },
+  solution(t){
+    const f=[t.a,t.b,t.c,t.d],mA=t.b-t.a,mC=t.d-t.c,bigDen=t.b>t.d?ft(t.a,t.b):ft(t.c,t.d),counts=line(`Bei ${ft(t.a,t.b)} ${cmpMissMain(mA)}, bei ${ft(t.c,t.d)} ${cmpMissMain(mC)}.`);
+    if(t.kind==='claim'||t.kind==='conflict')return [counts].concat(cmpClaimSolution(t));
+    if(t.kind==='check'&&!t.equal)return [counts,line('Das sind verschieden viele. Diese Regel hilft hier nicht.'),cmpPairPic(f,{rest:true})];
+    return [counts,line(`Das fehlende Stück bei ${bigDen} ist kleiner. Dieser Bruch ist größer.`),cmpPairPic(f,{rest:true}),cmpSolEq(t)];
   }
 };
