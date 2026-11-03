@@ -310,6 +310,24 @@ const INTRO={
       say:['Manche Brüche sind natürliche Zahlen, wie 1, 2 oder 3.','Bei {8|4} geht der Zähler ohne Rest durch den Nenner.','Es sind genau 2 Ganze.'],
       calc:[[8,':',4,'=',2]]}
   ]},
+  WQ:{title:'Eingangstest',steps:[
+    {h:'Kurzfragen zum Vergleichen',
+      say:[TASKS.WQ.size+' Fragen warten auf dich.','Du tippst eine Antwort an. Dann tippst du auf **Prüfen**.','Manchmal siehst du Brüche in einer Reihe.']},
+    {h:'Sofort eine Rückmeldung',
+      say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Es gibt keine Zeitmessung.']},
+    {h:'Danach siehst du, was fehlt',
+      say:['Am Ende siehst du, was du schon kannst.','Danach wählst du: dem Pfad folgen oder Meine Übersicht.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
+    {h:'Der Abschlusscheck',
+      say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat '+TASKS.WA.size+' Aufgaben: '+WA_TAP+' zum Antippen und '+WA_LINE.length+' zum Lösen.','Ab '+needOf(TASKS.WQ.size)+' richtigen Antworten gibt es die Urkunde.']}
+  ]},
+  WA:{title:'Abschlusscheck',steps:[
+    {h:'Wie viele Aufgaben?',
+      say:['Der Abschlusscheck hat '+TASKS.WA.size+' Aufgaben.',WA_TAP+' davon tippst du nur an.','Bei '+WA_LINE.length+' Aufgaben löst du selbst.']},
+    {h:'So geht es',
+      say:['Tippe eine Antwort an. Dann tippe auf **Prüfen**.','Bei den anderen Aufgaben wählst du Zeichen, tippst Zahlen oder legst Karten.','Tipps und Lösung gibt es nur bei den Lösen-Aufgaben.']},
+    {h:'Die Urkunde',
+      say:['Ab '+needOf(TASKS.WA.size)+' richtigen Antworten gibt es die Urkunde.','Aufgaben mit Tipp zählen nur halb.','Alle Pflicht-Stationen müssen vorher fertig sein.']}
+  ]},
   /* Vergleichen: Streifen immer gleich lang untereinander; Zeichen < und > stehen in calc zwischen zwei Brüchen */
   W01:{title:'Nenner gleich',steps:[
     {h:'Gleich große Stücke',
@@ -348,6 +366,102 @@ const INTRO={
       calc:[[[3,8],'<',[3,5]]]},
     {h:'Keins von beiden',
       say:['Manchmal ist weder der Nenner noch der Zähler gleich.','Dann wählst du **Keins von beiden**.','Eine Regel dafür kommt später.']}
+  ]},
+  /* rest:true zeichnet die fehlenden Teile gestrichelt */
+  W04:{title:'Gleich viele Teile fehlen zum Ganzen',steps:[
+    {h:'Was fehlt zum Ganzen?',
+      say:['Das Ganze sind alle Stücke zusammen.','Bei {8|9} fehlt noch ein Stück.','Bei {11|12} fehlt auch ein Stück.'],
+      fig:[{n:8,d:9,rest:true},{n:11,d:12,rest:true}]},
+    {h:'Das fehlende Stück',
+      say:['Bei beiden fehlt genau ein Stück.','Ein Zwölftel ist kleiner als ein Neuntel.','Bei {11|12} fehlt also weniger.'],
+      fig:[{n:8,d:9,rest:true},{n:11,d:12,rest:true}]},
+    {h:'Der kleinere Rest gewinnt',
+      say:['Fehlt weniger zum Ganzen, ist der Bruch größer.','Das gilt nur, wenn gleich viele Stücke fehlen.','Darum ist {11|12} größer als {8|9}.'],
+      calc:[[[8,9],'<',[11,12]]]},
+    {h:'Vorsicht',
+      say:['Gleich viele fehlende Stücke heißt nicht gleich groß.','Bei {3|4} und {5|6} fehlt je ein Stück.','Trotzdem ist {5|6} größer.'],
+      calc:[[[3,4],'<',[5,6]]]},
+    {h:'Verschieden viele fehlen',
+      say:['Fehlen verschieden viele Stücke, hilft die Regel nicht.','Bei {7|9} fehlen 2 Stücke, bei {3|4} nur eins.','Trotzdem ist {7|9} größer.'],
+      calc:[[[3,4],'<',[7,9]]]}
+  ]},
+  W05:{title:'Auf einen Nenner bringen',steps:[
+    {h:'Verschieden eingeteilt',
+      say:['Zwei Brüche mit verschiedenen Nennern sind schwer zu vergleichen.','Die Streifen sind verschieden eingeteilt.'],
+      fig:[{n:2,d:3},{n:5,d:12}]},
+    {h:'Feiner einteilen',
+      say:['Wir teilen jedes Drittel in 4 kleinere Teile.','Dann hat auch der obere Streifen 12 Teile.','Der gefärbte Anteil bleibt gleich groß.'],
+      fig:[{n:2,d:3},{n:8,d:12,acc:'erw'}]},
+    {h:'Das ist Erweitern',
+      say:['Wir erweitern mit 4.','Zähler und Nenner werden mit 4 malgenommen.'],
+      calc:[[[2,3],'=',[2,3,'x',4],'=',[8,12]]]},
+    {h:'Jetzt vergleichen',
+      say:['Beide Brüche haben den Nenner 12.','Jetzt zählt nur noch der Zähler.','Darum ist {8|12} größer als {5|12}.'],
+      calc:[[[5,12],'<',[8,12]]]},
+    {h:'Gleicher Zähler geht auch',
+      say:['Manchmal passt ein gleicher Zähler besser.','Erweitere {2|3} mit 2, dann vergleichst du {4|6} mit {4|7}.'],
+      calc:[[[2,3],'=',[2,3,'x',2],'=',[4,6]],[[4,7],'<',[4,6]]]}
+  ]},
+  W06:{title:'Vergleichszahl',steps:[
+    {h:'Die Hälfte als Maß',
+      say:['{1|2} ist die Hälfte vom Ganzen.','Ein Bruch unter {1|2} ist kleiner als die Hälfte.','Ein Bruch darüber ist größer.'],
+      fig:{mode:'strip',rows:[{n:3,d:8,half:true},{n:5,d:8,half:true}]}},
+    {h:'Zähler verdoppeln',
+      say:['So prüfst du schnell, ob ein Bruch über {1|2} liegt.','Verdopple den Zähler und vergleiche mit dem Nenner.','Bei {5|8} ist der doppelte Zähler 10. Das ist mehr als 8.'],
+      calc:[[[5,8],'>',[1,2]]]},
+    {h:'Einer darunter, einer darüber',
+      say:['Bei {3|8} und {5|7} liegt {1|2} dazwischen.','Dann ist {5|7} der größere Bruch.'],
+      fig:{mode:'strip',rows:[{n:3,d:8,half:true},{n:5,d:7,half:true}]},
+      calc:[[[3,8],'<',[5,7]]]},
+    {h:'Auch die 1 hilft',
+      say:['Ist der Zähler größer als der Nenner, liegt der Bruch über 1.','{7|5} liegt über 1 und {5|6} darunter.','Darum ist {7|5} größer als {5|6}.'],
+      calc:[[[5,6],'<',[7,5]]]}
+  ]},
+  W07:{title:'Welcher Weg passt?',steps:[
+    {h:'Fünf Wege',
+      say:['Du kennst jetzt fünf Wege zum Vergleichen.','Nicht jeder Weg passt zu jedem Paar.','Suche zuerst den schnellsten.']},
+    {h:'Der Reihe nach prüfen',
+      say:['Ist der Nenner gleich? Dann zählt der Zähler.','Ist der Zähler gleich? Dann zählt der Nenner.','Fehlen gleich viele Teile zum Ganzen? Dann zählt der Rest.']},
+    {h:'Liegt eine Vergleichszahl dazwischen?',
+      say:['Liegt ein Bruch unter {1|2} und einer darüber?','Dann ist die Sache klar.','Das gilt auch für die 1.']},
+    {h:'Erweitern geht immer',
+      say:['Auf einen Nenner bringen klappt bei allen Brüchen.','Es dauert aber länger.','Nimm es, wenn kein anderer Weg passt.']},
+    {h:'So antwortest du',
+      say:['Wähle zuerst den schnellsten Weg.','Dann wähle das Zeichen.','Dann tippe auf **Prüfen**.']}
+  ]},
+  W08:{title:'Brüche ordnen',steps:[
+    {h:'Eine Reihe bilden',
+      say:['Du bekommst drei bis fünf Brüche.','Lege sie der Größe nach in die Reihe.','Der kleinste Bruch kommt zuerst.']},
+    {h:'Ziehen oder antippen',
+      say:['Ziehe eine Karte auf einen Platz.','Oder tippe die Karte an. Sie springt auf den ersten freien Platz.','Tippe eine gelegte Karte an, dann geht sie zurück.']},
+    {h:'Zwei auf einmal',
+      say:['Vergleiche immer zwei Brüche.','Nimm den Weg, der gerade passt.','Dann weißt du, welcher kleiner ist.'],
+      fig:[{n:1,d:4},{n:3,d:8},{n:3,d:4}]},
+    {h:'So antwortest du',
+      say:['Lege alle Karten ab.','Dann tippe auf **Prüfen**.']}
+  ]},
+  W09:{title:'Größer als 1',steps:[
+    {h:'Ganze zuerst',
+      say:['Ein Bruch über 1 enthält Ganze.','Teile den Zähler durch den Nenner.','Bei {9|4} sind es 2 Ganze und noch ein Viertel.'],
+      calc:[[9,':',4,'=',2,'Rest',1]]},
+    {h:'Gemischte Zahl',
+      say:['Die Ganzen und der Rest ergeben eine gemischte Zahl.','Der Nenner bleibt gleich.'],
+      calc:[[[9,4],'=',2,'+',[1,4],'=',{m:[2,1,4]}]]},
+    {h:'Ganze vergleichen',
+      say:['Hat eine Zahl mehr Ganze, ist sie größer.','Sind die Ganzen gleich, vergleichst du die Reste.','Der Zahlenstrahl hilft dabei.'],
+      nline:{from:0,to:3,parts:4,marks:[{n:9,d:4,text:'9/4'},{n:11,d:4,text:'11/4'}],labels:'wholes'}},
+    {h:'Zahlen ordnen',
+      say:['Auch gemischte Zahlen und unechte Brüche kannst du ordnen.','Schau zuerst auf die Ganzen.','Ziehe oder tippe die Karten in die Reihe.']}
+  ]},
+  W10:{title:'Dazwischen',steps:[
+    {h:'Immer noch ein Bruch',
+      say:['Zwischen zwei Brüchen liegt immer noch ein Bruch.','Das gilt auch für Brüche, die dicht beieinander liegen.'],
+      nline:{from:0,to:1,parts:5,marks:[{n:3,d:5,text:'3/5'},{n:4,d:5,text:'4/5'}],labels:'wholes'}},
+    {h:'Feiner einteilen',
+      say:['Zwischen {3|5} und {4|5} scheint kein Platz zu sein.','Erweitere beide Brüche mit 2.','Dann liegt {7|10} dazwischen.'],
+      calc:[[[3,5],'=',[3,5,'x',2],'=',[6,10]],[[4,5],'=',[4,5,'x',2],'=',[8,10]]]},
+    {h:'So antwortest du',
+      say:['Manchmal nennst du einen Bruch dazwischen.','Schreibe ihn in die Felder.','Manchmal prüfst du eine Behauptung.']}
   ]}
 };
 const hasIntro=(id)=>Object.prototype.hasOwnProperty.call(INTRO,id);
@@ -424,7 +538,8 @@ function introFigNode(spec){
   const f=Array.isArray(spec)?{mode:'strip',rows:spec}:spec,circ=f.mode==='circle';
   const box=el('div',{class:'introfigs'+(circ?' circ':'')});
   f.rows.forEach(r=>{
-    const svg=drawMode(f.mode,r.n,r.d,{maxW:circ?130:460,fill:r.fill,label:r.n+' von '+r.d+' Teilen gefärbt'});
+    const rest=r.rest?Array.from({length:r.d-r.n},(_,i)=>r.n+i):null;
+    const svg=drawMode(f.mode,r.n,r.d,{maxW:circ?130:460,fill:r.fill,rest,half:r.half,label:r.n+' von '+r.d+' Teilen gefärbt'});
     box.append(el('div',{class:'fig'+(r.acc?' '+r.acc:'')},...(circ?[svg,frac(r.n,r.d)]:[frac(r.n,r.d),svg])));
   });
   return box;

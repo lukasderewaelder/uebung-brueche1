@@ -60,16 +60,24 @@ const MODULES=[
     ],
     pathGroups:{Einteilung:'lupe',Eintragen:'lineal','Zwei Wege':'wechsel',Weiter:'aus',Abschlusscheck:'plakette'}
   },
-  {id:'vergleichen',name:'Brüche vergleichen',desc:'Brüche vergleichen und ordnen.',icon:'wechsel',status:'aktiv',rank:false,recommends:'veraendern',
+  {id:'vergleichen',name:'Brüche vergleichen',desc:'Brüche vergleichen und ordnen.',icon:'wechsel',status:'aktiv',rank:false,quickcheck:true,qid:'WQ',finalId:'WA',recommends:'veraendern',finalText:'Du kannst Brüche vergleichen und ordnen. Stark!',
     groups:{
-      'Zwei Regeln':{pat:'dots',icon:'balken',text:'Nenner gleich, Zähler gleich und beides im Vergleich',ids:['W01','W02','W03']}
+      'Zwei Regeln':{pat:'dots',icon:'balken',text:'Nenner gleich, Zähler gleich und beides im Vergleich',ids:['W01','W02','W03']},
+      'Fehlt zum Ganzen':{pat:'dash',icon:'luecke',text:'Gleich viele Teile fehlen zum Ganzen',ids:['W04']},
+      'Mehr Wege':{pat:'hatch',icon:'aus',text:'Auf einen Nenner bringen, die Vergleichszahl und der schnellste Weg',ids:['W05','W06','W07']},
+      'Ordnen':{pat:'dots',icon:'netz',text:'Brüche ordnen, über 1 und dazwischen',ids:['W08','W09','W10']},
+      'Check Vergleichen':{pat:'dash',icon:'plakette',text:'Eingangstest und Abschlusscheck',ids:['WQ','WA']}
     },
-    practice:['W01','W02','W03'],
+    practice:['WQ','WA','W01','W02','W03','W04','W05','W06','W07','W08','W09','W10'],
     /* Lernpfad: alle Bauteile sind Pflicht */
     path:[
-      {id:'W01',grp:'Zwei Regeln',must:true},{id:'W02',grp:'Zwei Regeln',must:true},{id:'W03',grp:'Zwei Regeln',must:true}
+      {id:'W01',grp:'Zwei Regeln',must:true},{id:'W02',grp:'Zwei Regeln',must:true},{id:'W03',grp:'Zwei Regeln',must:true},
+      {id:'W04',grp:'Fehlt zum Ganzen',must:true},
+      {id:'W05',grp:'Mehr Wege',must:true,note:'Dafür hilft Erweitern und Kürzen.'},{id:'W06',grp:'Mehr Wege',must:true},{id:'W07',grp:'Mehr Wege',must:true},
+      {id:'W08',grp:'Ordnen',must:true},{id:'W09',grp:'Ordnen',must:true},{id:'W10',grp:'Ordnen',must:true},
+      {id:'WA',grp:'Check Vergleichen',must:true,final:true,title:'Abschlusscheck',desc:TASKS.WA.size+' Aufgaben zeigen, was du kannst. Ab '+needOf(TASKS.WA.size)+' richtig gibt es die Urkunde.'}
     ],
-    pathGroups:{'Zwei Regeln':'balken'}
+    pathGroups:{'Zwei Regeln':'balken','Fehlt zum Ganzen':'luecke','Mehr Wege':'aus',Ordnen:'netz','Check Vergleichen':'plakette'}
   },
   {id:'rechnen',name:'Mit Brüchen rechnen',desc:'Addieren, subtrahieren, multiplizieren, dividieren.',icon:'zahnrad',status:'geplant'}
 ];

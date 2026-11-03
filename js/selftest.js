@@ -983,7 +983,7 @@ function runSelfTests(){
     const keepV=S.view,keepR=S.rounds,keepI=S.intro,seen=[];
     try{
       S.rounds={};S.intro={G02:true,Q00:true,QA:true,ZQ:true,G04:true};
-      [{kind:'home',tab:'pfad'},{kind:'home',tab:'pfad',thema:'veraendern'},{kind:'home',tab:'ueben'},{kind:'home',tab:'spiele'},{kind:'home',tab:'rang'},{kind:'practice',id:'G02'},{kind:'practice',id:'Q00'},{kind:'practice',id:'QA'},{kind:'game',id:'S02'}].forEach(v=>{
+      [{kind:'home',tab:'pfad'},{kind:'home',tab:'pfad',thema:'veraendern'},{kind:'home',tab:'ueben'},{kind:'home',tab:'spiele'},{kind:'home',tab:'rang'},{kind:'practice',id:'G02'},{kind:'practice',id:'Q00'},{kind:'practice',id:'QA'},{kind:'game',id:'S02'},{kind:'game',id:'S03'}].forEach(v=>{
         S.view=v;renderAll();
         if(jargon.test(app.textContent))seen.push((v.tab||v.id)+': '+(app.textContent.match(jargon)||[''])[0]);
       });
@@ -1013,7 +1013,7 @@ function runSelfTests(){
       const f=nodes[0];if(f.classList.contains('ex')||/^Beispiel/.test(f.textContent))firstOK++;
       nodes.filter(n=>n.tagName==='P'||n.classList.contains('rule')).forEach(n=>n.textContent.split(/[.!?]\s+/).forEach(s=>{longest=Math.max(longest,words(s));}));
     });
-    t('Merkkästen: alle 11 (M1–M11) bauen sich, beginnen mit dem Beispiel, Sätze höchstens 14 Wörter (längster: '+longest+')',ids.length===11&&bad.length===0&&firstOK===11&&longest<=14);
+    t('Merkkästen: alle 16 (M1–M16) bauen sich, beginnen mit dem Beispiel, Sätze höchstens 14 Wörter (längster: '+longest+')',ids.length===16&&bad.length===0&&firstOK===16&&longest<=14);
     const txt=(id)=>NOTES[id].build([]).map(n=>n.textContent).join(' ');
     t('Merkkästen: Fachwörter kommen nach dem Beispiel mit Erklärung (Erweiterungszahl, Kürzungszahl, Quersumme, Dezimalbruch, gemischte Zahl, kgV)',txt('M2').includes('Erweiterungszahl. Sie ist mindestens 2')&&txt('M3').includes('Kürzungszahl. Sie ist mindestens 2')&&txt('M7').includes('Quersumme bekommst du, wenn du alle Ziffern addierst')&&txt('M4').includes('heißt Dezimalbruch')&&txt('M6').includes('Natürliche Zahlen sind 1, 2, 3')&&txt('M10').includes('kleinstes gemeinsames Vielfaches (kgV)'));
     /* Schrift: Menü und Rang-Chip mindestens 16 px */
@@ -1333,33 +1333,72 @@ function runSelfTests(){
   /* Vergleichen W01–W03: Zahlenraum, Lösbarkeit, Fehlercodes, Rundenplan, Ansicht, Tipps */
   {
     const real=(tk)=>cmpSignOf(compareFrac(tk.a,tk.b,tk.c,tk.d));
+    const isClaim=(k)=>k==='claim'||k==='conflict';
     const okDraft=(tk)=>{
-      if(tk.kind==='claim')return {j:tk.truth?'ja':'nein',r:tk.answerR};
+      if(isClaim(tk.kind))return {j:tk.truth?'ja':'nein',r:tk.answerR};
+      if(tk.type==='W07')return {way:tk.ways[0],sign:real(tk)};
+      if(tk.type==='W05'){
+        if(tk.kind==='ziel'){const o={sign:real(tk)};cmpExpansions(tk,tk.N).forEach(x=>{o['x'+x.i]=String(x.v);});return o;}
+        if(tk.kind==='frei'){const m=lcm(tk.b,tk.d);return {'x0.n':String(tk.a*m/tk.b),'x0.d':String(m),'x1.n':String(tk.c*m/tk.d),'x1.d':String(m),sign:real(tk)};}
+        const e=tk.ex===0?tk.b:tk.d;return {x0:String(e*tk.k),sign:real(tk)};
+      }
+      if(tk.type==='W04'&&tk.kind==='check')return tk.equal?{eq:'ja',sign:real(tk)}:{eq:'nein'};
       if(tk.type==='W03')return tk.same==='keins'?{same:'keins'}:{same:tk.same,sign:real(tk)};
       if(tk.kind==='paint')return {p0:Array.from({length:tk.a},(_,i)=>i),p1:Array.from({length:tk.c},(_,i)=>i),sign:real(tk)};
       return {sign:real(tk)};
     };
     const problems=[],codes=new Set(),signs={};let n=0,tipN=0;
-    for(const id of ['W01','W02','W03'])for(const lvl of [1,2])for(const kind of TASKS[id].layoutKinds(lvl))for(let i=0;i<60;i++){
+    for(const id of ['W01','W02','W03','W04','W05','W06','W07'])for(const lvl of [1,2])for(const kind of TASKS[id].layoutKinds(lvl))for(let i=0;i<60;i++){
       const tk=TASKS[id].gen(lvl,RNG,{kind});n++;
       const lim=lvl===1?24:100,tag=id+'-L'+lvl+' '+kind;
-      if(![tk.b,tk.d].every(x=>Number.isInteger(x)&&x>=2&&x<=lim)||![tk.a,tk.c].every(x=>Number.isInteger(x)&&x>=1))problems.push(tag+' Zahlenraum');
-      if(compareFrac(tk.a,tk.b,tk.c,tk.d)===0)problems.push(tag+' gleich groß');
-      if(!Array.isArray(tk.avoid)||tk.avoid.length!==2)problems.push(tag+' avoid');
+      const single=id==='W06'&&kind!=='sign';
+      if(![tk.b].concat(single?[]:[tk.d]).every(x=>Number.isInteger(x)&&x>=2&&x<=lim)||![tk.a,tk.c].every(x=>Number.isInteger(x)&&x>=1))problems.push(tag+' Zahlenraum');
+      if(compareFrac(tk.a,tk.b,tk.c,tk.d)===0&&!single&&!(id==='W05'&&kind==='ziel'&&lvl===1))problems.push(tag+' gleich groß');
+      if(!Array.isArray(tk.avoid)||tk.avoid.length!==(single?1:2))problems.push(tag+' avoid');
       if(id==='W01'&&(tk.b!==tk.d||tk.a===tk.c))problems.push(tag+' Nenner');
       if(id==='W02'&&(tk.a!==tk.c||tk.b===tk.d||(kind==='stamm'&&tk.a!==1)))problems.push(tag+' Zähler');
       if(id==='W03'&&((tk.same==='nenner'&&(tk.b!==tk.d||tk.a===tk.c))||(tk.same==='zaehler'&&(tk.a!==tk.c||tk.b===tk.d))||(tk.same==='keins'&&(tk.a===tk.c||tk.b===tk.d))))problems.push(tag+' gleich?');
       if(kind==='paint'&&(tk.a>=tk.b||tk.c>=tk.d||Math.max(tk.b,tk.d)>12))problems.push(tag+' Färben');
-      if(kind==='claim'&&(tk.opts.length!==3||new Set(tk.opts.map(o=>o.id)).size!==3||!tk.opts.some(o=>o.id===tk.answerR)||tk.truth!==(tk.shown===real(tk))))problems.push(tag+' Behauptung');
+      if(id==='W05'){
+        const sg=strategiesFor(tk.a,tk.b,tk.c,tk.d);
+        if(kind==='ziel'&&(tk.N%tk.b!==0||tk.N%tk.d!==0||(lvl===1?(tk.N!==Math.max(tk.b,tk.d)):(tk.N!==lcm(tk.b,tk.d)||tk.N>300||tk.N===tk.b||tk.N===tk.d))))problems.push(tag+' Ziel-Nenner');
+        if(kind==='frei'&&lcm(tk.b,tk.d)>300)problems.push(tag+' kgV zu groß');
+        if(kind==='zaehler'){const e=tk.ex===0?[tk.a,tk.b]:[tk.c,tk.d],o=tk.ex===0?[tk.c,tk.d]:[tk.a,tk.b];if(o[0]!==e[0]*tk.k||tk.k<2||o[1]===e[1]*tk.k||e[1]*tk.k>300)problems.push(tag+' Zähler-Paar');}
+        if(!sg)problems.push(tag+' ohne Wege');
+        if(kind==='ziel'&&validateTask(tk,Object.assign({},okDraft(tk),{['x'+cmpExpansions(tk,tk.N)[0].i]:'0'})).errorCode===undefined)problems.push(tag+' falscher Zähler');
+        if(kind==='frei'&&validateTask(tk,Object.assign({},okDraft(tk),{'x1.d':String(lcm(tk.b,tk.d)*2)})).errorCode!=='gemeinsam')problems.push(tag+' gemeinsamer Nenner');
+      }
+      if(id==='W07'){
+        const sg=strategiesFor(tk.a,tk.b,tk.c,tk.d),want=sg.special.length?sg.special:['erw'];
+        if(tk.ways.join()!==want.join()||tk.fast!==want[0]||!tk.ways.includes(kind==='konflikt'?tk.fast:kind==='erw'?'erw':kind)||(lvl===1&&tk.ways.length!==1)||sg.gleich)problems.push(tag+' Wege');
+        if(kind==='erw'&&tk.ways[0]!=='erw')problems.push(tag+' erw');
+        if(kind==='konflikt'&&!fehltConflict(tk.a,tk.b,tk.c,tk.d))problems.push(tag+' Konflikt');
+        const no=['nenner','zaehler','fehlt','zahl'].find(w=>!tk.ways.includes(w));
+        if(no&&validateTask(tk,{way:no}).errorCode!=='noCarry')problems.push(tag+' Weg trägt nicht');
+        if(tk.ways[0]!=='erw'){const r=validateTask(tk,{way:'erw',sign:real(tk)});if(r.correct||r.errorCode!=='stur'||!r.soft)problems.push(tag+' Universalweg');}
+      }
+      if(id==='W06'){
+        const sg=strategiesFor(tk.a,tk.b,tk.c,tk.d);
+        if(kind==='sign'&&(sg.fastest!=='zahl'||sg.zahl!==tk.ref))problems.push(tag+' Vergleichszahl');
+        if(single&&(tk.c!==1||tk.d!==(kind==='halb'?2:1)))problems.push(tag+' Vergleichszahl 2');
+      }
+      if(id==='W04'){
+        const mA=tk.b-tk.a,mC=tk.d-tk.c,km=lvl===1?2:3,wantEq=kind==='check'?tk.equal:kind!=='conflict';
+        if(tk.a>=tk.b||tk.c>=tk.d||tk.b===tk.d||mA>km||mC>km||(mA===mC)!==wantEq||(kind==='conflict'&&!fehltConflict(tk.a,tk.b,tk.c,tk.d)))problems.push(tag+' Fehlt-Paar');
+        if(kind==='conflict'&&(tk.truth||tk.shown!==cmpSignOf(fehltRule(tk.a,tk.b,tk.c,tk.d))))problems.push(tag+' Konflikt-Behauptung');
+        if(kind==='check'&&tk.equal&&validateTask(tk,{eq:'nein'}).errorCode!=='eq')problems.push(tag+' Prüffrage');
+        if(kind==='check'&&!tk.equal&&validateTask(tk,{eq:'ja',sign:real(tk)}).errorCode!=='eq')problems.push(tag+' Prüffrage 2');
+      }
+      if(isClaim(kind)&&(tk.opts.length!==3||new Set(tk.opts.map(o=>o.id)).size!==3||!tk.opts.some(o=>o.id===tk.answerR)||tk.truth!==(tk.shown===real(tk))))problems.push(tag+' Behauptung');
       if(id==='W01'&&kind==='sign'&&lvl===1)signs[real(tk)]=(signs[real(tk)]||0)+1;
       const ok=validateTask(tk,okDraft(tk));
       if(!ok.correct)problems.push(tag+' richtige Antwort abgelehnt: '+ok.feedback);
-      if(kind!=='claim'&&!(id==='W03'&&tk.same==='keins'))['<','=','>'].filter(s=>s!==real(tk)).forEach(s=>{
+      if(!isClaim(kind)&&!(id==='W03'&&tk.same==='keins')&&!(id==='W04'&&kind==='check'&&!tk.equal))['<','=','>'].filter(s=>s!==real(tk)).forEach(s=>{
         const r=validateTask(tk,Object.assign({},okDraft(tk),{sign:s}));
         if(r.correct||!r.errorCode||!r.marks||r.marks['sign'+s]!==false)problems.push(tag+' falsches Zeichen '+s+' nicht erkannt');
         else codes.add(r.errorCode);
       });
-      if(kind==='claim'){const r=validateTask(tk,{j:tk.truth?'nein':'ja',r:tk.answerR}),r2=validateTask(tk,{j:tk.truth?'ja':'nein',r:tk.opts.find(o=>o.id!==tk.answerR).id});if(r.errorCode!=='judge'||r2.errorCode!=='reason')problems.push(tag+' Urteil/Begründung');}
+      if(isClaim(kind)){const r=validateTask(tk,{j:tk.truth?'nein':'ja',r:tk.answerR}),r2=validateTask(tk,{j:tk.truth?'ja':'nein',r:tk.opts.find(o=>o.id!==tk.answerR).id});if(r.errorCode!=='judge'||r2.errorCode!=='reason')problems.push(tag+' Urteil/Begründung');}
       if(id==='W03'&&tk.same!=='keins'&&validateTask(tk,{same:tk.same==='nenner'?'zaehler':'nenner',sign:real(tk)}).errorCode!=='same')problems.push(tag+' falsch erkannt');
       if(i<8){
         const h=TASKS[id].hints(tk),txt=h.flat().join(' ');tipN++;
@@ -1368,17 +1407,203 @@ function runSelfTests(){
         try{const host=el('div');mountTask(host,newState(tk),{save(){},done(){}});const sol=buildWorkedSolution(tk);if(!sol.length||!host.querySelector('.stage'))problems.push(tag+' Ansicht leer');}catch(e){problems.push(tag+' Ansicht: '+e.message);}
       }
     }
-    t('Vergleichen W01–W03: '+n+' Aufgaben in Zahlenraum (Leicht bis 24, Knifflig bis 100), Art und Lösbarkeit, falsche Zeichen und Urteile benannt, Tipps (3 Stufen, kurz), Ansicht und Lösung bauen sich',problems.length===0||(console.log(problems.slice(0,6)),false));
+    t('Vergleichen W01–W07: '+n+' Aufgaben in Zahlenraum (Leicht bis 24, Knifflig bis 100), Art und Lösbarkeit, falsche Zeichen und Urteile benannt, Tipps (3 Stufen, kurz), Ansicht und Lösung bauen sich',problems.length===0||(console.log(problems.slice(0,6)),false));
     t('Vergleichen: Fehlercodes gleichNenner, gleichZahl, nurNenner kommen vor; die Zeichen < und > sind in Leicht ausgewogen (W01)',['gleichNenner','gleichZahl','nurNenner','sign'].every(c=>codes.has(c))&&signs['<']>signs['>']*0.5&&signs['>']>signs['<']*0.5&&!signs['=']);
     const plan=(id,lvl)=>{const r={results:[],cur:null},ks=[];for(let i=0;i<5;i++){r.results=Array(i).fill('f');ks.push(TASKS[id].ctx(r,lvl).kind);}return {r,ks};};
     let planBad=0;
-    for(const id of ['W01','W02','W03'])for(const lvl of [1,2])for(let i=0;i<40;i++){
+    for(const id of ['W01','W02','W03','W04','W05','W06','W07'])for(const lvl of [1,2])for(let i=0;i<40;i++){
       const {r,ks}=plan(id,lvl),again=[];for(let k=0;k<5;k++){r.results=Array(k).fill('f');again.push(TASKS[id].ctx(r,lvl).kind);}
-      if(ks.length!==5||ks.join()!==again.join()||ks[0]==='claim'||(id==='W03'&&lvl===1&&ks.includes('keins'))||(id==='W03'&&lvl===2&&!ks.includes('keins'))||(id==='W01'&&lvl===1&&!ks.includes('paint'))||(id==='W01'&&lvl===2&&!ks.includes('claim'))||(id==='W02'&&!ks.includes('stamm')))planBad++;
+      if(ks.length!==5||ks.join()!==again.join()||ks[0]==='claim'||ks[0]==='conflict'||(id==='W03'&&lvl===1&&ks.includes('keins'))||(id==='W03'&&lvl===2&&!ks.includes('keins'))||(id==='W01'&&lvl===1&&!ks.includes('paint'))||(id==='W01'&&lvl===2&&!ks.includes('claim'))||(id==='W02'&&!ks.includes('stamm'))||(id==='W04'&&(!ks.includes('check')||!ks.includes('claim')||(lvl===2&&!ks.includes('conflict'))||(lvl===1&&ks.includes('conflict'))))||(id==='W05'&&(lvl===1?ks.some(k=>k!=='ziel'):!(ks.includes('frei')&&ks.includes('zaehler'))))||(id==='W06'&&(!ks.includes('halb')||!ks.includes('sign')||(lvl===2)!==ks.includes('eins')))||(id==='W07'&&(ks.length!==5||new Set(ks).size!==5)))planBad++;
     }
     t('Vergleichen: Rundenplan hat 5 Arten, bleibt in der Runde gleich, beginnt nie mit einer Behauptung; W01 hat Färben (Leicht) und Behauptung (Knifflig), W02 beginnt mit Stammbrüchen, W03 hat „Keins von beiden“ nur in Knifflig',planBad===0);
     const g0=TASKS.W01.gen(1,RNG),g1=TASKS.W02.gen(1,RNG),g2=TASKS.W03.gen(1,RNG);
-    t('Vergleichen: ohne Plan (Probeaufgabe) gilt die einfachste Art; die Stationen stehen im Pfad von „Brüche vergleichen“ (Pflicht, kein Abschluss)',g0.kind==='sign'&&g1.kind==='stamm'&&g2.kind==='which'&&moduleById('vergleichen').path.map(m=>m.id).join()==='W01,W02,W03'&&moduleById('vergleichen').path.every(m=>m.must)&&moduleById('vergleichen').rank===false&&moduleOf('W02').id==='vergleichen');
+    t('Vergleichen: ohne Plan (Probeaufgabe) gilt die einfachste Art; die Stationen stehen im Pfad von „Brüche vergleichen“ (Pflicht, am Ende der Abschlusscheck WA)',g0.kind==='sign'&&g1.kind==='stamm'&&g2.kind==='which'&&moduleById('vergleichen').path.map(m=>m.id).join()==='W01,W02,W03,W04,W05,W06,W07,W08,W09,W10,WA'&&moduleById('vergleichen').path.every(m=>m.must)&&moduleById('vergleichen').rank===false&&moduleOf('W02').id==='vergleichen');
+  }
+  /* Vergleichen W08–W10 (Ordnen, Größer als 1, Dazwischen) und das Ziehen und Ablegen */
+  {
+    t('Ordnen (rein): Karte auf freien Platz, auf belegten Platz (Tausch), zurück, auf den ersten freien Platz',(()=>{
+      const e=[null,null,null],a=ordPlace(e,2,0),b=ordPlace(a,1,2),c=ordPlace(b,2,2),d=ordPlace(b,0,0);
+      return JSON.stringify(a)==='[2,null,null]'&&JSON.stringify(b)==='[2,null,1]'&&JSON.stringify(c)==='[1,null,2]'&&JSON.stringify(d)==='[0,null,1]'&&JSON.stringify(ordRemove(b,2))==='[null,null,1]'&&JSON.stringify(ordAppend(b,0))==='[2,0,1]'&&JSON.stringify(ordAppend([0,1,2],5))==='[0,1,2]'&&ordFull(b)===false&&ordFull([2,0,1])&&JSON.stringify(ordPlace(a,2,0))===JSON.stringify(a);
+    })());
+    const problems=[],codes=new Set();let n=0;
+    const fmtOk=(tk)=>tk.order.slice();
+    for(const id of ['W08','W09','W10'])for(const lvl of [1,2])for(const kind of TASKS[id].layoutKinds(lvl))for(let i=0;i<50;i++){
+      const tk=TASKS[id].gen(lvl,RNG,{kind});n++;
+      const tag=id+'-L'+lvl+' '+kind;
+      if(!Array.isArray(tk.avoid)||!tk.avoid.length)problems.push(tag+' avoid');
+      if(tk.fr&&tk.order){ /* Reihe: W08 und W09 ordnen */
+        const k=tk.fr.length,srt=cmpIdxSorted(tk.fr,tk.dir==='desc');
+        if(srt.join()!==tk.order.join()||tk.order.every((c,j)=>c===j))problems.push(tag+' Reihenfolge');
+        if(id==='W08'){
+          if(k!==+tk.kind.slice(-1)||tk.fr.some(f=>f[1]<2||f[1]>(lvl===1?24:100)||f[0]<1||f[0]>=f[1])||commonDenominator(tk.fr.map(f=>f[1]))>(lvl===1?48:300))problems.push(tag+' Zahlenraum');
+          if(tk.fr.some((x,a)=>tk.fr.some((y,b)=>a!==b&&compareFrac(x[0],x[1],y[0],y[1])===0)))problems.push(tag+' gleiche Werte');
+        }else if(k!==3||tk.big.some(x=>x.p!==x.w*x.q+x.r||x.r<1||x.w<1))problems.push(tag+' Zahlen');
+        const ok=validateTask(tk,{ord:fmtOk(tk)});
+        if(!ok.correct)problems.push(tag+' richtige Reihe abgelehnt: '+ok.feedback);
+        if(validateTask(tk,{ord:[tk.order[0],null,tk.order[2]].concat(tk.order.slice(3))}).errorCode!=='invalid')problems.push(tag+' unvollständig');
+        const rev=validateTask(tk,{ord:tk.order.slice().reverse()});
+        if(rev.correct||!rev.marks||(k>2&&rev.errorCode!=='reverse'))problems.push(tag+' umgekehrt');
+        const sw=tk.order.slice();[sw[0],sw[1]]=[sw[1],sw[0]];
+        const rs=validateTask(tk,{ord:sw});
+        if(rs.correct||rs.errorCode==='invalid'||rs.marks['ord0']!==false||rs.marks['ord1']!==false)problems.push(tag+' Nachbarn vertauscht');
+        else codes.add(rs.errorCode);
+      }else if(id==='W09'){ /* zwei Zahlen: sign, ganze */
+        const x0=tk.x[0],x1=tk.x[1],real=cmpSignOf(compareFrac(tk.a,tk.b,tk.c,tk.d));
+        if(x0.p!==tk.a||x1.p!==tk.c||x0.q!==tk.b||x1.q!==tk.d||real==='='||(x0.mixed&&x1.mixed)||[x0,x1].some(x=>x.w<1||x.p!==x.w*x.q+x.r))problems.push(tag+' Paar');
+        const okD=tk.kind==='ganze'?{w0:String(x0.w),w1:String(x1.w),sign:real}:{sign:real};
+        if(!validateTask(tk,okD).correct)problems.push(tag+' richtig abgelehnt');
+        ['<','=','>'].filter(s=>s!==real).forEach(s=>{const r=validateTask(tk,Object.assign({},okD,{sign:s}));if(r.correct||!r.marks||r.marks['sign'+s]!==false)problems.push(tag+' Zeichen '+s);});
+        if(tk.kind==='ganze'&&validateTask(tk,Object.assign({},okD,{w0:String(x0.w+1)})).errorCode!=='ganze')problems.push(tag+' Ganze');
+      }else{ /* W10 */
+        const B=cmpBetween(tk);
+        if(compareFrac(tk.a,tk.b,tk.c,tk.d)>=0||B.hi-B.lo<2)problems.push(tag+' lo<hi');
+        if(tk.kind==='claim'){
+          if(tk.opts.length!==3||tk.truth!==!tk.neg||tk.b!==tk.d||tk.c-tk.a!==1)problems.push(tag+' Behauptung');
+          if(!validateTask(tk,{j:tk.truth?'ja':'nein',r:tk.answerR}).correct||validateTask(tk,{j:tk.truth?'nein':'ja',r:tk.answerR}).errorCode!=='judge')problems.push(tag+' Urteil');
+        }else{
+          const mid={'x.n':String(B.lo+1),'x.d':String(B.M)};
+          if(!validateTask(tk,mid).correct)problems.push(tag+' Bruch dazwischen abgelehnt');
+          if(validateTask(tk,{'x.n':String(tk.a),'x.d':String(tk.b)}).errorCode!=='edge'||validateTask(tk,{'x.n':String(B.hi+1),'x.d':String(B.M)}).errorCode!=='outside'||validateTask(tk,{'x.n':'0','x.d':String(B.M)}).errorCode!=='outside')problems.push(tag+' Grenze/außerhalb');
+          if(validateTask(tk,{'x.n':'3'}).errorCode!=='invalid')problems.push(tag+' leer');
+        }
+      }
+      if(i<6){
+        const h=TASKS[id].hints(tk),txt=h.flat().join(' ');
+        if(h.length!==3||h.some(x=>!Array.isArray(x)||!x.length)||/undefined|NaN|null|Infinity/.test(txt))problems.push(tag+' Tipps');
+        if(txt.replace(/\*\*/g,'').replace(/\{\d+\|\d+\}/g,'x').split(/[.!?]\s+/).some(s=>s.split(/\s+/).filter(Boolean).length>14))problems.push(tag+' Tipp zu lang');
+        try{const host=el('div');mountTask(host,newState(tk),{save(){},done(){}});const sol=buildWorkedSolution(tk);if(!sol.length||!host.querySelector('.stage'))problems.push(tag+' Ansicht leer');}catch(e){problems.push(tag+' Ansicht: '+e.message);}
+      }
+    }
+    t('Vergleichen W08–W10: '+n+' Aufgaben mit richtiger Reihe/Bruch/Behauptung, falschen Antworten benannt (umgekehrt, Nachbarn, Ganze, Grenze), Zahlenraum, Tipps und Ansicht',problems.length===0||(console.log(problems.slice(0,6)),false));
+    t('Vergleichen: Reihen-Fehlercodes: Nachbarn vertauscht (adjacent) oder Nenner-/Zähler-Fehlvorstellung kommen vor',codes.has('adjacent')||codes.has('byNum')||codes.has('byDen'));
+    t('Ordnen: Fehlvorstellung „nur nach den Zählern“ und „nur nach den Nennern“ werden benannt',(()=>{
+      const tk={type:'W08',level:1,kind:'ord3',dir:'asc',fr:[[5,8],[2,3],[1,4]],order:[2,0,1],avoid:[]};
+      const byNum=validateTask(tk,{ord:[2,1,0]}),byDen=validateTask(tk,{ord:[1,2,0]});
+      return tk.order.join()===cmpIdxSorted(tk.fr,false).join()&&byNum.errorCode==='byNum'&&byDen.errorCode==='byDen';
+    })());
+    let planBad=0;
+    for(const id of ['W08','W09','W10'])for(const lvl of [1,2])for(let i=0;i<30;i++){
+      const r={results:[],cur:null},ks=[];for(let k=0;k<5;k++){r.results=Array(k).fill('f');ks.push(TASKS[id].ctx(r,lvl).kind);}
+      if(ks.length!==5||ks[0]==='claim'||(id==='W08'&&ks.some(k=>!/^(ord|desc)[345]$/.test(k)))||(id==='W09'&&!ks.includes('ordnen'))||(id==='W10'&&!ks.includes('claim')))planBad++;
+    }
+    t('Vergleichen: Rundenplan für W08–W10 (Ordnen 3–5 Karten, W09 mit Zahlenreihe, W10 mit Behauptung)',planBad===0);
+    /* Ziehen und Ablegen in der echten Ansicht: Antippen und Ziehen mit Pointer-Ereignissen */
+    {
+      const keepD={view:S.view,rounds:S.rounds,intro:S.intro,modus:S.modus,unlocked:S.unlocked,levelByType:S.levelByType};
+      try{
+        S.modus=Object.assign({},S.modus,{vergleichen:'frei'});S.unlocked=Object.assign({},S.unlocked,{vergleichen:true});Object.keys(INTRO).forEach(k=>S.intro[k]=true);
+        S.levelByType.W08=1;S.rounds={'W08-L1':{results:[],cur:null,size:5,cmp:['ord3','ord3','ord3','ord3','ord3']}};S.view={kind:'practice',id:'W08'};renderAll();window.scrollTo(0,0);
+        const cur=()=>S.rounds['W08-L1'].cur,ord=()=>cur().draft.ord,fire=(el_,type,x,y,id)=>el_.dispatchEvent(new PointerEvent(type,{bubbles:true,cancelable:true,pointerId:id||7,clientX:x,clientY:y,button:0,pointerType:'touch'}));
+        const centre=(e)=>{const r=e.getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2];};
+        const cards=()=>[...app.querySelectorAll('.ordpool .ordcard')],slotEls=()=>[...app.querySelectorAll('.ordslot')];
+        t('Ordnen-Ansicht: 3 Plätze, 3 Karten, noch nichts gelegt',slotEls().length===3&&cards().length===3&&ord().every(x=>x===null));
+        /* Antippen: erste Karte geht auf den ersten freien Platz, Antippen der gelegten Karte nimmt sie zurück */
+        let [x,y]=centre(cards()[0]);const c0=+cards()[0].dataset.card;
+        fire(cards()[0],'pointerdown',x,y);fire(cards()[0],'pointerup',x,y);
+        const tapped=ord()[0]===c0&&cards().length===2;
+        const placed=app.querySelector('.ordslot .ordcard');[x,y]=centre(placed);fire(placed,'pointerdown',x,y);fire(placed,'pointerup',x,y);
+        t('Ordnen: Antippen legt die Karte auf den ersten freien Platz und nimmt sie wieder zurück',tapped&&ord().every(v=>v===null)&&cards().length===3);
+        /* Ziehen auf den dritten Platz (nur prüfbar, wenn der Platz im sichtbaren Bereich liegt) */
+        const sl=slotEls()[2],[sx,sy]=centre(sl),visible=sy>0&&sy<innerHeight&&sx>0&&sx<innerWidth;
+        if(visible){
+          const c1=+cards()[1].dataset.card;[x,y]=centre(cards()[1]);
+          fire(cards()[1],'pointerdown',x,y);fire(cards()[1],'pointermove',x+3,y);
+          const noDragYet=!document.querySelector('.ordghost');
+          fire(cards()[1],'pointermove',sx,sy);
+          const ghost=!!document.querySelector('.ordghost'),over=slotEls()[2].classList.contains('over');
+          fire(cards()[1],'pointerup',sx,sy);
+          t('Ordnen: kleine Bewegung ist noch kein Ziehen, danach folgt das Abbild; Loslassen über Platz 3 legt die Karte dorthin; Abbild verschwindet',noDragYet&&ghost&&over&&ord()[2]===c1&&!document.querySelector('.ordghost')&&slotEls().every(s=>!s.classList.contains('over')));
+          /* Ziehen auf einen belegten Platz tauscht, Ziehen daneben legt die Karte zurück */
+          [x,y]=centre(cards()[0]);const c2=+cards()[0].dataset.card;
+          fire(cards()[0],'pointerdown',x,y);fire(cards()[0],'pointermove',sx,sy);fire(cards()[0],'pointerup',sx,sy);
+          const swapped=ord()[2]===c2&&cards().some(c=>+c.dataset.card===c1);
+          const pl=app.querySelector('.ordslot.filled .ordcard');[x,y]=centre(pl);
+          fire(pl,'pointerdown',x,y);fire(pl,'pointermove',x+40,innerHeight-2);fire(pl,'pointerup',x+40,innerHeight-2);
+          t('Ordnen: Ziehen auf einen belegten Platz ersetzt die Karte dort (sie geht zurück), Loslassen außerhalb der Plätze legt die Karte zurück; pointercancel räumt auf',swapped&&ord().every(v=>v===null)&&(()=>{const c=cards()[0];[x,y]=centre(c);fire(c,'pointerdown',x,y);fire(c,'pointermove',sx,sy);const had=!!document.querySelector('.ordghost');fire(c,'pointercancel',x,y);return had&&!document.querySelector('.ordghost');})());
+        }
+        /* Antworten: Karten per Antippen in die richtige Reihe, dann Prüfen */
+        const tk=cur().task;
+        tk.order.forEach(cardNo=>{const c=cards().find(e=>+e.dataset.card===cardNo);if(c){const [cx,cy]=centre(c);fire(c,'pointerdown',cx,cy);fire(c,'pointerup',cx,cy);}});
+        const res=validateTask(tk,cur().draft);
+        t('Ordnen: nacheinander die richtigen Karten angetippt ergibt die richtige Reihe und gilt als richtig',cur().draft.ord.join()===tk.order.join()&&res.correct);
+      }finally{Object.assign(S,keepD);persist();renderAll();document.querySelectorAll('.ordghost').forEach(g=>g.remove());}
+    }
+  }
+  /* Vergleichen: Eingangstest WQ und Abschlusscheck WA */
+  {
+    const problems=[],qs={};let n=0;
+    for(const lvl of [1,2])for(const skill of WQ_SKILLS)for(let occ=0;occ<3;occ++)for(let i=0;i<40;i++){
+      const tk=TASKS.WQ.gen(lvl,RNG,{skill,occ});n++;
+      const tag='WQ-L'+lvl+' '+skill+' '+occ;
+      if(tk.skill!==skill||tk.kind!==WQ_KINDS[skill][occ%3]||tk.type!=='WQ')problems.push(tag+' Art');
+      const yn=tk.answer==='ja'||tk.answer==='nein';
+      if(yn){if(tk.opts)problems.push(tag+' Ja/Nein mit Antworten');}
+      else{
+        const ids=(tk.opts||[]).map(o=>o.id),txts=(tk.opts||[]).map(o=>o.txt);
+        if(ids.length<3||ids.length>4||new Set(ids).size!==ids.length||new Set(txts).size!==txts.length||!ids.includes(tk.answer)||txts.some(x=>!x))problems.push(tag+' Antworten');
+      }
+      if(!tk.why||/undefined|NaN/.test(tk.why))problems.push(tag+' Begründung');
+      const rightD={ans:tk.answer},ok=validateTask(tk,rightD);
+      if(!ok.correct)problems.push(tag+' richtig abgelehnt');
+      const other=yn?(tk.answer==='ja'?'nein':'ja'):tk.opts.find(o=>o.id!==tk.answer).id,bad=validateTask(tk,{ans:other});
+      if(bad.correct||bad.errorCode!=='quick'||!/Richtig wäre/.test(bad.feedback))problems.push(tag+' falsch nicht erkannt');
+      if(validateTask(tk,{ans:Q_UNSURE}).errorCode!=='unsure'||validateTask(tk,{}).errorCode!=='invalid')problems.push(tag+' Weiß ich nicht');
+      if(i<4){
+        try{const h=el('div'),host=el('div');TASKS.WQ.prompt(tk,h);mountTask(host,newState(tk),{save(){},done(){}});if(!h.textContent||/undefined|NaN/.test(h.textContent+host.textContent))problems.push(tag+' Text');if(buildWorkedSolution(tk).length<2)problems.push(tag+' Lösung');}catch(e){problems.push(tag+' Ansicht: '+e.message);}
+        const hs=TASKS.WQ.hints(tk);if(hs.length!==2||!hs[1]||!hs[1].length)problems.push(tag+' Tipps');
+      }
+      qs[skill+occ]=1;
+    }
+    t('Vergleichen WQ: '+n+' Fragen (5 Fähigkeiten à 3 Arten, Leicht und Knifflig) mit 3–4 verschiedenen Antworten oder Ja/Nein, richtige Antwort anerkannt, falsche und „Weiß ich nicht“ benannt, Ansicht und Lösung bauen sich',problems.length===0||(console.log(problems.slice(0,6)),false));
+    const wqCtx=(()=>{let ok=true;for(let k=0;k<30;k++){const r={results:[],cur:null},seen={};for(let i=0;i<15;i++){r.results=Array(i).fill('f');const c=TASKS.WQ.ctx(r);seen[c.skill]=(seen[c.skill]||[]).concat(c.occ);}
+      if(!WQ_SKILLS.every(s=>seen[s]&&seen[s].join()==='0,1,2'))ok=false;}return ok;})();
+    t('Vergleichen WQ: 15 Fragen, je Fähigkeit 3 in der Reihenfolge der Arten (Plan), QCHK nennt Stationen, die es gibt',TASKS.WQ.size===15&&wqCtx&&Object.values(QCHK.WQ.stations).flat().every(id=>TASKS[id]&&PATH.some(m=>m.id===id))&&QCHK.WQ.skills.length===5&&WQ_SKILLS.every(s=>QCHK.WQ.names[s]));
+    const vm=moduleById('vergleichen'),wa=TASKS.WA;
+    const waTypes=[];for(let k=0;k<15;k++){const r={results:Array(k).fill('f'),cur:null,plan:null},c=wa.ctx(r),tk=wa.gen(1+(k%2),RNG,c);waTypes.push(tk.type);}
+    t('Vergleichen WA: 15 Aufgaben (10 Antippfragen WQ, dann W04, W05, W07, W08, W10), Urkunde über finalId, letzter Pfadpunkt, Zahl der Antippfragen und Beschriftung',waTypes.slice(0,10).every(x=>x==='WQ')&&waTypes.slice(10).join()==='W04,W05,W07,W08,W10'&&wa.size===15&&wa.finalTap===10&&!!wa.finalLabel&&vm.path.at(-1).id==='WA'&&vm.path.at(-1).final&&finalModOf('WA')===vm&&vm.qid==='WQ'&&vm.finalId==='WA'&&!TIPS.WA);
+    /* WA reicht Tipps und Lösung an die Typen weiter; die Lösen-Aufgaben haben Tipps */
+    t('Vergleichen WA: Lösen-Aufgaben erzeugen echte Typen (Rico-Behauptung, Strategiewahl mit Konflikt, Ordnen von vier Brüchen) mit Tipps',(()=>{
+      const a=TASKS.WA.gen(1,RNG,{slot:10}),b=TASKS.WA.gen(1,RNG,{slot:12}),c=TASKS.WA.gen(2,RNG,{slot:13});
+      return a.type==='W04'&&a.kind==='claim'&&b.type==='W07'&&b.kind==='konflikt'&&c.type==='W08'&&c.fr.length===4&&TASKS.WA.hints(a).length===3&&TASKS.WA.hints(c).length===3;
+    })());
+  }
+  /* Vergleichen: Spiel S03 Bruch-Duell (Duell und Ordnen-Rätsel) */
+  {
+    const keepG={view:S.view,games:S.games,levelByType:S.levelByType,xp:S.xp,streak:S.streak};
+    try{
+      S.games={};S.levelByType.S03=1;S.view={kind:'game',id:'S03'};renderAll();window.scrollTo(0,0);
+      const rec=S.games[keyOf('S03',1)],D=()=>rec.state.duell,prim=()=>app.querySelector('.actionbar .btn.primary');
+      const sign=(s)=>[...app.querySelectorAll('.cmpsigns button')].find(b=>b.getAttribute('aria-label')==={'<':'kleiner','=':'gleich','>':'größer'}[s]);
+      const real=()=>cmpSignOf(compareFrac(D().f[0],D().f[1],D().f[2],D().f[3]));
+      t('Bruch-Duell: Spiel und Name stehen in GAMES, Ansicht mit zwei Spielarten und drei Zeichen, Stand 0 : 0 beim ersten Duell',!!GAMES.S03&&isGame('S03')&&app.querySelectorAll('.seg button').length===2&&app.querySelectorAll('.cmpsigns button').length===3&&D().me===0&&D().pc===0&&D().n===0&&prim().disabled);
+      sign(real()).click();
+      const t1=D().me===1&&D().pc===0&&D().answered&&prim().textContent==='Nächstes Duell'&&!prim().disabled&&app.querySelector('.msg.ok');
+      prim().click();
+      const wrongS=['<','=','>'].find(s=>s!==real());sign(wrongS).click();
+      const t2=D().pc===1&&D().me===1&&!!app.querySelector('.msg.bad')&&/Computer/.test(app.querySelector('.msg').textContent);
+      t('Bruch-Duell: richtiges Zeichen gibt dir den Punkt, falsches dem Computer (mit Erklärung); danach geht es weiter',!!t1&&t2);
+      for(let k=0;k<6;k++){prim().click();sign(real()).click();}
+      const over=D().n===8&&D().me===7&&D().pc===1&&rec.won===1&&/Du gewinnst/.test(app.textContent)&&prim().textContent==='Neues Duell';
+      prim().click();
+      t('Bruch-Duell: nach acht Duellen steht der Spielstand da (Sieg zählt als gewonnen), „Neues Duell“ beginnt von vorn',over&&D().n===0&&D().me===0&&D().pc===0&&!D().answered);
+      const hb=[...app.querySelectorAll('.actionbar .btn')].find(b=>/Tipp/.test(b.textContent));hb.click();hb.click();
+      t('Bruch-Duell: der Tipp fragt erst nach den Wegen und nennt dann den schnellsten',D().hint===2&&app.textContent.includes(CMP_WAYNAME[D().fast]));
+      /* Ordnen-Rätsel */
+      app.querySelectorAll('.seg button')[1].click();
+      const Rr=()=>rec.state.raetsel,cards=()=>[...app.querySelectorAll('.ordpool .ordcard')];
+      const tapCard=(no)=>{const c=cards().find(e=>+e.dataset.card===no);if(!c)return false;const r=c.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;['pointerdown','pointerup'].forEach(tp=>c.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,pointerId:9,clientX:x,clientY:y,button:0,pointerType:'touch'})));return true;};
+      t('Bruch-Duell: Rätsel zeigt vier Karten und vier Plätze (Leicht), noch nichts gelegt',rec.state.mode==='raetsel'&&app.querySelectorAll('.ordslot').length===4&&cards().length===4&&Rr().draft.ord.every(x=>x===null)&&prim().textContent==='Prüfen');
+      Rr().order.slice().reverse().forEach(tapCard);prim().click();
+      const wrongTry=Rr().tries===1&&Rr().solved===0&&!!app.querySelector('.msg.bad')&&app.querySelectorAll('.ordslot.bad').length>0;
+      /* die Karten wieder wegnehmen und richtig legen */
+      [...app.querySelectorAll('.ordslot .ordcard')].forEach(c=>{const r=c.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;['pointerdown','pointerup'].forEach(tp=>c.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,pointerId:9,clientX:x,clientY:y,button:0,pointerType:'touch'})));});
+      Rr().order.forEach(tapCard);prim().click();
+      t('Bruch-Duell: falsche Reihe wird benannt und markiert (Versuch zählt), die richtige löst das Rätsel (Punkt, Streifen als Kontrolle, „Neues Rätsel“)',wrongTry&&Rr().solved===1&&Rr().done&&!!app.querySelector('.msg.ok')&&!!app.querySelector('.cmpstack')&&prim().textContent==='Neues Rätsel');
+      prim().click();
+      t('Bruch-Duell: neues Rätsel behält die Zahl gelöster Rätsel; der Spielstand lässt sich speichern (keine DOM-Teile darin)',Rr().solved===1&&!Rr().done&&Rr().tries===0&&(()=>{try{JSON.stringify(S);return true;}catch(e){return false;}})());
+      S.levelByType.S03=2;S.view={kind:'game',id:'S03'};renderAll();
+      t('Bruch-Duell: Knifflig hat fünf Karten im Rätsel und eigenen Spielstand',(()=>{const r2=S.games[keyOf('S03',2)];app.querySelectorAll('.seg button')[1].click();return r2&&r2.state.level===2&&app.querySelectorAll('.ordslot').length===5;})());
+    }finally{Object.assign(S,keepG);persist();renderAll();}
   }
   const bad=res.filter(r=>!r.ok);
   console.log(`Selbsttest: ${res.length-bad.length}/${res.length} bestanden`);
@@ -1395,7 +1620,7 @@ window.runSelfTests=runSelfTests;
    neue Aufgabe · Teil 2 (zweiteilige Aufgaben) · nach „Prüfen“ · nach drei Tipps.
    ===================================================================== */
 async function runLayoutTests(w=375,h=600,samples=3,ids,intro=true){
-  ids=ids||Object.keys(TASKS).filter(id=>!['QA','ZA'].includes(id));
+  ids=ids||Object.keys(TASKS).filter(id=>!['QA','ZA','WA'].includes(id));
   const f=document.createElement('iframe');
   f.style.cssText='position:fixed;left:0;top:0;width:'+w+'px;height:'+h+'px;border:0;visibility:hidden;pointer-events:none';
   f.src='index.html?layouttest='+Date.now();

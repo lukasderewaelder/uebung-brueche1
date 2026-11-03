@@ -315,6 +315,104 @@ TIPS.W03=(t)=>{
     [n?'Bei gleich großen Stücken zählt der Zähler: Mehr Stücke sind mehr.':'Bei gleich vielen Stücken zählt der Nenner: Größere Stücke sind mehr.']];
 };
 
+TIPS.W04=(t)=>{
+  const mA=t.b-t.a,mC=t.d-t.c,eqm=mA===mC;
+  const counts=`Bei ${tf(t.a,t.b)} ${cmpMissMain(mA)}, bei ${tf(t.c,t.d)} ${cmpMissMain(mC)}.`;
+  const pic=t.level===1?'':'Jetzt siehst du ein Bild. Das Gestrichelte fehlt noch. ';
+  if(t.kind==='claim'||t.kind==='conflict')return [
+    ['Zähle, wie viele Stücke bei jedem Bruch bis zum Ganzen fehlen.'],
+    [counts],
+    [eqm?'Fehlen gleich viele Stücke, zählt die Größe der fehlenden Stücke.':'Fehlen verschieden viele Stücke, reicht diese Regel nicht.']];
+  if(t.kind==='check')return [
+    ['Zähle bei jedem Bruch, wie viele Stücke bis zum Ganzen fehlen.'],
+    [pic+counts],
+    [t.equal?'Es sind gleich viele. Wähle **Ja**. Dann vergleichst du die fehlenden Stücke.':'Es sind verschieden viele. Wähle **Nein**.']];
+  return [
+    ['Wie viele Stücke fehlen bei jedem Bruch bis zum Ganzen?'],
+    [pic+counts],
+    ['Bei beiden fehlen gleich viele Stücke. Bei welchem Bruch ist das fehlende Stück kleiner?']];
+};
+
+TIPS.W05=(t)=>{
+  if(t.kind==='zaehler'){
+    const e=t.ex===0?[t.a,t.b]:[t.c,t.d],o=t.ex===0?[t.c,t.d]:[t.a,t.b];
+    return [
+      [`Die Zähler sind ${t.a} und ${t.c}. Wie kommst du vom kleineren zum größeren?`],
+      [`${o[0]} geteilt durch ${e[0]} ergibt ${t.k}. Erweitere ${tf(e[0],e[1])} mit ${t.k}.`],
+      [`Der neue Nenner ist ${e[1]} mal ${t.k}.`]];
+  }
+  const N=t.kind==='ziel'?t.N:lcm(t.b,t.d);
+  if(t.kind==='frei')return [
+    ['Suche eine Zahl, in die beide Nenner aufgehen.'],
+    [`Teste Vielfache des größeren Nenners ${Math.max(t.b,t.d)}. Geht auch ${Math.min(t.b,t.d)} auf?`],
+    [`Der kleinste gemeinsame Nenner ist ${N}. Erweitere beide Brüche darauf.`]];
+  const ex=cmpExpansions(t,N);
+  return [
+    [ex.length===1?`Der Nenner ${ex[0].den} soll zu ${N} werden. Mit welcher Zahl erweiterst du?`:`Die Nenner ${t.b} und ${t.d} sollen beide zu ${N} werden. Mit welchen Zahlen erweiterst du?`],
+    [ex.map(x=>`${N} geteilt durch ${x.den} ergibt ${x.k}.`).join(' ')],
+    [ex.length===1?`Rechne den Zähler: ${ex[0].n} mal ${ex[0].k}.`:`Rechne beide Zähler: ${ex.map(x=>`${x.n} mal ${x.k}`).join(' und ')}.`]];
+};
+TIPS.W06=(t)=>{
+  const rel=(x,y)=>x<y?'kleiner als':x===y?'gleich':'größer als';
+  if(t.kind==='sign')return [
+    [`Liegt ${t.ref==='half'?'die Hälfte':'die 1'} zwischen den beiden Brüchen?`],
+    [`Prüfe jeden Bruch einzeln: ${tf(t.a,t.b)} und ${tf(t.c,t.d)} gegen ${t.ref==='half'?tf(1,2):'1'}.`],
+    [t.ref==='half'?`Doppelter Zähler gegen Nenner: ${2*t.a} zu ${t.b} und ${2*t.c} zu ${t.d}.`:`Vergleiche jeden Zähler mit seinem Nenner: ${t.a} zu ${t.b} und ${t.c} zu ${t.d}.`]];
+  const pos=cmpSignOf(compareFrac(t.a,t.b,t.c,t.d))==='<'?'unter':cmpSignOf(compareFrac(t.a,t.b,t.c,t.d))==='='?'genau auf':'über';
+  if(t.ref==='half')return [
+    ['Die Hälfte eines Ganzen sind halb so viele Stücke wie der Nenner.'],
+    [`Verdopple den Zähler: ${t.a} mal 2 ergibt ${2*t.a}. Vergleiche mit dem Nenner ${t.b}.`],
+    [`${2*t.a} ist ${rel(2*t.a,t.b)} ${t.b}. Also liegt der Bruch ${pos} ${tf(1,2)}.`]];
+  return [
+    ['Ein Bruch ist größer als 1, wenn er mehr als ein Ganzes ist.'],
+    [`Vergleiche den Zähler ${t.a} mit dem Nenner ${t.b}.`],
+    [`${t.a} ist ${rel(t.a,t.b)} ${t.b}. Also liegt der Bruch ${pos} 1.`]];
+};
+
+TIPS.W07=(t)=>{
+  const mA=t.b-t.a,mC=t.d-t.c,s=strategiesFor(t.a,t.b,t.c,t.d),name=CMP_WAYNAME[t.fast];
+  const second={
+    nenner:`Beide Brüche haben den Nenner ${t.b}. Welcher Weg passt dazu?`,
+    zaehler:`Beide Brüche haben den Zähler ${t.a}. Welcher Weg passt dazu?`,
+    fehlt:`Bei ${tf(t.a,t.b)} ${cmpMissMain(mA)}, bei ${tf(t.c,t.d)} ${cmpMissMain(mC)}. Welcher Weg passt?`,
+    zahl:`Ein Bruch liegt unter ${s.zahl==='half'?tf(1,2):'1'}, einer darüber. Welcher Weg passt?`,
+    erw:'Nenner und Zähler sind verschieden und keine Vergleichszahl hilft. Welcher Weg bleibt?'}[t.fast];
+  if(t.kind==='konflikt')return [
+    ['Prüfe der Reihe nach: Was ist bei beiden Brüchen gleich?'],
+    [`Bei ${tf(t.a,t.b)} ${cmpMissMain(mA)}, bei ${tf(t.c,t.d)} ${cmpMissMain(mC)}. Das sind verschieden viele.`],
+    [`Dann trägt die Regel mit dem Rest nicht. Wähle **${name}**.`]];
+  return [
+    ['Prüfe der Reihe nach: Was ist bei beiden Brüchen gleich?'],
+    [second],
+    [`Wähle **${name}**. Wende ihn dann an.`]];
+};
+
+TIPS.W08=(t)=>{
+  const desc=t.dir==='desc',first=t.fr[t.order[0]];
+  return [
+    [`Vergleiche immer zwei Brüche. Welcher ist ${desc?'am größten':'am kleinsten'}?`],
+    ['Jetzt siehst du die Streifen untereinander. Vergleiche je zwei Streifen.'],
+    [`Der ${desc?'größte':'kleinste'} Bruch ist ${tf(first[0],first[1])}. Lege ihn zuerst.`]];
+};
+TIPS.W09=(t)=>{
+  if(t.kind==='ordnen')return [
+    ['Schau zuerst auf die Ganzen.'],
+    ['Teile bei jedem unechten Bruch den Zähler durch den Nenner.'],
+    [`Der ${t.dir==='desc'?'größte':'kleinste'} ist ${cmpBigTf(t.big[t.order[0]])}.`]];
+  const x0=t.x[0],x1=t.x[1];
+  return [
+    ['Wie viele Ganze stecken in jeder Zahl?'],
+    [`Jetzt siehst du einen Zahlenstrahl. ${x0.p} : ${x0.q} ergibt ${x0.w} Rest ${x0.r}. ${x1.p} : ${x1.q} ergibt ${x1.w} Rest ${x1.r}.`],
+    [x0.w!==x1.w?'Die Ganzen sind verschieden. Mehr Ganze sind größer.':'Die Ganzen sind gleich. Vergleiche die Reste.']];
+};
+TIPS.W10=(t)=>{
+  const B=cmpBetween(t);
+  return [
+    [t.kind==='claim'?'Gibt es wirklich keinen Bruch dazwischen? Teile feiner ein.':'Teile die Einteilung feiner. Dann findest du Platz dazwischen.'],
+    [`Bringe beide Brüche auf den Nenner ${B.M}: ${tf(B.lo,B.M)} und ${tf(B.hi,B.M)}.`],
+    [t.kind==='claim'?`Dazwischen liegt zum Beispiel ${tf(B.lo+1,B.M)}.`:`Zwischen ${B.lo} und ${B.hi} liegt zum Beispiel die Zahl ${B.lo+1}.`]];
+};
+
 /* ---------- Rückmeldung bei „richtig“: die Rechnung statt einer Floskel ----------
    proofText(task) liefert den Satz nach „Richtig: “ (null = die Aufgabe hat keine kurze Rechenprobe, dann gilt Lob + Begründung) */
 const PROOF={
