@@ -262,7 +262,7 @@ function mountTask(host,st,cb){
   const solMsg=()=>{
     const info=el('div',{class:'msg info'},'Schau dir die Lösung genau an. Dann geht es weiter.');
     if(!cb.msgHost){sol.replaceChildren(el('div',{class:'solbox'},el('h4',null,icon('auge'),'Musterlösung'),...buildWorkedSolution(st.task)));fb.replaceChildren(info);return;}
-    fb.replaceChildren(info,el('button',{type:'button',class:'btn small sollink',onclick:()=>openSolutionSheet(st.task)},icon('auge'),'Lösung ansehen'));
+    fb.replaceChildren(info,el('button',{type:'button',class:'linkbtn sollink',onclick:()=>openSolutionSheet(st.task)},icon('auge'),'Lösung ansehen'));
     onMsg('fb');
   };
   const applyMarks=(marks)=>{
@@ -442,8 +442,8 @@ function renderPractice(id){
   const hintBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('hinweis')),'Tipp');
   const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkkasten');
   const primary=el('button',{type:'button',class:'btn primary'},'Prüfen');
-  const solBtn=el('button',{type:'button',class:'btn small'},icon('auge'),'Lösung ansehen');
-  const skipBtn=el('button',{type:'button',class:'btn small'},icon('skip'),'Überspringen');
+  const solBtn=el('button',{type:'button',class:'linkbtn'},icon('auge'),'Lösung ansehen');
+  const skipBtn=el('button',{type:'button',class:'linkbtn'},icon('skip'),'Überspringen');
   const pad=makeKeypad(host,()=>onPrimary());
   const links=el('div',{class:'linkrow hidden'},solBtn,skipBtn); /* liegt in der Meldung unten, nach einem Fehlversuch */
   const msg=el('div',{class:'dockmsg'});
@@ -526,20 +526,23 @@ function renderSummary(main,id,lvl,key,round){
   const again=()=>{S.rounds[key]={results:[],cur:null,size:TASKS[id].size};persist();renderAll();};
   const toPfad=()=>go(pfadView(id));
   const btn=(label,fn,primary)=>el('button',{type:'button',class:'btn'+(primary?' primary':''),onclick:fn},label);
-  const lvlBtn=btn(lvl===1?'Knifflig probieren':'Zurück zu Leicht',()=>setLevel(id,lvl===1?2:1));
-  let msg=null,btns;
+  /* Ein Hauptknopf, alles andere sind Textlinks. Was der Hauptknopf ist, hängt davon ab, woher die Runde kam (Lernpfad oder Üben). */
+  const fromPfad=!!(S.view&&S.view.from==='pfad'),toList=()=>go({kind:'home',tab:'ueben'});
+  const lvlLink=linkBtn(lvl===1?'Knifflig probieren':'Zurück zu Leicht',()=>setLevel(id,lvl===1?2:1));
+  let msg=null,mainBtn,links;
   if(inPath){
     const nx=pathState(moduleOf(id)).find(r=>r.next);
     if(passed){
       msg=info.firstPass?'Station fertig!'+(nx?' Als Nächstes: '+stationTitle(nx.id)+'.':''):'Wieder geschafft – stark!';
-      btns=[btn('Weiter im Lernpfad',toPfad,true),btn('Nochmal',again),lvlBtn];
     }else{
       /* Punkte: ohne Tipp ganz, mit Tipp oder zweitem Versuch halb (Altdaten ohne info.points: nur die Treffer) */
       const fmt=(x)=>String(x).replace('.',','),pts=info.points!=null?info.points:info.right;
       msg='Du hast '+info.right+' von '+round.size+' richtig.'+(pts<info.right?' Aufgaben mit Tipp zählen nur halb.':'')+' Du brauchst '+fmt(info.need)+' Punkte, du hast '+fmt(pts)+'. Noch einmal?';
-      btns=[btn('Nochmal',again,true),btn('Zum Lernpfad',toPfad),lvlBtn];
     }
-  }else btns=[btn(`Neue Runde (${TASKS[id].size} Aufgaben)`,again,true),lvlBtn];
+  }
+  if(fromPfad&&passed){mainBtn=btn('Weiter im Lernpfad',toPfad,true);links=[linkBtn('Nochmal',again),lvlLink];}
+  else if(fromPfad&&inPath){mainBtn=btn('Nochmal',again,true);links=[linkBtn('Zum Lernpfad',toPfad),lvlLink];}
+  else{mainBtn=btn(`Neue Runde (${TASKS[id].size} Aufgaben)`,again,true);links=[lvlLink,linkBtn('Zur Liste',toList)].concat(inPath?[linkBtn('Zum Lernpfad',toPfad)]:[]);}
   main.append(el('div',{class:'card summary'},el('div',{class:'stampbox'},passed?'Station fertig':'Runde fertig'),el('p',null),bigStars(stars),
     el('p',null,`${round.size} Aufgaben bearbeitet · ${LEVEL_LABEL[lvl]}`),
     el('table',null,
@@ -548,7 +551,7 @@ function renderSummary(main,id,lvl,key,round){
       el('tr',null,el('td',null,'Übersprungen'),el('td',null,el('b',null,String(c('s'))))),
       el('tr',null,el('td',null,'Lösung angezeigt'),el('td',null,el('b',null,String(c('x')))))),
     msg?el('p',null,msg):null,
-    el('div',{class:'rowbtns'},...btns)));
+    el('div',{class:'sumact'},mainBtn,el('div',{class:'linkrow'},...links))));
 }
 
 /* Ergebnis des Abschlusschecks (QA, ZA): Punkte, Antippfragen und Rechenaufgaben getrennt, Urkunde */
@@ -568,7 +571,7 @@ function renderFinalSummary(main,id,lvl,key,round){
       el('tr',null,el('td',null,'Zum Antippen richtig'),el('td',null,el('b',null,good(tap)+' von '+tap.length))),
       el('tr',null,el('td',null,TASKS[id].finalLabel||(id==='ZA'?'Am Zahlenstrahl richtig':'Zum Rechnen richtig')),el('td',null,el('b',null,good(calc)+' von '+calc.length)))),
     ...lines.map(x=>el('p',null,x)),
-    el('div',{class:'rowbtns'},btn('Zum Lernpfad',()=>go(pfadView(id)),true),btn('Nochmal',again))));
+    el('div',{class:'sumact'},btn('Zum Lernpfad',()=>go(pfadView(id)),true),el('div',{class:'linkrow'},linkBtn('Nochmal',again)))));
 }
 
 /* Ergebnis des Eingangstests eines Themas (QCHK[id]) */
@@ -589,7 +592,7 @@ function renderQuickSummary(main,id,lvl,key,round){
       el('p',null,`${right} von ${round.size} richtig`),
       el('p',null,'Das war noch schwer. Das ist ganz normal.'),
       el('p',null,qc.startText),
-      el('div',{class:'rowbtns'},btn('Zum Lernpfad',toPfad,true),btn('Nochmal',again))));
+      el('div',{class:'sumact'},btn('Zum Lernpfad',toPfad,true),el('div',{class:'linkrow'},linkBtn('Nochmal',again)))));
     return;
   }
   /* Fähigkeiten in Lernpfad-Reihenfolge */
@@ -614,14 +617,14 @@ function renderQuickSummary(main,id,lvl,key,round){
     else lines.push('Alles sitzt – stark!');
     if(ev.unsure)lines.push('Bei „Weiß ich nicht“ steht die Fähigkeit auf „üben“.');
   }
-  const btns=[btn('Weiter',toPfad,true)];
-  if(order.every(sk=>ev.skills[sk].status==='sitzt')&&lvl===1)btns.push(btn('Knifflig probieren',()=>setLevel(id,2)));
-  btns.push(btn('Nochmal',again));
+  const links=[];
+  if(order.every(sk=>ev.skills[sk].status==='sitzt')&&lvl===1)links.push(linkBtn('Knifflig probieren',()=>setLevel(id,2)));
+  links.push(linkBtn('Nochmal',again));
   main.append(el('div',{class:'card summary'},
     el('div',{class:'stampbox'},'Check fertig'),el('p',null),stars,
     el('p',null,`${right} von ${round.size} richtig · ${LEVEL_LABEL[lvl]}`),
     el('table',{class:'qsum'},...rows),
     ...lines.map(x=>el('p',null,x)),
-    el('div',{class:'rowbtns'},...btns)));
+    el('div',{class:'sumact'},btn('Zum Lernpfad',toPfad,true),el('div',{class:'linkrow'},...links))));
 }
 

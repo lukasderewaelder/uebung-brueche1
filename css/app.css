@@ -973,6 +973,11 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 .dockmsg .linkrow{margin:.25rem 0 0;gap:.5rem}
 .dockmsg .linkrow .btn{min-height:max(40px,2.5rem);flex:1}
 .sollink{margin-top:.125rem;width:100%}
+.dockmsg .linkrow .linkbtn{min-height:max(40px,2.5rem)}
+/* Ergebnisseite: ein Hauptknopf, darunter Textlinks */
+.sumact{margin-top:.75rem}
+.sumact>.btn{width:100%}
+.sumact .linkrow{margin-top:.25rem}
 /* Musterlösung: eigenes Fenster, scrollt dort */
 .solsheet .modalcard{display:flex;flex-direction:column;gap:.5rem;max-height:calc(100dvh - 2.5rem);text-align:left}
 .solsheet .modalcard h2{display:flex;align-items:center;gap:.5rem;margin:0}
@@ -1162,3 +1167,6 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 .tile.tile-txt .tv{hyphens:auto}
 .seg{max-width:100%}
 .seg button{flex:1 1 auto}
+
+/* Nach einem Fehlversuch passen Meldung und Textlinks („Lösung ansehen“, „Überspringen“) ganz ins Bedienpult; fitPage gleicht die Seitenhöhe aus */
+.dockpanel>.dockmsg:has(.linkrow:not(.hidden)){max-height:calc(3*max(44px,2.75rem) + .5rem)}

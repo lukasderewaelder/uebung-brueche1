@@ -996,6 +996,28 @@ function runSelfTests(){
       t('Üben: ein Antippen öffnet die Aufgabe, Zurück führt in die Üben-Liste',S.view.kind==='practice'&&S.last===S.view.id&&backTarget().tab==='ueben');
     }finally{Object.assign(S,{view:keepU.view,last:keepU.last,levelByType:keepU.levelByType});persist();renderAll();}
   }
+  /* Ergebnisseiten: ein Hauptknopf, alles andere sind Textlinks; der Hauptknopf folgt der Herkunft (Lernpfad oder Üben) */
+  {
+    const keepR={view:S.view};
+    try{
+      const lab=(m)=>[...m.querySelectorAll('.btn,.linkbtn')].map(b=>(b.classList.contains('primary')?'*':'')+b.textContent.trim().replace(/\s+/g,' ')).join('|');
+      const sum=(id,from,lvl,res,info)=>{S.view=from?{kind:'practice',id,from}:{kind:'practice',id};const m=el('div');renderSummary(m,id,lvl,keyOf(id,lvl),{results:res,size:res.length,info});return m;};
+      const okR=['f','f','f','f','f'],badR=['x','x','x','x','x'],passI={passed:true,firstPass:true,right:5,need:4,points:5},failI={passed:false,right:0,need:4,points:0};
+      const a=sum('G03','pfad',1,okR,passI),b=sum('G03','pfad',1,badR,failI),c=sum('G03',null,1,okR,passI),d=sum('U04',null,1,okR,null),e=sum('G03','pfad',2,okR,passI);
+      t('Ergebnis aus dem Lernpfad (bestanden): der eine Hauptknopf heißt „Weiter im Lernpfad“, dazu die Textlinks „Nochmal“ und „Knifflig probieren“',lab(a)==='*Weiter im Lernpfad|Nochmal|Knifflig probieren'&&a.querySelectorAll('.btn').length===1);
+      t('Ergebnis aus dem Lernpfad (nicht bestanden): Hauptknopf „Nochmal“, Textlinks „Zum Lernpfad“ und „Knifflig probieren“',lab(b)==='*Nochmal|Zum Lernpfad|Knifflig probieren'&&b.querySelectorAll('.btn').length===1);
+      t('Ergebnis aus Üben: Hauptknopf „Neue Runde“, Textlinks Niveau, „Zur Liste“ und (bei einer Station des Lernpfads) „Zum Lernpfad“ – auch wenn die Aufgabe im Pfad vorkommt',lab(c)==='*Neue Runde ('+TASKS.G03.size+' Aufgaben)|Knifflig probieren|Zur Liste|Zum Lernpfad'&&lab(d)==='*Neue Runde ('+TASKS.U04.size+' Aufgaben)|Knifflig probieren|Zur Liste');
+      t('Ergebnis: im Niveau Knifflig heißt der Textlink „Zurück zu Leicht“',/Zurück zu Leicht/.test(lab(e)));
+      t('Ergebnis: „Zur Liste“ führt in die Üben-Liste',(()=>{[...c.querySelectorAll('.linkbtn')].find(x=>x.textContent.trim()==='Zur Liste').click();const ok=S.view.kind==='home'&&S.view.tab==='ueben';return ok;})());
+      const fm=el('div');renderFinalSummary(fm,'QA',1,'QA-L1',{results:Array(15).fill('f'),size:15,info:{passed:true,ready:true,final:true}});
+      t('Ergebnis Abschlusscheck: Hauptknopf „Zum Lernpfad“, Textlink „Nochmal“',lab(fm)==='*Zum Lernpfad|Nochmal');
+      const qsk=Array.from({length:15},(_,i)=>QCHK.Q00.skills[i%QCHK.Q00.skills.length]);
+      const qm=el('div');renderQuickSummary(qm,'Q00',1,'Q00-L1',{results:Array(15).fill('f'),size:15,sk:qsk,info:{}});
+      t('Ergebnis Eingangstest: Hauptknopf „Zum Lernpfad“ (nicht „Weiter“), Textlinks „Knifflig probieren“ und „Nochmal“',lab(qm)==='*Zum Lernpfad|Knifflig probieren|Nochmal'&&qm.querySelectorAll('.btn').length===1);
+      const qs=el('div');renderQuickSummary(qs,'Q00',1,'Q00-L1',{results:Array(15).fill('x'),size:15,sk:qsk,info:{}});
+      t('Ergebnis Eingangstest („von vorn“): Hauptknopf „Zum Lernpfad“, Textlink „Nochmal“',lab(qs)==='*Zum Lernpfad|Nochmal');
+    }finally{S.view=keepR.view;persist();renderAll();}
+  }
   /* Paket 4: Sprache für Kinder, Rechenprobe im Lob, Merkkästen, Schriftgröße */
   {
     const jargon=/Bauteil|Bauplan|Baupläne|Blatt \d|Blitz|Maßgenau|Millimeter|Legende: alles perfekt|\bPos\b/;
