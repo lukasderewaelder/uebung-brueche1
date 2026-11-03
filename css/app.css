@@ -1081,3 +1081,33 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 @media (max-height:700px){
   .memgrid .mcard{height:4.5rem}
 }
+
+/* ---------- Vergleichen (W01–W10): Zeichen wählen, Streifen untereinander, Rest, Balken ---------- */
+.cmpeq{display:flex;align-items:center;justify-content:center;gap:.625rem;font-size:1.7rem;margin:.375rem 0}
+.cmpslot{display:inline-grid;place-items:center;min-width:2.5rem;height:2.5rem;border:2px dashed var(--chalk-dim);font:700 1.6rem var(--font-mono);color:var(--amber)}
+.cmpslot:not(:empty){border-style:solid;border-color:var(--amber)}
+.cmpsigns{display:grid;grid-template-columns:repeat(3,1fr);gap:.625rem;margin:.5rem 0}
+.tile.tile-sign{flex-direction:column;gap:0;padding:.375rem .25rem;min-height:4.25rem;font-size:2.1rem;line-height:1.1}
+.tile.tile-sign .sw{font:600 .75rem var(--font-body);color:var(--ink-dim)}
+.cmpstack{display:flex;flex-direction:column;gap:.375rem;margin:.375rem 0}
+.cmpfig{display:grid;grid-template-columns:3.5rem minmax(0,1fr);column-gap:.625rem;align-items:center} /* feste Beschriftungsspalte: alle Streifen beginnen und enden bündig */
+.cmpfig>.frac,.cmpfig>.cmplab{justify-self:center}
+.cmpfig svg{min-width:0}
+.cmplab{font:700 1.1rem var(--font-mono);color:var(--chalk)}
+.cell.rest>*{stroke-dasharray:5 3;stroke-width:2.2}
+.barframe{fill:none;stroke:var(--cell-stroke);stroke-width:1.6}
+.barrest{fill:none;stroke:var(--cell-stroke);stroke-width:2.2;stroke-dasharray:5 3}
+.tile.tile-txt.noltr{padding-left:.625rem}
+.halfline{fill:none;stroke:var(--amber);stroke-width:2;stroke-dasharray:4 3}
+.cmpstack svg.bad{outline:3px solid var(--bad);outline-offset:2px}
+.cmpstack svg.good{outline:3px solid var(--ok);outline-offset:2px}
+.cmppic{margin:.25rem 0}
+.solbox{--cell-stroke:var(--ink);--cell-on:url(#hatch-ink)}
+.note .cmplab,.solbox .cmplab{color:var(--ink)}
+.note .halfline,.solbox .halfline{stroke:var(--ink-dim)}
+@media (max-height:820px){
+  .cmpeq{font-size:1.45rem;margin:.125rem 0}
+  .cmpsigns{margin:.25rem 0;gap:.5rem}
+  .tile.tile-sign{min-height:3.5rem;font-size:1.8rem}
+  .cmpstack{gap:.25rem;margin:.25rem 0}
+}

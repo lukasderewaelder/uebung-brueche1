@@ -14,10 +14,13 @@ function cellShape(kind,i,d,dims,sh){
   const [rows,cols]=dims,cs=Math.min(48,360/cols),r=Math.floor(i/cols),c=i%cols;
   return S_('rect',{x:1+c*cs,y:1+r*cs,width:cs,height:cs});
 }
-/* Gemeinsame Zeichenfunktion. filled: Set mit Indizes. opts.onToggle(i)->neuer Zustand */
+/* Gemeinsame Zeichenfunktion. filled: Set mit Indizes. opts.onToggle(i)->neuer Zustand.
+   Streifen: opts.tall (hoch), opts.flat (flach, 30), opts.h (eigene Höhe), opts.rest (Indexliste gestrichelter Teile: „fehlt noch“),
+   opts.half (gestrichelte Linie bei ½ über dem Streifen) */
 function drawCells(kind,d,dims,filled,opts={}){
   let vb,maxW;
-  const sh=opts.tall?110:56; /* hohe Streifen für kleine Karten */
+  const sh=opts.h||(opts.tall?110:opts.flat?30:56); /* hohe Streifen für kleine Karten, flache zum Vergleichen untereinander */
+  const rest=opts.rest?new Set(opts.rest):null;
   if(kind==='strip'){vb='0 0 362 '+(sh+2);maxW=opts.maxW||460;}
   else if(kind==='circle'){vb='0 0 204 204';maxW=opts.maxW||210;}
   else{const [rows,cols]=dims,cs=Math.min(48,360/cols);vb=`0 0 ${cols*cs+2} ${rows*cs+2}`;maxW=opts.maxW||(cols*cs*1.3+2);}
@@ -27,7 +30,7 @@ function drawCells(kind,d,dims,filled,opts={}){
   if(opts.onToggle)svg.classList.add('interactive');
   for(let i=0;i<d;i++){
     const on=filled.has(i);
-    const g=S_('g',{class:'cell'+(on?' on':'')},cellShape(kind,i,d,dims,sh));
+    const g=S_('g',{class:'cell'+(on?' on':'')+(rest&&rest.has(i)&&!on?' rest':'')},cellShape(kind,i,d,dims,sh));
     if(opts.onToggle){
       g.setAttribute('role','button');g.setAttribute('tabindex','0');
       g.setAttribute('aria-pressed',String(on));g.setAttribute('aria-label','Teil '+(i+1));
@@ -42,6 +45,20 @@ function drawCells(kind,d,dims,filled,opts={}){
     svg.append(g);
   }
   if(opts.onToggle)svg.removeAttribute('role');
+  if(opts.half&&kind==='strip')svg.append(S_('line',{class:'halfline',x1:181,x2:181,y1:-4,y2:sh+6}));
+  return svg;
+}
+/* Glatter Balken ohne Zellen für große Nenner (über BAR_FROM Teile werden Zellen zu schmal): n/d der Länge ist gefärbt, nie mehr als ein Ganzes.
+   Gleiche Maße wie ein Streifen (viewBox 362 breit), damit mehrere Zeilen bündig untereinander stehen. */
+const BAR_FROM=25;
+function drawSmoothBar(n,d,opts={}){
+  const sh=opts.h||(opts.flat?30:56),w=360*Math.min(n,d)/d;
+  const svg=S_('svg',{viewBox:'0 0 362 '+(sh+2),class:'fracsvg',role:'img','aria-label':opts.label||'Bruchbild'});
+  svg.style.maxWidth=((opts.maxW||460)/16).toFixed(3)+'rem';
+  if(w>0)svg.append(S_('g',{class:'cell on'},S_('rect',{x:1,y:1,width:w,height:sh})));
+  if(opts.rest&&w<360)svg.append(S_('rect',{class:'barrest',x:1+w,y:1,width:360-w,height:sh})); /* gestrichelt: was zum Ganzen fehlt */
+  svg.append(S_('rect',{class:'barframe',x:1,y:1,width:360,height:sh}));
+  if(opts.half)svg.append(S_('line',{class:'halfline',x1:181,x2:181,y1:-4,y2:sh+6}));
   return svg;
 }
 const firstN=(n)=>new Set(Array.from({length:n},(_,i)=>i));

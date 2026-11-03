@@ -282,6 +282,39 @@ TIPS.Z08=(t)=>{
     [t.kind==='between'?`Der Punkt liegt hinter der ${w}. Die nächste ganze Zahl ist ${w+1}.`:`Du hast ${w} Ganze und ${rest} Abschnitte. Der Nenner bleibt ${t.d}.`]];
 };
 
+/* ---------- Vergleichen (W01–W03). In Knifflig und bei unechten Brüchen erscheint das Bild erst mit Tipp 2 (cmpPicSign) ---------- */
+const cmpLater=(t)=>(t.level===1&&t.a<=t.b&&t.c<=t.d)?'':'Jetzt siehst du ein Bild. ';
+TIPS.W01=(t)=>{
+  const big=Math.max(t.a,t.c),small=Math.min(t.a,t.c);
+  if(t.kind==='claim')return [
+    ['Beide Brüche haben denselben Nenner. Was heißt das für die Stücke?'],
+    [`${cmpLater(t)}Der Nenner ${t.b} sagt, wie groß die Stücke sind. Beide Brüche haben gleich große Stücke.`],
+    ['Dann entscheidet der Zähler: Wer mehr Stücke hat, ist größer. Passt das zur Behauptung?']];
+  return [
+    [t.kind==='paint'?'Beide Brüche haben denselben Nenner. Färbe so viele Teile, wie der Zähler sagt.':'Beide Brüche haben denselben Nenner. Was heißt das für die Stücke?'],
+    [`${t.kind==='paint'?'':cmpLater(t)}Der Nenner ${t.b} sagt: Alle Stücke sind gleich groß. Der Zähler zählt die Stücke: ${t.a} und ${t.c}.`],
+    [`${big} Stücke sind mehr als ${small} Stücke. Welcher Bruch ist also größer?`]];
+};
+TIPS.W02=(t)=>{
+  const mn=Math.min(t.b,t.d);
+  if(t.kind==='claim')return [
+    ['Beide Brüche haben denselben Zähler. Was heißt das für die Stücke?'],
+    [`${cmpLater(t)}Es sind je ${t.a} ${t.a===1?'Stück':'Stücke'}. Aber ${t.b} und ${t.d} Teile machen verschieden große Stücke.`],
+    ['Je mehr Teile das Ganze hat, desto kleiner sind die Stücke. Passt das zur Behauptung?']];
+  return [
+    [t.kind==='stamm'?'Von beiden ist ein Stück gefärbt. Sind die Stücke gleich groß?':'Beide Brüche haben gleich viele Stücke. Sind die Stücke gleich groß?'],
+    [`${t.kind==='paint'?'':cmpLater(t)}Das Ganze ist einmal in ${t.b} und einmal in ${t.d} Teile geteilt. Wo sind die Stücke größer?`],
+    [`In ${mn} Teile geteilt, sind die Stücke größer. Welcher Bruch ist also größer?`]];
+};
+TIPS.W03=(t)=>{
+  const first=['Vergleiche die Nenner und die Zähler. Steht bei beiden dieselbe Zahl?'];
+  if(t.same==='keins')return [first,['Die Nenner sind verschieden und die Zähler auch. Was passt dann?'],['Wähle **Keins von beiden**. Dafür lernst du gleich einen anderen Weg.']];
+  const n=t.same==='nenner';
+  return [first,
+    [n?`Beide Brüche haben den Nenner ${t.b}. Dann sind alle Stücke gleich groß.`:`Beide Brüche haben den Zähler ${t.a}. Dann sind es gleich viele Stücke.`],
+    [n?'Bei gleich großen Stücken zählt der Zähler: Mehr Stücke sind mehr.':'Bei gleich vielen Stücken zählt der Nenner: Größere Stücke sind mehr.']];
+};
+
 /* ---------- Rückmeldung bei „richtig“: die Rechnung statt einer Floskel ----------
    proofText(task) liefert den Satz nach „Richtig: “ (null = die Aufgabe hat keine kurze Rechenprobe, dann gilt Lob + Begründung) */
 const PROOF={

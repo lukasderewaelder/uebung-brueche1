@@ -60,7 +60,17 @@ const MODULES=[
     ],
     pathGroups:{Einteilung:'lupe',Eintragen:'lineal','Zwei Wege':'wechsel',Weiter:'aus',Abschlusscheck:'plakette'}
   },
-  {id:'vergleichen',name:'Brüche vergleichen',desc:'Brüche vergleichen und ordnen.',icon:'wechsel',status:'geplant'},
+  {id:'vergleichen',name:'Brüche vergleichen',desc:'Brüche vergleichen und ordnen.',icon:'wechsel',status:'aktiv',rank:false,recommends:'veraendern',
+    groups:{
+      'Zwei Regeln':{pat:'dots',icon:'balken',text:'Nenner gleich, Zähler gleich und beides im Vergleich',ids:['W01','W02','W03']}
+    },
+    practice:['W01','W02','W03'],
+    /* Lernpfad: alle Bauteile sind Pflicht */
+    path:[
+      {id:'W01',grp:'Zwei Regeln',must:true},{id:'W02',grp:'Zwei Regeln',must:true},{id:'W03',grp:'Zwei Regeln',must:true}
+    ],
+    pathGroups:{'Zwei Regeln':'balken'}
+  },
   {id:'rechnen',name:'Mit Brüchen rechnen',desc:'Addieren, subtrahieren, multiplizieren, dividieren.',icon:'zahnrad',status:'geplant'}
 ];
 
