@@ -18,7 +18,7 @@ const MODULES=[
       'Entdecken':{pat:'dots',icon:'lupe',text:'Labor, gleiche Anteile und Bruchbilder',ids:['LAB','G01','B01']},
       'Erweitern':{pat:'dash',icon:'aus',text:'Brüche feiner einteilen',ids:['G02']},
       'Kürzen':{pat:'hatch',icon:'ein',text:'Teilbarkeit, gemeinsame Teiler und Kürzen',ids:['T01','T02','G03','G04']},
-      'Mischen':{pat:'dots',icon:'zahnrad',text:'Mal erweitern, mal kürzen',ids:['G05']},
+      'Mischen':{pat:'dots',icon:'wechsel',text:'Mal erweitern, mal kürzen',ids:['G05']},
       'Knobeln':{pat:'dash',icon:'zirkel',text:'Lücken, Fehler, Begründen und mehrere Lösungen',ids:['U01','U02','U03','U04','O01','O02']},
       'Umwandeln':{pat:'hatch',icon:'wechsel',text:'Dezimalzahlen und gemischte Zahlen',ids:['D01','D02','D03']},
       'Abschluss':{pat:'dots',icon:'plakette',text:'Eingangstest und Abschlusscheck',ids:['Q00','QA']}
@@ -39,7 +39,7 @@ const MODULES=[
       {id:'U01',grp:'Knobeln'},{id:'U02',grp:'Knobeln'},{id:'U03',grp:'Knobeln'},{id:'O02',grp:'Knobeln'},
       {id:'QA',grp:'Abschluss',must:true,final:true,title:'Abschlusscheck',desc:TASKS.QA.size+' Aufgaben zeigen, was du kannst. Ab '+needOf(TASKS.QA.size)+' richtig gibt es die Urkunde.'}
     ],
-    pathGroups:{Entdecken:'lupe',Erweitern:'aus','Kürzen':'ein',Mischen:'zahnrad',Knobeln:'zirkel',Umwandeln:'wechsel',Abschluss:'plakette'}
+    pathGroups:{Entdecken:'lupe',Erweitern:'aus','Kürzen':'ein',Mischen:'wechsel',Knobeln:'zirkel',Umwandeln:'wechsel',Abschluss:'plakette'}
   },
   {id:'zahlenstrahl',name:'Brüche am Zahlenstrahl',desc:'Brüche ablesen, eintragen und passend einteilen.',icon:'lineal',status:'aktiv',rank:false,quickcheck:true,qid:'ZQ',finalId:'ZA',recommends:'veraendern',finalText:'Du kannst Brüche am Zahlenstrahl ablesen und eintragen. Stark!',
     groups:{
@@ -79,7 +79,7 @@ const MODULES=[
     ],
     pathGroups:{'Zwei Regeln':'balken','Fehlt zum Ganzen':'luecke','Mehr Wege':'aus',Ordnen:'netz','Check Vergleichen':'plakette'}
   },
-  {id:'rechnen',name:'Mit Brüchen rechnen',desc:'Addieren, subtrahieren, multiplizieren, dividieren.',icon:'zahnrad',status:'geplant'}
+  {id:'rechnen',name:'Mit Brüchen rechnen',desc:'Addieren, subtrahieren, multiplizieren, dividieren.',icon:'winkel',status:'geplant'}
 ];
 
 const activeModules=()=>MODULES.filter(m=>m.status==='aktiv');

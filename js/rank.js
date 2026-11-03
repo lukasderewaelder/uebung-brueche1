@@ -6,7 +6,7 @@
    ===================================================================== */
 const RANKS=[
   [0,'Praktikant','bleistift'],[40,'Azubi','lineal'],[100,'Zeichner','winkel'],[190,'Konstrukteur','zirkel'],
-  [320,'Techniker','zahnrad'],[500,'Werkmeister','schluessel'],[750,'Ingenieur','helm'],[1100,'Baumeister','plakette'],
+  [320,'Techniker','netz'],[500,'Werkmeister','schluessel'],[750,'Ingenieur','helm'],[1100,'Baumeister','plakette'],
   [1600,'Erfinder','gluehbirne'],[2300,'Chefkonstrukteur','pokal'],[3200,'Meister','stern'],[4500,'Legende','krone']
 ];
 const RANK_TOP=RANKS.length-1;
@@ -60,8 +60,7 @@ function chipNode(){
     el('span',{class:'gicon','aria-hidden':'true'},icon(st.cur[2])),
     el('span',{class:'gtext'},el('b',{class:'gname'},st.cur[1]),segBar(st.pct)),
     el('span',{class:'gxp'},xp+' XP'),
-    (S.streak||0)>1?el('span',{class:'gstreak','aria-hidden':'true'},'TREFFER '+S.streak):null,
-    el('span',{class:'gchev','aria-hidden':'true'},icon('ab')));
+    (S.streak||0)>1?el('span',{class:'gstreak','aria-hidden':'true'},'TREFFER '+S.streak):null);
 }
 function updateChip(){document.querySelectorAll('.gchip').forEach(c=>c.replaceWith(chipNode()));}
 

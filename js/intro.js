@@ -653,7 +653,7 @@ function renderIntro(id){
   const known=!again&&!stationPassed(id)&&checkMark(id)==='sitzt'; /* im Eingangstest schon gezeigt: „Kenne ich schon“ ist der Hauptknopf */
   let P=null; /* die Probeaufgabe bleibt beim Blättern erhalten */
   let i=0;
-  const root=el('div',{class:'page'});root.append(topbar(I.title));
+  const root=el('div',{class:'page'});root.append(topbar('')); /* der Titel steht im Schriftfeld der Karte */
   const shell=el('div',{class:'shell'}),main=el('main',{class:'work introwork'});
   main.dataset.acc=ACC[id]||PATH_ACC[id]||'';
   shell.append(main);root.append(shell);app.append(root);

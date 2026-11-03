@@ -125,18 +125,16 @@ input:disabled{opacity:.8}
 .brand{display:flex;align-items:center;gap:0.5rem;font:700 .9rem var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--chalk)}
 .brand{min-width:0}
 .brand .bt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.brand .ic{color:var(--amber);flex:none}
 .gchip{flex:none}
 .topbar .title{flex:1;min-width:0;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .topbar{container-type:inline-size}
 @container (max-width:22.5rem){.topbar .title{display:none}}
-@container (max-width:26rem){.gchip .gstreak,.gchip .gchev{display:none}} /* schmale Kopfzeile oder große Schrift: Treffer-Konto und Pfeil weglassen, sonst ragt der Chip über den Rand */
+@container (max-width:24rem){.gchip .gstreak{display:none}} /* schmale Kopfzeile oder große Schrift: Treffer-Konto weglassen, sonst ragt der Chip über den Rand */
 .backbtn{min-height:max(44px,2.75rem)}
 
 /* Messanzeige (Rang + XP) */
 .gchip{display:flex;align-items:center;gap:0.5rem;margin-left:auto;padding:0.1875rem 0.5625rem;background:var(--bp);border:2px solid var(--chalk);white-space:nowrap;font:inherit;color:var(--chalk);text-align:left;cursor:pointer;min-height:max(44px,2.75rem);box-shadow:0 3px 0 rgba(0,0,0,.3)}
 .gchip:active{transform:translateY(2px);box-shadow:none}
-.gchev .ic{width:.95rem;height:.95rem;color:var(--chalk-dim)}
 .gicon .ic{width:1.625rem;height:1.625rem;color:var(--amber)}
 .gtext{display:flex;flex-direction:column;gap:0.1875rem;min-width:5.25rem}
 .gname{font:700 .64rem/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase}
@@ -203,7 +201,11 @@ input:disabled{opacity:.8}
 .btn.small{min-height:max(44px,2.75rem);padding:0 0.75rem;font-size:.95rem}
 .btn.danger{border-color:var(--bad);color:var(--bad)}
 .btn.go{background:var(--ok);border-color:var(--ok);color:var(--on-amber)}
-.linkbtn{min-height:max(48px,3rem);padding:0 0.5rem;background:none;border:0;border-bottom:2px dashed var(--chalk-dim);color:var(--chalk);cursor:pointer;display:inline-flex;align-items:center;gap:0.375rem;font-weight:600}
+/* Textlink: Nebenhandlung ohne Rahmen (Nochmal, Überspringen, Ohne Test beginnen …); der Hauptknopf bleibt .btn.primary */
+.linkbtn{min-height:max(48px,3rem);min-width:0;padding:0 0.5rem;background:none;border:0;color:var(--chalk);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:0.375rem;font:inherit;font-weight:600;text-align:center;overflow-wrap:anywhere;text-decoration:underline dashed var(--chalk-dim);text-decoration-thickness:2px;text-underline-offset:.3em}
+.linkbtn:hover{color:var(--amber)}
+.linkbtn .ic{width:1.1em;height:1.1em;flex:none}
+.linkbtn.danger{color:var(--bad);text-decoration-color:var(--bad)}
 .linkrow{display:flex;gap:1.125rem;justify-content:center;flex-wrap:wrap;margin:0.625rem 0 0.25rem}
 .rowbtns{display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem}
 
