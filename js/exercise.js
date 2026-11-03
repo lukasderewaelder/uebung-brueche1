@@ -344,10 +344,9 @@ function backTarget(){
   if(v.from==='opt'&&v.back)return v.back;
   if(v.from==='pfad'&&(v.kind==='practice'||v.kind==='lab'))return pfadView(v.kind==='lab'?'LAB':v.id);
   if(v.kind==='home'&&v.tab==='pfad'&&v.thema)return {kind:'home',tab:'pfad'};
-  if(v.kind==='practice'){const g=Object.keys(GROUPS).find(k=>GROUPS[k].ids.includes(v.id));return {kind:'home',tab:'ueben',group:g};}
+  if(v.kind==='practice')return {kind:'home',tab:'ueben'};
   if(v.kind==='game')return {kind:'home',tab:'spiele'};
-  if(v.kind==='lab')return {kind:'home',tab:'ueben',group:'Entdecken'};
-  if(v.kind==='home'&&v.group)return {kind:'home',tab:'ueben'};
+  if(v.kind==='lab')return {kind:'home',tab:'ueben'};
   return null;
 }
 function topbar(title){

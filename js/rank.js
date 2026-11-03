@@ -119,7 +119,7 @@ function openOptions(){
     el('div',{class:'optlist'},
       optRow('schluessel','Hilfe bei Problemen','Wenn etwas nicht klappt',()=>{closeOptions();openProblemHelp();})),
     el('div',{class:'optfoot'},
-      el('button',{type:'button',class:'btn alt small danger',onclick:resetProgress},'Fortschritt löschen'),
+      linkBtn('Fortschritt löschen',resetProgress,null,'danger'),
       el('button',{type:'button',class:'btn',onclick:closeOptions},'Schließen'))]);
   m.classList.add('optmodal');optModal=m;
   m.addEventListener('click',e=>{if(e.target===m)closeOptions();});

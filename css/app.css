@@ -634,6 +634,10 @@ svg.interactive{touch-action:none}
 .optsec:empty{display:none}
 .optfoot{display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:space-between;margin-top:0.75rem}
 .modalcard .btn.danger{color:#a32626;border-color:#a32626}
+.modalcard .linkbtn{color:var(--ink);text-decoration-color:var(--ink-dim)}
+.modalcard .linkbtn:hover{color:var(--ink)}
+.modalcard .linkbtn.danger{color:#a32626;text-decoration-color:#a32626}
+.optfoot{align-items:center}
 .modalcard .rowbtns{justify-content:center}
 
 /* Hilfe bei Problemen: große Schrift, kurze Schritte, immer nur ein Eintrag offen.
@@ -918,7 +922,13 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 .gstreak{font-size:max(16px,.78rem)}
 
 /* Paket 5: Eingangstest-Knöpfe gleich groß, Einstellungen im Reiter „Ich“ */
-.settingsbtn{margin:0 0 .75rem}
+.ichhead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0 .75rem}
+.ichhead h1{margin-right:auto}
+.ichhead .linkbtn{margin-bottom:.25rem}
+/* Gruppenüberschrift in der Üben-Liste */
+.grp{display:flex;align-items:center;gap:.5rem;margin:1rem 0 .25rem;font:700 .75rem var(--font-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--chalk-dim)}
+.grp .ic{width:1.1rem;height:1.1rem;flex:none}
+.uebenbody>.grp:first-child{margin-top:.25rem}
 
 /* Paket 7: Probeaufgabe in der Erklärung, Zahlenkarten */
 .introprobe{margin:.5rem 0}

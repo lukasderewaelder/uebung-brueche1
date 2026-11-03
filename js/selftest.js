@@ -719,7 +719,7 @@ function runSelfTests(){
     t('Navigation: pfadView findet das Thema zu Bauteil, Labor und unbekannter ID',pfadView('G02').thema==='veraendern'&&pfadView('LAB').thema==='veraendern'&&pfadView().thema==='veraendern');
     t('Navigation: Zurück aus dem Lernpfad führt zur Themenübersicht, aus der Übersicht nirgends hin',JSON.stringify(bt({kind:'home',tab:'pfad',thema:'veraendern'}))==='{"kind":"home","tab":"pfad"}'&&bt({kind:'home',tab:'pfad'})===null);
     t('Navigation: Zurück aus einem Bauteil des Lernpfads führt in den Lernpfad dieses Themas',bt({kind:'practice',id:'G02',from:'pfad'}).thema==='veraendern'&&bt({kind:'lab',from:'pfad'}).thema==='veraendern');
-    t('Navigation: Zurück aus Üben führt in die Gruppe, aus der Gruppe in die Übersicht',bt({kind:'practice',id:'G02'}).group==='Erweitern'&&bt({kind:'home',tab:'ueben',group:'Erweitern'}).tab==='ueben'&&!bt({kind:'home',tab:'ueben',group:'Erweitern'}).group);
+    t('Navigation: Zurück aus Üben (Aufgabe, Labor) führt in die Üben-Liste; es gibt keine Gruppenseite mehr',bt({kind:'practice',id:'G02'}).tab==='ueben'&&!bt({kind:'practice',id:'G02'}).group&&bt({kind:'lab'}).tab==='ueben'&&!bt({kind:'lab'}).group&&bt({kind:'home',tab:'ueben'})===null);
     S.view=keepV;
   }
 
@@ -967,7 +967,7 @@ function runSelfTests(){
       chip.click();
       t('Rang-Chip: ein Tipp öffnet den Reiter „Ich“',S.view.kind==='home'&&S.view.tab==='rang'&&!document.querySelector('.optmodal'));
       const ich=[...app.querySelectorAll('button')].map(b=>b.textContent.trim());
-      t('Ich: oben „Einstellungen“, dazu Bruchlabor, Lernpfad und Hilfe bei Problemen im Reiter',ich.findIndex(x=>x.includes('Einstellungen'))>=0&&ich.findIndex(x=>x.includes('Einstellungen'))<ich.findIndex(x=>x.includes('Bruchlabor'))&&ich.some(x=>x.includes('Bruchlabor'))&&ich.some(x=>x.includes('Lernpfad'))&&ich.some(x=>x.includes('Hilfe bei Problemen')));
+      t('Ich: „Einstellungen“ als Textlink neben der Überschrift; keine Knopfreihe mehr (Bruchlabor, Lernpfad, Hilfe bei Problemen), keine dritte Sternenliste',!!app.querySelector('.ichhead .linkbtn')&&/Einstellungen/.test(app.querySelector('.ichhead .linkbtn').textContent)&&!app.querySelector('.rowbtns')&&!ich.some(x=>/Bruchlabor|Lernpfad|Hilfe bei Problemen/.test(x))&&!app.querySelector('.bom')&&!/Deine Sterne/.test(app.textContent)&&app.querySelectorAll('.btn.primary,.bigbtn').length===0);
       openOptions();
       const om=document.querySelector('.optmodal');
       t('Einstellungen: Textgröße, Hilfe bei Problemen und Fortschritt löschen; Bruchlabor und Lernpfad stehen nicht mehr im Dialog',!!om&&om.textContent.includes('Einstellungen')&&om.textContent.includes('Textgröße')&&om.textContent.includes('Hilfe bei Problemen')&&om.textContent.includes('Fortschritt löschen')&&!om.textContent.includes('Bruchlabor')&&!om.textContent.includes('Lernpfad'));
@@ -976,6 +976,25 @@ function runSelfTests(){
       closeOptions();document.querySelectorAll('.modal').forEach(m=>m.remove());
       Object.assign(S,keep5);persist();renderAll();
     }
+  }
+  /* Üben: eine Seite (keine Gruppenseiten), ein Umschalter, je Thema eine Liste in Gruppen mit fortlaufender Nummer */
+  {
+    const keepU={view:S.view,last:S.last,levelByType:Object.assign({},S.levelByType)};
+    try{
+      S.last=null;S.view={kind:'home',tab:'ueben'};renderAll();
+      const folds=[...app.querySelectorAll('details.fold')];
+      t('Üben: ein Umschalter für alle, je Thema eine Liste (das erste geöffnet), jede Aufgabe ohne Zwischenseite erreichbar',app.querySelectorAll('.levelrow').length===1&&folds.length===activeModules().length&&folds[0].open&&folds.slice(1).every(d=>!d.open)&&activeModules().every((m,i)=>folds[i].querySelectorAll('.bomrow').length===Object.values(m.groups).reduce((n,g)=>n+g.ids.length,0))&&!app.querySelector('.menu')&&app.querySelectorAll('.btn.primary,.bigbtn').length===0);
+      t('Üben: die Gruppen stehen als Überschriften, die Nummern laufen je Thema durch (Kopfzeile nur einmal)',activeModules().every((m,i)=>folds[i].querySelectorAll('h3.grp').length===Object.keys(m.groups).length&&folds[i].querySelectorAll('.bomhead').length===1&&[...folds[i].querySelectorAll('.bomrow .pos')].map(e=>e.textContent).join()===[...Array(folds[i].querySelectorAll('.bomrow').length).keys()].map(k=>String(k+1).padStart(2,'0')).join()));
+      S.last='W05';renderAll();
+      const folds2=[...app.querySelectorAll('details.fold')],vi=activeModules().findIndex(m=>m.id==='vergleichen');
+      t('Üben: „Weiter üben“ ist der einzige Hauptknopf; das Thema der letzten Aufgabe ist geöffnet',app.querySelectorAll('.bigbtn.go').length===1&&/Weiter üben/.test(app.querySelector('.bigbtn.go').textContent)&&folds2[vi].open&&folds2.filter(d=>d.open).length===1);
+      S.levelByType.W05=1;app.querySelectorAll('.levelrow .seg button')[1].click();
+      t('Üben: der Schwierigkeits-Umschalter gilt für alle Aufgaben der Seite',levelOf('W05')===2&&levelOf('G01')===2&&levelOf('Z03')===2);
+      S.view={kind:'home',tab:'ueben',group:'Erweitern'};renderAll();
+      t('Üben: ein alter Verlaufseintrag mit Gruppe zeigt die Üben-Liste',!!app.querySelector('.uebenbody')&&/Üben/.test(app.querySelector('h1').textContent));
+      app.querySelectorAll('.bomrow')[1].click(); /* die erste Zeile ist das Bruchlabor */
+      t('Üben: ein Antippen öffnet die Aufgabe, Zurück führt in die Üben-Liste',S.view.kind==='practice'&&S.last===S.view.id&&backTarget().tab==='ueben');
+    }finally{Object.assign(S,{view:keepU.view,last:keepU.last,levelByType:keepU.levelByType});persist();renderAll();}
   }
   /* Paket 4: Sprache für Kinder, Rechenprobe im Lob, Merkkästen, Schriftgröße */
   {
@@ -1412,7 +1431,7 @@ function runSelfTests(){
       }
     }
     t('Vergleichen W01–W07: '+n+' Aufgaben in Zahlenraum (Leicht bis 24, Knifflig bis 100), Art und Lösbarkeit, falsche Zeichen und Urteile benannt, Tipps (3 Stufen, kurz), Ansicht und Lösung bauen sich',problems.length===0||(console.log(problems.slice(0,6)),false));
-    t('Vergleichen: Fehlercodes gleichNenner, gleichZahl, nurNenner kommen vor; die Zeichen < und > sind in Leicht ausgewogen (W01)',['gleichNenner','gleichZahl','nurNenner','sign'].every(c=>codes.has(c))&&signs['<']>signs['>']*0.5&&signs['>']>signs['<']*0.5&&!signs['=']);
+    t('Vergleichen: Fehlercodes gleichNenner, gleichZahl, nurNenner kommen vor; die Zeichen < und > sind in Leicht ausgewogen (W01)',['gleichNenner','gleichZahl','nurNenner','sign'].every(c=>codes.has(c))&&signs['<']>signs['>']*0.35&&signs['>']>signs['<']*0.35&&!signs['=']); /* nur grobe Schieflage; bei 40 Zufallsaufgaben fiel die Schwelle 0,5 in rund 7 % der Läufe */
     const plan=(id,lvl)=>{const r={results:[],cur:null},ks=[];for(let i=0;i<5;i++){r.results=Array(i).fill('f');ks.push(TASKS[id].ctx(r,lvl).kind);}return {r,ks};};
     let planBad=0;
     for(const id of ['W01','W02','W03','W04','W05','W06','W07'])for(const lvl of [1,2])for(let i=0;i<40;i++){
@@ -1729,10 +1748,9 @@ async function runLayoutTests(w=375,h=600,samples=3,ids,intro=true,opts={}){
       const r=cw.eval(`(()=>{try{${js}}catch(e){return {err:e.message};}})()`);
       out[name]=r&&r.err?'FEHLER '+r.err:{neu:-1,teil2:-1,pruefen:-1,tipps:-1,breit:r?r.breit:0,wo:r?r.wo:''};
     };
-    const page=(v)=>`S.view=${v};renderAll();window.scrollTo(0,0);const x=__ovx();return {breit:x,wo:x?__off():''};`;
+    const page=(v)=>`S.view=${v};renderAll();document.querySelectorAll('#app details').forEach(d=>{d.open=true;});window.scrollTo(0,0);const x=__ovx();return {breit:x,wo:x?__off():''};`;
     const views=[['Seite Lernen',"{kind:'home',tab:'pfad'}"],['Seite Üben',"{kind:'home',tab:'ueben'}"],['Seite Spiele',"{kind:'home',tab:'spiele'}"],['Seite Ich',"{kind:'home',tab:'rang'}"],['Seite Labor',"{kind:'lab'}"]];
     activeModules().forEach(m=>views.push(['Seite Thema '+m.name,`{kind:'home',tab:'pfad',thema:'${m.id}'}`]));
-    Object.keys(GROUPS).forEach(g=>views.push(['Seite Gruppe '+g,`{kind:'home',tab:'ueben',group:${JSON.stringify(g)}}`]));
     Object.keys(GAMES).forEach(g=>[1,2].forEach(l=>views.push(['Spiel '+g+' '+LEVEL_LABEL[l],`S.levelByType['${g}']=${l};{kind:'game',id:'${g}'}`])));
     views.forEach(([name,v])=>wide(name,v.startsWith('S.levelByType')?`${v.split(';')[0]};${page(v.split(';')[1])}`:page(v)));
     /* Fenster (liegen außerhalb von #app) */
