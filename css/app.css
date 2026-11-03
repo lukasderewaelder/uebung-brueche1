@@ -1169,4 +1169,4 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 .seg button{flex:1 1 auto}
 
 /* Nach einem Fehlversuch passen Meldung und Textlinks („Lösung ansehen“, „Überspringen“) ganz ins Bedienpult; fitPage gleicht die Seitenhöhe aus */
-.dockpanel>.dockmsg:has(.linkrow:not(.hidden)){max-height:calc(3*max(44px,2.75rem) + .5rem)}
+.dockpanel>.dockmsg:has(.linkrow:not(.hidden)){max-height:calc(2*max(44px,2.75rem) + 1.5rem)}

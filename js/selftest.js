@@ -327,7 +327,14 @@ function runSelfTests(){
     const c3=moduleCard(mod);
     t('Themenkarte (Urkunde): „Urkunde geschafft“, kein Hauptknopf, nur die Kopfzeile ist ein Knopf',/Urkunde geschafft/.test(c3.textContent)&&!c3.querySelector('.btn.primary')&&c3.querySelectorAll('button').length===1);
     freshP();
-    t('Alle Themenkarten (neu): höchstens ein Hauptknopf und höchstens zwei Knöpfe (Kopfzeile, Hauptknopf); Empfehlung nur als Text',activeModules().every(m=>{const c=moduleCard(m);return c.querySelectorAll('.btn.primary').length===1&&c.querySelectorAll('button').length===2;}));
+    t('Alle Themenkarten (neu): höchstens ein Hauptknopf und höchstens zwei Knöpfe (Kopfzeile, Aktion); Empfehlung nur als Text',activeModules().every(m=>{const c=moduleCard(m);return c.querySelectorAll('.btn.primary').length===1&&c.querySelectorAll('button').length===2;}));
+    /* Reiter Lernen: gelb ist nur die Aktion der Karte, bei der es weitergeht (ein gelber Knopf je Bildschirm) */
+    freshP();
+    const lt=el('div');lernenTab(lt);
+    t('Reiter Lernen: nur die erste Karte, bei der es weitergeht, hat den gelben Knopf; die anderen Aktionen sind Rahmenknöpfe',lt.querySelectorAll('.btn.primary').length===1&&!!lt.querySelectorAll('.tcard')[0].querySelector('.btn.primary')&&lt.querySelectorAll('.tcard .btn:not(.primary)').length===activeModules().length-1);
+    mod.path.filter(m=>m.must&&!m.final).forEach(m=>{S.passed[m.id+'-L1']=true;});S.placed=true;S.final=true;
+    const lt2=el('div');lernenTab(lt2);
+    t('Reiter Lernen: ist das erste Thema fertig (Urkunde), wird die nächste Karte gelb',lt2.querySelectorAll('.btn.primary').length===1&&!lt2.querySelectorAll('.tcard')[0].querySelector('.btn')&&!!lt2.querySelectorAll('.tcard')[1].querySelector('.btn.primary'));
     freshP();
   }
   /* Bruch-Tresor: Code-Bruch, Schlösser, Tür */
@@ -994,6 +1001,12 @@ function runSelfTests(){
       t('Üben: ein alter Verlaufseintrag mit Gruppe zeigt die Üben-Liste',!!app.querySelector('.uebenbody')&&/Üben/.test(app.querySelector('h1').textContent));
       app.querySelectorAll('.bomrow')[1].click(); /* die erste Zeile ist das Bruchlabor */
       t('Üben: ein Antippen öffnet die Aufgabe, Zurück führt in die Üben-Liste',S.view.kind==='practice'&&S.last===S.view.id&&backTarget().tab==='ueben');
+      /* Leitregeln: ein gelber Hauptknopf je Bildschirm, „Lernpfad“ nie als Knopf oder Überschrift */
+      const homeViews=[{kind:'home',tab:'pfad'},{kind:'home',tab:'pfad',thema:'veraendern'},{kind:'home',tab:'pfad',thema:'zahlenstrahl'},{kind:'home',tab:'pfad',thema:'vergleichen'},{kind:'home',tab:'ueben'},{kind:'home',tab:'spiele'},{kind:'home',tab:'rang'}];
+      const yellow=homeViews.map(v=>{S.view=v;renderAll();return app.querySelectorAll('.btn.primary,.bigbtn.go').length;});
+      t('Ein gelber Hauptknopf je Bildschirm: Lernen, die drei Themenseiten, Üben, Spiele und Ich zeigen höchstens einen ('+yellow.join(',')+')',yellow.every(n=>n<=1));
+      const names=homeViews.map(v=>{S.view=v;renderAll();return [...app.querySelectorAll('button,h1,h2')].map(e=>e.textContent.trim());}).flat();
+      t('Wortschatz: „Lernpfad“ steht nie allein als Knopf oder Überschrift, „Lernpfad ansehen“ und „Stationen ansehen“ gibt es nicht',!names.some(x=>x==='Lernpfad'||/^(Lernpfad|Stationen) ansehen/.test(x)));
     }finally{Object.assign(S,{view:keepU.view,last:keepU.last,levelByType:keepU.levelByType});persist();renderAll();}
   }
   /* Ergebnisseiten: ein Hauptknopf, alles andere sind Textlinks; der Hauptknopf folgt der Herkunft (Lernpfad oder Üben) */

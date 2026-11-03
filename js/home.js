@@ -49,8 +49,9 @@ function uebenBody(m){
   return body;
 }
 /* Reiter „Lernen“: eine Karte je Thema. Die Karte hat immer dieselben Teile: Kopf (eine Zeile, die zur Themenseite führt), Fortschritt, höchstens
-   ein Hauptknopf („Starten“ führt zum Eingangstest-Block der Themenseite, „Start/Weiter: Station“ öffnet die Station). Geplante Themen sind nur ein Hinweis, kein Link. */
-function moduleCard(m){
+   eine Aktion („Starten“ führt zum Eingangstest-Block der Themenseite, „Start/Weiter: Station“ öffnet die Station). Gelb (primary) ist nur die Aktion
+   der Karte, bei der es weitergeht: ein gelber Knopf je Bildschirm. Geplante Themen sind nur ein Hinweis, kein Link. */
+function moduleCard(m,primary=true){
   const z=lernenZustand(m),rec=recommendNote(m),openThema=()=>go({kind:'home',tab:'pfad',thema:m.id});
   const {must,doneN,go1,rows}=pfadInfo(m);
   const head=el('button',{type:'button',class:'tc-head','aria-label':m.name+': Stationen ansehen',onclick:openThema},
@@ -59,8 +60,9 @@ function moduleCard(m){
     icon('weiter'));
   const seg=el('span',{class:'segn',role:'img','aria-label':doneN+' von '+must.length+' Pflicht-Stationen fertig'});
   must.forEach((r,i)=>seg.append(el('i',{class:i<doneN?'on':''})));
-  const act=z==='gate'?el('button',{type:'button',class:'btn primary',onclick:openThema},icon('play'),'Starten')
-    :go1?el('button',{type:'button',class:'btn primary',onclick:()=>openStation(go1.id)},icon('play'),startWord(rows,go1)+': '+stationTitle(go1.id))
+  const cls='btn'+(primary?' primary':'');
+  const act=z==='gate'?el('button',{type:'button',class:cls,onclick:openThema},icon('play'),'Starten')
+    :go1?el('button',{type:'button',class:cls,onclick:()=>openStation(go1.id)},icon('play'),startWord(rows,go1)+': '+stationTitle(go1.id))
     :el('p',{class:'tc-done'},icon('haken'),'Urkunde geschafft');
   return el('section',{class:'tcard'},head,
     rec?el('p',{class:'tc-note'},'Empfohlen: erst '+rec.name+'.'):null,
@@ -68,7 +70,8 @@ function moduleCard(m){
     act);
 }
 function lernenTab(home){
-  home.append(el('h1',null,'Lernen'),...activeModules().map(moduleCard));
+  const focus=activeModules().find(m=>lernenZustand(m)==='gate'||pfadInfo(m).go1); /* das Thema, bei dem es weitergeht */
+  home.append(el('h1',null,'Lernen'),...activeModules().map(m=>moduleCard(m,m===focus)));
   const soon=plannedModules();
   if(soon.length)home.append(el('section',{class:'soon','aria-label':'Geplante Themen'},el('h2',{class:'area'},'Bald'),
     el('ul',null,...soon.map(m=>el('li',null,icon(m.icon),el('span',null,el('b',null,m.name),el('small',null,m.desc)),el('em',null,'geplant'))))));
