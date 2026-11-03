@@ -154,6 +154,16 @@ const NOTES={
       el('p',null,strong('So prüfst du: '),'Verdopple den Zähler und vergleiche mit dem Nenner. Ist er größer, liegt der Bruch über ',frac(1,2),'.'),
       el('p',null,'Ist der Zähler größer als der Nenner, liegt der Bruch über 1.'),
       el('p',null,strong('Merke: '),'Das hilft nur, wenn die Vergleichszahl zwischen den Brüchen liegt.')
+    ];}},
+  M15:{title:'Welcher Weg passt?',build(avoid){
+    return [
+      el('div',{class:'ex'},strong('Beispiel: '),frac(5,7),' und ',frac(3,8),': ',frac(1,2),' liegt dazwischen.'),
+      el('p',null,strong('1. '),'Ist der Nenner gleich? Dann zählt der Zähler.'),
+      el('p',null,strong('2. '),'Ist der Zähler gleich? Dann zählt der Nenner.'),
+      el('p',null,strong('3. '),'Fehlen gleich viele Teile zum Ganzen? Dann zählt der Rest.'),
+      el('p',null,strong('4. '),'Liegt ',frac(1,2),' oder 1 zwischen den Brüchen?'),
+      el('p',null,strong('5. '),'Sonst auf einen Nenner bringen. Das geht immer.'),
+      el('p',null,strong('Merke: '),'Probiere die Wege der Reihe nach. Nimm den ersten, der passt.')
     ];}}
 };
 /* noteFor(task): Merkkästen zur Aufgabe, ohne die Aufgabe zu lösen */

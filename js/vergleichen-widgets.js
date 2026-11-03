@@ -87,7 +87,7 @@ const cmpPainted=(d,key,i)=>(Array.isArray(d[key+i])?d[key+i]:[]).length;
 /* Einfachwahl mit Kacheln: opts = [{v,label}]; Entwurf: draft[key] = v. Eingaben: key+v */
 function cmpTiles(view,host,key,opts,o){
   o=o||{};
-  const d=view.draft,grid=el('div',{class:'tiles tiles-3',role:'group','aria-label':o.label||'Antworten'});
+  const d=view.draft,grid=el('div',{class:'tiles'+(o.two?'':' tiles-3'),role:'group','aria-label':o.label||'Antworten'});
   opts.forEach((x,i)=>{
     const b=el('button',{type:'button',class:'tile tile-txt'+(x.ltr?'':' noltr'),'aria-pressed':String(d[key]===x.v)},x.ltr?el('span',{class:'ltr','aria-hidden':'true'},x.ltr):null,el('span',{class:'tv'},x.label));
     b.disabled=view.locked();

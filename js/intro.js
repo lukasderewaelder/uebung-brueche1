@@ -398,6 +398,18 @@ const INTRO={
     {h:'Auch die 1 hilft',
       say:['Ist der Zähler größer als der Nenner, liegt der Bruch über 1.','{7|5} liegt über 1 und {5|6} darunter.','Darum ist {7|5} größer als {5|6}.'],
       calc:[[[5,6],'<',[7,5]]]}
+  ]},
+  W07:{title:'Welcher Weg passt?',steps:[
+    {h:'Fünf Wege',
+      say:['Du kennst jetzt fünf Wege zum Vergleichen.','Nicht jeder Weg passt zu jedem Paar.','Suche zuerst den schnellsten.']},
+    {h:'Der Reihe nach prüfen',
+      say:['Ist der Nenner gleich? Dann zählt der Zähler.','Ist der Zähler gleich? Dann zählt der Nenner.','Fehlen gleich viele Teile zum Ganzen? Dann zählt der Rest.']},
+    {h:'Liegt eine Vergleichszahl dazwischen?',
+      say:['Liegt ein Bruch unter {1|2} und einer darüber?','Dann ist die Sache klar.','Das gilt auch für die 1.']},
+    {h:'Erweitern geht immer',
+      say:['Auf einen Nenner bringen klappt bei allen Brüchen.','Es dauert aber länger.','Nimm es, wenn kein anderer Weg passt.']},
+    {h:'So antwortest du',
+      say:['Wähle zuerst den schnellsten Weg.','Dann wähle das Zeichen.','Dann tippe auf **Prüfen**.']}
   ]}
 };
 const hasIntro=(id)=>Object.prototype.hasOwnProperty.call(INTRO,id);

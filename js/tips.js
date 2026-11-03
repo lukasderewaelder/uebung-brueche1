@@ -369,6 +369,24 @@ TIPS.W06=(t)=>{
     [`${t.a} ist ${rel(t.a,t.b)} ${t.b}. Also liegt der Bruch ${pos} 1.`]];
 };
 
+TIPS.W07=(t)=>{
+  const mA=t.b-t.a,mC=t.d-t.c,s=strategiesFor(t.a,t.b,t.c,t.d),name=CMP_WAYNAME[t.fast];
+  const second={
+    nenner:`Beide Brüche haben den Nenner ${t.b}. Welcher Weg passt dazu?`,
+    zaehler:`Beide Brüche haben den Zähler ${t.a}. Welcher Weg passt dazu?`,
+    fehlt:`Bei ${tf(t.a,t.b)} ${cmpMissMain(mA)}, bei ${tf(t.c,t.d)} ${cmpMissMain(mC)}. Welcher Weg passt?`,
+    zahl:`Ein Bruch liegt unter ${s.zahl==='half'?tf(1,2):'1'}, einer darüber. Welcher Weg passt?`,
+    erw:'Nenner und Zähler sind verschieden und keine Vergleichszahl hilft. Welcher Weg bleibt?'}[t.fast];
+  if(t.kind==='konflikt')return [
+    ['Prüfe der Reihe nach: Was ist bei beiden Brüchen gleich?'],
+    [`Bei ${tf(t.a,t.b)} ${cmpMissMain(mA)}, bei ${tf(t.c,t.d)} ${cmpMissMain(mC)}. Das sind verschieden viele.`],
+    [`Dann trägt die Regel mit dem Rest nicht. Wähle **${name}**.`]];
+  return [
+    ['Prüfe der Reihe nach: Was ist bei beiden Brüchen gleich?'],
+    [second],
+    [`Wähle **${name}**. Wende ihn dann an.`]];
+};
+
 /* ---------- Rückmeldung bei „richtig“: die Rechnung statt einer Floskel ----------
    proofText(task) liefert den Satz nach „Richtig: “ (null = die Aufgabe hat keine kurze Rechenprobe, dann gilt Lob + Begründung) */
 const PROOF={

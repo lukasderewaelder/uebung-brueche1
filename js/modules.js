@@ -64,14 +64,14 @@ const MODULES=[
     groups:{
       'Zwei Regeln':{pat:'dots',icon:'balken',text:'Nenner gleich, Zähler gleich und beides im Vergleich',ids:['W01','W02','W03']},
       'Fehlt zum Ganzen':{pat:'dash',icon:'luecke',text:'Gleich viele Teile fehlen zum Ganzen',ids:['W04']},
-      'Mehr Wege':{pat:'hatch',icon:'aus',text:'Auf einen Nenner bringen und die Vergleichszahl',ids:['W05','W06']}
+      'Mehr Wege':{pat:'hatch',icon:'aus',text:'Auf einen Nenner bringen, die Vergleichszahl und der schnellste Weg',ids:['W05','W06','W07']}
     },
-    practice:['W01','W02','W03','W04','W05','W06'],
+    practice:['W01','W02','W03','W04','W05','W06','W07'],
     /* Lernpfad: alle Bauteile sind Pflicht */
     path:[
       {id:'W01',grp:'Zwei Regeln',must:true},{id:'W02',grp:'Zwei Regeln',must:true},{id:'W03',grp:'Zwei Regeln',must:true},
       {id:'W04',grp:'Fehlt zum Ganzen',must:true},
-      {id:'W05',grp:'Mehr Wege',must:true,note:'Dafür hilft Erweitern und Kürzen.'},{id:'W06',grp:'Mehr Wege',must:true}
+      {id:'W05',grp:'Mehr Wege',must:true,note:'Dafür hilft Erweitern und Kürzen.'},{id:'W06',grp:'Mehr Wege',must:true},{id:'W07',grp:'Mehr Wege',must:true}
     ],
     pathGroups:{'Zwei Regeln':'balken','Fehlt zum Ganzen':'luecke','Mehr Wege':'aus'}
   },

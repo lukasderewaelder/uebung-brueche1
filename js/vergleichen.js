@@ -83,7 +83,8 @@ const CMP_PLAN={
   W03:{1:(R)=>['nenner','zaehler','nenner','zaehler',R.pick(['nenner','zaehler'])],2:(R)=>['nenner','zaehler','keins',R.pick(['nenner','zaehler']),R.pick(['nenner','zaehler'])]},
   W04:{1:['check','rest','rest','claim','check'],2:['check','conflict','rest','claim','conflict']},
   W05:{1:['ziel','ziel','ziel','ziel','ziel'],2:['ziel','frei','frei','zaehler','ziel']},
-  W06:{1:['halb','halb','sign','sign','sign'],2:['halb','eins','sign','sign','sign']}
+  W06:{1:['halb','halb','sign','sign','sign'],2:['halb','eins','sign','sign','sign']},
+  W07:{1:['nenner','zaehler','fehlt','zahl','erw'],2:['konflikt','zaehler','fehlt','zahl','erw']}
 };
 /* alle Aufgabenarten einer Station (für den Layout-Test, layoutKinds) */
 const cmpKindsOf=(id,lvl)=>{const src=CMP_PLAN[id][lvl];return Array.from(new Set(typeof src==='function'?src(RNG):src));};
@@ -558,5 +559,80 @@ TASKS.W06={area:'Vergleichen',name:'Vergleichszahl',desc:'Liegt ein Bruch unter 
     const f=[t.a,t.b,t.c,t.d];
     if(t.kind==='sign')return [line(`Vergleiche jeden Bruch mit ${CMP_REF[t.ref]}.`),cmpPairPic(f,{half:t.ref==='half'}),cmpSolEq(t)];
     return [line(t.ref==='half'?`Verdopple den Zähler: ${2*t.a}. Vergleiche mit dem Nenner ${t.b}.`:`Vergleiche den Zähler ${t.a} mit dem Nenner ${t.b}.`),cmpPairPic(f,{single:true,half:t.ref==='half',line:t.ref==='one'}),eq(frac(t.a,t.b),cmpSigned(t),cmpRefNode(t.ref))];
+  }
+};
+
+/* ---------- W07 Welcher Weg passt? ---------- */
+/* Erst den schnellsten Weg wählen (fünf Kacheln), dann das Zeichen. Richtig sind alle Wege, die bei diesem Paar tragen (Leicht genau einer);
+   „Auf einen Nenner bringen“ geht immer, gilt bei einem schnelleren Weg aber nur als „fast“ (soft). Aufgabenart (ctx.kind) = der gesuchte Weg;
+   konflikt: „Gleich viele Teile fehlen“ sieht passend aus, trägt aber nicht (verschieden viele fehlen). */
+const CMP_WAYNAME={nenner:'Nenner gleich',zaehler:'Zähler gleich',fehlt:'Gleich viele Teile fehlen zum Ganzen',zahl:'Vergleichszahl',erw:'Auf einen Nenner bringen'};
+function cmpWegPair(R,level,want){
+  const small=level===1?[3,4,5,6,7,8,9,10,12,15,16,18,20,24]:[7,8,9,10,12,15,16,18,20,24,25,30,40,50,60,75,100];
+  const plain=want==='erw'||want==='konflikt';
+  for(let i=0;i<2000;i++){
+    let f;
+    if(want==='nenner')f=cmpNenner(R,level);
+    else if(want==='zaehler')f=cmpZaehler(R,level,{noImp:true});
+    else if(want==='fehlt')f=cmpFehlt(R,level,'gleich');
+    else if(want==='zahl')f=cmpZahl(R,level).f;
+    else if(want==='konflikt')f=cmpFehlt(R,level,'konflikt');
+    else{const b=R.pick(small),d=R.pick(small);if(b===d)continue;f=[R.int(1,b-1),b,R.int(1,d-1),d];}
+    const s=strategiesFor(f[0],f[1],f[2],f[3]);
+    if(s.gleich||cmpDelta(f[0],f[1],f[2],f[3])<(level===1?0.03:0.005))continue;
+    if(want==='erw'&&(s.special.length||(level===1&&s.erw.m>48)))continue;
+    if(want==='konflikt'&&(s.special.length>1||s.special.includes('fehlt')||s.special.includes('nenner')||s.special.includes('zaehler')))continue;
+    if(!plain&&(level===1?(s.special.length!==1||s.special[0]!==want):!s.special.includes(want)))continue;
+    return {f,ways:s.special.length?s.special:['erw']};
+  }
+  const fb={nenner:[3,8,5,8],zaehler:[1,5,1,8],fehlt:[8,9,11,12],zahl:[3,8,5,7],erw:[2,3,3,4],konflikt:[7,9,3,4]}[want];
+  return {f:fb,ways:strategiesFor(fb[0],fb[1],fb[2],fb[3]).special.length?strategiesFor(fb[0],fb[1],fb[2],fb[3]).special:['erw']};
+}
+/* Satz, warum der gewählte Weg trägt (Rückmeldung bei richtig) */
+function cmpWayOk(t,w){
+  const mA=t.b-t.a,mC=t.d-t.c,s=strategiesFor(t.a,t.b,t.c,t.d);
+  if(w==='nenner')return 'Der Nenner ist gleich. Der größere Zähler gehört zum größeren Bruch.';
+  if(w==='zaehler')return 'Der Zähler ist gleich. Der kleinere Nenner gehört zum größeren Bruch.';
+  if(w==='fehlt')return `Bei beiden ${cmpMissMain(mA)}. Das kleinere fehlende Stück gehört zum größeren Bruch.`;
+  if(w==='zahl')return `Die Vergleichszahl ${CMP_REF[s.zahl]} liegt zwischen den Brüchen.`;
+  return `Auf den Nenner ${s.erw.m} erweitert zählt nur der Zähler.`;
+}
+/* Meldung, wenn der gewählte Weg bei diesem Paar nicht trägt */
+function cmpWayNo(t,w){
+  const mA=t.b-t.a,mC=t.d-t.c;
+  if(w==='nenner')return `Die Nenner ${t.b} und ${t.d} sind verschieden.`;
+  if(w==='zaehler')return `Die Zähler ${t.a} und ${t.c} sind verschieden.`;
+  if(w==='fehlt')return t.a>=t.b||t.c>=t.d?'Hier ist ein Bruch nicht kleiner als 1. Es fehlt nichts zum Ganzen.':`Bei ${ft(t.a,t.b)} ${cmpMissMain(mA)}, bei ${ft(t.c,t.d)} ${cmpMissMain(mC)}. Diese Regel trägt hier nicht.`;
+  return 'Beide Brüche liegen auf derselben Seite von 1/2 und von 1.';
+}
+TASKS.W07={area:'Vergleichen',name:'Welcher Weg passt?',desc:'Wähle den schnellsten Weg zum Vergleichen und wende ihn an.',notes:['M15','M11','M12'],size:5,
+  ctx:cmpCtx('W07'),layoutKinds:(lvl)=>cmpKindsOf('W07',lvl),
+  gen(level,R,ctx){
+    const want=(ctx&&ctx.kind)||'nenner',r=cmpWegPair(R,level,want);
+    return {type:'W07',level,kind:want,a:r.f[0],b:r.f[1],c:r.f[2],d:r.f[3],ways:r.ways,fast:r.ways[0],avoid:cmpAvoid(...r.f)};
+  },
+  prompt(t,h){h.append(el('p',{class:'q'},'Du vergleichst diese zwei Brüche:'),eq(frac(t.a,t.b),'und',frac(t.c,t.d)));},
+  render(view,host){
+    const t=view.task,d=view.draft,f=[t.a,t.b,t.c,t.d];
+    const stg=twoStage(view,host,{isDone:()=>!!d.way,summary:()=>'1. Weg: '+(CMP_WAYNAME[d.way]||'')});
+    stg.box1.append(el('p',null,strong('1. Welcher Weg ist am schnellsten?')));
+    const opts=[{v:'nenner',label:CMP_WAYNAME.nenner},{v:'zaehler',label:CMP_WAYNAME.zaehler},{v:'fehlt',label:CMP_WAYNAME.fehlt},{v:'zahl',label:['Vergleichszahl ',frac(1,2),' oder 1']},{v:'erw',label:CMP_WAYNAME.erw}];
+    const fill2=()=>{stg.box2.replaceChildren();if(d.way){stg.box2.append(el('p',null,strong('2. Welches Zeichen passt?')));cmpSign(view,stg.box2,'sign',f);}stg.upd();};
+    cmpTiles(view,stg.box1,'way',opts,{label:'Wege',two:true,onPick:()=>{fill2();stg.advance();}});
+    fill2();
+  },
+  validate(t,d){
+    if(!d.way)return invalid('Wähle zuerst den schnellsten Weg.');
+    const w=d.way;
+    if(!t.ways.includes(w)){
+      if(w==='erw')return soft('stur',`Auf einen Nenner bringen geht immer. Hier gibt es aber einen schnelleren Weg: ${CMP_WAYNAME[t.fast]}.`,{['way'+w]:false});
+      return wrong('noCarry',cmpWayNo(t,w),{['way'+w]:false});
+    }
+    if(!d.sign)return invalid('Wähle auch ein Zeichen.');
+    return cmpSignCheck(t,d,'sign','Richtig! '+cmpWayOk(t,w),{sign:'Wende den Weg noch einmal an. '+(w==='erw'?'Vergleiche die Zähler.':'Prüfe, welcher Bruch größer ist.')});
+  },
+  solution(t){
+    const f=[t.a,t.b,t.c,t.d];
+    return [line(strong('Schnellster Weg: '),CMP_WAYNAME[t.fast]+(t.ways.length>1?' (auch '+t.ways.slice(1).map(w=>CMP_WAYNAME[w]).join(', ')+')':'')+'.'),line(cmpWayOk(t,t.fast)),cmpPairPic(f),cmpSolEq(t)];
   }
 };
