@@ -309,6 +309,45 @@ const INTRO={
     {h:'Brüche, die natürliche Zahlen sind',
       say:['Manche Brüche sind natürliche Zahlen, wie 1, 2 oder 3.','Bei {8|4} geht der Zähler ohne Rest durch den Nenner.','Es sind genau 2 Ganze.'],
       calc:[[8,':',4,'=',2]]}
+  ]},
+  /* Vergleichen: Streifen immer gleich lang untereinander; Zeichen < und > stehen in calc zwischen zwei Brüchen */
+  W01:{title:'Nenner gleich',steps:[
+    {h:'Gleich große Stücke',
+      say:['Beide Streifen sind in 8 gleich große Stücke geteilt.','Beide Brüche haben den Nenner 8.','Die Stücke sind also gleich groß.'],
+      fig:[{n:3,d:8},{n:5,d:8}]},
+    {h:'Mehr Stücke sind mehr',
+      say:['Der Zähler zählt die gefärbten Stücke.','Oben sind es 3 Stücke, unten 5 Stücke.','Darum ist {5|8} größer als {3|8}.'],
+      calc:[[[3,8],'<',[5,8]]]},
+    {h:'Die Zeichen',
+      say:['Das Zeichen zeigt, welcher Bruch kleiner oder größer ist.','Die Spitze zeigt auf den kleineren Bruch.','Sind beide gleich groß, steht ein Gleichheitszeichen.'],
+      calc:[[[3,8],'<',[5,8]],[[5,8],'>',[3,8]]]},
+    {h:'So antwortest du',
+      say:['Schau auf den Nenner. Er ist bei beiden gleich.','Vergleiche dann die Zähler.','Wähle das Zeichen. Dann tippe auf **Prüfen**.']}
+  ]},
+  W02:{title:'Zähler gleich',steps:[
+    {h:'Gleich viele Stücke',
+      say:['Bei beiden Brüchen ist ein Stück gefärbt.','Aber die Stücke sind verschieden groß.'],
+      fig:[{n:1,d:4},{n:1,d:8}]},
+    {h:'Mehr Teile, kleinere Stücke',
+      say:['Das Ganze ist einmal in 4, einmal in 8 Teile geteilt.','Je mehr Teile, desto kleiner ist jedes Stück.','Darum ist {1|8} kleiner als {1|4}.'],
+      calc:[[[1,8],'<',[1,4]]]},
+    {h:'Auch bei mehr Stücken',
+      say:['Von jedem Streifen sind zwei Stücke gefärbt.','Die Stücke im unteren Streifen sind kleiner.','Darum ist {2|8} kleiner als {2|4}.'],
+      fig:[{n:2,d:4},{n:2,d:8}]},
+    {h:'So antwortest du',
+      say:['Schau auf den Zähler. Er ist bei beiden gleich.','Vergleiche dann die Nenner.','Der größere Nenner macht den kleineren Bruch.']}
+  ]},
+  W03:{title:'Nenner oder Zähler?',steps:[
+    {h:'Erst schauen',
+      say:['Schau zuerst auf beide Brüche.','Ist der Nenner gleich oder der Zähler?','Das entscheidet, welche Regel hilft.']},
+    {h:'Nenner gleich',
+      say:['Gleicher Nenner heißt: gleich große Stücke.','Dann zählt der Zähler. Mehr Stücke sind mehr.'],
+      calc:[[[3,8],'<',[5,8]]]},
+    {h:'Zähler gleich',
+      say:['Gleicher Zähler heißt: gleich viele Stücke.','Dann zählt der Nenner. Kleinere Stücke sind weniger.'],
+      calc:[[[3,8],'<',[3,5]]]},
+    {h:'Keins von beiden',
+      say:['Manchmal ist weder der Nenner noch der Zähler gleich.','Dann wählst du **Keins von beiden**.','Eine Regel dafür kommt später.']}
   ]}
 };
 const hasIntro=(id)=>Object.prototype.hasOwnProperty.call(INTRO,id);
@@ -360,7 +399,7 @@ function introRich(s){
   });
   return out;
 }
-const INTRO_OPS=['=','→','·',':','+'];
+const INTRO_OPS=['=','→','·',':','+','<','>'];
 function introCalcLine(tokens){
   const parts=tokens.map(t=>{
     if(t&&t.m)return mixed(t.m[0],t.m[1],t.m[2]);
