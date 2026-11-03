@@ -983,7 +983,7 @@ function runSelfTests(){
     const keepV=S.view,keepR=S.rounds,keepI=S.intro,seen=[];
     try{
       S.rounds={};S.intro={G02:true,Q00:true,QA:true,ZQ:true,G04:true};
-      [{kind:'home',tab:'pfad'},{kind:'home',tab:'pfad',thema:'veraendern'},{kind:'home',tab:'ueben'},{kind:'home',tab:'spiele'},{kind:'home',tab:'rang'},{kind:'practice',id:'G02'},{kind:'practice',id:'Q00'},{kind:'practice',id:'QA'},{kind:'game',id:'S02'}].forEach(v=>{
+      [{kind:'home',tab:'pfad'},{kind:'home',tab:'pfad',thema:'veraendern'},{kind:'home',tab:'ueben'},{kind:'home',tab:'spiele'},{kind:'home',tab:'rang'},{kind:'practice',id:'G02'},{kind:'practice',id:'Q00'},{kind:'practice',id:'QA'},{kind:'game',id:'S02'},{kind:'game',id:'S03'}].forEach(v=>{
         S.view=v;renderAll();
         if(jargon.test(app.textContent))seen.push((v.tab||v.id)+': '+(app.textContent.match(jargon)||[''])[0]);
       });
@@ -1566,6 +1566,44 @@ function runSelfTests(){
       const a=TASKS.WA.gen(1,RNG,{slot:10}),b=TASKS.WA.gen(1,RNG,{slot:12}),c=TASKS.WA.gen(2,RNG,{slot:13});
       return a.type==='W04'&&a.kind==='claim'&&b.type==='W07'&&b.kind==='konflikt'&&c.type==='W08'&&c.fr.length===4&&TASKS.WA.hints(a).length===3&&TASKS.WA.hints(c).length===3;
     })());
+  }
+  /* Vergleichen: Spiel S03 Bruch-Duell (Duell und Ordnen-Rätsel) */
+  {
+    const keepG={view:S.view,games:S.games,levelByType:S.levelByType,xp:S.xp,streak:S.streak};
+    try{
+      S.games={};S.levelByType.S03=1;S.view={kind:'game',id:'S03'};renderAll();window.scrollTo(0,0);
+      const rec=S.games[keyOf('S03',1)],D=()=>rec.state.duell,prim=()=>app.querySelector('.actionbar .btn.primary');
+      const sign=(s)=>[...app.querySelectorAll('.cmpsigns button')].find(b=>b.getAttribute('aria-label')==={'<':'kleiner','=':'gleich','>':'größer'}[s]);
+      const real=()=>cmpSignOf(compareFrac(D().f[0],D().f[1],D().f[2],D().f[3]));
+      t('Bruch-Duell: Spiel und Name stehen in GAMES, Ansicht mit zwei Spielarten und drei Zeichen, Stand 0 : 0 beim ersten Duell',!!GAMES.S03&&isGame('S03')&&app.querySelectorAll('.seg button').length===2&&app.querySelectorAll('.cmpsigns button').length===3&&D().me===0&&D().pc===0&&D().n===0&&prim().disabled);
+      sign(real()).click();
+      const t1=D().me===1&&D().pc===0&&D().answered&&prim().textContent==='Nächstes Duell'&&!prim().disabled&&app.querySelector('.msg.ok');
+      prim().click();
+      const wrongS=['<','=','>'].find(s=>s!==real());sign(wrongS).click();
+      const t2=D().pc===1&&D().me===1&&!!app.querySelector('.msg.bad')&&/Computer/.test(app.querySelector('.msg').textContent);
+      t('Bruch-Duell: richtiges Zeichen gibt dir den Punkt, falsches dem Computer (mit Erklärung); danach geht es weiter',!!t1&&t2);
+      for(let k=0;k<6;k++){prim().click();sign(real()).click();}
+      const over=D().n===8&&D().me===7&&D().pc===1&&rec.won===1&&/Du gewinnst/.test(app.textContent)&&prim().textContent==='Neues Duell';
+      prim().click();
+      t('Bruch-Duell: nach acht Duellen steht der Spielstand da (Sieg zählt als gewonnen), „Neues Duell“ beginnt von vorn',over&&D().n===0&&D().me===0&&D().pc===0&&!D().answered);
+      const hb=[...app.querySelectorAll('.actionbar .btn')].find(b=>/Tipp/.test(b.textContent));hb.click();hb.click();
+      t('Bruch-Duell: der Tipp fragt erst nach den Wegen und nennt dann den schnellsten',D().hint===2&&app.textContent.includes(CMP_WAYNAME[D().fast]));
+      /* Ordnen-Rätsel */
+      app.querySelectorAll('.seg button')[1].click();
+      const Rr=()=>rec.state.raetsel,cards=()=>[...app.querySelectorAll('.ordpool .ordcard')];
+      const tapCard=(no)=>{const c=cards().find(e=>+e.dataset.card===no);if(!c)return false;const r=c.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;['pointerdown','pointerup'].forEach(tp=>c.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,pointerId:9,clientX:x,clientY:y,button:0,pointerType:'touch'})));return true;};
+      t('Bruch-Duell: Rätsel zeigt vier Karten und vier Plätze (Leicht), noch nichts gelegt',rec.state.mode==='raetsel'&&app.querySelectorAll('.ordslot').length===4&&cards().length===4&&Rr().draft.ord.every(x=>x===null)&&prim().textContent==='Prüfen');
+      Rr().order.slice().reverse().forEach(tapCard);prim().click();
+      const wrongTry=Rr().tries===1&&Rr().solved===0&&!!app.querySelector('.msg.bad')&&app.querySelectorAll('.ordslot.bad').length>0;
+      /* die Karten wieder wegnehmen und richtig legen */
+      [...app.querySelectorAll('.ordslot .ordcard')].forEach(c=>{const r=c.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;['pointerdown','pointerup'].forEach(tp=>c.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,pointerId:9,clientX:x,clientY:y,button:0,pointerType:'touch'})));});
+      Rr().order.forEach(tapCard);prim().click();
+      t('Bruch-Duell: falsche Reihe wird benannt und markiert (Versuch zählt), die richtige löst das Rätsel (Punkt, Streifen als Kontrolle, „Neues Rätsel“)',wrongTry&&Rr().solved===1&&Rr().done&&!!app.querySelector('.msg.ok')&&!!app.querySelector('.cmpstack')&&prim().textContent==='Neues Rätsel');
+      prim().click();
+      t('Bruch-Duell: neues Rätsel behält die Zahl gelöster Rätsel; der Spielstand lässt sich speichern (keine DOM-Teile darin)',Rr().solved===1&&!Rr().done&&Rr().tries===0&&(()=>{try{JSON.stringify(S);return true;}catch(e){return false;}})());
+      S.levelByType.S03=2;S.view={kind:'game',id:'S03'};renderAll();
+      t('Bruch-Duell: Knifflig hat fünf Karten im Rätsel und eigenen Spielstand',(()=>{const r2=S.games[keyOf('S03',2)];app.querySelectorAll('.seg button')[1].click();return r2&&r2.state.level===2&&app.querySelectorAll('.ordslot').length===5;})());
+    }finally{Object.assign(S,keepG);persist();renderAll();}
   }
   const bad=res.filter(r=>!r.ok);
   console.log(`Selbsttest: ${res.length-bad.length}/${res.length} bestanden`);

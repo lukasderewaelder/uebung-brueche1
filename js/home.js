@@ -73,8 +73,8 @@ function renderHome(){
   if(tab==='pfad'){
     if(thema)pfadTab(home,thema);else lernenTab(home);
   }else if(tab==='spiele'){
-    home.append(el('h1',null,'Spiele'),listLevel(['S01','S02']),el('div',{class:'menu'},
-      ...['S01','S02'].map(id=>{const r=S.games[keyOf(id,levelOf(id))];return bigBtn(ICON[id],()=>openEntry(id),GAMES[id].name,GAMES[id].desc,[r?`Runden: ${r.played}`:'',id==='S02'&&lootOf().length?`Sammelkarten: ${lootOf().length} von ${LOOT.length}`:''].filter(Boolean).join(' · '),'',null,id==='S01'?'dots':'hatch');})));
+    home.append(el('h1',null,'Spiele'),listLevel(['S01','S02','S03']),el('div',{class:'menu'},
+      ...['S01','S02','S03'].map(id=>{const r=S.games[keyOf(id,levelOf(id))];return bigBtn(ICON[id],()=>openEntry(id),GAMES[id].name,GAMES[id].desc,[r?`Runden: ${r.played}`:'',id==='S02'&&lootOf().length?`Sammelkarten: ${lootOf().length} von ${LOOT.length}`:''].filter(Boolean).join(' · '),'',null,id==='S01'?'dots':id==='S02'?'hatch':'dash');})));
   }else if(tab==='rang'){
     const total=Object.values(S.progress).reduce((a,p)=>a+p.done,0);
     home.append(el('h1',null,'Ich'),
@@ -140,6 +140,7 @@ function renderAll(){
   else if(v.kind==='practice'&&TASKS[v.id])renderPractice(v.id);
   else if(v.kind==='game'&&v.id==='S01')renderMemory(v.id);
   else if(v.kind==='game'&&v.id==='S02')renderVault(v.id);
+  else if(v.kind==='game'&&v.id==='S03')renderDuell(v.id);
   else if(v.kind==='lab')renderLab();
   else renderHome();
   if(!Store.ok)app.append(el('div',{class:'note-storage'},
