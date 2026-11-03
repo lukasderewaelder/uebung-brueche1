@@ -164,6 +164,15 @@ const NOTES={
       el('p',null,strong('4. '),'Liegt ',frac(1,2),' oder 1 zwischen den Brüchen?'),
       el('p',null,strong('5. '),'Sonst auf einen Nenner bringen. Das geht immer.'),
       el('p',null,strong('Merke: '),'Probiere die Wege der Reihe nach. Nimm den ersten, der passt.')
+    ];}},
+  M16:{title:'Ordnen und Dazwischen',build(avoid){
+    return [
+      el('div',{class:'ex'},strong('Beispiel: '),eq(frac(3,8),'<',frac(1,2),'<',frac(5,8))),
+      cmpStack([{n:3,d:8},{n:1,d:2},{n:5,d:8}],{compact:true}),
+      el('p',null,'Beim Ordnen vergleichst du immer zwei Zahlen. Nimm den Weg, der passt.'),
+      el('p',null,strong('Ganze zuerst: '),'Eine Zahl mit mehr Ganzen ist größer. Bei gleichen Ganzen vergleichst du die Reste.'),
+      el('p',null,strong('Dazwischen: '),'Teile feiner ein. Dann liegt immer noch ein Bruch dazwischen.'),
+      el('p',null,strong('Merke: '),'Zwischen zwei Brüchen gibt es immer weitere.')
     ];}}
 };
 /* noteFor(task): Merkkästen zur Aufgabe, ohne die Aufgabe zu lösen */

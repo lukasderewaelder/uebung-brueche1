@@ -1013,7 +1013,7 @@ function runSelfTests(){
       const f=nodes[0];if(f.classList.contains('ex')||/^Beispiel/.test(f.textContent))firstOK++;
       nodes.filter(n=>n.tagName==='P'||n.classList.contains('rule')).forEach(n=>n.textContent.split(/[.!?]\s+/).forEach(s=>{longest=Math.max(longest,words(s));}));
     });
-    t('Merkkästen: alle 15 (M1–M15) bauen sich, beginnen mit dem Beispiel, Sätze höchstens 14 Wörter (längster: '+longest+')',ids.length===15&&bad.length===0&&firstOK===15&&longest<=14);
+    t('Merkkästen: alle 16 (M1–M16) bauen sich, beginnen mit dem Beispiel, Sätze höchstens 14 Wörter (längster: '+longest+')',ids.length===16&&bad.length===0&&firstOK===16&&longest<=14);
     const txt=(id)=>NOTES[id].build([]).map(n=>n.textContent).join(' ');
     t('Merkkästen: Fachwörter kommen nach dem Beispiel mit Erklärung (Erweiterungszahl, Kürzungszahl, Quersumme, Dezimalbruch, gemischte Zahl, kgV)',txt('M2').includes('Erweiterungszahl. Sie ist mindestens 2')&&txt('M3').includes('Kürzungszahl. Sie ist mindestens 2')&&txt('M7').includes('Quersumme bekommst du, wenn du alle Ziffern addierst')&&txt('M4').includes('heißt Dezimalbruch')&&txt('M6').includes('Natürliche Zahlen sind 1, 2, 3')&&txt('M10').includes('kleinstes gemeinsames Vielfaches (kgV)'));
     /* Schrift: Menü und Rang-Chip mindestens 16 px */
@@ -1417,7 +1417,117 @@ function runSelfTests(){
     }
     t('Vergleichen: Rundenplan hat 5 Arten, bleibt in der Runde gleich, beginnt nie mit einer Behauptung; W01 hat Färben (Leicht) und Behauptung (Knifflig), W02 beginnt mit Stammbrüchen, W03 hat „Keins von beiden“ nur in Knifflig',planBad===0);
     const g0=TASKS.W01.gen(1,RNG),g1=TASKS.W02.gen(1,RNG),g2=TASKS.W03.gen(1,RNG);
-    t('Vergleichen: ohne Plan (Probeaufgabe) gilt die einfachste Art; die Stationen stehen im Pfad von „Brüche vergleichen“ (Pflicht, kein Abschluss)',g0.kind==='sign'&&g1.kind==='stamm'&&g2.kind==='which'&&moduleById('vergleichen').path.map(m=>m.id).join()==='W01,W02,W03,W04,W05,W06,W07'&&moduleById('vergleichen').path.every(m=>m.must)&&moduleById('vergleichen').rank===false&&moduleOf('W02').id==='vergleichen');
+    t('Vergleichen: ohne Plan (Probeaufgabe) gilt die einfachste Art; die Stationen stehen im Pfad von „Brüche vergleichen“ (Pflicht, kein Abschluss)',g0.kind==='sign'&&g1.kind==='stamm'&&g2.kind==='which'&&moduleById('vergleichen').path.map(m=>m.id).join()==='W01,W02,W03,W04,W05,W06,W07,W08,W09,W10'&&moduleById('vergleichen').path.every(m=>m.must)&&moduleById('vergleichen').rank===false&&moduleOf('W02').id==='vergleichen');
+  }
+  /* Vergleichen W08–W10 (Ordnen, Größer als 1, Dazwischen) und das Ziehen und Ablegen */
+  {
+    t('Ordnen (rein): Karte auf freien Platz, auf belegten Platz (Tausch), zurück, auf den ersten freien Platz',(()=>{
+      const e=[null,null,null],a=ordPlace(e,2,0),b=ordPlace(a,1,2),c=ordPlace(b,2,2),d=ordPlace(b,0,0);
+      return JSON.stringify(a)==='[2,null,null]'&&JSON.stringify(b)==='[2,null,1]'&&JSON.stringify(c)==='[1,null,2]'&&JSON.stringify(d)==='[0,null,1]'&&JSON.stringify(ordRemove(b,2))==='[null,null,1]'&&JSON.stringify(ordAppend(b,0))==='[2,0,1]'&&JSON.stringify(ordAppend([0,1,2],5))==='[0,1,2]'&&ordFull(b)===false&&ordFull([2,0,1])&&JSON.stringify(ordPlace(a,2,0))===JSON.stringify(a);
+    })());
+    const problems=[],codes=new Set();let n=0;
+    const fmtOk=(tk)=>tk.order.slice();
+    for(const id of ['W08','W09','W10'])for(const lvl of [1,2])for(const kind of TASKS[id].layoutKinds(lvl))for(let i=0;i<50;i++){
+      const tk=TASKS[id].gen(lvl,RNG,{kind});n++;
+      const tag=id+'-L'+lvl+' '+kind;
+      if(!Array.isArray(tk.avoid)||!tk.avoid.length)problems.push(tag+' avoid');
+      if(tk.fr&&tk.order){ /* Reihe: W08 und W09 ordnen */
+        const k=tk.fr.length,srt=cmpIdxSorted(tk.fr,tk.dir==='desc');
+        if(srt.join()!==tk.order.join()||tk.order.every((c,j)=>c===j))problems.push(tag+' Reihenfolge');
+        if(id==='W08'){
+          if(k!==+tk.kind.slice(-1)||tk.fr.some(f=>f[1]<2||f[1]>(lvl===1?24:100)||f[0]<1||f[0]>=f[1])||commonDenominator(tk.fr.map(f=>f[1]))>(lvl===1?48:300))problems.push(tag+' Zahlenraum');
+          if(tk.fr.some((x,a)=>tk.fr.some((y,b)=>a!==b&&compareFrac(x[0],x[1],y[0],y[1])===0)))problems.push(tag+' gleiche Werte');
+        }else if(k!==3||tk.big.some(x=>x.p!==x.w*x.q+x.r||x.r<1||x.w<1))problems.push(tag+' Zahlen');
+        const ok=validateTask(tk,{ord:fmtOk(tk)});
+        if(!ok.correct)problems.push(tag+' richtige Reihe abgelehnt: '+ok.feedback);
+        if(validateTask(tk,{ord:[tk.order[0],null,tk.order[2]].concat(tk.order.slice(3))}).errorCode!=='invalid')problems.push(tag+' unvollständig');
+        const rev=validateTask(tk,{ord:tk.order.slice().reverse()});
+        if(rev.correct||!rev.marks||(k>2&&rev.errorCode!=='reverse'))problems.push(tag+' umgekehrt');
+        const sw=tk.order.slice();[sw[0],sw[1]]=[sw[1],sw[0]];
+        const rs=validateTask(tk,{ord:sw});
+        if(rs.correct||rs.errorCode==='invalid'||rs.marks['ord0']!==false||rs.marks['ord1']!==false)problems.push(tag+' Nachbarn vertauscht');
+        else codes.add(rs.errorCode);
+      }else if(id==='W09'){ /* zwei Zahlen: sign, ganze */
+        const x0=tk.x[0],x1=tk.x[1],real=cmpSignOf(compareFrac(tk.a,tk.b,tk.c,tk.d));
+        if(x0.p!==tk.a||x1.p!==tk.c||x0.q!==tk.b||x1.q!==tk.d||real==='='||(x0.mixed&&x1.mixed)||[x0,x1].some(x=>x.w<1||x.p!==x.w*x.q+x.r))problems.push(tag+' Paar');
+        const okD=tk.kind==='ganze'?{w0:String(x0.w),w1:String(x1.w),sign:real}:{sign:real};
+        if(!validateTask(tk,okD).correct)problems.push(tag+' richtig abgelehnt');
+        ['<','=','>'].filter(s=>s!==real).forEach(s=>{const r=validateTask(tk,Object.assign({},okD,{sign:s}));if(r.correct||!r.marks||r.marks['sign'+s]!==false)problems.push(tag+' Zeichen '+s);});
+        if(tk.kind==='ganze'&&validateTask(tk,Object.assign({},okD,{w0:String(x0.w+1)})).errorCode!=='ganze')problems.push(tag+' Ganze');
+      }else{ /* W10 */
+        const B=cmpBetween(tk);
+        if(compareFrac(tk.a,tk.b,tk.c,tk.d)>=0||B.hi-B.lo<2)problems.push(tag+' lo<hi');
+        if(tk.kind==='claim'){
+          if(tk.opts.length!==3||tk.truth!==!tk.neg||tk.b!==tk.d||tk.c-tk.a!==1)problems.push(tag+' Behauptung');
+          if(!validateTask(tk,{j:tk.truth?'ja':'nein',r:tk.answerR}).correct||validateTask(tk,{j:tk.truth?'nein':'ja',r:tk.answerR}).errorCode!=='judge')problems.push(tag+' Urteil');
+        }else{
+          const mid={'x.n':String(B.lo+1),'x.d':String(B.M)};
+          if(!validateTask(tk,mid).correct)problems.push(tag+' Bruch dazwischen abgelehnt');
+          if(validateTask(tk,{'x.n':String(tk.a),'x.d':String(tk.b)}).errorCode!=='edge'||validateTask(tk,{'x.n':String(B.hi+1),'x.d':String(B.M)}).errorCode!=='outside'||validateTask(tk,{'x.n':'0','x.d':String(B.M)}).errorCode!=='outside')problems.push(tag+' Grenze/außerhalb');
+          if(validateTask(tk,{'x.n':'3'}).errorCode!=='invalid')problems.push(tag+' leer');
+        }
+      }
+      if(i<6){
+        const h=TASKS[id].hints(tk),txt=h.flat().join(' ');
+        if(h.length!==3||h.some(x=>!Array.isArray(x)||!x.length)||/undefined|NaN|null|Infinity/.test(txt))problems.push(tag+' Tipps');
+        if(txt.replace(/\*\*/g,'').replace(/\{\d+\|\d+\}/g,'x').split(/[.!?]\s+/).some(s=>s.split(/\s+/).filter(Boolean).length>14))problems.push(tag+' Tipp zu lang');
+        try{const host=el('div');mountTask(host,newState(tk),{save(){},done(){}});const sol=buildWorkedSolution(tk);if(!sol.length||!host.querySelector('.stage'))problems.push(tag+' Ansicht leer');}catch(e){problems.push(tag+' Ansicht: '+e.message);}
+      }
+    }
+    t('Vergleichen W08–W10: '+n+' Aufgaben mit richtiger Reihe/Bruch/Behauptung, falschen Antworten benannt (umgekehrt, Nachbarn, Ganze, Grenze), Zahlenraum, Tipps und Ansicht',problems.length===0||(console.log(problems.slice(0,6)),false));
+    t('Vergleichen: Reihen-Fehlercodes: Nachbarn vertauscht (adjacent) oder Nenner-/Zähler-Fehlvorstellung kommen vor',codes.has('adjacent')||codes.has('byNum')||codes.has('byDen'));
+    t('Ordnen: Fehlvorstellung „nur nach den Zählern“ und „nur nach den Nennern“ werden benannt',(()=>{
+      const tk={type:'W08',level:1,kind:'ord3',dir:'asc',fr:[[5,8],[2,3],[1,4]],order:[2,0,1],avoid:[]};
+      const byNum=validateTask(tk,{ord:[2,1,0]}),byDen=validateTask(tk,{ord:[1,2,0]});
+      return tk.order.join()===cmpIdxSorted(tk.fr,false).join()&&byNum.errorCode==='byNum'&&byDen.errorCode==='byDen';
+    })());
+    let planBad=0;
+    for(const id of ['W08','W09','W10'])for(const lvl of [1,2])for(let i=0;i<30;i++){
+      const r={results:[],cur:null},ks=[];for(let k=0;k<5;k++){r.results=Array(k).fill('f');ks.push(TASKS[id].ctx(r,lvl).kind);}
+      if(ks.length!==5||ks[0]==='claim'||(id==='W08'&&ks.some(k=>!/^(ord|desc)[345]$/.test(k)))||(id==='W09'&&!ks.includes('ordnen'))||(id==='W10'&&!ks.includes('claim')))planBad++;
+    }
+    t('Vergleichen: Rundenplan für W08–W10 (Ordnen 3–5 Karten, W09 mit Zahlenreihe, W10 mit Behauptung)',planBad===0);
+    /* Ziehen und Ablegen in der echten Ansicht: Antippen und Ziehen mit Pointer-Ereignissen */
+    {
+      const keepD={view:S.view,rounds:S.rounds,intro:S.intro,modus:S.modus,unlocked:S.unlocked,levelByType:S.levelByType};
+      try{
+        S.modus=Object.assign({},S.modus,{vergleichen:'frei'});S.unlocked=Object.assign({},S.unlocked,{vergleichen:true});Object.keys(INTRO).forEach(k=>S.intro[k]=true);
+        S.levelByType.W08=1;S.rounds={'W08-L1':{results:[],cur:null,size:5,cmp:['ord3','ord3','ord3','ord3','ord3']}};S.view={kind:'practice',id:'W08'};renderAll();window.scrollTo(0,0);
+        const cur=()=>S.rounds['W08-L1'].cur,ord=()=>cur().draft.ord,fire=(el_,type,x,y,id)=>el_.dispatchEvent(new PointerEvent(type,{bubbles:true,cancelable:true,pointerId:id||7,clientX:x,clientY:y,button:0,pointerType:'touch'}));
+        const centre=(e)=>{const r=e.getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2];};
+        const cards=()=>[...app.querySelectorAll('.ordpool .ordcard')],slotEls=()=>[...app.querySelectorAll('.ordslot')];
+        t('Ordnen-Ansicht: 3 Plätze, 3 Karten, noch nichts gelegt',slotEls().length===3&&cards().length===3&&ord().every(x=>x===null));
+        /* Antippen: erste Karte geht auf den ersten freien Platz, Antippen der gelegten Karte nimmt sie zurück */
+        let [x,y]=centre(cards()[0]);const c0=+cards()[0].dataset.card;
+        fire(cards()[0],'pointerdown',x,y);fire(cards()[0],'pointerup',x,y);
+        const tapped=ord()[0]===c0&&cards().length===2;
+        const placed=app.querySelector('.ordslot .ordcard');[x,y]=centre(placed);fire(placed,'pointerdown',x,y);fire(placed,'pointerup',x,y);
+        t('Ordnen: Antippen legt die Karte auf den ersten freien Platz und nimmt sie wieder zurück',tapped&&ord().every(v=>v===null)&&cards().length===3);
+        /* Ziehen auf den dritten Platz (nur prüfbar, wenn der Platz im sichtbaren Bereich liegt) */
+        const sl=slotEls()[2],[sx,sy]=centre(sl),visible=sy>0&&sy<innerHeight&&sx>0&&sx<innerWidth;
+        if(visible){
+          const c1=+cards()[1].dataset.card;[x,y]=centre(cards()[1]);
+          fire(cards()[1],'pointerdown',x,y);fire(cards()[1],'pointermove',x+3,y);
+          const noDragYet=!document.querySelector('.ordghost');
+          fire(cards()[1],'pointermove',sx,sy);
+          const ghost=!!document.querySelector('.ordghost'),over=slotEls()[2].classList.contains('over');
+          fire(cards()[1],'pointerup',sx,sy);
+          t('Ordnen: kleine Bewegung ist noch kein Ziehen, danach folgt das Abbild; Loslassen über Platz 3 legt die Karte dorthin; Abbild verschwindet',noDragYet&&ghost&&over&&ord()[2]===c1&&!document.querySelector('.ordghost')&&slotEls().every(s=>!s.classList.contains('over')));
+          /* Ziehen auf einen belegten Platz tauscht, Ziehen daneben legt die Karte zurück */
+          [x,y]=centre(cards()[0]);const c2=+cards()[0].dataset.card;
+          fire(cards()[0],'pointerdown',x,y);fire(cards()[0],'pointermove',sx,sy);fire(cards()[0],'pointerup',sx,sy);
+          const swapped=ord()[2]===c2&&cards().some(c=>+c.dataset.card===c1);
+          const pl=app.querySelector('.ordslot.filled .ordcard');[x,y]=centre(pl);
+          fire(pl,'pointerdown',x,y);fire(pl,'pointermove',x+40,innerHeight-2);fire(pl,'pointerup',x+40,innerHeight-2);
+          t('Ordnen: Ziehen auf einen belegten Platz ersetzt die Karte dort (sie geht zurück), Loslassen außerhalb der Plätze legt die Karte zurück; pointercancel räumt auf',swapped&&ord().every(v=>v===null)&&(()=>{const c=cards()[0];[x,y]=centre(c);fire(c,'pointerdown',x,y);fire(c,'pointermove',sx,sy);const had=!!document.querySelector('.ordghost');fire(c,'pointercancel',x,y);return had&&!document.querySelector('.ordghost');})());
+        }
+        /* Antworten: Karten per Antippen in die richtige Reihe, dann Prüfen */
+        const tk=cur().task;
+        tk.order.forEach(cardNo=>{const c=cards().find(e=>+e.dataset.card===cardNo);if(c){const [cx,cy]=centre(c);fire(c,'pointerdown',cx,cy);fire(c,'pointerup',cx,cy);}});
+        const res=validateTask(tk,cur().draft);
+        t('Ordnen: nacheinander die richtigen Karten angetippt ergibt die richtige Reihe und gilt als richtig',cur().draft.ord.join()===tk.order.join()&&res.correct);
+      }finally{Object.assign(S,keepD);persist();renderAll();document.querySelectorAll('.ordghost').forEach(g=>g.remove());}
+    }
   }
   const bad=res.filter(r=>!r.ok);
   console.log(`Selbsttest: ${res.length-bad.length}/${res.length} bestanden`);

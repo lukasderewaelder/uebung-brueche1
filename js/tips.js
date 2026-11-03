@@ -387,6 +387,32 @@ TIPS.W07=(t)=>{
     [`Wähle **${name}**. Wende ihn dann an.`]];
 };
 
+TIPS.W08=(t)=>{
+  const desc=t.dir==='desc',first=t.fr[t.order[0]];
+  return [
+    [`Vergleiche immer zwei Brüche. Welcher ist ${desc?'am größten':'am kleinsten'}?`],
+    ['Jetzt siehst du die Streifen untereinander. Vergleiche je zwei Streifen.'],
+    [`Der ${desc?'größte':'kleinste'} Bruch ist ${tf(first[0],first[1])}. Lege ihn zuerst.`]];
+};
+TIPS.W09=(t)=>{
+  if(t.kind==='ordnen')return [
+    ['Schau zuerst auf die Ganzen.'],
+    ['Teile bei jedem unechten Bruch den Zähler durch den Nenner.'],
+    [`Der ${t.dir==='desc'?'größte':'kleinste'} ist ${cmpBigTf(t.big[t.order[0]])}.`]];
+  const x0=t.x[0],x1=t.x[1];
+  return [
+    ['Wie viele Ganze stecken in jeder Zahl?'],
+    [`Jetzt siehst du einen Zahlenstrahl. ${x0.p} : ${x0.q} ergibt ${x0.w} Rest ${x0.r}. ${x1.p} : ${x1.q} ergibt ${x1.w} Rest ${x1.r}.`],
+    [x0.w!==x1.w?'Die Ganzen sind verschieden. Mehr Ganze sind größer.':'Die Ganzen sind gleich. Vergleiche die Reste.']];
+};
+TIPS.W10=(t)=>{
+  const B=cmpBetween(t);
+  return [
+    [t.kind==='claim'?'Gibt es wirklich keinen Bruch dazwischen? Teile feiner ein.':'Teile die Einteilung feiner. Dann findest du Platz dazwischen.'],
+    [`Bringe beide Brüche auf den Nenner ${B.M}: ${tf(B.lo,B.M)} und ${tf(B.hi,B.M)}.`],
+    [t.kind==='claim'?`Dazwischen liegt zum Beispiel ${tf(B.lo+1,B.M)}.`:`Zwischen ${B.lo} und ${B.hi} liegt zum Beispiel die Zahl ${B.lo+1}.`]];
+};
+
 /* ---------- Rückmeldung bei „richtig“: die Rechnung statt einer Floskel ----------
    proofText(task) liefert den Satz nach „Richtig: “ (null = die Aufgabe hat keine kurze Rechenprobe, dann gilt Lob + Begründung) */
 const PROOF={

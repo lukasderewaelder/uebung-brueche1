@@ -84,7 +84,10 @@ const CMP_PLAN={
   W04:{1:['check','rest','rest','claim','check'],2:['check','conflict','rest','claim','conflict']},
   W05:{1:['ziel','ziel','ziel','ziel','ziel'],2:['ziel','frei','frei','zaehler','ziel']},
   W06:{1:['halb','halb','sign','sign','sign'],2:['halb','eins','sign','sign','sign']},
-  W07:{1:['nenner','zaehler','fehlt','zahl','erw'],2:['konflikt','zaehler','fehlt','zahl','erw']}
+  W07:{1:['nenner','zaehler','fehlt','zahl','erw'],2:['konflikt','zaehler','fehlt','zahl','erw']},
+  W08:{1:['ord3','ord3','ord3','ord4','desc3'],2:['ord4','ord4','ord5','desc4','ord5']},
+  W09:{1:['ganze','sign','ganze','ordnen','sign'],2:['ganze','sign','sign','ordnen','ordnen']},
+  W10:{1:['find','find','claim','find','find'],2:['find','claim','find','find','claim']}
 };
 /* alle Aufgabenarten einer Station (für den Layout-Test, layoutKinds) */
 const cmpKindsOf=(id,lvl)=>{const src=CMP_PLAN[id][lvl];return Array.from(new Set(typeof src==='function'?src(RNG):src));};
@@ -634,5 +637,220 @@ TASKS.W07={area:'Vergleichen',name:'Welcher Weg passt?',desc:'Wähle den schnell
   solution(t){
     const f=[t.a,t.b,t.c,t.d];
     return [line(strong('Schnellster Weg: '),CMP_WAYNAME[t.fast]+(t.ways.length>1?' (auch '+t.ways.slice(1).map(w=>CMP_WAYNAME[w]).join(', ')+')':'')+'.'),line(cmpWayOk(t,t.fast)),cmpPairPic(f),cmpSolEq(t)];
+  }
+};
+
+/* ---------- Ordnen (W08, W09) ---------- */
+/* k echte Brüche mit paarweise verschiedenen Werten. Familien: nenner (gleicher Nenner), zaehler (gleicher Zähler), vielfach (Nenner b, 2b, 3b …),
+   gemischt. Gemeinsamer Nenner aller höchstens 48 (Leicht) bzw. 300 (Knifflig). */
+function cmpList(R,level,k){
+  const fams=level===1?['nenner','zaehler','vielfach','gemischt']:['nenner','zaehler','vielfach','gemischt','gemischt'];
+  const lim=level===1?48:300,gap=level===1?0.03:0.004;
+  const dNenner=level===1?[6,8,9,10,12,15,16,20,24]:[20,24,25,30,36,40,50,60,75,100];
+  const dAny=level===1?[3,4,5,6,8,9,10,12,15,16,20,24]:[4,5,6,8,9,10,12,15,16,18,20,24,25,30,36,40,50,60,75,80,90,100];
+  for(let i=0;i<2000;i++){
+    const fam=R.pick(fams),fr=[];
+    if(fam==='nenner'){const d=R.pick(dNenner);for(let j=0;j<k;j++)fr.push([R.int(1,d-1),d]);}
+    else if(fam==='zaehler'){const n=R.int(1,level===1?3:5),ds=dAny.filter(x=>x>n);for(let j=0;j<k;j++)fr.push([n,R.pick(ds)]);}
+    else if(fam==='vielfach'){const base=R.pick(level===1?[2,3,4]:[4,5,6,10]);R.shuffle([1,2,3,4,5,6]).slice(0,k).forEach(m=>{const d=base*m;fr.push([R.int(1,d-1),d]);});}
+    else for(let j=0;j<k;j++){const d=R.pick(dAny);fr.push([R.int(1,d-1),d]);}
+    if(commonDenominator(fr.map(x=>x[1]))>lim)continue;
+    if(!fr.every((x,a)=>fr.every((y,b)=>a===b||Math.abs(x[0]/x[1]-y[0]/y[1])>=gap)))continue;
+    return fr;
+  }
+  return [[1,2],[3,8],[5,6],[3,4],[1,3]].slice(0,k);
+}
+/* Kartennummern in der richtigen Reihenfolge (kleinste zuerst, bei desc die größte) */
+function cmpIdxSorted(fr,desc){
+  const idx=fr.map((_,i)=>i).sort((p,q)=>compareFrac(fr[p][0],fr[p][1],fr[q][0],fr[q][1]));
+  return desc?idx.reverse():idx;
+}
+/* Fehlvorstellung hinter einer falschen Reihe: reverse (umgekehrt), byNum (nur nach den Zählern), byDen (nur nach den Nennern, größerer Nenner = größer),
+   adjacent (zwei Nachbarn vertauscht), sonst order */
+function cmpOrderCode(t,ord){
+  const wrongAt=t.order.map((c,j)=>ord[j]!==c?j:-1).filter(j=>j>=0),desc=t.dir==='desc';
+  const by=(sel)=>{const idx=t.fr.map((_,i)=>i).sort((p,q)=>sel(t.fr[p])-sel(t.fr[q])||p-q);return desc?idx.reverse():idx;};
+  if(ord.join()===t.order.slice().reverse().join())return {code:'reverse'};
+  if(ord.join()===by(x=>x[0]).join())return {code:'byNum'};
+  if(ord.join()===by(x=>x[1]).join())return {code:'byDen'};
+  if(wrongAt.length===2&&wrongAt[1]===wrongAt[0]+1)return {code:'adjacent',a:ord[wrongAt[0]],b:ord[wrongAt[1]]};
+  return {code:'order'};
+}
+/* Prüfung einer Reihe; fmt(i) = Text der Karte i */
+function cmpOrderCheck(t,d,fmt){
+  const ord=Array.isArray(d.ord)?d.ord:[];
+  if(!ordFull(ord))return invalid('Lege alle Karten in die Reihe.');
+  const marks={};let bad=0;
+  t.order.forEach((c,j)=>{if(ord[j]!==c){marks['ord'+j]=false;bad++;}});
+  if(!bad)return right('Richtig! '+t.order.map(fmt).join(t.dir==='desc'?' > ':' < '));
+  const r=cmpOrderCode(t,ord),big=t.dir==='desc'?'größte':'kleinste';
+  const msg={
+    reverse:`Die Reihe ist umgekehrt. Der ${big} gehört nach links.`,
+    byNum:'Du hast nur auf die Zähler geschaut. Der Nenner sagt, wie groß die Stücke sind.',
+    byDen:'Du hast nur auf die Nenner geschaut. Ein größerer Nenner heißt kleinere Stücke.',
+    adjacent:`Vergleiche ${r.code==='adjacent'?fmt(r.a)+' und '+fmt(r.b):''} noch einmal.`,
+    order:'Die Reihe stimmt noch nicht. Vergleiche je zwei Zahlen nebeneinander.'}[r.code];
+  return wrong(r.code,msg,marks);
+}
+/* Lösung: die Reihe mit Zeichen und darunter die Streifen (echte Brüche) */
+const cmpOrderSolution=(t,nodeOf,withPic)=>[line(t.dir==='desc'?'Der größte kommt zuerst:':'Der kleinste kommt zuerst:'),
+  eq(...t.order.reduce((a,i,j)=>a.concat(j?[t.dir==='desc'?'>':'<']:[],[nodeOf(i)]),[])),
+  ...(withPic?[cmpStack(t.order.map(i=>({n:t.fr[i][0],d:t.fr[i][1]})),{compact:true})]:[])];
+
+/* ---------- W08 Brüche ordnen ---------- */
+TASKS.W08={area:'Vergleichen',name:'Brüche ordnen',desc:'Lege Brüche der Größe nach in eine Reihe. Ziehe die Karten oder tippe sie an.',notes:['M16','M15'],size:5,
+  ctx:cmpCtx('W08'),layoutKinds:(lvl)=>cmpKindsOf('W08',lvl),
+  gen(level,R,ctx){
+    const kind=(ctx&&ctx.kind)||'ord3',k=+kind.slice(-1),desc=kind.startsWith('desc');
+    let fr,order;
+    for(let i=0;i<60;i++){
+      fr=cmpList(R,level,k);order=cmpIdxSorted(fr,desc);
+      if(order.some((c,j)=>c!==j))break; /* nicht schon richtig herum */
+    }
+    return {type:'W08',level,kind,dir:desc?'desc':'asc',fr,order,avoid:fr.map(x=>redKey(x[0],x[1]))};
+  },
+  prompt(t,h){h.append(el('p',{class:'q'},t.dir==='desc'?'Ordne die Brüche. Der größte Bruch kommt zuerst.':'Ordne die Brüche. Der kleinste Bruch kommt zuerst.'));},
+  render(view,host){
+    const t=view.task,box=el('div');host.append(box);
+    const draw=()=>{const on=view.st&&view.st.hint>=2;box.replaceChildren(...(on?[cmpStack(t.fr.map(x=>({n:x[0],d:x[1]})),{compact:true})]:[]));view.changed();};
+    const prev=view.onHint;view.onHint=()=>{if(prev)prev();draw();};
+    draw();
+    cmpOrder(view,host,'ord',t.fr.map(x=>({n:x[0],d:x[1],aria:x[0]+' durch '+x[1]})),{desc:t.dir==='desc'});
+  },
+  validate(t,d){return cmpOrderCheck(t,d,(i)=>ft(t.fr[i][0],t.fr[i][1]));},
+  solution(t){return cmpOrderSolution(t,(i)=>frac(t.fr[i][0],t.fr[i][1]),true);},
+  variety:(t)=>t.fr.slice(0,2).map(x=>'n'+x[1])
+};
+
+/* ---------- W09 Größer als 1 ---------- */
+/* Zahl über 1 als unechter Bruch p/q mit w Ganzen und Rest r; mixed: wird als gemischte Zahl angezeigt */
+function cmpBig(R,level,wholeFix){
+  const q=R.pick(level===1?[2,3,4,5,6,8]:[4,5,6,7,8,9,10,12,15,20,25,50,100]),w=wholeFix!=null?wholeFix:R.int(1,level===1?3:5),r=R.int(1,q-1);
+  return {p:w*q+r,q,w,r,mixed:R.chance(0.5)};
+}
+const cmpBigNode=(x)=>x.mixed?mixed(x.w,x.r,x.q):frac(x.p,x.q);
+const cmpBigTxt=(x)=>x.mixed?`${x.w} ${x.r}/${x.q}`:ft(x.p,x.q);
+const cmpBigTf=(x)=>x.mixed?`${x.w} ${tf(x.r,x.q)}`:tf(x.p,x.q);
+/* Paar: same = gleich viele Ganze (die Reste entscheiden), sonst verschieden viele Ganze; mindestens eine Zahl als unechter Bruch */
+function cmpBigPair(R,level,same){
+  for(let i=0;i<600;i++){
+    const x=cmpBig(R,level),y=cmpBig(R,level,same?x.w:null);
+    if((!same&&x.w===y.w)||(x.mixed&&y.mixed)||compareFrac(x.p,x.q,y.p,y.q)===0||cmpDelta(x.p,x.q,y.p,y.q)<(level===1?0.05:0.01))continue;
+    return [x,y];
+  }
+  return [{p:9,q:4,w:2,r:1,mixed:false},{p:11,q:4,w:2,r:3,mixed:true}];
+}
+TASKS.W09={area:'Vergleichen',name:'Größer als 1',desc:'Unechte Brüche und gemischte Zahlen vergleichen und ordnen: Ganze zuerst.',notes:['M6','M16'],size:5,
+  ctx:cmpCtx('W09'),layoutKinds:(lvl)=>cmpKindsOf('W09',lvl),
+  gen(level,R,ctx){
+    const kind=(ctx&&ctx.kind)||'sign';
+    if(kind==='ordnen'){
+      for(let i=0;i<300;i++){
+        const big=[cmpBig(R,level),cmpBig(R,level),cmpBig(R,level)],fr=big.map(x=>[x.p,x.q]);
+        if(big.filter(x=>x.mixed).length>2||new Set(big.map(x=>x.w)).size<2)continue;
+        if(!fr.every((x,a)=>fr.every((y,b)=>a===b||Math.abs(x[0]/x[1]-y[0]/y[1])>=0.08)))continue;
+        const desc=R.chance(0.3),order=cmpIdxSorted(fr,desc);
+        if(!order.some((c,j)=>c!==j))continue;
+        return {type:'W09',level,kind,dir:desc?'desc':'asc',big,fr,order,avoid:fr.map(x=>redKey(x[0],x[1]))};
+      }
+    }
+    const pair=cmpBigPair(R,level,kind==='ganze'?R.chance(0.35):R.chance(0.4));
+    return {type:'W09',level,kind:kind==='ordnen'?'sign':kind,x:pair,a:pair[0].p,b:pair[0].q,c:pair[1].p,d:pair[1].q,avoid:cmpAvoid(pair[0].p,pair[0].q,pair[1].p,pair[1].q)};
+  },
+  prompt(t,h){
+    if(t.kind==='ordnen')h.append(el('p',{class:'q'},t.dir==='desc'?'Ordne die Zahlen. Die größte Zahl kommt zuerst.':'Ordne die Zahlen. Die kleinste Zahl kommt zuerst.'));
+    else h.append(el('p',{class:'q'},t.kind==='ganze'?'Wie viele Ganze stecken in jeder Zahl? Welches Zeichen passt?':'Welches Zeichen passt?'));
+  },
+  render(view,host){
+    const t=view.task;
+    if(t.kind==='ordnen'){
+      const box=el('div');host.append(box);
+      cmpOrder(view,host,'ord',t.big.map((x,i)=>({node:cmpBigNode(x),aria:cmpBigTxt(x)})),{desc:t.dir==='desc'});
+      return;
+    }
+    const f=[t.a,t.b,t.c,t.d],opt={first:cmpBigNode(t.x[0]),second:cmpBigNode(t.x[1])};
+    cmpPicBox(view,host,f,false);
+    if(t.kind==='sign'){cmpSign(view,host,'sign',f,opt);return;}
+    const rows=el('div'),keys=['w0','w1'];host.append(rows);
+    t.x.forEach((x,i)=>rows.append(el('div',{class:'eq'},cmpBigNode(x),el('span',{class:'cmpword'},'enthält'),intInput(view,'w'+i,'Ganze'),el('span',{class:'cmpword'},'Ganze'))));
+    cmpAfterInputs(view,host,keys,(box)=>cmpSign(view,box,'sign',f,Object.assign({noEq:true},opt)));
+  },
+  validate(t,d){
+    if(t.kind==='ordnen')return cmpOrderCheck(t,d,(i)=>cmpBigTxt(t.big[i]));
+    const x0=t.x[0],x1=t.x[1];
+    if(t.kind==='ganze'){
+      const g0=getInt(d,'w0'),g1=getInt(d,'w1');
+      if(g0===null||g1===null)return invalid('Trage bei beiden Zahlen die Ganzen ein.');
+      const m={};
+      if(g0!==x0.w)m.w0=false;
+      if(g1!==x1.w)m.w1=false;
+      if(Object.keys(m).length){const x=m.w0===false?x0:x1;return wrong('ganze',`Teile den Zähler durch den Nenner: ${x.p} : ${x.q} ergibt ${x.w} Rest ${x.r}.`,m);}
+      if(!d.sign)return invalid('Wähle auch ein Zeichen.');
+    }
+    const hint=x0.w!==x1.w?'Die Ganzen sind verschieden. Die Zahl mit mehr Ganzen ist größer.':'Die Ganzen sind gleich. Vergleiche die Reste.';
+    const over=Object.fromEntries(['sign','nurZaehler','nurNenner','beide','gleich','gleichwertig','gleichNenner','gleichZahl','gleichAbstand'].map(c=>[c,hint]));
+    return cmpSignCheck(t,d,'sign',x0.w!==x1.w?`Richtig! ${x0.w} Ganze und ${x1.w} Ganze: Mehr Ganze sind größer.`:'Richtig! Die Ganzen sind gleich. Die Reste entscheiden.',over);
+  },
+  solution(t){
+    if(t.kind==='ordnen')return cmpOrderSolution(t,(i)=>cmpBigNode(t.big[i]),false);
+    const x0=t.x[0],x1=t.x[1];
+    return [line(`${cmpBigTxt(x0)} hat ${x0.w} Ganze, ${cmpBigTxt(x1)} hat ${x1.w} Ganze.`),line(x0.w!==x1.w?'Mehr Ganze sind größer.':'Die Ganzen sind gleich. Vergleiche die Reste.'),cmpPairPic([t.a,t.b,t.c,t.d]),eq(cmpBigNode(x0),cmpSigned(t),cmpBigNode(x1))];
+  },
+  variety:(t)=>t.x?['n'+t.x[0].q,'n'+t.x[1].q]:['n'+t.fr[0][1]]
+};
+
+/* ---------- W10 Dazwischen ---------- */
+/* Brüche lo < hi: adj = direkt benachbart bei gleichem Nenner (zum Finden muss man feiner einteilen); sonst Leicht gleicher Nenner mit Platz, Knifflig verschiedene Nenner */
+function cmpZwischen(R,level,adj){
+  for(let i=0;i<800;i++){
+    let f;
+    if(adj||level===1){
+      const D=R.pick(level===1?[5,6,8,10,12,16,20]:[10,12,15,20,25,50,100]),lo=R.int(1,D-3),hi=adj?lo+1:lo+R.int(2,3);
+      if(hi>=D)continue;
+      f=[lo,D,hi,D];
+    }else{
+      const [b,d]=cmpDenPair(R,CMP_FRIENDLY.filter(x=>x>=3),120,false),a=R.int(1,b-1),c=R.int(1,d-1),s=compareFrac(a,b,c,d);
+      if(!s||b===d||cmpDelta(a,b,c,d)>0.4||cmpDelta(a,b,c,d)<0.02)continue;
+      f=s<0?[a,b,c,d]:[c,d,a,b];
+    }
+    return f;
+  }
+  return [3,8,5,8];
+}
+/* gemeinsamer Nenner M = doppelter kgV: zwischen lo' und hi' (je M-tel) liegt immer mindestens ein weiterer */
+const cmpBetween=(t)=>{const M=2*lcm(t.b,t.d);return {M,lo:t.a*M/t.b,hi:t.c*M/t.d};};
+CMP_WHY.W10={ok:'Man kann feiner einteilen. Dann liegt noch ein Bruch dazwischen.',
+  bad:['Brüche mit demselben Nenner liegen direkt nebeneinander.','Zwischen zwei Brüchen mit gleichem Nenner liegt nie ein Bruch.','Es gibt nur Brüche mit diesem Nenner.']};
+TASKS.W10={area:'Vergleichen',name:'Dazwischen',desc:'Zwischen zwei Brüchen liegt immer noch ein Bruch. Finde einen.',notes:['M13','M16'],size:5,
+  ctx:cmpCtx('W10'),layoutKinds:(lvl)=>cmpKindsOf('W10',lvl),
+  gen(level,R,ctx){
+    const kind=(ctx&&ctx.kind)||'find',adj=kind==='claim'||R.chance(level===1?0.3:0.4),f=cmpZwischen(R,level,adj);
+    const t={type:'W10',level,kind,a:f[0],b:f[1],c:f[2],d:f[3],avoid:cmpAvoid(...f)};
+    if(kind==='claim'){const neg=R.chance(0.6);Object.assign(t,{neg,who:R.pick(CMP_NAMES),truth:!neg},cmpReasons(R,CMP_WHY.W10.ok,CMP_WHY.W10.bad));}
+    return t;
+  },
+  prompt(t,h){
+    if(t.kind==='claim')h.append(el('p',{class:'q'},t.who+' sagt:'),el('p',{class:'q'},'Zwischen ',frac(t.a,t.b),' und ',frac(t.c,t.d),t.neg?' liegt kein Bruch.':' liegt ein Bruch.'));
+    else h.append(el('p',{class:'q'},'Nenne einen Bruch zwischen ',frac(t.a,t.b),' und ',frac(t.c,t.d),'.'));
+  },
+  render(view,host){
+    const t=view.task;
+    if(t.kind==='claim'){cmpClaim(view,host);return;}
+    cmpPicBox(view,host,[t.a,t.b,t.c,t.d],false);
+    host.append(eq(el('span',{class:'cmpword'},'Dein Bruch'),fracInput(view,'x')));
+  },
+  validate(t,d){
+    if(t.kind==='claim')return cmpClaimCheck(t,d,'Teile die Einteilung feiner. Prüfe, ob dann noch ein Bruch dazwischen liegt.');
+    const x=getFrac(d,'x');
+    if(!x)return invalid(MSG_FRAC_INVALID);
+    const m={'x.n':false,'x.d':false},toLo=compareFrac(x.n,x.d,t.a,t.b),toHi=compareFrac(x.n,x.d,t.c,t.d);
+    if(toLo>0&&toHi<0)return right(`Richtig! ${ft(x.n,x.d)} liegt zwischen ${ft(t.a,t.b)} und ${ft(t.c,t.d)}. Es gibt noch viele weitere.`);
+    if(toLo===0||toHi===0)return wrong('edge','Das ist eine der beiden Grenzen. Gesucht ist ein Bruch dazwischen.',m);
+    return wrong('outside',toLo<0?`Dein Bruch ist kleiner als ${ft(t.a,t.b)}.`:`Dein Bruch ist größer als ${ft(t.c,t.d)}.`,m);
+  },
+  solution(t){
+    const f=[t.a,t.b,t.c,t.d],B=cmpBetween(t);
+    if(t.kind==='claim')return [line(strong(t.truth?'Das stimmt. ':'Das stimmt nicht. '),t.opts.find(o=>o.id===t.answerR).txt),eq(frac(t.a,t.b),'=',frac(B.lo,B.M)),eq(frac(t.c,t.d),'=',frac(B.hi,B.M)),line(`Dazwischen liegt zum Beispiel ${ft(B.lo+1,B.M)}.`)];
+    return [line(`Erweitere beide Brüche auf den Nenner ${B.M}.`),eq(frac(t.a,t.b),'=',frac(B.lo,B.M)),eq(frac(t.c,t.d),'=',frac(B.hi,B.M)),line(`Dazwischen liegt zum Beispiel ${ft(B.lo+1,B.M)}.`),cmpPairPic(f)];
   }
 };

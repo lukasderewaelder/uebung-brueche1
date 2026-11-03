@@ -410,6 +410,40 @@ const INTRO={
       say:['Auf einen Nenner bringen klappt bei allen Brüchen.','Es dauert aber länger.','Nimm es, wenn kein anderer Weg passt.']},
     {h:'So antwortest du',
       say:['Wähle zuerst den schnellsten Weg.','Dann wähle das Zeichen.','Dann tippe auf **Prüfen**.']}
+  ]},
+  W08:{title:'Brüche ordnen',steps:[
+    {h:'Eine Reihe bilden',
+      say:['Du bekommst drei bis fünf Brüche.','Lege sie der Größe nach in die Reihe.','Der kleinste Bruch kommt zuerst.']},
+    {h:'Ziehen oder antippen',
+      say:['Ziehe eine Karte auf einen Platz.','Oder tippe die Karte an. Sie springt auf den ersten freien Platz.','Tippe eine gelegte Karte an, dann geht sie zurück.']},
+    {h:'Zwei auf einmal',
+      say:['Vergleiche immer zwei Brüche.','Nimm den Weg, der gerade passt.','Dann weißt du, welcher kleiner ist.'],
+      fig:[{n:1,d:4},{n:3,d:8},{n:3,d:4}]},
+    {h:'So antwortest du',
+      say:['Lege alle Karten ab.','Dann tippe auf **Prüfen**.']}
+  ]},
+  W09:{title:'Größer als 1',steps:[
+    {h:'Ganze zuerst',
+      say:['Ein Bruch über 1 enthält Ganze.','Teile den Zähler durch den Nenner.','Bei {9|4} sind es 2 Ganze und noch ein Viertel.'],
+      calc:[[9,':',4,'=',2,'Rest',1]]},
+    {h:'Gemischte Zahl',
+      say:['Die Ganzen und der Rest ergeben eine gemischte Zahl.','Der Nenner bleibt gleich.'],
+      calc:[[[9,4],'=',2,'+',[1,4],'=',{m:[2,1,4]}]]},
+    {h:'Ganze vergleichen',
+      say:['Hat eine Zahl mehr Ganze, ist sie größer.','Sind die Ganzen gleich, vergleichst du die Reste.','Der Zahlenstrahl hilft dabei.'],
+      nline:{from:0,to:3,parts:4,marks:[{n:9,d:4,text:'9/4'},{n:11,d:4,text:'11/4'}],labels:'wholes'}},
+    {h:'Zahlen ordnen',
+      say:['Auch gemischte Zahlen und unechte Brüche kannst du ordnen.','Schau zuerst auf die Ganzen.','Ziehe oder tippe die Karten in die Reihe.']}
+  ]},
+  W10:{title:'Dazwischen',steps:[
+    {h:'Immer noch ein Bruch',
+      say:['Zwischen zwei Brüchen liegt immer noch ein Bruch.','Das gilt auch für Brüche, die dicht beieinander liegen.'],
+      nline:{from:0,to:1,parts:5,marks:[{n:3,d:5,text:'3/5'},{n:4,d:5,text:'4/5'}],labels:'wholes'}},
+    {h:'Feiner einteilen',
+      say:['Zwischen {3|5} und {4|5} scheint kein Platz zu sein.','Erweitere beide Brüche mit 2.','Dann liegt {7|10} dazwischen.'],
+      calc:[[[3,5],'=',[3,5,'x',2],'=',[6,10]],[[4,5],'=',[4,5,'x',2],'=',[8,10]]]},
+    {h:'So antwortest du',
+      say:['Manchmal nennst du einen Bruch dazwischen.','Schreibe ihn in die Felder.','Manchmal prüfst du eine Behauptung.']}
   ]}
 };
 const hasIntro=(id)=>Object.prototype.hasOwnProperty.call(INTRO,id);
