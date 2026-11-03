@@ -288,8 +288,8 @@ function qOptions(view,host,t){
   if(t.opts){
     const grid=el('div',{class:'tiles tiles-'+t.opts.length,role:'group','aria-label':'Antworten'});
     t.opts.forEach((o,i)=>{
-      const shown=o.f?frac(o.f[0],o.f[1]):o.mx?mixed(o.mx[0],o.mx[1],o.mx[2]):el('span',{class:'tv'},o.txt);
-      const b=el('button',{type:'button',class:'tile'+(o.ic?' tile-ic':''),'aria-pressed':String(d.ans===o.id),'aria-label':'Antwort '+Q_LETTERS[i]+': '+o.txt},
+      const shown=o.f?frac(o.f[0],o.f[1]):o.mx?mixed(o.mx[0],o.mx[1],o.mx[2]):o.fs?el('span',{class:'tv'},...o.fs.map((x,k)=>[k?' < ':'',frac(x[0],x[1])])):o.pt?el('span',{class:'tv'},...o.pt.map(x=>Array.isArray(x)?frac(x[0],x[1]):x)):el('span',{class:'tv'},o.txt); /* fs: Reihe von Brüchen, pt: Text mit Brüchen */
+      const b=el('button',{type:'button',class:'tile'+(o.ic?' tile-ic':'')+(o.fs||o.pt?' tile-fs':''),'aria-pressed':String(d.ans===o.id),'aria-label':'Antwort '+Q_LETTERS[i]+': '+o.txt},
         el('span',{class:'ltr','aria-hidden':'true'},Q_LETTERS[i]),o.ic?icon(o.ic):null,shown);
       b.disabled=view.locked();qMark(b,o.id,view,t);
       b.addEventListener('click',()=>qPick(view,o.id,b,wrap));

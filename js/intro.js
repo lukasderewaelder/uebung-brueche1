@@ -310,6 +310,24 @@ const INTRO={
       say:['Manche Brüche sind natürliche Zahlen, wie 1, 2 oder 3.','Bei {8|4} geht der Zähler ohne Rest durch den Nenner.','Es sind genau 2 Ganze.'],
       calc:[[8,':',4,'=',2]]}
   ]},
+  WQ:{title:'Eingangstest',steps:[
+    {h:'Kurzfragen zum Vergleichen',
+      say:[TASKS.WQ.size+' Fragen warten auf dich.','Du tippst eine Antwort an. Dann tippst du auf **Prüfen**.','Manchmal siehst du Brüche in einer Reihe.']},
+    {h:'Sofort eine Rückmeldung',
+      say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Es gibt keine Zeitmessung.']},
+    {h:'Danach siehst du, was fehlt',
+      say:['Am Ende siehst du, was du schon kannst.','Danach wählst du: dem Pfad folgen oder Meine Übersicht.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
+    {h:'Der Abschlusscheck',
+      say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat '+TASKS.WA.size+' Aufgaben: '+WA_TAP+' zum Antippen und '+WA_LINE.length+' zum Lösen.','Ab '+needOf(TASKS.WQ.size)+' richtigen Antworten gibt es die Urkunde.']}
+  ]},
+  WA:{title:'Abschlusscheck',steps:[
+    {h:'Wie viele Aufgaben?',
+      say:['Der Abschlusscheck hat '+TASKS.WA.size+' Aufgaben.',WA_TAP+' davon tippst du nur an.','Bei '+WA_LINE.length+' Aufgaben löst du selbst.']},
+    {h:'So geht es',
+      say:['Tippe eine Antwort an. Dann tippe auf **Prüfen**.','Bei den anderen Aufgaben wählst du Zeichen, tippst Zahlen oder legst Karten.','Tipps und Lösung gibt es nur bei den Lösen-Aufgaben.']},
+    {h:'Die Urkunde',
+      say:['Ab '+needOf(TASKS.WA.size)+' richtigen Antworten gibt es die Urkunde.','Aufgaben mit Tipp zählen nur halb.','Alle Pflicht-Stationen müssen vorher fertig sein.']}
+  ]},
   /* Vergleichen: Streifen immer gleich lang untereinander; Zeichen < und > stehen in calc zwischen zwei Brüchen */
   W01:{title:'Nenner gleich',steps:[
     {h:'Gleich große Stücke',

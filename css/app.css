@@ -1102,6 +1102,9 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 .cmpstack svg.bad{outline:3px solid var(--bad);outline-offset:2px}
 .cmpstack svg.good{outline:3px solid var(--ok);outline-offset:2px}
 .cmppic{margin:.25rem 0}
+.tile.tile-fs{font-size:.95rem;padding-left:2.25rem;padding-right:.25rem}
+.tile.tile-fs .tv{white-space:nowrap;display:inline-flex;align-items:center;gap:.25rem}
+.tile.tile-fs .frac{font-size:.9em}
 .cmpstack.compact{gap:.125rem}
 .cmpstack.compact .frac{font-size:.9rem}
 /* Ordnen: Plätze (gestrichelt) und Karten; die Karten lassen sich ziehen (touch-action:none) oder antippen */

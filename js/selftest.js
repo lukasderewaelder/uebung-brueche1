@@ -1417,7 +1417,7 @@ function runSelfTests(){
     }
     t('Vergleichen: Rundenplan hat 5 Arten, bleibt in der Runde gleich, beginnt nie mit einer Behauptung; W01 hat Färben (Leicht) und Behauptung (Knifflig), W02 beginnt mit Stammbrüchen, W03 hat „Keins von beiden“ nur in Knifflig',planBad===0);
     const g0=TASKS.W01.gen(1,RNG),g1=TASKS.W02.gen(1,RNG),g2=TASKS.W03.gen(1,RNG);
-    t('Vergleichen: ohne Plan (Probeaufgabe) gilt die einfachste Art; die Stationen stehen im Pfad von „Brüche vergleichen“ (Pflicht, kein Abschluss)',g0.kind==='sign'&&g1.kind==='stamm'&&g2.kind==='which'&&moduleById('vergleichen').path.map(m=>m.id).join()==='W01,W02,W03,W04,W05,W06,W07,W08,W09,W10'&&moduleById('vergleichen').path.every(m=>m.must)&&moduleById('vergleichen').rank===false&&moduleOf('W02').id==='vergleichen');
+    t('Vergleichen: ohne Plan (Probeaufgabe) gilt die einfachste Art; die Stationen stehen im Pfad von „Brüche vergleichen“ (Pflicht, am Ende der Abschlusscheck WA)',g0.kind==='sign'&&g1.kind==='stamm'&&g2.kind==='which'&&moduleById('vergleichen').path.map(m=>m.id).join()==='W01,W02,W03,W04,W05,W06,W07,W08,W09,W10,WA'&&moduleById('vergleichen').path.every(m=>m.must)&&moduleById('vergleichen').rank===false&&moduleOf('W02').id==='vergleichen');
   }
   /* Vergleichen W08–W10 (Ordnen, Größer als 1, Dazwischen) und das Ziehen und Ablegen */
   {
@@ -1529,6 +1529,44 @@ function runSelfTests(){
       }finally{Object.assign(S,keepD);persist();renderAll();document.querySelectorAll('.ordghost').forEach(g=>g.remove());}
     }
   }
+  /* Vergleichen: Eingangstest WQ und Abschlusscheck WA */
+  {
+    const problems=[],qs={};let n=0;
+    for(const lvl of [1,2])for(const skill of WQ_SKILLS)for(let occ=0;occ<3;occ++)for(let i=0;i<40;i++){
+      const tk=TASKS.WQ.gen(lvl,RNG,{skill,occ});n++;
+      const tag='WQ-L'+lvl+' '+skill+' '+occ;
+      if(tk.skill!==skill||tk.kind!==WQ_KINDS[skill][occ%3]||tk.type!=='WQ')problems.push(tag+' Art');
+      const yn=tk.answer==='ja'||tk.answer==='nein';
+      if(yn){if(tk.opts)problems.push(tag+' Ja/Nein mit Antworten');}
+      else{
+        const ids=(tk.opts||[]).map(o=>o.id),txts=(tk.opts||[]).map(o=>o.txt);
+        if(ids.length<3||ids.length>4||new Set(ids).size!==ids.length||new Set(txts).size!==txts.length||!ids.includes(tk.answer)||txts.some(x=>!x))problems.push(tag+' Antworten');
+      }
+      if(!tk.why||/undefined|NaN/.test(tk.why))problems.push(tag+' Begründung');
+      const rightD={ans:tk.answer},ok=validateTask(tk,rightD);
+      if(!ok.correct)problems.push(tag+' richtig abgelehnt');
+      const other=yn?(tk.answer==='ja'?'nein':'ja'):tk.opts.find(o=>o.id!==tk.answer).id,bad=validateTask(tk,{ans:other});
+      if(bad.correct||bad.errorCode!=='quick'||!/Richtig wäre/.test(bad.feedback))problems.push(tag+' falsch nicht erkannt');
+      if(validateTask(tk,{ans:Q_UNSURE}).errorCode!=='unsure'||validateTask(tk,{}).errorCode!=='invalid')problems.push(tag+' Weiß ich nicht');
+      if(i<4){
+        try{const h=el('div'),host=el('div');TASKS.WQ.prompt(tk,h);mountTask(host,newState(tk),{save(){},done(){}});if(!h.textContent||/undefined|NaN/.test(h.textContent+host.textContent))problems.push(tag+' Text');if(buildWorkedSolution(tk).length<2)problems.push(tag+' Lösung');}catch(e){problems.push(tag+' Ansicht: '+e.message);}
+        const hs=TASKS.WQ.hints(tk);if(hs.length!==2||!hs[1]||!hs[1].length)problems.push(tag+' Tipps');
+      }
+      qs[skill+occ]=1;
+    }
+    t('Vergleichen WQ: '+n+' Fragen (5 Fähigkeiten à 3 Arten, Leicht und Knifflig) mit 3–4 verschiedenen Antworten oder Ja/Nein, richtige Antwort anerkannt, falsche und „Weiß ich nicht“ benannt, Ansicht und Lösung bauen sich',problems.length===0||(console.log(problems.slice(0,6)),false));
+    const wqCtx=(()=>{let ok=true;for(let k=0;k<30;k++){const r={results:[],cur:null},seen={};for(let i=0;i<15;i++){r.results=Array(i).fill('f');const c=TASKS.WQ.ctx(r);seen[c.skill]=(seen[c.skill]||[]).concat(c.occ);}
+      if(!WQ_SKILLS.every(s=>seen[s]&&seen[s].join()==='0,1,2'))ok=false;}return ok;})();
+    t('Vergleichen WQ: 15 Fragen, je Fähigkeit 3 in der Reihenfolge der Arten (Plan), QCHK nennt Stationen, die es gibt',TASKS.WQ.size===15&&wqCtx&&Object.values(QCHK.WQ.stations).flat().every(id=>TASKS[id]&&PATH.some(m=>m.id===id))&&QCHK.WQ.skills.length===5&&WQ_SKILLS.every(s=>QCHK.WQ.names[s]));
+    const vm=moduleById('vergleichen'),wa=TASKS.WA;
+    const waTypes=[];for(let k=0;k<15;k++){const r={results:Array(k).fill('f'),cur:null,plan:null},c=wa.ctx(r),tk=wa.gen(1+(k%2),RNG,c);waTypes.push(tk.type);}
+    t('Vergleichen WA: 15 Aufgaben (10 Antippfragen WQ, dann W04, W05, W07, W08, W10), Urkunde über finalId, letzter Pfadpunkt, Zahl der Antippfragen und Beschriftung',waTypes.slice(0,10).every(x=>x==='WQ')&&waTypes.slice(10).join()==='W04,W05,W07,W08,W10'&&wa.size===15&&wa.finalTap===10&&!!wa.finalLabel&&vm.path.at(-1).id==='WA'&&vm.path.at(-1).final&&finalModOf('WA')===vm&&vm.qid==='WQ'&&vm.finalId==='WA'&&!TIPS.WA);
+    /* WA reicht Tipps und Lösung an die Typen weiter; die Lösen-Aufgaben haben Tipps */
+    t('Vergleichen WA: Lösen-Aufgaben erzeugen echte Typen (Rico-Behauptung, Strategiewahl mit Konflikt, Ordnen von vier Brüchen) mit Tipps',(()=>{
+      const a=TASKS.WA.gen(1,RNG,{slot:10}),b=TASKS.WA.gen(1,RNG,{slot:12}),c=TASKS.WA.gen(2,RNG,{slot:13});
+      return a.type==='W04'&&a.kind==='claim'&&b.type==='W07'&&b.kind==='konflikt'&&c.type==='W08'&&c.fr.length===4&&TASKS.WA.hints(a).length===3&&TASKS.WA.hints(c).length===3;
+    })());
+  }
   const bad=res.filter(r=>!r.ok);
   console.log(`Selbsttest: ${res.length-bad.length}/${res.length} bestanden`);
   bad.forEach(b=>console.error('FEHLER:',b.name));
@@ -1544,7 +1582,7 @@ window.runSelfTests=runSelfTests;
    neue Aufgabe · Teil 2 (zweiteilige Aufgaben) · nach „Prüfen“ · nach drei Tipps.
    ===================================================================== */
 async function runLayoutTests(w=375,h=600,samples=3,ids,intro=true){
-  ids=ids||Object.keys(TASKS).filter(id=>!['QA','ZA'].includes(id));
+  ids=ids||Object.keys(TASKS).filter(id=>!['QA','ZA','WA'].includes(id));
   const f=document.createElement('iframe');
   f.style.cssText='position:fixed;left:0;top:0;width:'+w+'px;height:'+h+'px;border:0;visibility:hidden;pointer-events:none';
   f.src='index.html?layouttest='+Date.now();
