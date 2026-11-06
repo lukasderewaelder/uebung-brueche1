@@ -64,6 +64,41 @@ const sortFracs=(list)=>list.slice().sort((x,y)=>compareFrac(x[0],x[1],y[0],y[1]
 const isImproper=(a,b)=>a>=b;
 const toMixed=(a,b)=>({w:Math.floor(a/b),n:a%b,d:b});
 
+/* ---------- Addieren und Subtrahieren, gleicher Nenner (Baustein R, js/rechnen.js) ----------
+   Aufgabe: a/b + c/b oder a/b − c/b (gleicher Nenner b, bei Minus a ≥ c). Das Ergebnis ist res = [n, b], nicht gekürzt; gekürzt wird mit simplify().
+   addDiagnose: Was steckt hinter einer falschen Eingabe x/y? null, wenn der Wert stimmt.
+   nennerAddiert  der Nenner wurde mitgerechnet (b + b) und der Zähler stimmt (zum Beispiel 3/8 + 2/8 = 5/16)
+   andereRechnung gerechnet wurde die andere Rechenart (plus statt minus oder umgekehrt), der Nenner ist richtig
+   zaehlerNenner  Zähler und Nenner einzeln gerechnet, aber nicht nach dem Muster nennerAddiert (zum Beispiel Zähler a + c, Nenner b + b, dann gekürzt)
+   rechenfehler   der Nenner stimmt, nur der Zähler ist falsch
+   sonst          'wert' (der Nenner ist verändert oder gar nichts passt) */
+const sameDenSum=(a,c,b)=>[a+c,b];
+const sameDenDiff=(a,c,b)=>[a-c,b];
+const sameDenRes=(a,c,b,plus)=>plus?sameDenSum(a,c,b):sameDenDiff(a,c,b);
+function addDiagnose(a,c,b,plus,x,y){
+  const res=sameDenRes(a,c,b,plus);
+  if(equivalent(x,y,res[0],res[1]))return null;
+  const other=sameDenRes(a,c,b,!plus);
+  if(y===2*b&&x===res[0])return 'nennerAddiert';
+  if(y===b&&x===other[0])return 'andereRechnung';
+  if(equivalent(x,y,res[0],2*b))return 'zaehlerNenner';
+  if(y===b)return 'rechenfehler';
+  return 'wert';
+}
+/* Ergebnis-Block: Prüfung des Felds „Ergebnis“ und des Felds „gekürzt“ (js/rechnen-widgets.js zeigt beide immer).
+   res = [n, b] das richtige Ergebnis (ungekürzt). kid: {r:{n,d}|null, k:{n,d}|null, kn:bool (Knopf „Kürzen geht nicht“)}.
+   Rückgabe: 'leer' (Ergebnis fehlt) · 'kuerzenLeer' (zum Kürzen ist nichts angegeben; das kommt vor jeder Wertprüfung, damit die Rückmeldung nichts über das Ergebnis oder über das Kürzen verrät) ·
+   'wert' (Ergebnis hat einen anderen Wert) · 'keinKuerzen' (Knopf gewählt, es geht aber) · 'kuerzenWert' (gekürzter Bruch hat einen anderen Wert) · 'nochKuerzen' (noch nicht ganz gekürzt) · null (alles stimmt). */
+function kuerzenCheck(res,kid){
+  if(!kid.r)return 'leer';
+  if(!kid.kn&&!kid.k)return 'kuerzenLeer';
+  if(!equivalent(kid.r.n,kid.r.d,res[0],res[1]))return 'wert';
+  const exp=simplify(res[0],res[1]),reducible=!isFullyReduced(res[0],res[1]);
+  if(kid.kn)return reducible?'keinKuerzen':null;
+  if(!equivalent(kid.k.n,kid.k.d,exp[0],exp[1]))return 'kuerzenWert';
+  return (kid.k.n===exp[0]&&kid.k.d===exp[1])?null:'nochKuerzen';
+}
+
 /* ---------- Zahlenstrahl ----------
    Ein Bruch mit dem Nenner d liegt genau auf einem Strich, wenn die Einteilung (m Teile je Ganzem) ein Vielfaches von d ist:
    der Nenner „geht in die Einteilung auf“. Strich i (von 0 gezählt) bei m Teilen je Ganzem liegt bei i/m. */

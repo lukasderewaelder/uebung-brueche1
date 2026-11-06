@@ -13,7 +13,8 @@ const NOTE_EX={
   M5:['0,6','0,04','1,25','0,9','0,07','2,5','0,125','3,05'],
   M6:[[2,3,4],[3,1,2],[1,2,5],[4,3,7]],
   M11:{nenner:[[3,8,5,8],[2,7,5,7],[4,9,7,9],[3,10,9,10]],zaehler:[[1,5,1,8],[3,4,3,7],[2,5,2,9],[1,3,1,6]]}, /* Paare a/b, c/d */
-  M12:[[8,9,11,12],[5,6,9,10],[7,8,11,12],[4,5,7,8]] /* je Bruch fehlt ein Stück: a/b < c/d */
+  M12:[[8,9,11,12],[5,6,9,10],[7,8,11,12],[4,5,7,8]], /* je Bruch fehlt ein Stück: a/b < c/d */
+  M17:[[3,2,8],[2,5,9],[4,3,10],[1,4,7]] /* a/b + c/b, als [a, c, b] mit a + c < b */
 };
 const pickEx=(list,keyFn,avoid)=>list.find(x=>!avoid.includes(keyFn(x)))||list[list.length-1];
 
@@ -173,6 +174,18 @@ const NOTES={
       el('p',null,strong('Ganze zuerst: '),'Eine Zahl mit mehr Ganzen ist größer. Bei gleichen Ganzen vergleichst du die Reste.'),
       el('p',null,strong('Dazwischen: '),'Teile feiner ein. Dann liegt immer noch ein Bruch dazwischen.'),
       el('p',null,strong('Merke: '),'Zwischen zwei Brüchen gibt es immer weitere.')
+    ];}},
+  M17:{title:'Zusammenfügen und Wegnehmen',build(avoid){
+    const e=NOTE_EX.M17.find(x=>!avoid.includes(redKey(x[0],x[2]))&&!avoid.includes(redKey(x[1],x[2])))||NOTE_EX.M17[0];
+    const [a,c,b]=e,n=a+c;
+    return [
+      el('div',{class:'ex'},strong('Beispiel: '),eq(frac(a,b),'+',frac(c,b),'=',frac(n,b))),
+      addFigure(b,a,c,{mode:'plus'}),
+      el('p',null,strong('Addieren'),' heißt zusammenfügen. ',strong('Subtrahieren'),' heißt wegnehmen.'),
+      el('p',null,'Der Nenner sagt, wie groß die Stücke sind. Er bleibt gleich. Du rechnest nur mit den Zählern.'),
+      el('p',null,strong('Ein Bild, drei Aufgaben:')),
+      el('div',{class:'ex'},eq(frac(a,b),'+',frac(c,b),'=',frac(n,b)),eq(frac(n,b),'−',frac(c,b),'=',frac(a,b)),eq(frac(n,b),'−',frac(a,b),'=',frac(c,b))),
+      el('p',null,strong('Merke: '),'Der Nenner wird nicht mitgerechnet. Prüfe am Ende, ob du kürzen kannst.')
     ];}}
 };
 /* noteFor(task): Merkkästen zur Aufgabe, ohne die Aufgabe zu lösen */

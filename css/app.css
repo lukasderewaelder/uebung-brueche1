@@ -1170,3 +1170,53 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 
 /* Nach einem Fehlversuch passen Meldung und Textlinks („Lösung ansehen“, „Überspringen“) ganz ins Bedienpult; fitPage gleicht die Seitenhöhe aus */
 .dockpanel>.dockmsg:has(.linkrow:not(.hidden)){max-height:calc(2*max(44px,2.75rem) + 1.5rem)}
+
+/* ---------- Addieren und Subtrahieren (R01–R03): zwei Anteile in zwei Mustern, Ergebnis-Block, Zeilen ----------
+   Anteil 1: Schraffur nach rechts oben, Anteil 2: nach links oben (Muster und Farbe, nie nur Farbe). Im hellen Kasten (Merkkasten, Lösung, Hilfe) beide in Tinte. */
+.addfig{--cell-on:url(#hatch-amber);--cell-on2:url(#hatch-kue);display:flex;flex-direction:column;gap:.375rem;margin:.375rem 0}
+.note .addfig,.solbox .addfig,.help .addfig,.pick .addfig{--cell-on:url(#hatch-ink);--cell-on2:url(#hatch-ink2);--cell-stroke:var(--ink)}
+.cell.on2>*{fill:var(--cell-on2)}
+.addbar .seg1{fill:var(--cell-on)}
+.addbar .seg2{fill:var(--cell-on2)}
+.addbar .sep{stroke:var(--cell-stroke);stroke-width:2.2}
+.addleg{display:flex;flex-wrap:wrap;gap:.125rem .875rem;font:700 .78rem var(--font-mono);color:var(--chalk-dim)}
+.addleg span{display:inline-flex;align-items:center;gap:.375rem}
+.addleg svg{width:1.75rem;height:1rem;flex:none}
+.note .addleg,.solbox .addleg{color:var(--ink-dim)}
+/* Ergebnis-Block: zwei Felder (Ergebnis und gekürzt) und der Knopf „Kürzen geht nicht“ stehen bei jeder Aufgabe, ob sich kürzen lässt oder nicht */
+.addres{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.25rem .75rem;margin:.5rem 0}
+.arow{display:flex;flex-direction:column;align-items:flex-start;gap:.125rem;min-width:0}
+.alab{font:700 .78rem var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--chalk-dim)}
+.btn.kn{grid-column:1/-1;justify-self:start;font-size:.9rem}
+.btn.kn[aria-pressed="true"]{background:var(--amber-fill);color:var(--on-amber);border-color:var(--amber)}
+.btn.kn.bad{border-color:var(--bad);outline:2px dotted var(--bad);outline-offset:3px}
+.btn.kn.good{border-color:var(--ok)}
+/* Zeilen „▢/b + ▢/b = ▢/b“ (offene Aufgaben): der Nenner steht fest, das Rechenzeichen wird angetippt */
+.addrows{display:grid;gap:.5rem;margin:.375rem 0}
+.addrow{display:flex;align-items:center;flex-wrap:wrap;gap:.25rem .375rem}
+.addrow .tag{font:700 .8rem var(--font-mono);min-width:1.2rem}
+.addrow .frac{font-size:1.3rem;margin:0}
+.addrow input.intin{width:3.4rem;height:max(44px,2.75rem);padding:0 .125rem}
+.addrow .frac.inp>.num{padding-bottom:.25rem}
+.addrow .frac.inp>.den{padding-top:.25rem}
+.btn.opbtn{min-width:2.75rem;padding:0 .25rem;font-size:1.4rem}
+.btn.opbtn.bad{border-color:var(--bad);outline:2px dotted var(--bad);outline-offset:3px}
+.btn.opbtn.good{border-color:var(--ok)}
+/* Rechnungen zum Antippen (Fehler finden): Gleichung in der Kachel */
+.tiles-3 .tile.tile-eq,.tile.tile-eq{min-height:3.25rem;padding:.375rem .375rem .375rem 2.25rem;font-size:1.15rem}
+@media (max-height:700px){.tiles-3 .tile.tile-eq,.tile.tile-eq{min-height:3rem}}
+.tile.tile-eq .tv{display:flex;align-items:center;justify-content:center}
+.tile.tile-eq .eq{margin:0;font-size:1.05rem;justify-content:center;flex-wrap:nowrap;gap:.2em}
+@media (max-height:820px){
+  .addfig{gap:.25rem;margin:.25rem 0}
+  .addres{gap:.25rem;margin:.375rem 0}
+}
+@media (max-height:700px){
+  .addres{margin:.25rem 0}
+  .addres .frac.inp input,.addrow input.intin{height:2.5rem}
+  .addres .frac.inp>.num,.addrow .frac.inp>.num{padding-bottom:.125rem}
+  .addres .frac.inp>.den,.addrow .frac.inp>.den{padding-top:.125rem}
+  .addrow .frac{font-size:1.15rem}
+  .addrows{gap:.25rem;margin:.25rem 0}
+  .btn.kn{min-height:2.5rem}
+}

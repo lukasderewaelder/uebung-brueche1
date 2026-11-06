@@ -79,7 +79,19 @@ const MODULES=[
     ],
     pathGroups:{'Zwei Regeln':'balken','Fehlt zum Ganzen':'luecke','Mehr Wege':'aus',Ordnen:'netz','Check Vergleichen':'plakette'}
   },
-  {id:'rechnen',name:'Mit Brüchen rechnen',desc:'Addieren, subtrahieren, multiplizieren, dividieren.',icon:'winkel',status:'geplant'}
+  /* Addieren und Subtrahieren, Teil 1: gleiche Nenner (R01–R03). Reihenfolge des Themas: gleichnamig, unterschiedlich benannt, gemischte Zahlen (kommen später, mit Eingangstest RQ und Abschlusscheck RA). */
+  {id:'addsub',name:'Brüche addieren und subtrahieren',desc:'Teil 1: Brüche mit gleichem Nenner zusammenfügen und wegnehmen.',icon:'wechsel',status:'aktiv',rank:false,recommends:'veraendern',
+    groups:{
+      'Gleich eingeteilt':{pat:'dots',icon:'balken',text:'Zusammenfügen und Wegnehmen bei gleichem Nenner',ids:['R01','R02','R03']}
+    },
+    practice:['R01','R02','R03'],
+    /* Lernpfad: alle Bauteile sind Pflicht, in dieser Reihenfolge */
+    path:[
+      {id:'R01',grp:'Gleich eingeteilt',must:true},{id:'R02',grp:'Gleich eingeteilt',must:true},{id:'R03',grp:'Gleich eingeteilt',must:true}
+    ],
+    pathGroups:{'Gleich eingeteilt':'balken'}
+  },
+  {id:'rechnen',name:'Brüche multiplizieren und dividieren',desc:'Malnehmen und teilen mit Brüchen.',icon:'winkel',status:'geplant'}
 ];
 
 const activeModules=()=>MODULES.filter(m=>m.status==='aktiv');

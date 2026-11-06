@@ -56,7 +56,7 @@ function storageState(){
 /* Angaben, die eine Lehrkraft braucht, wenn ein Kind ein Problem meldet */
 function techInfo(){
   const cur=(S.ui&&S.ui.size)||'m',size=TEXT_SIZES.filter(x=>x[0]===cur)[0],st=rankState();
-  const rows=[['Bildschirm',innerWidth+' × '+innerHeight],['Textgröße',size?size[1]:'Normal'],['Darstellung',(THEMES.filter(x=>x[0]===themeOf())[0]||THEMES[0])[1]],['Speichern',Store.ok?'klappt':'klappt nicht'],['Rang',st.cur[1]+' · '+st.xp+' XP']];
+  const rows=[['Bildschirm',innerWidth+' × '+innerHeight],['Textgröße',size?size[1]:'Normal'],['Darstellung',(THEMES.filter(x=>x[0]===themeOf())[0]||THEMES[0])[1]],['Speichern',Store.ok?'klappt':'klappt nicht'],['Rang',st.cur[1]+' · '+st.xp+' XP'],['Ideen',"DZLM, Mathe sicher können"]];
   return el('div',{class:'techinfo'},el('div',{class:'tih'},'Technik-Angaben'),
     ...rows.map(r=>el('div',{class:'tir'},el('span',null,r[0]),el('b',null,r[1]))));
 }

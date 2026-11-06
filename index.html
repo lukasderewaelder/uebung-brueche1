@@ -8,7 +8,7 @@
 <title>Bruchwerkstatt</title>
 <script>/* Darstellung vor dem ersten Zeichnen setzen: Wahl „Hell“ oder „Dunkel“ aus dem Speicher; sonst folgt die Seite dem Gerät */
 try{var u=JSON.parse(localStorage.getItem('bruchwerkstatt_v1')).ui;if(u&&(u.theme==='hell'||u.theme==='dunkel'))document.documentElement.setAttribute('data-theme',u.theme);}catch(e){}</script>
-<link rel="stylesheet" href="css/app.css?v=61">
+<link rel="stylesheet" href="css/app.css?v=62">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -17,6 +17,7 @@ try{var u=JSON.parse(localStorage.getItem('bruchwerkstatt_v1')).ui;if(u&&(u.them
   <pattern id="hatch-erw" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" style="fill:var(--hatch-erw-bg)"/><line x1="0" y1="0" x2="0" y2="7" stroke-width="2.6" style="stroke:var(--hatch-erw)"/></pattern>
   <pattern id="hatch-kue" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><rect width="7" height="7" style="fill:var(--hatch-kue-bg)"/><line x1="0" y1="0" x2="0" y2="7" stroke-width="2.6" style="stroke:var(--hatch-kue)"/></pattern>
   <pattern id="hatch-ink" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" style="fill:var(--hatch-ink-bg)"/><line x1="0" y1="0" x2="0" y2="7" stroke-width="2.4" style="stroke:var(--hatch-ink)"/></pattern>
+  <pattern id="hatch-ink2" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><rect width="7" height="7" style="fill:var(--hatch-ink-bg)"/><line x1="0" y1="0" x2="0" y2="7" stroke-width="2.4" style="stroke:var(--hatch-ink)"/></pattern>
 </defs>
 <symbol id="i-lupe" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="M14.5 14.5 20 20"/></symbol>
 <symbol id="i-zahnrad" viewBox="0 0 24 24"><path d="M12 3l1.6 2.2 2.7-.5 1 2.5 2.5 1-.5 2.7L21 12l-2.2 1.6.5 2.7-2.5 1-1 2.5-2.7-.5L12 21l-1.6-2.2-2.7.5-1-2.5-2.5-1 .5-2.7L3 12l2.2-1.6-.5-2.7 2.5-1 1-2.5 2.7.5z"/><circle cx="12" cy="12" r="3.2"/></symbol>
@@ -77,32 +78,34 @@ try{var u=JSON.parse(localStorage.getItem('bruchwerkstatt_v1')).ui;if(u&&(u.them
 </svg>
 <div id="app"></div>
 <div id="scrim" class="scrim"></div>
-<script src="js/math.js?v=61"></script>
-<script src="js/dom.js?v=61"></script>
-<script src="js/viz.js?v=61"></script>
-<script src="js/store.js?v=61"></script>
-<script src="js/notes.js?v=61"></script>
-<script src="js/tasks.js?v=61"></script>
-<script src="js/quickcheck.js?v=61"></script>
-<script src="js/linewidget.js?v=61"></script>
-<script src="js/zahlenstrahl.js?v=61"></script>
-<script src="js/zahlenstrahl-check.js?v=61"></script>
-<script src="js/vergleichen-widgets.js?v=61"></script>
-<script src="js/vergleichen.js?v=61"></script>
-<script src="js/vergleichen-check.js?v=61"></script>
-<script src="js/mix.js?v=61"></script>
-<script src="js/tips.js?v=61"></script>
-<script src="js/modules.js?v=61"></script>
-<script src="js/lab.js?v=61"></script>
-<script src="js/path.js?v=61"></script>
-<script src="js/intro.js?v=61"></script>
-<script src="js/rank.js?v=61"></script>
-<script src="js/help.js?v=61"></script>
-<script src="js/exercise.js?v=61"></script>
-<script src="js/games.js?v=61"></script>
-<script src="js/vergleichen-spiel.js?v=61"></script>
-<script src="js/home.js?v=61"></script>
-<script src="js/selftest.js?v=61"></script>
-<script src="js/app.js?v=61"></script>
+<script src="js/math.js?v=62"></script>
+<script src="js/dom.js?v=62"></script>
+<script src="js/viz.js?v=62"></script>
+<script src="js/store.js?v=62"></script>
+<script src="js/notes.js?v=62"></script>
+<script src="js/tasks.js?v=62"></script>
+<script src="js/quickcheck.js?v=62"></script>
+<script src="js/linewidget.js?v=62"></script>
+<script src="js/zahlenstrahl.js?v=62"></script>
+<script src="js/zahlenstrahl-check.js?v=62"></script>
+<script src="js/vergleichen-widgets.js?v=62"></script>
+<script src="js/vergleichen.js?v=62"></script>
+<script src="js/vergleichen-check.js?v=62"></script>
+<script src="js/rechnen-widgets.js?v=62"></script>
+<script src="js/rechnen.js?v=62"></script>
+<script src="js/mix.js?v=62"></script>
+<script src="js/tips.js?v=62"></script>
+<script src="js/modules.js?v=62"></script>
+<script src="js/lab.js?v=62"></script>
+<script src="js/path.js?v=62"></script>
+<script src="js/intro.js?v=62"></script>
+<script src="js/rank.js?v=62"></script>
+<script src="js/help.js?v=62"></script>
+<script src="js/exercise.js?v=62"></script>
+<script src="js/games.js?v=62"></script>
+<script src="js/vergleichen-spiel.js?v=62"></script>
+<script src="js/home.js?v=62"></script>
+<script src="js/selftest.js?v=62"></script>
+<script src="js/app.js?v=62"></script>
 </body>
 </html>
