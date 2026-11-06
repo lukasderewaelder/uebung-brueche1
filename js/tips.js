@@ -413,6 +413,64 @@ TIPS.W10=(t)=>{
     [t.kind==='claim'?`Dazwischen liegt zum Beispiel ${tf(B.lo+1,B.M)}.`:`Zwischen ${B.lo} und ${B.hi} liegt zum Beispiel die Zahl ${B.lo+1}.`]];
 };
 
+/* ---------- Addieren und Subtrahieren, gleiche Nenner (R01–R03). Tipps zum Kürzen stehen bei jeder Aufgabe gleich da und verraten nie, ob es geht ---------- */
+const addSay=(plus)=>plus?'plus':'minus';
+TIPS.R01=(t)=>{
+  const later=(t.kind==='bild'||(t.level===1&&t.b<BAR_FROM))?'':'Jetzt siehst du ein Bild. ';
+  if(t.kind==='drei')return [
+    ['Zähle die Teile im ersten und im zweiten Muster.'],
+    [`${later}Das erste Muster hat ${t.p1} Teile, das zweite ${t.p2}. Das Ganze hat ${t.b} Teile.`],
+    [`Zusammen sind es ${t.p1+t.p2} Teile. Eine Plusaufgabe passt und zwei Minusaufgaben auch.`]];
+  if(t.kind==='bild')return [
+    ['Zähle die Teile im ersten und im zweiten Muster.'],
+    [`Im ersten Muster sind ${t.a} Teile, im zweiten ${t.c}. Das Ganze hat ${t.b} Teile.`],
+    [`Zusammen sind ${t.a+t.c} Teile gefärbt. Prüfe zuletzt das Feld **gekürzt**.`]];
+  return [
+    [t.plus?'Die Stücke sind gleich groß. Füge sie zusammen. Was heißt das für den Nenner?':'Die Stücke sind gleich groß. Nimm Stücke weg. Was heißt das für den Nenner?'],
+    [`${later}Du rechnest mit ${t.a} Stücken und ${t.c} Stücken. Ein Stück ist ${tf(1,t.b)}.`],
+    [`${t.a} ${addSay(t.plus)} ${t.c} ergibt ${t.res[0]}. Der Nenner ${t.b} bleibt. Prüfe zuletzt das Feld **gekürzt**.`]];
+};
+TIPS.R02=(t)=>{
+  if(t.kind==='luecke'){
+    const [p1,p2,p3]=t.p,k=t.blank===0?p2:p1;
+    if(t.plus)return [
+      ['Zwei Teile ergeben zusammen das Ganze der Rechnung. Ein Teil ist bekannt.'],
+      [`Das Ganze ist ${tf(p3,t.b)}. Ein Teil ist ${tf(k,t.b)}.`],
+      [`Nimm den bekannten Teil weg: ${p3} minus ${k}. Der Nenner bleibt.`]];
+    if(t.blank===0)return [
+      ['Es wird etwas weggenommen. Was bleibt, steht hinter dem Gleichheitszeichen.'],
+      [`Weggenommen wird ${tf(p2,t.b)}. Übrig bleibt ${tf(p3,t.b)}.`],
+      [`Gib beides wieder zusammen: ${p2} plus ${p3}. Der Nenner bleibt.`]];
+    return [
+      ['Vom Anfang bleibt ein Rest. Wie viel wurde weggenommen?'],
+      [`Am Anfang sind es ${tf(p1,t.b)}. Danach bleiben ${tf(p3,t.b)}.`],
+      [`Rechne ${p1} minus ${p3}. Der Nenner bleibt.`]];
+  }
+  return [
+    ['Wird zusammengefügt oder weggenommen? Der Nenner sagt, wie groß die Stücke sind.'],
+    [`Jetzt siehst du ein Bild. Rechne nur mit den Zählern ${t.a} und ${t.c}.`],
+    [`${t.a} ${addSay(t.plus)} ${t.c} ergibt ${t.res[0]}. Der Nenner ${t.b} bleibt. Prüfe zuletzt das Feld **gekürzt**.`]];
+};
+TIPS.R03=(t)=>{
+  if(t.kind==='finde'){
+    const s=t.mode==='summe';
+    return [
+      [s?`Zwei Zähler sollen zusammen ${t.T} ergeben. Probiere eine kleine Zahl.`:`Die Zähler haben den Unterschied ${t.T}. Probiere eine kleine Zahl.`],
+      [s?`Nimm 1 als ersten Zähler. Der zweite Zähler ist dann ${t.T-1}.`:`Nimm 1 als zweiten Zähler. Der erste Zähler ist dann ${t.T+1}.`],
+      [s?`Danach probierst du 2 und ${t.T-2}. So findest du viele Aufgaben.`:`Danach probierst du 2 und ${t.T+2}. Der erste Zähler bleibt unter ${t.b}.`]];
+  }
+  const third={nennerAddiert:'Der Nenner sagt, wie groß die Stücke sind. Er ändert sich nicht.',andereRechnung:'Lies das Rechenzeichen. Wird zusammengefügt oder weggenommen?',rechenfehler:'Der Nenner stimmt. Rechne die Zähler noch einmal.'}[t.errType];
+  return [
+    ['Rechne jede Rechnung nach. Nur eine ist falsch.'],
+    [`Prüfe Rechnung ${'ABCD'[t.wrong]}. Stimmen Nenner, Zähler und Rechenzeichen?`],
+    [third]];
+};
+/* Rechenprobe nach „richtig“ (Brüche als a/b im Text) */
+function addProof(t){
+  const n=t.res[0],b=t.res[1],g=gcd(n,b);
+  return `${t.a} ${addSay(t.plus)} ${t.c} = ${n}. Der Nenner ${b} bleibt.`+(g>1?` Gekürzt: ${n/g}/${b/g}.`:' Das Ergebnis lässt sich nicht kürzen.');
+}
+
 /* ---------- Rückmeldung bei „richtig“: die Rechnung statt einer Floskel ----------
    proofText(task) liefert den Satz nach „Richtig: “ (null = die Aufgabe hat keine kurze Rechenprobe, dann gilt Lob + Begründung) */
 const PROOF={
@@ -439,6 +497,9 @@ const PROOF={
   U05:(t)=>`${t.part} : ${t.g} = ${t.p} und ${t.total} : ${t.g} = ${t.q}. Der Bruch ist fertig gekürzt.`
 };
 PROOF.G04=PROOF.G03;PROOF.V01=PROOF.G03;
+PROOF.R01=(t)=>t.kind==='drei'?null:addProof(t);
+PROOF.R02=(t)=>t.kind==='luecke'?`${t.p[0]} ${addSay(t.plus)} ${t.p[1]} = ${t.p[2]}. Der Nenner ${t.b} bleibt.`:addProof(t);
+PROOF.R03=(t)=>t.kind==='finde'?null:addProof(addCalcTask(t.calcs[t.wrong]));
 function proofText(task){const f=PROOF[task.type];return f?f(task):null;}
 
 /* Anmelden: jede Aufgabe liefert ihre Tipps aus TIPS (die Schnelltests Q00 und ZQ zeigen keine Tipps, behalten aber ihre eigenen) */

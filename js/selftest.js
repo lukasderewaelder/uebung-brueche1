@@ -391,11 +391,25 @@ function runSelfTests(){
     t('Erklärungen: kurze Sätze, höchstens 14 Wörter (längster: '+longest+')',longest<=14);
     t('Erklärungen: keine Rechnung im Text (Zahlen, Rechenzeichen, Brüche stehen als Daten), kein Emoji, kein ✓/★/✗',texts.every(x=>!/\d\s*[·×÷+−=]\s*\d|\d\s*:\s*\d|[☀-➿\u{1F000}-\u{1FFFF}]/u.test(x)));
     /* Rechnungen: alle Brüche einer Zeile gleich (Lücke „?“ muss ganzzahlig lösbar sein), Erweitern/Kürzen mit Zahl ≥ 2 passend, Rechenketten stimmen */
+    /* Rechenzeilen mit Brüchen: Bruch (+ oder −) Bruch … = Bruch; ein „?“ muss ganzzahlig lösbar sein (Addieren und Subtrahieren, Baustein R) */
+    const isArithLine=(l)=>l.some(x=>x==='+'||x==='−')&&l.some(Array.isArray)&&!l.some(x=>x&&x.m)&&!l.some(x=>x==='<'||x==='>');
+    const arithLine=(l)=>{
+      const eqi=l.indexOf('=');if(eqi<3)return false;
+      const left=l.slice(0,eqi),rights=l.slice(eqi+1).filter(Array.isArray);
+      if(!rights.length||!left.every((x,i)=>i%2===0?Array.isArray(x):(x==='+'||x==='−')))return false;
+      const val=(sub)=>{let v=null;for(let i=0;i<left.length;i+=2){const f=left[i][0]==='?'?[sub,left[i][1]]:left[i];v=i===0?f.slice(0,2):(left[i-1]==='+'?addFrac(v[0],v[1],f[0],f[1]):subFrac(v[0],v[1],f[0],f[1]));}return v;};
+      const gap=left.some(x=>Array.isArray(x)&&x[0]==='?');
+      const hits=(v)=>v[0]>=0&&rights.every(r=>r[0]!=='?'&&equivalent(v[0],v[1],r[0],r[1]));
+      if(!gap)return hits(val(0));
+      for(let x=1;x<=200;x++)if(hits(val(x)))return true;
+      return false;
+    };
     const isOp=(x)=>x==='+'||x==='·'||x===':',calcOK=(l)=>{
       if(l.some(x=>x&&x.m)){ /* gemischte Zahl: Bruch = Ganze + Rest = {m} */
         const [w,n,d]=l.find(x=>x&&x.m).m,f2=l.filter(Array.isArray);
         return f2.length===2&&equivalent(f2[0][0],f2[0][1],w*d+n,d)&&f2[1][0]===n&&f2[1][1]===d&&l.includes(w);
       }
+      if(isArithLine(l))return arithLine(l);
       if(l.some(x=>x==='<'||x==='>')){ /* Vergleich: jedes Zeichen passt zu seinen beiden Brüchen */
         const fs=l.filter(Array.isArray),rels=l.filter(x=>x==='<'||x==='>'||x==='=');
         return fs.length===rels.length+1&&rels.every((r,i)=>cmpSignOf(compareFrac(fs[i][0],fs[i][1],fs[i+1][0],fs[i+1][1]))===r);
@@ -420,12 +434,16 @@ function runSelfTests(){
     let calcs=0,calcBad=0,wrongBad=0;
     steps.forEach(s=>(s.calc||[]).forEach(l=>{
       calcs++;
-      if(l.wrong){const [x,,y]=l.t;if(equivalent(x[0],x[1],y[0],y[1]))wrongBad++;}
+      if(l.wrong){
+        if(isArithLine(l.t)){if(arithLine(l.t))wrongBad++;} /* falsche Rechnung: das Ergebnis darf nicht stimmen */
+        else{const [x,,y]=l.t;if(equivalent(x[0],x[1],y[0],y[1]))wrongBad++;}
+      }
       else if(!calcOK(l))calcBad++;
     }));
     t('Erklärungen: alle '+calcs+' Rechnungen stimmen (gleiche Brüche, Lücken lösbar, Teilbarkeit); falsche Rechnung ist wirklich falsch',calcs>=25&&calcBad===0&&wrongBad===0);
     t('Erklärungen: Bilder gültig (Teile, Färbung als gültige Indexliste, Farbe), höchstens ein Bild oder Ausprobieren je Schritt',steps.every(s=>{
-      if([s.fig,s.lab,s.tryit,s.nline,s.nltry].filter(Boolean).length>1)return false;
+      if([s.fig,s.add,s.lab,s.tryit,s.nline,s.nltry].filter(Boolean).length>1)return false;
+      if(s.add&&!(Number.isInteger(s.add.d)&&s.add.d>=2&&s.add.p1>=1&&s.add.p2>=1&&s.add.p1+s.add.p2<=s.add.d&&['plus','minus'].includes(s.add.mode)))return false;
       const f=s.fig&&(Array.isArray(s.fig)?{mode:'strip',rows:s.fig}:s.fig);
       return !f||(['strip','circle'].includes(f.mode)&&f.rows.length>=1&&f.rows.length<=3&&f.rows.every(r=>r.n>=1&&r.d>=r.n&&(!r.fill||validFill(r.fill,r.n,r.d))&&[undefined,'erw','kue'].includes(r.acc)));
     }));
@@ -439,7 +457,7 @@ function runSelfTests(){
     t('Erklärungen: Schnellcheck nennt die Zahlen aus den Einstellungen (Fragen, Urkunden-Hürde)',(()=>{const x=INTRO.Q00.steps.map(s=>s.say.join(' ')).join(' ');return x.includes(TASKS.Q00.size+' Fragen')&&x.includes('Ab '+needOf(TASKS.Q00.size)+' richtigen');})());
     t('Erklärungen: Wörter und Knöpfe stimmen mit den Namen auf dem Bildschirm überein',[['G02','Erweiterungszahl'],['G03','Kürzungszahl'],['G04','Geht nicht mehr'],['G04','Sind beide Zahlen gerade'],['G01','Prüfen'],['LAB','Rückgängig'],['O02','Weg neu starten'],['T01','Merkkasten']].every(([id,w])=>INTRO[id].steps.some(s=>s.say.some(x=>x.includes('**'+w)))));
     let built=true;
-    try{steps.forEach(s=>{introRich(s.h);s.say.forEach(introRich);if(s.fig)introFigNode(s.fig);if(s.calc)introCalcNode(s.calc);if(s.tryit)introTry(s.tryit);if(s.lab)labFigure({mode:'strip',base:s.lab.base,cur:s.lab.cur,last:{op:s.lab.op,k:s.lab.k}});});}catch(e){built=false;}
+    try{steps.forEach(s=>{introRich(s.h);s.say.forEach(introRich);if(s.fig)introFigNode(s.fig);if(s.add)introAddNode(s.add);if(s.calc)introCalcNode(s.calc);if(s.tryit)introTry(s.tryit);if(s.lab)labFigure({mode:'strip',base:s.lab.base,cur:s.lab.cur,last:{op:s.lab.op,k:s.lab.k}});});}catch(e){built=false;}
     t('Erklärungen: alle Schritte lassen sich aufbauen',built);
     t('Erklärungen: **fett** und {n|d} werden zu Text, Hervorhebung und Bruch',(()=>{const n=introRich('Tippe **Prüfen**. Aus {4|6} wird {2|3}.');return n.length===7&&n[1].tagName==='STRONG'&&n[1].textContent==='Prüfen'&&n[3].classList.contains('frac')&&n[3].textContent==='46'&&n[5].classList.contains('frac')&&n[5].textContent==='23';})());
     /* Gate: ungesehen oder ausdrücklich geöffnet; nie für Spiele, Startseite */
@@ -1071,7 +1089,7 @@ function runSelfTests(){
       const f=nodes[0];if(f.classList.contains('ex')||/^Beispiel/.test(f.textContent))firstOK++;
       nodes.filter(n=>n.tagName==='P'||n.classList.contains('rule')).forEach(n=>n.textContent.split(/[.!?]\s+/).forEach(s=>{longest=Math.max(longest,words(s));}));
     });
-    t('Merkkästen: alle 16 (M1–M16) bauen sich, beginnen mit dem Beispiel, Sätze höchstens 14 Wörter (längster: '+longest+')',ids.length===16&&bad.length===0&&firstOK===16&&longest<=14);
+    t('Merkkästen: alle 17 (M1–M17) bauen sich, beginnen mit dem Beispiel, Sätze höchstens 14 Wörter (längster: '+longest+')',ids.length===17&&bad.length===0&&firstOK===17&&longest<=14);
     const txt=(id)=>NOTES[id].build([]).map(n=>n.textContent).join(' ');
     t('Merkkästen: Fachwörter kommen nach dem Beispiel mit Erklärung (Erweiterungszahl, Kürzungszahl, Quersumme, Dezimalbruch, gemischte Zahl, kgV)',txt('M2').includes('Erweiterungszahl. Sie ist mindestens 2')&&txt('M3').includes('Kürzungszahl. Sie ist mindestens 2')&&txt('M7').includes('Quersumme bekommst du, wenn du alle Ziffern addierst')&&txt('M4').includes('heißt Dezimalbruch')&&txt('M6').includes('Natürliche Zahlen sind 1, 2, 3')&&txt('M10').includes('kleinstes gemeinsames Vielfaches (kgV)'));
     /* Schrift: Menü und Rang-Chip mindestens 16 px */
@@ -1340,7 +1358,7 @@ function runSelfTests(){
       t('Einstellungen: Zeile „Darstellung“ mit Automatisch, Hell, Dunkel; die gewählte ist markiert; Tippen speichert und wendet sofort an',names==='Automatisch,Hell,Dunkel'&&first==='Dunkel'&&afterHell==='hell,hell,Hell'&&afterAuto==='auto,undefined,Automatisch'&&defaultState().ui.theme==='auto'&&techInfo().textContent.includes('Darstellung'));
     }finally{S.ui=keepD.ui;applyUi();persist();}
     const pats=[...document.querySelectorAll('pattern[id^="hatch-"]')];
-    t('Schraffuren (Bruchbilder) nehmen ihre Farben aus den Tokens, keine festen Farben; Seite meldet „dark light“',pats.length===4&&pats.every(p=>!/#[0-9a-f]{3,6}|rgba?\(/i.test(p.innerHTML)&&p.querySelectorAll('[style*="var(--hatch-"]').length===2)&&document.querySelector('meta[name="color-scheme"]').content==='dark light');
+    t('Schraffuren (Bruchbilder) nehmen ihre Farben aus den Tokens, keine festen Farben; Seite meldet „dark light“',pats.length===5&&pats.every(p=>!/#[0-9a-f]{3,6}|rgba?\(/i.test(p.innerHTML)&&p.querySelectorAll('[style*="var(--hatch-"]').length===2)&&document.querySelector('meta[name="color-scheme"]').content==='dark light');
     /* Start ohne Aufblitzen: das kleine Skript im <head> liest die Wahl aus dem Speicher */
     const boot=[...document.scripts].find(s=>!s.src&&s.textContent.includes('data-theme'));
     let bootOK=false;const keepRaw=(()=>{try{return localStorage.getItem(KEY);}catch(e){return null;}})();
@@ -1358,7 +1376,7 @@ function runSelfTests(){
     const btn=(txt)=>bar().find(b=>b.textContent.trim().startsWith(txt));
     const panel=()=>app.querySelector('.dockpanel');
     try{
-      S.modus={veraendern:'frei',zahlenstrahl:'frei',vergleichen:'frei'};S.unlocked={veraendern:true,zahlenstrahl:true,vergleichen:true};Object.keys(INTRO).forEach(k=>S.intro[k]=true);
+      S.modus={veraendern:'frei',zahlenstrahl:'frei',vergleichen:'frei',addsub:'frei'};S.unlocked={veraendern:true,zahlenstrahl:true,vergleichen:true,addsub:true};Object.keys(INTRO).forEach(k=>S.intro[k]=true);
       S.levelByType.G02=1;S.rounds={};S.view={kind:'practice',id:'G02'};renderAll();
       t('Bedienpult: Tipp | Merkkasten | Prüfen, ein gelber Hauptknopf rechts; „Lösung ansehen“ und „Überspringen“ liegen in der Meldung, nicht unter der Karte',bar().map(b=>b.textContent.trim()).join('|')==='Tipp|Merkkasten|Prüfen'&&bar()[2].classList.contains('primary')&&app.querySelectorAll('.actionbar .btn.primary').length===1&&!app.querySelector('.work > .linkrow')&&!!app.querySelector('.dockmsg .linkrow'));
       btn('Prüfen').click();
@@ -1685,6 +1703,142 @@ function runSelfTests(){
       t('Bruch-Duell: Knifflig hat fünf Karten im Rätsel und eigenen Spielstand',(()=>{const r2=S.games[keyOf('S03',2)];app.querySelectorAll('.seg button')[1].click();return r2&&r2.state.level===2&&app.querySelectorAll('.ordslot').length===5;})());
     }finally{Object.assign(S,keepG);persist();renderAll();}
   }
+  /* Addieren und Subtrahieren, Teil 1 (R01–R03): gleiche Nenner. Zahlenraum, Lösbarkeit, Ergebnis-Block (Kürzen-Feld bei jeder Aufgabe, ohne etwas zu verraten),
+     Fehlercodes, offene Aufgaben, Rundenplan, Reihenfolge im Pfad, Tipps, Ansicht */
+  {
+    const problems=[],codes=new Set(),red={y:0,n:0},structure=new Set();let n=0;
+    const rd=(r)=>({'r.n':String(r[0]),'r.d':String(r[1])});
+    const kd=(r)=>{const s=simplify(r[0],r[1]);return isFullyReduced(r[0],r[1])?{kn:true}:{'k.n':String(s[0]),'k.d':String(s[1])};};
+    const resOf=(tk)=>tk.kind==='fehler'?addCalcTask(tk.calcs[tk.wrong]).res:tk.res;
+    const okDraft=(tk)=>{
+      if(tk.kind==='drei'){const T=tk.p1+tk.p2,d={rows:tk.need,q0x:String(tk.p1),q0y:String(tk.p2),q0z:String(T),q0o:'+',q1x:String(T),q1y:String(tk.p2),q1z:String(tk.p1),q1o:'−'};if(tk.need>2)Object.assign(d,{q2x:String(T),q2y:String(tk.p1),q2z:String(tk.p2),q2o:'−'});return d;}
+      if(tk.kind==='luecke')return {x:String(tk.x)};
+      if(tk.kind==='finde'){const d={rows:tk.need};for(let i=0;i<tk.need;i++){if(tk.mode==='summe'){d['f'+i+'x']=String(i+1);d['f'+i+'y']=String(tk.T-i-1);}else{d['f'+i+'x']=String(tk.T+i+1);d['f'+i+'y']=String(i+1);}}return d;}
+      const r=resOf(tk);
+      return Object.assign(tk.kind==='fehler'?{sel:tk.wrong,err:tk.errType}:{},rd(r),kd(r));
+    };
+    const words=(s)=>s.replace(/\*\*/g,'').replace(/\{\d+\|\d+\}/g,'x').split(/[.!?]\s+/).some(x=>x.split(/\s+/).filter(Boolean).length>14);
+    for(const id of ['R01','R02','R03'])for(const lvl of [1,2])for(const kind of TASKS[id].layoutKinds(lvl))for(let i=0;i<60;i++){
+      const tk=TASKS[id].gen(lvl,RNG,{kind});n++;
+      const lim=lvl===1?24:100,tag=id+'-L'+lvl+' '+kind,hasRes=['plus','minus','ueber1','bild','fehler'].includes(kind);
+      if(tk.type!==id||tk.kind!==kind)problems.push(tag+' Art');
+      if(!Array.isArray(tk.avoid)||!tk.avoid.length)problems.push(tag+' avoid');
+      if(!Number.isInteger(tk.b)||tk.b<4||tk.b>lim)problems.push(tag+' Nenner');
+      if(hasRes&&kind!=='fehler'){
+        const over=tk.plus?tk.a+tk.c>tk.b:tk.a>tk.b;
+        if(!(tk.a>=1&&tk.c>=1)||tk.res[1]!==tk.b||tk.res[0]!==(tk.plus?tk.a+tk.c:tk.a-tk.c)||tk.res[0]<1||tk.res[0]%tk.b===0)problems.push(tag+' Zahlen');
+        if(tk.c>=tk.b||(tk.plus&&tk.a>=tk.b)||(over&&lvl===1&&kind!=='ueber1')||(kind==='plus'&&tk.plus!==true)||(kind==='minus'&&tk.plus!==false))problems.push(tag+' echt oder unecht');
+        if(kind==='bild'&&(tk.b>12||tk.plus!==true||lvl!==1))problems.push(tag+' Bild');
+        if(kind!=='bild'){if(isFullyReduced(tk.res[0],tk.res[1]))red.n++;else red.y++;}
+      }
+      if(kind==='luecke'){
+        const [p1,p2,p3]=tk.p;
+        if(!(p1>=1&&p2>=1&&p3>=1)||(tk.plus?p1+p2!==p3:p1-p2!==p3)||tk.x!==tk.p[tk.blank]||![0,1].includes(tk.blank))problems.push(tag+' Lücke');
+      }
+      if(kind==='drei'&&(tk.p1===tk.p2||tk.need!==(lvl===1?2:3)||tk.p1>=tk.b||tk.p2>=tk.b||(lvl===1?tk.p1+tk.p2>=tk.b:tk.p1+tk.p2===tk.b)))problems.push(tag+' Bild mit zwei Anteilen');
+      if(kind==='finde'){
+        const cnt=tk.mode==='summe'?Math.floor(tk.T/2):tk.b-1-tk.T;
+        if(cnt<tk.need||tk.need!==(lvl===1?2:3))problems.push(tag+' zu wenige Lösungen');
+      }
+      if(kind==='fehler'){
+        const bads=tk.calcs.filter(c=>!equivalent(c.x,c.y,c.plus?c.a+c.c:c.a-c.c,c.b));
+        const w=tk.calcs[tk.wrong];
+        if(tk.calcs.length!==4||bads.length!==1||bads[0]!==w||addDiagnose(w.a,w.c,w.b,w.plus,w.x,w.y)!==tk.errType)problems.push(tag+' genau eine falsche Rechnung');
+        if(new Set(tk.calcs.map(c=>c.a+'/'+c.c+'/'+c.b)).size!==4)problems.push(tag+' Dubletten');
+      }
+      const ok=validateTask(tk,okDraft(tk));
+      if(!ok.correct)problems.push(tag+' richtige Antwort abgelehnt: '+ok.feedback);
+      if(i<10){
+        const h=TASKS[id].hints(tk),txt=h.flat().join(' ');
+        if(h.length!==3||h.some(x=>!Array.isArray(x)||!x.length)||/undefined|NaN|null|Infinity/.test(txt))problems.push(tag+' Tipps');
+        if(words(txt))problems.push(tag+' Tipp zu lang');
+        if((txt.match(/\w*kürz\w*/gi)||[]).some(x=>x!=='gekürzt')||/lässt sich|nicht kürzen|kannst kürzen/i.test(txt))problems.push(tag+' Tipp verrät das Kürzen');
+        try{
+          const host=el('div');mountTask(host,newState(tk),{save(){},done(){}});
+          const sol=buildWorkedSolution(tk),solHost=el('div');solHost.append(...sol);
+          if(!sol.length||!host.querySelector('.stage'))problems.push(tag+' Ansicht leer');
+          if(/undefined|NaN/.test(host.textContent+solHost.textContent))problems.push(tag+' Text');
+          if(host.querySelector('.mixed')||solHost.querySelector('.mixed'))problems.push(tag+' gemischte Zahl in Block 1');
+          const box=host.querySelector('.addres');
+          if(hasRes!==!!box)problems.push(tag+' Ergebnis-Block');
+          if(box){structure.add(box.outerHTML);if(box.querySelectorAll('input').length!==4||box.querySelectorAll('button.kn').length!==1)problems.push(tag+' Felder');}
+        }catch(e){problems.push(tag+' Ansicht: '+e.message);}
+        if(hasRes){
+          const r=resOf(tk),base=kind==='fehler'?{sel:tk.wrong,err:tk.errType}:{},chk=(x)=>validateTask(tk,Object.assign({},base,x));
+          const a1=chk(rd(r)),a2=chk(rd([r[0]+1,r[1]]));
+          if(!a1.invalid||!a2.invalid||a1.feedback!==a2.feedback)problems.push(tag+' Kürzen-Feld wird nicht zuerst geprüft');
+          if(isFullyReduced(r[0],r[1])){
+            const b1=chk(Object.assign(rd(r),{'k.n':String(r[0]+1),'k.d':String(r[1])}));
+            if(!chk(Object.assign(rd(r),{kn:true})).correct||!chk(Object.assign(rd(r),{'k.n':String(r[0]),'k.d':String(r[1])})).correct||b1.errorCode!=='kuerzenWert'||!b1.soft)problems.push(tag+' nicht kürzbar');
+          }else{
+            const b2=chk(Object.assign(rd(r),{kn:true})),b3=chk(Object.assign(rd(r),{'k.n':String(r[0]),'k.d':String(r[1])}));
+            if(b2.errorCode!=='keinKuerzen'||!b2.soft||!b2.marks||b2.marks.kn!==false||b3.errorCode!=='nochKuerzen'||!b3.soft)problems.push(tag+' kürzbar');
+          }
+          const w=chk(Object.assign(rd([r[0]+1,r[1]]),kd(r)));
+          if(w.correct||w.soft||!w.errorCode||!w.marks||w.marks['r.n']!==false)problems.push(tag+' falsches Ergebnis');else codes.add(w.errorCode);
+          /* typische Fehler: Nenner mitgerechnet, andere Rechenart */
+          const ct=kind==='fehler'?addCalcTask(tk.calcs[tk.wrong]):tk,w2=chk(Object.assign(rd([r[0],2*r[1]]),kd(r))),oth=ct.plus?ct.a-ct.c:ct.a+ct.c;
+          if(w2.errorCode!=='nennerAddiert'||w2.soft)problems.push(tag+' Nenner mitgerechnet nicht erkannt');else codes.add(w2.errorCode);
+          if(oth>=1&&oth!==r[0]){const w3=chk(Object.assign(rd([oth,r[1]]),kd(r)));if(w3.errorCode!=='andereRechnung')problems.push(tag+' andere Rechenart nicht erkannt');else codes.add(w3.errorCode);}
+        }
+      }
+    }
+    t('Rechnen R01–R03: '+n+' Aufgaben, gleiche Nenner (Leicht bis 24, Knifflig bis 100), Zahlen und Lösbarkeit, richtige Antworten gelten, Tipps (3 Stufen, kurz, verraten das Kürzen nicht), keine gemischte Zahl, Ansicht und Lösung bauen sich',problems.length===0||(console.log(problems.slice(0,6)),false));
+    t('Rechnen: das Ergebnis-Feld mit „gekürzt“ und „Kürzen geht nicht“ sieht bei jeder Aufgabe mit Ergebnis gleich aus; kürzbare und nicht kürzbare Ergebnisse sind gemischt ('+red.y+' kürzbar, '+red.n+' nicht)',structure.size===1&&red.y>(red.y+red.n)*0.25&&red.n>(red.y+red.n)*0.25);
+    t('Rechnen: Fehlercodes nennerAddiert und andereRechnung werden bei falschen Ergebnissen benannt',codes.has('nennerAddiert')&&codes.has('andereRechnung')&&[...codes].every(c=>['nennerAddiert','andereRechnung','zaehlerNenner','rechenfehler','wert'].includes(c)));
+    t('addDiagnose: Nenner mitgerechnet, andere Rechenart, Zähler und Nenner einzeln, Zählerfehler, sonst „wert“; richtig (auch ungekürzt) gibt null',
+      addDiagnose(3,2,8,true,5,16)==='nennerAddiert'&&addDiagnose(3,2,8,true,1,8)==='andereRechnung'&&addDiagnose(5,2,8,false,7,8)==='andereRechnung'&&addDiagnose(3,2,8,true,10,32)==='zaehlerNenner'&&addDiagnose(3,2,8,true,6,8)==='rechenfehler'&&addDiagnose(3,2,8,true,5,9)==='wert'&&addDiagnose(3,2,8,true,5,8)===null&&addDiagnose(3,2,8,true,10,16)===null);
+    const kc=kuerzenCheck;
+    t('kuerzenCheck: leer, Kürzen offen (kommt vor der Wertprüfung), Wert, Knopf bei kürzbarem Ergebnis, gekürzt falsch, noch kürzbar, alles richtig (auch nicht kürzbar)',
+      kc([4,6],{r:null})==='leer'&&kc([4,6],{r:{n:4,d:6}})==='kuerzenLeer'&&kc([4,6],{r:{n:5,d:6}})==='kuerzenLeer'&&kc([4,6],{r:{n:5,d:6},k:{n:2,d:3}})==='wert'
+      &&kc([4,6],{r:{n:4,d:6},kn:true})==='keinKuerzen'&&kc([4,6],{r:{n:4,d:6},k:{n:3,d:4}})==='kuerzenWert'&&kc([8,12],{r:{n:8,d:12},k:{n:4,d:6}})==='nochKuerzen'&&kc([4,6],{r:{n:4,d:6},k:{n:4,d:6}})==='nochKuerzen'
+      &&kc([4,6],{r:{n:4,d:6},k:{n:2,d:3}})===null&&kc([4,6],{r:{n:2,d:3},k:{n:2,d:3}})===null&&kc([5,8],{r:{n:5,d:8},kn:true})===null&&kc([5,8],{r:{n:5,d:8},k:{n:5,d:8}})===null);
+    /* Ergebnis-Block bedienen: „Kürzen geht nicht“ leert „gekürzt“, Tippen in „gekürzt“ nimmt den Knopf zurück */
+    {
+      const tk={type:'R02',level:1,kind:'plus',a:3,c:2,b:8,plus:true,res:[5,8],avoid:[],who:['Lena','Ben'],story:null},st=newState(tk),host=el('div');
+      mountTask(host,st,{save(){},done(){}});document.body.append(host);
+      const kb=host.querySelector('button.kn'),kn1=host.querySelectorAll('.addres input')[2],kd1=host.querySelectorAll('.addres input')[3];
+      kn1.value='5';kn1.dispatchEvent(new Event('input',{bubbles:true}));
+      kb.click();const a1=[st.draft.kn===true,kb.getAttribute('aria-pressed'),kn1.value,st.draft['k.n']];
+      kn1.value='4';kn1.dispatchEvent(new Event('input',{bubbles:true}));const a2=[st.draft.kn===true,kb.getAttribute('aria-pressed'),st.draft['k.n']];
+      host.remove();
+      t('Ergebnis-Block: „Kürzen geht nicht“ leert „gekürzt“ und ist gedrückt; neue Eingabe in „gekürzt“ nimmt den Knopf zurück',a1.join('|')==='true|true||'&&a2.join()==='false,false,4');
+    }
+    /* Offene Aufgaben: mehrere Lösungen, per Regel geprüft; Doppelte zählen nicht */
+    {
+      const d1={type:'R01',level:1,kind:'drei',b:8,p1:3,p2:2,need:2},d2={type:'R01',level:2,kind:'drei',b:12,p1:3,p2:5,need:3};
+      const v=(tk,d)=>validateTask(tk,d);
+      const one={rows:2,q0x:'3',q0y:'2',q0z:'5',q0o:'+'},two=Object.assign({},one,{q1x:'5',q1y:'2',q1z:'3',q1o:'−'});
+      t('R01 Ein Bild, drei Aufgaben: eine Rechnung reicht nicht (Leicht braucht 2), zwei verschiedene gelten; Knifflig braucht 3',
+        !v(d1,one).correct&&v(d1,one).soft&&/1 von 2/.test(v(d1,one).feedback)&&v(d1,two).correct&&!v(d2,Object.assign({},two,{q1x:'8',q1y:'5',q1z:'3',rows:3})).correct&&v(d2,Object.assign({rows:3,q0x:'3',q0y:'5',q0z:'8',q0o:'+',q1x:'8',q1y:'5',q1z:'3',q1o:'−',q2x:'8',q2y:'3',q2z:'5',q2o:'−'})).correct);
+      const dup=v(d1,Object.assign({},one,{q1x:'2',q1y:'3',q1z:'5',q1o:'+'})),notBild=v(d1,Object.assign({},one,{q1x:'1',q1y:'1',q1z:'2',q1o:'+'})),falsch=v(d1,Object.assign({},one,{q1x:'5',q1y:'2',q1z:'4',q1o:'−'})),ohneZeichen=v(d1,Object.assign({},one,{q1x:'5',q1y:'2',q1z:'3'}));
+      t('R01 offen: dieselbe Aufgabe mit vertauschten Zahlen zählt nicht doppelt, passt-nicht-zum-Bild und falsche Rechnung werden unterschieden, fehlendes Rechenzeichen wird verlangt',
+        !dup.correct&&/schon/.test(dup.feedback)&&dup.marks.q1x===false&&/nicht zum Bild/.test(notBild.feedback)&&/nicht\./.test(falsch.feedback)&&/Fülle alle Felder/.test(ohneZeichen.feedback)&&!dup.soft);
+      const f1={type:'R03',level:1,kind:'finde',b:12,mode:'summe',T:9,need:2},f2={type:'R03',level:2,kind:'finde',b:50,mode:'differenz',T:3,need:3};
+      const pair=(tk,l)=>{const d={rows:l.length};l.forEach(([x,y],i)=>{d['f'+i+'x']=String(x);d['f'+i+'y']=String(y);});return validateTask(tk,d);};
+      t('R03 Finde Brüche: zwei Summen mit Zählersumme 9 (auch andere Paare) gelten, vertauschte Paare und Zählersummen ≠ 9 nicht; Unterschied 3 braucht 3 Paare mit erstem Zähler < 50',
+        pair(f1,[[2,7],[4,5]]).correct&&pair(f1,[[1,8]]).soft&&!pair(f1,[[2,7],[7,2]]).correct&&!pair(f1,[[2,7],[3,5]]).correct&&pair(f2,[[4,1],[10,7],[49,46]]).correct&&!pair(f2,[[4,1],[10,7]]).correct&&!pair(f2,[[53,50],[4,1],[5,2]]).correct);
+      const fe=TASKS.R03.gen(1,RNG,{kind:'fehler'}),ok=okDraft(fe);
+      t('R03 Fehler finden: falsche Rechnung wählen, Fehlerart wählen, berichtigen (mit Kürzen-Feld); jede Stufe hat ihren Fehlercode',
+        validateTask(fe,Object.assign({},ok,{sel:(fe.wrong+1)%4})).errorCode==='sel'&&validateTask(fe,Object.assign({},ok,{err:ADD_ERR.find(e=>e!==fe.errType)})).errorCode==='err'&&validateTask(fe,Object.assign({},ok,{sel:undefined})).invalid&&validateTask(fe,Object.assign({},ok,{err:undefined})).invalid&&validateTask(fe,ok).correct);
+      const lu={type:'R02',level:1,kind:'luecke',b:8,plus:true,blank:1,p:[3,2,5],x:2,avoid:[]},lm={type:'R02',level:1,kind:'luecke',b:8,plus:false,blank:0,p:[6,2,4],x:6,avoid:[]};
+      t('R02 Lücken: die fehlende Zahl stimmt oder nicht; häufige Richtungsfehler (addiert statt weggenommen) werden benannt',
+        validateTask(lu,{x:'2'}).correct&&validateTask(lu,{x:'8'}).errorCode==='luecke'&&/Nimm den bekannten Teil weg/.test(validateTask(lu,{x:'8'}).feedback)&&validateTask(lm,{x:'6'}).correct&&/wovon weggenommen/.test(validateTask(lm,{x:'2'}).feedback)&&validateTask(lu,{}).invalid);
+    }
+    /* Rundenplan, Reihenfolge und Anmeldung */
+    {
+      const plan=(id,lvl)=>{const r={results:[],cur:null},ks=[];for(let i=0;i<5;i++){r.results=Array(i).fill('f');ks.push(TASKS[id].ctx(r,lvl).kind);}return {r,ks};};
+      let planBad=0;
+      for(const id of ['R01','R02','R03'])for(const lvl of [1,2])for(let i=0;i<40;i++){
+        const {r,ks}=plan(id,lvl),again=[];for(let k=0;k<5;k++){r.results=Array(k).fill('f');again.push(TASKS[id].ctx(r,lvl).kind);}
+        if(ks.length!==5||ks.join()!==again.join()||(id==='R01'&&(!ks.includes('drei')||!ks.includes('plus')||!ks.includes('minus')||(lvl===1)!==ks.includes('bild')))||(id==='R02'&&(!ks.includes('luecke')||(lvl===2)!==ks.includes('ueber1')))||(id==='R03'&&(ks.filter(k=>k==='fehler').length!==3||ks.filter(k=>k==='finde').length!==2)))planBad++;
+      }
+      t('Rechnen: Rundenplan hat 5 Arten und bleibt in der Runde gleich; R01 mischt plus und minus und hat ein Bild mit mehreren Aufgaben, R02 Lücken (Knifflig auch über 1), R03 drei Fehlersuchen und zwei offene',planBad===0);
+      const am=moduleById('addsub'),idx=(id)=>MODULES.findIndex(m=>m.id===id);
+      t('Rechnen: das Thema „Brüche addieren und subtrahieren“ ist aktiv, hat im Pfad genau R01, R02, R03 (alle Pflicht, in dieser Reihenfolge) und noch keinen Eingangstest und Abschlusscheck; das Thema Multiplizieren bleibt „geplant“',
+        !!am&&am.status==='aktiv'&&am.path.map(m=>m.id).join()==='R01,R02,R03'&&am.path.every(m=>m.must&&!m.final)&&am.practice.join()==='R01,R02,R03'&&!am.quickcheck&&!am.finalId&&idx('addsub')>idx('vergleichen')&&moduleById('rechnen').status==='geplant'&&INTRO.R01&&INTRO.R02&&INTRO.R03&&TASKS.R01.notes.includes('M17'));
+    }
+  }
   const bad=res.filter(r=>!r.ok);
   console.log(`Selbsttest: ${res.length-bad.length}/${res.length} bestanden`);
   bad.forEach(b=>console.error('FEHLER:',b.name));
@@ -1721,14 +1875,14 @@ async function runLayoutTests(w=375,h=600,samples=3,ids,intro=true,opts={}){
     S.ui=S.ui||{};S.ui.size='${opts.textSize||'m'}';applyUi();
     S.xp=Math.max(S.xp||0,1234);S.streak=12; /* Kopfzeile im ungünstigsten Fall: vierstellige XP und Treffer-Konto */
     window.__btn=(t)=>[...document.querySelectorAll('.actionbar button, .card button')].find(b=>b.textContent.trim().startsWith(t)&&!b.disabled);
-    S.modus={veraendern:'frei',zahlenstrahl:'frei',vergleichen:'frei'};S.unlocked={veraendern:true,zahlenstrahl:true,vergleichen:true};Object.keys(INTRO).forEach(k=>S.intro[k]=true);`);
+    S.modus={veraendern:'frei',zahlenstrahl:'frei',vergleichen:'frei',addsub:'frei'};S.unlocked={veraendern:true,zahlenstrahl:true,vergleichen:true,addsub:true};Object.keys(INTRO).forEach(k=>S.intro[k]=true);`);
   const out={};
   for(const id of ids){
     for(const lvl of [1,2]){
       /* Aufgaben mit mehreren Arten (layoutKinds): jede Art einzeln messen, der Rundenplan wird dafür fest vorgegeben */
       const kinds=(TASKS[id].layoutKinds&&TASKS[id].layoutKinds(lvl))||[null];
       for(const kind of kinds){
-      const okey=id+'-L'+lvl+(kind?' '+kind:''),rs=kind?`{'${keyOf(id,lvl)}':{results:[],cur:null,size:${TASKS[id].size},cmp:Array(${TASKS[id].size}).fill('${kind}')}}`:'{}';
+      const okey=id+'-L'+lvl+(kind?' '+kind:''),rs=kind?`{'${keyOf(id,lvl)}':{results:[],cur:null,size:${TASKS[id].size},${TASKS[id].planKey||'cmp'}:Array(${TASKS[id].size}).fill('${kind}')}}`:'{}';
       const worst={neu:-1,teil2:-1,pruefen:-1,tipps:-1,breit:-1,wo:''};
       const quick=!!TASKS[id].quick,poss=quick?[...Array(TASKS[id].size).keys()]:[null]; /* Eingangstests: jede Position (jede Art von Frage kommt vor) */
       for(const pos of poss){

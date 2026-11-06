@@ -462,6 +462,47 @@ const INTRO={
       calc:[[[3,5],'=',[3,5,'x',2],'=',[6,10]],[[4,5],'=',[4,5,'x',2],'=',[8,10]]]},
     {h:'So antwortest du',
       say:['Manchmal nennst du einen Bruch dazwischen.','Schreibe ihn in die Felder.','Manchmal prüfst du eine Behauptung.']}
+  ]},
+  /* Addieren und Subtrahieren, gleiche Nenner: add = Bild mit zwei Anteilen {d,p1,p2,mode} (rechnen-widgets.js) */
+  R01:{title:'Zusammenfügen und Wegnehmen',steps:[
+    {h:'Zwei Anteile zusammenfügen',
+      say:['Der Streifen hat 8 gleich große Teile.','Das erste Muster zeigt {3|8}.','Das zweite Muster zeigt {2|8}.'],
+      add:{d:8,p1:3,p2:2,mode:'plus'}},
+    {h:'Der Nenner bleibt',
+      say:['Zusammen sind es 5 Teile von 8.','Der Nenner sagt nur, wie groß die Teile sind.','Darum bleibt er gleich.'],
+      add:{d:8,p1:3,p2:2,mode:'plus'},calc:[[[3,8],'+',[2,8],'=',[5,8]]]},
+    {h:'Wegnehmen',
+      say:['Du kannst auch wegnehmen.','Von {5|8} nimmst du {2|8} weg.','Es bleiben {3|8}.'],
+      add:{d:8,p1:3,p2:2,mode:'minus'},calc:[[[5,8],'−',[2,8],'=',[3,8]]]},
+    {h:'Ein Bild, drei Aufgaben',
+      say:['In dasselbe Bild passt eine Plusaufgabe.','Es passen auch zwei Minusaufgaben.','Finde sie alle.'],
+      add:{d:8,p1:3,p2:2,mode:'plus'},calc:[[[3,8],'+',[2,8],'=',[5,8]],[[5,8],'−',[2,8],'=',[3,8]],[[5,8],'−',[3,8],'=',[2,8]]]},
+    {h:'So antwortest du',
+      say:['Schreibe das Ergebnis in das Feld **Ergebnis**.','Das Feld **gekürzt** gibt es immer.','Geht kürzen nicht, tippe **Kürzen geht nicht**.']}
+  ]},
+  R02:{title:'Gleichnamig rechnen',steps:[
+    {h:'Nur die Zähler rechnen',
+      say:['Die Teile sind gleich groß.','Du zählst nur die Teile.','Der Nenner bleibt, wie er ist.'],
+      calc:[[[2,10],'+',[5,10],'=',[7,10]],[[7,10],'−',[2,10],'=',[5,10]]]},
+    {h:'Plus oder minus?',
+      say:['Wörter wie zusammen und noch dazu bedeuten plus.','Wörter wie übrig und ausgießen bedeuten minus.','Lies genau, was passiert.']},
+    {h:'Lücken füllen',
+      say:['Manchmal fehlt eine Zahl in der Rechnung.','Dann fügst du zusammen oder nimmst weg.','Setze deine Zahl ein und prüfe.'],
+      calc:[[[3,9],'+',['?',9],'=',[8,9]]]},
+    {h:'So antwortest du',
+      say:['Bei Rechnungen füllst du beide Felder aus.','Das Feld **gekürzt** gibt es immer.','Bei Lücken trägst du nur die fehlende Zahl ein.']}
+  ]},
+  R03:{title:'Fehler und eigene Aufgaben',steps:[
+    {h:'Fehler finden',
+      say:['Vier Rechnungen stehen da. Eine ist falsch.','Tippe sie an.','Dann sagst du, was falsch war.'],
+      calc:[{wrong:true,t:[[3,8],'+',[2,8],'=',[5,16]]}]},
+    {h:'Typische Fehler',
+      say:['Der Nenner wird mitgerechnet.','Plus und minus werden verwechselt.','Ein Zähler wird falsch gerechnet.']},
+    {h:'Viele Lösungen',
+      say:['Manchmal gibt es mehr als eine richtige Antwort.','Finde Rechnungen mit demselben Ergebnis.'],
+      calc:[[[1,8],'+',[5,8],'=',[6,8]],[[2,8],'+',[4,8],'=',[6,8]]]},
+    {h:'So antwortest du',
+      say:['Beim Fehler berichtigst du die Rechnung.','Dort stehen wieder **Ergebnis** und **gekürzt**.','Bei eigenen Aufgaben füllst du die Zähler aus.','Mit **+ Aufgabe** schreibst du weitere auf.']}
   ]}
 };
 const hasIntro=(id)=>Object.prototype.hasOwnProperty.call(INTRO,id);
@@ -513,7 +554,7 @@ function introRich(s){
   });
   return out;
 }
-const INTRO_OPS=['=','→','·',':','+','<','>'];
+const INTRO_OPS=['=','→','·',':','+','−','<','>'];
 function introCalcLine(tokens){
   const parts=tokens.map(t=>{
     if(t&&t.m)return mixed(t.m[0],t.m[1],t.m[2]);
@@ -710,6 +751,7 @@ function renderIntro(id){
       el('div',{class:'introtxt'},s.say.map(t=>el('p',null,introRich(t)))),
       s.lab?el('div',{class:'introstage'},labFigure({mode:'strip',base:s.lab.base.slice(),cur:s.lab.cur.slice(),last:{op:s.lab.op,k:s.lab.k}})):null,
       s.fig?introFigNode(s.fig):null,
+      s.add?introAddNode(s.add):null,
       s.nline?introLineNode(s.nline):null,
       s.nltry?introLineTry(s.nltry):null,
       s.calc?introCalcNode(s.calc):null,
