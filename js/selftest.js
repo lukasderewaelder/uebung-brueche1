@@ -1844,6 +1844,14 @@ function runSelfTests(){
         &&cnt(g3,'.addgrids g.cell')===5&&g3.querySelector('svg.fracsvg').getAttribute('viewBox')==='0 0 242 50'
         &&cnt(g4,'.addgrids g.cell.on')===5&&cnt(g4,'.addgrids g.cell.on2')===5&&!first5.every(c=>c.classList.contains('on'))
         &&cnt(g5,'.addgrids g.cell')===0&&cnt(g5,'.addbar')===1&&cnt(g6,'.addgrids svg')===2&&cnt(g6,'.addgrids g.cell.on')===10&&cnt(g6,'.addgrids g.cell.on2')===5);
+      /* erst getrennt, dann gesammelt: [Anteil 1] + [Anteil 2] = [zusammen], bei minus [Anfang] − [Weggenommenes] = [Anfang mit Kreuzen]; ohne Legende, mit Beschriftung bei der Kuchen-Geschichte */
+      const s1=addFigure(12,8,3,{mode:'plus',split:true}),s2=addFigure(12,6,3,{mode:'minus',split:true}),s3=addFigure(8,5,6,{mode:'plus',split:true}),s4=addFigure(30,9,6,{mode:'plus',split:true}),s5=addFigure(10,5,4,{mode:'plus',split:true,caps:['Schokokuchen','Apfelkuchen','zusammen']});
+      const syms=(n)=>[...n.querySelectorAll('.asym')].map(x=>x.textContent).join('');
+      t('Bild getrennt und gesammelt: drei Raster (8 Felder, 3 Felder, 8 und 3 zusammen), Zeichen + und =; bei minus 9, 3 durchgekreuzt und 9 mit 3 Kreuzen, Zeichen − und =; über ein Ganzes hinaus nur das gemeinsame Bild mit Legende; ab Nenner 25 bleibt es ein Balken; ohne Legende; Beschriftung nur auf Wunsch',
+        cnt(s1,'.addgrids svg')===3&&cnt(s1,'.addu:nth-child(1) g.cell.on')===8&&cnt(s1,'.addu:nth-child(2) g.cell.on2')===3&&cnt(s1,'.addu:nth-child(3) g.cell.on')===8&&cnt(s1,'.addu:nth-child(3) g.cell.on2')===3&&syms(s1)==='+='&&!s1.querySelector('.addleg')
+        &&cnt(s2,'.addu:nth-child(1) g.cell.on')===9&&cnt(s2,'.addu:nth-child(1) .xmark')===0&&cnt(s2,'.addu:nth-child(2) .xmark')===3&&cnt(s2,'.addu:nth-child(3) .xmark')===3&&syms(s2)==='−='
+        &&cnt(s3,'.addgrids svg')===2&&!s3.querySelector('.addsplit')&&!!s3.querySelector('.addleg')&&cnt(s4,'.addbar')===1&&!!s4.querySelector('.addleg')&&!s4.querySelector('.addsplit')
+        &&cnt(s5,'.acap')===3&&s5.querySelector('.acap').textContent==='Schokokuchen'&&cnt(s1,'.acap')===0);
       const seen={};
       for(let i=0;i<400;i++){const tk=TASKS.R01.gen(1+i%2,RNG,{kind:'geschichte'});seen[tk.story]=tk;}
       const sayOf=(tk)=>{const h=el('div');TASKS.R01.prompt(tk,h);return h.textContent;};

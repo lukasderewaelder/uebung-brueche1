@@ -27,7 +27,8 @@ function addLegend(mode,grid){
 }
 /* Raster: ein Rechteck aus Reihen × Spalten (gridDims in viz.js; Primzahlen wie 5 oder 7 sind eine Reihe, wie die fünf Spalten an der Tafel) */
 const addDims=(d)=>gridDims(d)||[1,d];
-const addCellPx=(rows)=>Math.max(18,Math.min(30,Math.floor(84/rows))); /* so groß erscheint ein Feld auf dem Bildschirm (Pixel): ein Raster ist höchstens etwa 84 Pixel hoch */
+/* so groß erscheint ein Feld auf dem Bildschirm (Pixel): ein Raster ist höchstens etwa 84 Pixel hoch; sind drei Raster nebeneinander (split), höchstens etwa 88 Pixel breit */
+const addCellPx=(rows,cols,split)=>Math.max(split?10:18,Math.min(30,Math.floor(84/rows),split?Math.floor(88/cols):30));
 /* Feste Mischung der Felder (kein Zufall beim Zeichnen: dasselbe Bild bleibt beim erneuten Zeichnen gleich) */
 function addPerm(d,seed){
   const idx=Array.from({length:d},(_,i)=>i);
@@ -40,7 +41,7 @@ function addPerm(d,seed){
 function addGrid(d,c1,e2,o,k){
   const dims=addDims(d),[rows,cols]=dims,cs=Math.min(48,360/cols),minus=o.mode==='minus';
   const order=o.scatter?addPerm(d,(o.seed||d*31+c1*7+e2)+k*101):Array.from({length:d},(_,i)=>i);
-  const maxW=Math.round((cols*cs+2)*addCellPx(rows)/cs);
+  const maxW=Math.round((cols*cs+2)*addCellPx(rows,cols,o.split)/cs);
   const svg=drawCells('grid',d,dims,new Set(order.slice(0,e2)),{maxW,label:'Raster aus '+d+' Feldern, '+(minus?(e2-c1)+' durchgekreuzt, '+c1+' nicht':c1+' im ersten Muster, '+(e2-c1)+' im zweiten')});
   const cells=svg.querySelectorAll('g.cell');
   order.slice(c1,e2).forEach(i=>{
@@ -64,21 +65,42 @@ function addBar(d,c1,e2,o){
   svg.append(S_('rect',{class:'barframe',x:1,y:1,width:360,height:sh}));
   return svg;
 }
+/* Die Raster zu p1 Feldern im Muster 1 und p2 Feldern im Muster 2 (bei minus: durchgekreuzt); über ein Ganzes hinaus ein weiteres Raster */
+function addWholes(d,p1,p2,o){
+  const wholes=Math.max(1,Math.ceil((p1+p2)/d)),out=[];
+  for(let k=0;k<wholes;k++){
+    const lo=k*d,c1=Math.max(0,Math.min(d,p1-lo)),e2=Math.max(c1,Math.min(d,p1+p2-lo));
+    out.push(addGrid(d,c1,e2,o,k));
+  }
+  return out;
+}
 /* Bild zu zwei Anteilen p1 und p2 (Zähler) mit dem Nenner d, wie an der Tafel: ein Ganzes ist ein Raster (bis Nenner 24), darüber ein glatter Balken.
    Reichen die Anteile über ein Ganzes hinaus, folgt ein zweites Raster daneben (oder ein zweiter Balken darunter).
    o.mode 'plus' (zwei Anteile in zwei Mustern) oder 'minus' (Raster: das Ganze ist gefärbt, das Weggenommene ist durchgekreuzt; Balken: Weggenommenes im zweiten Muster)
+   o.split (nur Raster): erst die Anteile getrennt, dann gesammelt, wie an der Tafel: [Anteil 1] + [Anteil 2] = [zusammen]; bei minus [Anfang] − [Weggenommenes] = [Anfang mit Kreuzen].
+   Passt es nicht in eine Zeile, rutscht das „= Bild“ in die nächste. Reichen die Anteile über ein Ganzes hinaus, gibt es nur das gemeinsame Bild. o.caps: drei Beschriftungen unter den Rastern. Ohne Legende, die Muster sind in allen Rastern gleich.
    o.scatter verteilt die Felder im Raster · o.seed für die Verteilung · o.noLegend · o.h (Höhe der Balken) */
 function addFigure(d,p1,p2,o){
   o=o||{};
-  const wholes=Math.max(1,Math.ceil((p1+p2)/d)),grid=d<BAR_FROM;
+  const wholes=Math.max(1,Math.ceil((p1+p2)/d)),grid=d<BAR_FROM,split=grid&&o.split===true&&wholes===1; /* über ein Ganzes hinaus bleibt es ein gemeinsames Bild: getrennt wäre es zu hoch */
   if(!grid&&!o.h&&wholes>1)o=Object.assign({},o,{h:24}); /* zwei Balken untereinander: flacher, damit die Aufgabe ohne Scrollen passt */
-  const box=el('div',{class:'addfig',role:'group','aria-label':o.label||('Bild: '+p1+' und '+p2+' von '+d+' gleich großen Teilen')});
-  const rows=grid?el('div',{class:'addgrids'}):box;
-  for(let k=0;k<wholes;k++){
-    const lo=k*d,c1=Math.max(0,Math.min(d,p1-lo)),e2=Math.max(c1,Math.min(d,p1+p2-lo));
-    rows.append(grid?addGrid(d,c1,e2,o,k):addBar(d,c1,e2,o));
+  const box=el('div',{class:'addfig'+(split?' split':''),role:'group','aria-label':o.label||('Bild: '+p1+' und '+p2+' von '+d+' gleich großen Teilen')});
+  if(split){
+    const minus=o.mode==='minus',so=Object.assign({},o,{split:true,scatter:false});
+    const parts=minus
+      ?[['',addWholes(d,p1+p2,0,so)],['−',addWholes(d,0,p2,so)],['=',addWholes(d,p1,p2,so)]]
+      :[['',addWholes(d,p1,0,so)],['+',addWholes(d,0,p2,so)],['=',addWholes(d,p1,p2,so)]];
+    const row=el('div',{class:'addsplit'});
+    parts.forEach(([sym,grids],i)=>row.append(el('div',{class:'addu'},sym?el('span',{class:'asym','aria-hidden':'true'},sym):null,
+      el('div',{class:'addcol'},el('div',{class:'addgrids'},...grids),o.caps&&o.caps[i]?el('small',{class:'acap'},o.caps[i]):null))));
+    box.append(row);
+    return box;
   }
-  if(grid)box.append(rows);
+  if(grid)box.append(el('div',{class:'addgrids'},...addWholes(d,p1,p2,o)));
+  else for(let k=0;k<wholes;k++){
+    const lo=k*d,c1=Math.max(0,Math.min(d,p1-lo)),e2=Math.max(c1,Math.min(d,p1+p2-lo));
+    box.append(addBar(d,c1,e2,o));
+  }
   if(!o.noLegend)box.append(addLegend(o.mode,grid));
   return box;
 }

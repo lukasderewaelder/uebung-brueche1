@@ -87,7 +87,7 @@ const ADD_STORIES={
   torte:{plus:false,big:false,txt:(t,w)=>['Von einer Torte sind noch ',frac(t.a,t.b),' übrig. '+w[0]+' isst ',frac(t.c,t.b),' der ganzen Torte. Wie viel der Torte bleibt übrig?']},
   schoko:{plus:false,big:false,txt:(t,w)=>['Von einer Tafel Schokolade sind ',frac(t.a,t.b),' übrig. '+w[0]+' isst ',frac(t.c,t.b),' der ganzen Tafel. Wie viel der Tafel bleibt übrig?']},
   /* wie an der Tafel: zwei gleich große Kuchen, Reste zusammen; Pizza: Anfang und Ende sind gegeben, gesucht ist das Gegessene (Unterschied, ohne Bild: durchgekreuzt wäre sonst das Übrige) */
-  kuchen:{plus:true,big:false,txt:(t)=>['Vom Schokokuchen sind ',frac(t.a,t.b),' übrig, vom Apfelkuchen ',frac(t.c,t.b),'. Beide Kuchen sind gleich groß. Wie viel Kuchen ist das zusammen?']},
+  kuchen:{plus:true,big:false,caps:['Schokokuchen','Apfelkuchen','zusammen'],txt:(t)=>['Vom Schokokuchen sind ',frac(t.a,t.b),' übrig, vom Apfelkuchen ',frac(t.c,t.b),'. Beide Kuchen sind gleich groß. Wie viel Kuchen ist das zusammen?']},
   pizzaEnde:{plus:false,big:false,pic:false,txt:(t)=>['Von der Salamipizza sind zu Beginn noch ',frac(t.a,t.b),' da. Am Ende sind noch ',frac(t.c,t.b),' übrig. Wie viel der Pizza wurde gegessen?']}
 };
 /* Aufgabe mit Geschichte (kind „geschichte“): Kuchen und Pizza von der Tafel besonders oft; die Rechenart folgt der Geschichte */
@@ -107,7 +107,8 @@ const addWho=(R)=>{const w=R.shuffle(ADD_NAMES);return [w[0],w[1]];};
 
 /* ---------- Bild-Knoten zu einer Aufgabe: plus zwei Anteile, minus das Ganze gefärbt und das Weggenommene durchgekreuzt (t.scatter, t.seed: verstreute Felder) ---------- */
 function addTaskFigure(t){
-  const n=t.res[0],o={scatter:t.scatter,seed:t.seed};
+  /* Wie an der Tafel: die Anteile erst getrennt, dann gesammelt (außer „Bild lesen“: dort ist das gesammelte Bild die Aufgabe) */
+  const n=t.res[0],o={scatter:t.scatter,seed:t.seed,split:t.kind!=='bild',caps:t.story?ADD_STORIES[t.story].caps:null};
   return t.plus?addFigure(t.b,t.a,t.c,Object.assign({mode:'plus'},o)):addFigure(t.b,n,t.c,Object.assign({mode:'minus'},o));
 }
 /* Bild zu dieser Aufgabe zeigen? (Geschichte „Pizza am Ende“ nicht: dort wäre das Durchgekreuzte nicht das Gegessene) */
