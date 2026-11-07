@@ -181,7 +181,7 @@ const NOTES={
     const [a,c,b]=e,n=a+c,hi=Math.max(a,c),lo=Math.min(a,c);
     return [
       el('div',{class:'ex'},strong('Beispiel: '),addChain(a,c,b,true)),
-      addFigure(b,a,c,{mode:'plus'}),
+      addFigure(b,a,c,{mode:'plus',split:true}),
       el('p',null,strong('Gleichnamig'),' heißen Brüche mit gleichem Nenner.'),
       el('p',null,'Gleichnamige Brüche werden addiert oder subtrahiert, indem man ihre Zähler addiert oder subtrahiert.'),
       el('p',null,'Der Nenner bleibt dabei gleich.'),
