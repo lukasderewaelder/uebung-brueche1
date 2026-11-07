@@ -855,8 +855,8 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 .help svg.nline .nl-cell{stroke:var(--ink)}
 
 /* Reiter „Lernen“: Themenkacheln (quadratisch, zwei nebeneinander) und geplante Themen. Bei großer Schrift wächst die Kachel nach unten, statt abzuschneiden. */
-.tgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0.75rem;margin:0.75rem 0;max-width:32rem}
-.ttile{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:0.375rem;aspect-ratio:1/1;width:100%;min-width:0;padding:0.75rem;text-align:left;background:var(--bp-2);color:var(--chalk);border:3px double var(--chalk);box-shadow:0 3px 0 rgba(0,0,0,.35);font:inherit;cursor:pointer}
+.tgrid{container-type:inline-size;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:1fr;gap:0.75rem;margin:0.75rem 0;max-width:32rem} /* alle Kacheln gleich groß: mindestens quadratisch, jede Reihe so hoch wie die höchste Kachel */
+.ttile{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:0.25rem;width:100%;min-width:0;min-height:calc((100cqw - 0.75rem) / 2);padding:0.625rem 0.75rem;text-align:left;background:var(--bp-2);color:var(--chalk);border:3px double var(--chalk);box-shadow:0 3px 0 rgba(0,0,0,.35);font:inherit;cursor:pointer}
 .ttile .ico{width:2rem;height:2rem;color:var(--amber)}
 .ttile .ico .ic{width:100%;height:100%}
 .tt-name{font-size:1.05rem;line-height:1.2;overflow-wrap:anywhere}
@@ -870,6 +870,7 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 .ttile.focus .tt-tag{padding:0.125rem 0.375rem;background:var(--amber-fill);color:var(--on-amber)}
 .ttile.done .tt-tag{color:var(--ok)}
 .ttile:active{transform:translateY(2px);box-shadow:none}
+@supports not (width:1cqw){.ttile{aspect-ratio:1/1;min-height:0}}
 .soon{margin-top:1.25rem}
 .soon ul{list-style:none;margin:0;padding:0}
 .soon li{display:flex;align-items:center;gap:0.75rem;padding:0.625rem 0.75rem;margin:0.375rem 0;border:2px dashed var(--chalk-dim);color:var(--chalk-dim)}
