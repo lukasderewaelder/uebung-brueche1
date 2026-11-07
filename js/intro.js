@@ -464,33 +464,37 @@ const INTRO={
       say:['Manchmal nennst du einen Bruch dazwischen.','Schreibe ihn in die Felder.','Manchmal prüfst du eine Behauptung.']}
   ]},
   /* Addieren und Subtrahieren, gleiche Nenner: add = Bild mit zwei Anteilen {d,p1,p2,mode} (rechnen-widgets.js) */
-  R01:{title:'Zusammenfügen und Wegnehmen',steps:[
-    {h:'Zwei Anteile zusammenfügen',
-      say:['Der Streifen hat 8 gleich große Teile.','Das erste Muster zeigt {3|8}.','Das zweite Muster zeigt {2|8}.'],
-      add:{d:8,p1:3,p2:2,mode:'plus'}},
-    {h:'Der Nenner bleibt',
-      say:['Zusammen sind es 5 Teile von 8.','Der Nenner sagt nur, wie groß die Teile sind.','Darum bleibt er gleich.'],
-      add:{d:8,p1:3,p2:2,mode:'plus'},calc:[[[3,8],'+',[2,8],'=',[5,8]]]},
-    {h:'Wegnehmen',
-      say:['Du kannst auch wegnehmen.','Von {5|8} nimmst du {2|8} weg.','Es bleiben {3|8}.'],
-      add:{d:8,p1:3,p2:2,mode:'minus'},calc:[[[5,8],'−',[2,8],'=',[3,8]]]},
+  /* Wörter und Beispiele wie das Tafelbild: Raster mit zwei Mustern, gleichnamig, Zwischenschritt (8 + 3)/12, Kreuze beim Subtrahieren */
+  R01:{title:'Bild und Rechnung',steps:[
+    {h:'Ein Bild lesen',
+      say:['Das Raster hat 12 gleich große Felder. Das ist der Nenner.','Das erste Muster zeigt {8|12}.','Das zweite Muster zeigt {3|12}.','Zähle die Felder jedes Musters. Das sind die Zähler.'],
+      add:{d:12,p1:8,p2:3,mode:'plus'}},
+    {h:'Addieren: nur die Zähler',
+      say:['Die Brüche sind gleichnamig: Sie haben denselben Nenner.','Du addierst nur die Zähler.','Der Nenner bleibt dabei gleich.'],
+      add:{d:12,p1:8,p2:3,mode:'plus',chain:true,nofig:true}},
+    {h:'Subtrahieren: durchkreuzen',
+      say:['Du kannst auch wegnehmen.','Von {9|12} nimmst du {3|12} weg.','Die weggenommenen Felder kreuzt du durch.'],
+      add:{d:12,p1:6,p2:3,mode:'minus'},calc:[[[9,12],'−',[3,12],'=',[6,12]]]},
     {h:'Ein Bild, drei Aufgaben',
       say:['In dasselbe Bild passt eine Plusaufgabe.','Es passen auch zwei Minusaufgaben.','Finde sie alle.'],
       add:{d:8,p1:3,p2:2,mode:'plus'},calc:[[[3,8],'+',[2,8],'=',[5,8]],[[5,8],'−',[2,8],'=',[3,8]],[[5,8],'−',[3,8],'=',[2,8]]]},
     {h:'So antwortest du',
-      say:['Schreibe das Ergebnis in das Feld **Ergebnis**.','Das Feld **gekürzt** gibt es immer.','Geht kürzen nicht, tippe **Kürzen geht nicht**.']}
+      say:['In Leicht schreibst du zuerst den **Zwischenschritt**.','Dann kommt das **Ergebnis**.','Das Feld **gekürzt** gibt es immer. Geht kürzen nicht, tippe **Kürzen geht nicht**.']}
   ]},
   R02:{title:'Gleichnamig rechnen',steps:[
     {h:'Nur die Zähler rechnen',
-      say:['Die Teile sind gleich groß.','Du zählst nur die Teile.','Der Nenner bleibt, wie er ist.'],
+      say:['Gleichnamige Brüche haben gleich große Teile.','Du addierst oder subtrahierst nur die Zähler.','Der Nenner bleibt, wie er ist.'],
       calc:[[[2,10],'+',[5,10],'=',[7,10]],[[7,10],'−',[2,10],'=',[5,10]]]},
     {h:'Plus oder minus?',
       say:['Wörter wie zusammen und noch dazu bedeuten plus.','Wörter wie übrig und ausgießen bedeuten minus.','Lies genau, was passiert.']},
+    {h:'Anfang und Ende',
+      say:['Manchmal sind Anfang und Ende bekannt.','Gesucht ist, wie viel dazwischen verbraucht wurde.','Dann rechnest du Anfang minus Ende.'],
+      calc:[[[9,12],'−',[3,12],'=',[6,12]]]},
     {h:'Lücken füllen',
       say:['Manchmal fehlt eine Zahl in der Rechnung.','Dann fügst du zusammen oder nimmst weg.','Setze deine Zahl ein und prüfe.'],
       calc:[[[3,9],'+',['?',9],'=',[8,9]]]},
     {h:'So antwortest du',
-      say:['Bei Rechnungen füllst du beide Felder aus.','Das Feld **gekürzt** gibt es immer.','Bei Lücken trägst du nur die fehlende Zahl ein.']}
+      say:['In Leicht schreibst du bei Rechnungen zuerst den **Zwischenschritt**.','Dann füllst du **Ergebnis** und **gekürzt** aus.','Bei Lücken trägst du nur die fehlende Zahl ein.']}
   ]},
   R03:{title:'Fehler und eigene Aufgaben',steps:[
     {h:'Fehler finden',

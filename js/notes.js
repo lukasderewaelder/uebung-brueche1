@@ -14,7 +14,7 @@ const NOTE_EX={
   M6:[[2,3,4],[3,1,2],[1,2,5],[4,3,7]],
   M11:{nenner:[[3,8,5,8],[2,7,5,7],[4,9,7,9],[3,10,9,10]],zaehler:[[1,5,1,8],[3,4,3,7],[2,5,2,9],[1,3,1,6]]}, /* Paare a/b, c/d */
   M12:[[8,9,11,12],[5,6,9,10],[7,8,11,12],[4,5,7,8]], /* je Bruch fehlt ein Stück: a/b < c/d */
-  M17:[[3,2,8],[2,5,9],[4,3,10],[1,4,7]] /* a/b + c/b, als [a, c, b] mit a + c < b */
+  M17:[[5,1,12],[3,2,8],[2,5,9],[4,3,10],[1,4,7]] /* a/b + c/b, als [a, c, b] mit a + c < b; das erste ist das Beispiel von der Tafel */
 };
 const pickEx=(list,keyFn,avoid)=>list.find(x=>!avoid.includes(keyFn(x)))||list[list.length-1];
 
@@ -175,14 +175,18 @@ const NOTES={
       el('p',null,strong('Dazwischen: '),'Teile feiner ein. Dann liegt immer noch ein Bruch dazwischen.'),
       el('p',null,strong('Merke: '),'Zwischen zwei Brüchen gibt es immer weitere.')
     ];}},
-  M17:{title:'Zusammenfügen und Wegnehmen',build(avoid){
+  /* Wortlaut und Beispiele wie das Tafelbild: gleichnamig; Aufgabe = (Zähler ± Zähler) / Nenner = Ergebnis = gekürzt */
+  M17:{title:'Addieren und Subtrahieren',build(avoid){
     const e=NOTE_EX.M17.find(x=>!avoid.includes(redKey(x[0],x[2]))&&!avoid.includes(redKey(x[1],x[2])))||NOTE_EX.M17[0];
-    const [a,c,b]=e,n=a+c;
+    const [a,c,b]=e,n=a+c,hi=Math.max(a,c),lo=Math.min(a,c);
     return [
-      el('div',{class:'ex'},strong('Beispiel: '),eq(frac(a,b),'+',frac(c,b),'=',frac(n,b))),
+      el('div',{class:'ex'},strong('Beispiel: '),addChain(a,c,b,true)),
       addFigure(b,a,c,{mode:'plus'}),
+      el('p',null,strong('Gleichnamig'),' heißen Brüche mit gleichem Nenner.'),
+      el('p',null,'Gleichnamige Brüche werden addiert oder subtrahiert, indem man ihre Zähler addiert oder subtrahiert.'),
+      el('p',null,'Der Nenner bleibt dabei gleich.'),
+      el('div',{class:'ex'},addChain(hi,lo,b,false)),
       el('p',null,strong('Addieren'),' heißt zusammenfügen. ',strong('Subtrahieren'),' heißt wegnehmen.'),
-      el('p',null,'Der Nenner sagt, wie groß die Stücke sind. Er bleibt gleich. Du rechnest nur mit den Zählern.'),
       el('p',null,strong('Ein Bild, drei Aufgaben:')),
       el('div',{class:'ex'},eq(frac(a,b),'+',frac(c,b),'=',frac(n,b)),eq(frac(n,b),'−',frac(c,b),'=',frac(a,b)),eq(frac(n,b),'−',frac(a,b),'=',frac(c,b))),
       el('p',null,strong('Merke: '),'Der Nenner wird nicht mitgerechnet. Prüfe am Ende, ob du kürzen kannst.')

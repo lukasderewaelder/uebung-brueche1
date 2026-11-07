@@ -1,18 +1,19 @@
 'use strict';
 /* =====================================================================
    Aufgaben des Themas „Brüche addieren und subtrahieren“ (Kürzel R), Teil 1: gleiche Nenner
-   R01 Zusammenfügen und Wegnehmen im Bild   plus und minus am Bild; „Ein Bild, drei Aufgaben“ (offen: mehrere Lösungen, per Regel geprüft)
-   R02 Gleichnamig rechnen                   plus und minus mit und ohne Geschichte, auch über 1 (unechter Bruch), Lücken füllen
+   R01 Bild und Rechnung                     Bild → Brüche ablesen → Rechenweg (bild, wie LB S. 33 Nr. 5), Geschichte mit Bild, plus und minus am Bild; „Ein Bild, drei Aufgaben“ (offen: mehrere Lösungen, per Regel geprüft)
+   R02 Gleichnamig rechnen                   plus und minus mit und ohne Geschichte (Kuchen, Pizza), auch über 1 (unechter Bruch), Lücken füllen
    R03 Fehler und eigene Aufgaben            „Hausaufgaben kontrollieren“ (falsche Rechnung, Fehlerart, berichtigen) und „Finde Brüche mit …“ (offen)
+   Aufbau und Wörter wie an der Tafel: Fachwort „gleichnamig“, Rechenweg Aufgabe = (Zähler ± Zähler)/Nenner = Ergebnis = gekürzt, Bilder als Raster, bei minus durchgekreuzt.
    Reihenfolge des Themas: gleichnamig, danach unterschiedlich benannt, danach gemischte Zahlen (kommen später). Plus und Minus laufen in jeder Station gemischt.
    Gleicher Vertrag wie in tasks.js: gen, prompt, render, validate, solution (Tipps: js/tips.js). Aufgabenfelder: a, c = Zähler, b = Nenner (derselbe für beide), plus = Rechenart, res = [Zähler, Nenner] des Ergebnisses.
-   Ergebnis-Block: Felder „Ergebnis“ und „gekürzt“ immer (addResult, js/rechnen-widgets.js). Zahlenraum: Leicht Nenner bis 24, Knifflig bis 100.
-   Bilder: Leicht sofort (bis Nenner 24), Knifflig und Rechnungen erst mit dem zweiten Tipp. Fehlercodes: nennerAddiert, andereRechnung, zaehlerNenner, rechenfehler, wert (addDiagnose in math.js),
-   dazu luecke, sel, err (Fehler finden), zeile (offene Zeilen).
+   Rechenweg-Block: Zwischenschritt (nur Leicht), Felder „Ergebnis“ und „gekürzt“ immer (addResult, js/rechnen-widgets.js). Zahlenraum: Leicht Nenner bis 24, Knifflig bis 100.
+   Bilder: Leicht sofort (bis Nenner 24), Knifflig und Rechnungen erst mit dem zweiten Tipp. Fehlercodes: nennerAddiert, zwischenNenner, vertauscht, zahl (Zwischenschritt), andereRechnung, zaehlerNenner, rechenfehler, wert (addDiagnose in math.js),
+   dazu nennerFelder, zaehlerFelder (Ablesen), luecke, sel, err (Fehler finden), zeile (offene Zeilen).
    ===================================================================== */
 const ADD_NAMES=['Lena','Ben','Mia','Tom','Ida','Paul','Nora','Jan'];
 const ADD_POOL={1:[4,5,6,7,8,9,10,11,12,15,16,20,24],2:[10,12,15,16,18,20,24,25,30,36,40,50,60,75,80,100]};
-const ADD_POOL_PIC=[4,5,6,8,9,10,12]; /* Bilder zum Abzählen: höchstens 12 Teile */
+const ADD_POOL_PIC=[4,5,6,8,9,10,12,15,16]; /* Bilder zum Abzählen: höchstens 16 Felder (Tafel: 12, 5, 10, 9, 15) */
 const ADD_SIGN=(plus)=>plus?'+':'−';
 
 /* ---------- Zahlen ----------
@@ -41,11 +42,14 @@ function addNums(R,level,plus,o){
 const addAvoid=(t)=>[redKey(t.a,t.b),redKey(t.c,t.b)];
 const addEq=(t,end)=>eq(frac(t.a,t.b),ADD_SIGN(t.plus),frac(t.c,t.b),...(end===undefined?[]:['=',end]));
 const addPicKinds=(id,lvl)=>Array.from(new Set(ADD_PLAN[id][lvl]));
+/* Zwischenschritt nur in Leicht (Gerüst); t.level, Zahlen der Aufgabe (bei „Fehler finden“ die der falschen Rechnung ct) */
+const addMidOpt=(t)=>t.level===1?{mid:ADD_SIGN(t.plus)}:{};
+const addMidArg=(t,ct)=>{ct=ct||t;return t.level===1?{a:ct.a,c:ct.c,b:ct.b,plus:ct.plus}:null;};
 
 /* ---------- Rundenplan ---------- */
 const ADD_PLAN={
-  R01:{1:['bild','plus','minus','drei','plus'],2:['plus','minus','drei','minus','plus']},
-  R02:{1:['plus','minus','luecke','plus','minus'],2:['plus','minus','ueber1','luecke','minus']},
+  R01:{1:['bild','plus','minus','geschichte','drei'],2:['plus','minus','drei','geschichte','minus']},
+  R02:{1:['geschichte','minus','luecke','plus','minus'],2:['plus','geschichte','ueber1','luecke','minus']},
   R03:{1:['fehler','finde','fehler','fehler','finde'],2:['fehler','finde','fehler','fehler','finde']}
 };
 function addCtx(id){
@@ -69,7 +73,7 @@ function addDiag(t,x,y){
   return code?{code,msg:ADD_MSG[code](t)}:null;
 }
 /* Satz aus Wörtern und Brüchen: Teile sind Text oder Knoten */
-const addP=(...parts)=>el('p',{class:'q'},...parts);
+const addP=(...parts)=>el('p',{class:'q qa'},...parts);
 
 /* ---------- Geschichten (immer dasselbe Ganze: derselbe Kuchen, dieselbe Kanne) ----------
    plus: zusammenfügen, minus: wegnehmen. big: erlaubt Werte über 1 (Liter, Meter), sonst nur Teile eines Ganzen */
@@ -81,8 +85,17 @@ const ADD_STORIES={
   kanne:{plus:false,big:true,txt:(t,w)=>['In einer Kanne sind ',frac(t.a,t.b),' Liter Wasser. '+w[0]+' gießt ',frac(t.c,t.b),' Liter aus. Wie viel Liter bleiben in der Kanne?']},
   band:{plus:false,big:true,txt:(t,w)=>['Ein Band ist ',frac(t.a,t.b),' Meter lang. '+w[0]+' schneidet ',frac(t.c,t.b),' Meter ab. Wie viel Meter bleiben übrig?']},
   torte:{plus:false,big:false,txt:(t,w)=>['Von einer Torte sind noch ',frac(t.a,t.b),' übrig. '+w[0]+' isst ',frac(t.c,t.b),' der ganzen Torte. Wie viel der Torte bleibt übrig?']},
-  schoko:{plus:false,big:false,txt:(t,w)=>['Von einer Tafel Schokolade sind ',frac(t.a,t.b),' übrig. '+w[0]+' isst ',frac(t.c,t.b),' der ganzen Tafel. Wie viel der Tafel bleibt übrig?']}
+  schoko:{plus:false,big:false,txt:(t,w)=>['Von einer Tafel Schokolade sind ',frac(t.a,t.b),' übrig. '+w[0]+' isst ',frac(t.c,t.b),' der ganzen Tafel. Wie viel der Tafel bleibt übrig?']},
+  /* wie an der Tafel: zwei gleich große Kuchen, Reste zusammen; Pizza: Anfang und Ende sind gegeben, gesucht ist das Gegessene (Unterschied, ohne Bild: durchgekreuzt wäre sonst das Übrige) */
+  kuchen:{plus:true,big:false,txt:(t)=>['Vom Schokokuchen sind ',frac(t.a,t.b),' übrig, vom Apfelkuchen ',frac(t.c,t.b),'. Beide Kuchen sind gleich groß. Wie viel Kuchen ist das zusammen?']},
+  pizzaEnde:{plus:false,big:false,pic:false,txt:(t)=>['Von der Salamipizza sind zu Beginn noch ',frac(t.a,t.b),' da. Am Ende sind noch ',frac(t.c,t.b),' übrig. Wie viel der Pizza wurde gegessen?']}
 };
+/* Aufgabe mit Geschichte (kind „geschichte“): Kuchen und Pizza von der Tafel besonders oft; die Rechenart folgt der Geschichte */
+function addStoryTask(R,level,type,kind){
+  const id=R.chance(0.5)?R.pick(['kuchen','pizzaEnde']):R.pick(Object.keys(ADD_STORIES)),S=ADD_STORIES[id];
+  const r=addNums(R,level,S.plus,{over:S.big&&level===2&&R.chance(S.plus?0.35:0.25),red:R.chance(0.5)});
+  return Object.assign({type,level,kind,story:id,who:addWho(R)},r,{avoid:addAvoid(r)});
+}
 /* Geschichte zu einer Aufgabe wählen (oder null): die Geschichte muss zur Rechenart und zur Größe passen */
 function addPickStory(R,t,p){
   if(!R.chance(p))return null;
@@ -92,22 +105,25 @@ function addPickStory(R,t,p){
 }
 const addWho=(R)=>{const w=R.shuffle(ADD_NAMES);return [w[0],w[1]];};
 
-/* ---------- Bild-Knoten zu einer Aufgabe: plus zwei Anteile, minus das Ganze mit dem weggenommenen Teil im zweiten Muster ---------- */
+/* ---------- Bild-Knoten zu einer Aufgabe: plus zwei Anteile, minus das Ganze gefärbt und das Weggenommene durchgekreuzt (t.scatter, t.seed: verstreute Felder) ---------- */
 function addTaskFigure(t){
-  const n=t.res[0];
-  return t.plus?addFigure(t.b,t.a,t.c,{mode:'plus'}):addFigure(t.b,n,t.c,{mode:'minus'});
+  const n=t.res[0],o={scatter:t.scatter,seed:t.seed};
+  return t.plus?addFigure(t.b,t.a,t.c,Object.assign({mode:'plus'},o)):addFigure(t.b,n,t.c,Object.assign({mode:'minus'},o));
 }
+/* Bild zu dieser Aufgabe zeigen? (Geschichte „Pizza am Ende“ nicht: dort wäre das Durchgekreuzte nicht das Gegessene) */
+const addHasPic=(t)=>!t.story||ADD_STORIES[t.story].pic!==false;
 /* Rechenweg als Lösung: Nenner bleibt, Zähler gerechnet, dann gekürzt (immer vollständig angezeigt, nach dem Lösen) */
 function addSolLines(t){
   const [n,b]=t.res,sg=ADD_SIGN(t.plus),g=gcd(n,b);
-  const out=[line('Der Nenner bleibt ',strong(b),'. Nur die Zähler werden gerechnet.'),
+  const out=[...(t.story==='pizzaEnde'?[line('Gegessen wurde der Unterschied zwischen Anfang und Ende. Darum rechnest du minus.')]:[]),
+    line(strong('Gleichnamige Brüche:'),' Der Nenner bleibt ',strong(b),'. Nur die Zähler werden gerechnet.'),
     eq(frac(t.a,b),sg,frac(t.c,b),'=',frac(t.a+' '+sg+' '+t.c,b),'=',frac(n,b))];
   if(g>1)out.push(line('Kürzen: '),eq(frac(n,b),'=',frac(n+' : '+g,b+' : '+g),'=',frac(n/g,b/g)));
   else out.push(line('Das Ergebnis lässt sich nicht kürzen.'));
   return out;
 }
 
-/* ---------- R01 Zusammenfügen und Wegnehmen im Bild ---------- */
+/* ---------- R01 Bild und Rechnung ---------- */
 /* Ein Bild mit zwei Anteilen p1, p2 (Nenner b): Leicht Summe unter einem Ganzen, Knifflig auch darüber */
 function addDrei(R,level){
   for(let i=0;i<300;i++){
@@ -145,7 +161,22 @@ function r01Judge(t,d,i){
   if(x===T&&y===t.p1&&z===t.p2)return {key:'mA'};
   return {bad:true,msg:`Zeile ${i+1}: Diese Rechnung stimmt, passt aber nicht zum Bild.`,marks:mk('xyz')};
 }
-TASKS.R01={area:'Rechnen',name:'Zusammenfügen und Wegnehmen',desc:'Anteile am Bild zusammenfügen und wegnehmen. Ein Bild passt zu mehreren Aufgaben.',notes:['M17'],size:5,
+/* Stufe 1 von „bild“: die Brüche am Bild ablesen. plus: Muster 1 und Muster 2 (Reihenfolge egal), minus: erst alles Gefärbte, dann das Durchgekreuzte */
+function addReadCheck(t,d){
+  const u=getFrac(d,'u'),v=getFrac(d,'v'),op=d.op,fix=d.s1===true?' Tippe oben auf „ändern“.':'';
+  if(!u||!v||(op!=='+'&&op!=='−'))return invalid('Trage beide Brüche ein und wähle plus oder minus.');
+  if((op==='+')!==t.plus)return wrong('andereRechnung',(t.plus?'Hier werden zwei Anteile zusammengefügt. Das ist plus.':'Hier werden Felder durchgekreuzt, also weggenommen. Das ist minus.')+fix,{op:false});
+  if(u.d!==t.b||v.d!==t.b){
+    const m={};
+    if(u.d!==t.b)m['u.d']=false;
+    if(v.d!==t.b)m['v.d']=false;
+    return wrong('nennerFelder','Der Nenner ist die Anzahl aller gleich großen Felder im Bild. Zähle noch einmal.'+fix,m);
+  }
+  const ok=t.plus?((u.n===t.a&&v.n===t.c)||(u.n===t.c&&v.n===t.a)):(u.n===t.a&&v.n===t.c);
+  if(!ok)return wrong('zaehlerFelder',(t.plus?'Zähle die Felder jedes Musters noch einmal.':'Zähle alle gefärbten Felder, auch die durchgekreuzten. Zähle dann nur die durchgekreuzten.')+fix,{'u.n':false,'v.n':false});
+  return null;
+}
+TASKS.R01={area:'Rechnen',name:'Bild und Rechnung',desc:'Brüche am Bild ablesen, addieren und subtrahieren. Ein Bild passt zu mehreren Aufgaben.',notes:['M17'],size:5,
   ctx:addCtx('R01'),planKey:'add',layoutKinds:(lvl)=>addPicKinds('R01',lvl),
   gen(level,R,ctx){
     const kind=(ctx&&ctx.kind)||'plus';
@@ -153,33 +184,40 @@ TASKS.R01={area:'Rechnen',name:'Zusammenfügen und Wegnehmen',desc:'Anteile am B
       const r=addDrei(R,level);
       return {type:'R01',level,kind,b:r.b,p1:r.p1,p2:r.p2,need:R01_NEED[level],avoid:[redKey(r.p1,r.b),redKey(r.p2,r.b)]};
     }
+    if(kind==='geschichte')return addStoryTask(R,level,'R01',kind);
     if(kind==='bild'){
-      let t;
-      for(let i=0;i<300;i++){
-        const b=R.pick(ADD_POOL_PIC),a=R.int(1,b-2),c=R.int(1,b-1-a);
-        if(a+c<2||(a+c)%b===0||R.chance(0.5)!==!isFullyReduced(a+c,b))continue;
-        t={type:'R01',level,kind,a,c,b,plus:true,res:[a+c,b]};break;
-      }
-      t=t||{type:'R01',level,kind,a:3,c:2,b:8,plus:true,res:[5,8]};
-      t.avoid=addAvoid(t);return t;
+      /* wie LB S. 33 Nr. 5: ein Raster mit zwei Anteilen (oder einem Anteil mit Kreuzen), die Felder liegen manchmal verstreut */
+      const plus=R.chance(0.65),r=addNums(R,1,plus,{pool:ADD_POOL_PIC,red:R.chance(0.5)});
+      return Object.assign({type:'R01',level,kind},r,{scatter:R.chance(0.4),seed:R.int(1,9999),avoid:addAvoid(r)});
     }
     const plus=kind==='plus',r=addNums(R,level,plus,{over:level===2&&R.chance(plus?0.35:0.25),red:R.chance(0.5)});
     return Object.assign({type:'R01',level,kind},r,{avoid:addAvoid(r)});
   },
   prompt(t,h){
     if(t.kind==='drei')h.append(el('p',{class:'q'},`Schreibe Rechnungen, die zum Bild passen. Finde mindestens ${t.need} verschiedene.`));
-    else if(t.kind==='bild')h.append(el('p',{class:'q'},'Zwei Anteile sind gefärbt. Wie viel ist das zusammen?'));
-    else h.append(el('p',{class:'q'},t.plus?'Füge die beiden Anteile zusammen.':'Nimm den zweiten Anteil weg.'),addEq(t));
+    else if(t.kind==='bild')h.append(el('p',{class:'q'},'Welche Aufgabe gehört zum Bild? Schreibe die Aufgabe auf und rechne aus.'));
+    else if(t.kind==='geschichte')h.append(addP(...ADD_STORIES[t.story].txt(t,t.who)));
+    else h.append(el('p',{class:'q'},t.plus?'Addiere die beiden Anteile.':'Subtrahiere den zweiten Anteil.'),addEq(t));
   },
   render(view,host){
-    const t=view.task;
+    const t=view.task,d=view.draft;
     if(t.kind==='drei'){
       addPicBox(view,host,()=>addFigure(t.b,t.p1,t.p2,{mode:'plus'}),t.level===1&&t.b<BAR_FROM);
       addRows(view,host,{key:'rows',start:2,max:5,word:'Rechnung',row:(i)=>r01Row(view,t,i),drop:(i)=>['x','y','z','o'].map(k=>'q'+i+k)});
       return;
     }
-    addPicBox(view,host,()=>addTaskFigure(t),t.kind==='bild'||(t.level===1&&t.b<BAR_FROM));
-    addResult(view,host);
+    if(t.kind==='bild'){
+      addPicBox(view,host,()=>addTaskFigure(t),true);
+      const stg=twoStage(view,host,{isDone:()=>d.s1===true,summary:()=>addReadText(d)});
+      stg.box1.append(el('p',null,strong('1. Lies die Aufgabe am Bild ab.')));
+      addReadStage(view,stg.box1,()=>stg.advance());
+      stg.box2.append(el('p',null,strong('2. Rechne aus.')));
+      addResult(view,stg.box2,addMidOpt(t));
+      stg.upd();
+      return;
+    }
+    if(addHasPic(t))addPicBox(view,host,()=>addTaskFigure(t),t.level===1&&t.b<BAR_FROM);
+    addResult(view,host,addMidOpt(t));
   },
   validate(t,d){
     if(t.kind==='drei'){
@@ -198,9 +236,14 @@ TASKS.R01={area:'Rechnen',name:'Zusammenfügen und Wegnehmen',desc:'Anteile am B
       if(!issues.length)return right('Richtig! In ein Bild passt eine Plusaufgabe und es passen zwei Minusaufgaben.');
       return (bad?wrong:soft)('zeile',issues.join(' '),marks);
     }
-    const g=addResultCheck(t.res,d,(x,y)=>addDiag(t,x,y));
+    if(t.kind==='bild'){
+      const rd=addReadCheck(t,d);
+      if(rd)return rd;
+      if(d.s1!==true)return invalid('Tippe auf „Weiter zum Rechenweg“.');
+    }
+    const g=addResultCheck(t.res,d,(x,y)=>addDiag(t,x,y),addMidArg(t));
     if(g)return g;
-    return right(t.plus?'Richtig! Du hast beide Anteile zusammengefügt. Der Nenner bleibt gleich.':'Richtig! Du hast den zweiten Anteil weggenommen. Der Nenner bleibt gleich.');
+    return right(t.plus?'Richtig! Du hast beide Anteile addiert. Der Nenner bleibt gleich.':'Richtig! Du hast den zweiten Anteil subtrahiert. Der Nenner bleibt gleich.');
   },
   solution(t){
     if(t.kind==='drei'){
@@ -208,7 +251,8 @@ TASKS.R01={area:'Rechnen',name:'Zusammenfügen und Wegnehmen',desc:'Anteile am B
         eq(frac(t.p1,b),'+',frac(t.p2,b),'=',frac(T,b)),eq(frac(T,b),'−',frac(t.p2,b),'=',frac(t.p1,b)),eq(frac(T,b),'−',frac(t.p1,b),'=',frac(t.p2,b))];
       return out;
     }
-    return [addTaskFigure(t),...addSolLines(t)];
+    if(t.kind==='bild')return [addTaskFigure(t),line(t.plus?'Zwei Anteile werden zusammengefügt: plus.':'Felder werden durchgekreuzt: minus.'),...addSolLines(t)];
+    return [...(addHasPic(t)?[addTaskFigure(t)]:[]),...addSolLines(t)];
   }
 };
 
@@ -226,7 +270,7 @@ function addLuecke(R,level){
   }
   return {b:8,plus:true,blank:1,p:[3,2,5],x:2};
 }
-TASKS.R02={area:'Rechnen',name:'Gleichnamig rechnen',desc:'Addiere und subtrahiere Brüche mit gleichem Nenner.',notes:['M17','M3'],size:5,
+TASKS.R02={area:'Rechnen',name:'Gleichnamig rechnen',desc:'Addiere und subtrahiere gleichnamige Brüche. Der Nenner bleibt.',notes:['M17','M3'],size:5,
   ctx:addCtx('R02'),planKey:'add',layoutKinds:(lvl)=>addPicKinds('R02',lvl),
   gen(level,R,ctx){
     const kind=(ctx&&ctx.kind)||'plus';
@@ -234,11 +278,12 @@ TASKS.R02={area:'Rechnen',name:'Gleichnamig rechnen',desc:'Addiere und subtrahie
       const r=addLuecke(R,level);
       return {type:'R02',level,kind,b:r.b,plus:r.plus,blank:r.blank,p:r.p,x:r.x,avoid:[redKey(r.p[0],r.b),redKey(r.p[1],r.b)]};
     }
+    if(kind==='geschichte')return addStoryTask(R,level,'R02',kind);
     const plus=kind==='ueber1'?R.chance(0.5):kind==='plus';
     const r=addNums(R,level,plus,{over:kind==='ueber1',red:R.chance(0.5)});
     const t=Object.assign({type:'R02',level,kind},r,{avoid:addAvoid(r)});
     t.who=addWho(R);
-    t.story=addPickStory(R,t,level===1?0.6:0.45);
+    t.story=addPickStory(R,t,level===1?0.4:0.45);
     return t;
   },
   prompt(t,h){
@@ -253,8 +298,8 @@ TASKS.R02={area:'Rechnen',name:'Gleichnamig rechnen',desc:'Addiere und subtrahie
       host.append(eq(parts[0],ADD_SIGN(t.plus),parts[1],'=',parts[2]));
       return;
     }
-    addPicBox(view,host,()=>addTaskFigure(t),false);
-    addResult(view,host);
+    if(addHasPic(t))addPicBox(view,host,()=>addTaskFigure(t),false);
+    addResult(view,host,addMidOpt(t));
   },
   validate(t,d){
     if(t.kind==='luecke'){
@@ -268,7 +313,7 @@ TASKS.R02={area:'Rechnen',name:'Gleichnamig rechnen',desc:'Addiere und subtrahie
       else if(!t.plus&&t.blank===0&&x===Math.abs(p2-p3))msg='Hier fehlt das, wovon weggenommen wird. Das ist mehr als der Rest.';
       return wrong('luecke',msg,{x:false});
     }
-    const g=addResultCheck(t.res,d,(x,y)=>addDiag(t,x,y));
+    const g=addResultCheck(t.res,d,(x,y)=>addDiag(t,x,y),addMidArg(t));
     if(g)return g;
     return right(t.plus?'Richtig! Der Nenner bleibt, die Zähler werden addiert.':'Richtig! Der Nenner bleibt, die Zähler werden subtrahiert.');
   },
@@ -279,7 +324,7 @@ TASKS.R02={area:'Rechnen',name:'Gleichnamig rechnen',desc:'Addiere und subtrahie
       return [line(t.plus?'Das Ganze ist die Summe. Nimm den bekannten Teil weg.':(t.blank===0?'Hier wird etwas weggenommen. Rechne vom Rest zurück.':'Hier fehlt das Weggenommene. Rechne vom Anfang zum Rest.')),
         eq(frac(how[0],b),how[1],frac(how[2],b),'=',frac(t.x,b)),eq(frac(p1,b),ADD_SIGN(t.plus),frac(p2,b),'=',frac(p3,b))];
     }
-    return [addTaskFigure(t),...addSolLines(t)];
+    return [...(addHasPic(t)?[addTaskFigure(t)]:[]),...addSolLines(t)];
   }
 };
 
@@ -368,7 +413,7 @@ function r03Judge(t,d,i){
   if(x-y!==t.T)return {bad:true,msg:`Zeile ${i+1}: Der Unterschied der Zähler ist nicht ${t.T}.`,marks:m};
   return {key:x+'-'+y};
 }
-TASKS.R03={area:'Rechnen',name:'Fehler und eigene Aufgaben',desc:'Finde den Fehler in einer Rechnung. Erfinde selbst Aufgaben mit gleichem Nenner.',notes:['M17'],size:5,
+TASKS.R03={area:'Rechnen',name:'Fehler und eigene Aufgaben',desc:'Finde den Fehler in einer Rechnung. Erfinde selbst Aufgaben mit gleichnamigen Brüchen.',notes:['M17'],size:5,
   ctx:addCtx('R03'),planKey:'add',layoutKinds:(lvl)=>addPicKinds('R03',lvl),
   gen(level,R,ctx){
     const kind=(ctx&&ctx.kind)||'fehler';
@@ -396,7 +441,7 @@ TASKS.R03={area:'Rechnen',name:'Fehler und eigene Aufgaben',desc:'Finde den Fehl
         opts.append(el('label',{class:'opt'},r,el('span',null,ADD_ERR_TEXT[o])));
       });
       stg.box2.append(el('p',null,strong('2. Was wurde falsch gemacht?')),opts,el('p',null,strong('3. Rechne richtig:')),eq(frac(w.a,w.b),ADD_SIGN(w.plus),frac(w.c,w.b),'='));
-      addResult(view,stg.box2);
+      addResult(view,stg.box2,addMidOpt({level:t.level,plus:w.plus}));
       stg.upd();
       return;
     }
@@ -411,7 +456,7 @@ TASKS.R03={area:'Rechnen',name:'Fehler und eigene Aufgaben',desc:'Finde den Fehl
       if(!d.err)return invalid('Wähle auch aus, was falsch gemacht wurde.');
       if(d.err!==t.errType)return wrong('err','Du hast die falsche Rechnung gefunden. Die Fehlerart passt noch nicht. Vergleiche Nenner, Zähler und Rechenzeichen.',{['err'+d.err]:false});
       const w=t.calcs[t.wrong],ct=addCalcTask(w);
-      const g=addResultCheck(ct.res,d,(x,y)=>addDiag(ct,x,y));
+      const g=addResultCheck(ct.res,d,(x,y)=>addDiag(ct,x,y),addMidArg(t,ct));
       if(g)return g;
       return right('Richtig! Fehler gefunden: '+ADD_ERR_TEXT[t.errType]);
     }

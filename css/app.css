@@ -1183,11 +1183,23 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 .addleg span{display:inline-flex;align-items:center;gap:.375rem}
 .addleg svg{width:1.75rem;height:1rem;flex:none}
 .note .addleg,.solbox .addleg{color:var(--ink-dim)}
+/* Raster wie an der Tafel: ein Ganzes ist ein Rechteck aus Feldern (bei zwei Ganzen nebeneinander); durchgekreuzt = wird weggenommen */
+.addgrids{display:flex;flex-wrap:wrap;align-items:flex-start;gap:.5rem .875rem}
+.addgridw{flex:0 1 auto;width:var(--gw);max-width:100%}
+.xmark{fill:none;stroke:var(--cell-stroke);stroke-width:3.2;stroke-linecap:round;pointer-events:none}
+.addleg .xmark{stroke-width:2.2}
+/* Zwischenschritt „(▢ + ▢) / ▢“ steht wie an der Tafel vor dem Ergebnis, in derselben Reihe, wenn es die Breite erlaubt */
+.frac.inp.mid{font-size:1.15rem}
+.frac.inp.mid>.num{display:flex;align-items:center;justify-content:center;gap:.25rem}
+.zop{font:700 1.25rem var(--font-mono);color:var(--amber)}
+.frac.inp.mid input.intin{width:3.2rem;padding:0 .125rem}
+.addread{margin:.375rem 0}
 /* Ergebnis-Block: zwei Felder (Ergebnis und gekürzt) und der Knopf „Kürzen geht nicht“ stehen bei jeder Aufgabe, ob sich kürzen lässt oder nicht */
-.addres{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.25rem .75rem;margin:.5rem 0}
+.addres{display:flex;flex-direction:column;align-items:flex-start;gap:.25rem;margin:.5rem 0}
+.afields{display:flex;flex-wrap:wrap;align-items:flex-end;gap:.25rem .75rem}
 .arow{display:flex;flex-direction:column;align-items:flex-start;gap:.125rem;min-width:0}
 .alab{font:700 .78rem var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--chalk-dim)}
-.btn.kn{grid-column:1/-1;justify-self:start;font-size:.9rem}
+.btn.kn{font-size:.9rem}
 .btn.kn[aria-pressed="true"]{background:var(--amber-fill);color:var(--on-amber);border-color:var(--amber)}
 .btn.kn.bad{border-color:var(--bad);outline:2px dotted var(--bad);outline-offset:3px}
 .btn.kn.good{border-color:var(--ok)}
@@ -1207,13 +1219,21 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 @media (max-height:700px){.tiles-3 .tile.tile-eq,.tile.tile-eq{min-height:3rem}}
 .tile.tile-eq .tv{display:flex;align-items:center;justify-content:center}
 .tile.tile-eq .eq{margin:0;font-size:1.05rem;justify-content:center;flex-wrap:nowrap;gap:.2em}
+@media (max-width:599px){
+  .afields{gap:.25rem .5rem}
+  .addres .frac.inp input{width:3.8em} /* Zwischenschritt, Ergebnis und gekürzt passen auch auf 360 Pixel in eine Reihe */
+}
 @media (max-height:820px){
   .addfig{gap:.25rem;margin:.25rem 0}
   .addres{gap:.25rem;margin:.375rem 0}
 }
 @media (max-height:700px){
+  .addfig{gap:.125rem;margin:.125rem 0}
+  .addgridw{width:calc(var(--gw)*.85)}
+  .q.qa .frac{font-size:1.1em}
   .addres{margin:.25rem 0}
-  .addres .frac.inp input,.addrow input.intin{height:2.5rem}
+  .addres .frac.inp input,.addrow input.intin{height:2.375rem}
+  .alab{font-size:.72rem;line-height:1}
   .addres .frac.inp>.num,.addrow .frac.inp>.num{padding-bottom:.125rem}
   .addres .frac.inp>.den,.addrow .frac.inp>.den{padding-top:.125rem}
   .addrow .frac{font-size:1.15rem}

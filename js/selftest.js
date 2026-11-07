@@ -1710,17 +1710,24 @@ function runSelfTests(){
     const rd=(r)=>({'r.n':String(r[0]),'r.d':String(r[1])});
     const kd=(r)=>{const s=simplify(r[0],r[1]);return isFullyReduced(r[0],r[1])?{kn:true}:{'k.n':String(s[0]),'k.d':String(s[1])};};
     const resOf=(tk)=>tk.kind==='fehler'?addCalcTask(tk.calcs[tk.wrong]).res:tk.res;
+    /* alles an der Antwort außer „Ergebnis“ und „gekürzt“: Fehler finden (Auswahl), Zwischenschritt (nur Leicht), Brüche ablesen (bild) */
+    const baseOf=(tk)=>{
+      const ct=tk.kind==='fehler'?addCalcTask(tk.calcs[tk.wrong]):tk,d=tk.kind==='fehler'?{sel:tk.wrong,err:tk.errType}:{};
+      if(tk.level===1)Object.assign(d,{z1:String(ct.a),z2:String(ct.c),zn:String(ct.b)});
+      if(tk.kind==='bild')Object.assign(d,{'u.n':String(tk.a),'u.d':String(tk.b),'v.n':String(tk.c),'v.d':String(tk.b),op:tk.plus?'+':'−',s1:true});
+      return d;
+    };
     const okDraft=(tk)=>{
       if(tk.kind==='drei'){const T=tk.p1+tk.p2,d={rows:tk.need,q0x:String(tk.p1),q0y:String(tk.p2),q0z:String(T),q0o:'+',q1x:String(T),q1y:String(tk.p2),q1z:String(tk.p1),q1o:'−'};if(tk.need>2)Object.assign(d,{q2x:String(T),q2y:String(tk.p1),q2z:String(tk.p2),q2o:'−'});return d;}
       if(tk.kind==='luecke')return {x:String(tk.x)};
       if(tk.kind==='finde'){const d={rows:tk.need};for(let i=0;i<tk.need;i++){if(tk.mode==='summe'){d['f'+i+'x']=String(i+1);d['f'+i+'y']=String(tk.T-i-1);}else{d['f'+i+'x']=String(tk.T+i+1);d['f'+i+'y']=String(i+1);}}return d;}
       const r=resOf(tk);
-      return Object.assign(tk.kind==='fehler'?{sel:tk.wrong,err:tk.errType}:{},rd(r),kd(r));
+      return Object.assign(baseOf(tk),rd(r),kd(r));
     };
     const words=(s)=>s.replace(/\*\*/g,'').replace(/\{\d+\|\d+\}/g,'x').split(/[.!?]\s+/).some(x=>x.split(/\s+/).filter(Boolean).length>14);
     for(const id of ['R01','R02','R03'])for(const lvl of [1,2])for(const kind of TASKS[id].layoutKinds(lvl))for(let i=0;i<60;i++){
       const tk=TASKS[id].gen(lvl,RNG,{kind});n++;
-      const lim=lvl===1?24:100,tag=id+'-L'+lvl+' '+kind,hasRes=['plus','minus','ueber1','bild','fehler'].includes(kind);
+      const lim=lvl===1?24:100,tag=id+'-L'+lvl+' '+kind,hasRes=['plus','minus','ueber1','bild','geschichte','fehler'].includes(kind);
       if(tk.type!==id||tk.kind!==kind)problems.push(tag+' Art');
       if(!Array.isArray(tk.avoid)||!tk.avoid.length)problems.push(tag+' avoid');
       if(!Number.isInteger(tk.b)||tk.b<4||tk.b>lim)problems.push(tag+' Nenner');
@@ -1728,7 +1735,11 @@ function runSelfTests(){
         const over=tk.plus?tk.a+tk.c>tk.b:tk.a>tk.b;
         if(!(tk.a>=1&&tk.c>=1)||tk.res[1]!==tk.b||tk.res[0]!==(tk.plus?tk.a+tk.c:tk.a-tk.c)||tk.res[0]<1||tk.res[0]%tk.b===0)problems.push(tag+' Zahlen');
         if(tk.c>=tk.b||(tk.plus&&tk.a>=tk.b)||(over&&lvl===1&&kind!=='ueber1')||(kind==='plus'&&tk.plus!==true)||(kind==='minus'&&tk.plus!==false))problems.push(tag+' echt oder unecht');
-        if(kind==='bild'&&(tk.b>12||tk.plus!==true||lvl!==1))problems.push(tag+' Bild');
+        if(kind==='bild'&&(tk.b>16||lvl!==1||!Number.isInteger(tk.seed)||typeof tk.scatter!=='boolean'))problems.push(tag+' Bild');
+        if(kind==='geschichte'){
+          const S=ADD_STORIES[tk.story];
+          if(!S||S.plus!==tk.plus||(over&&!S.big)||!tk.who||tk.who.length!==2)problems.push(tag+' Geschichte passt nicht zur Rechenart');
+        }
         if(kind!=='bild'){if(isFullyReduced(tk.res[0],tk.res[1]))red.n++;else red.y++;}
       }
       if(kind==='luecke'){
@@ -1761,10 +1772,13 @@ function runSelfTests(){
           if(host.querySelector('.mixed')||solHost.querySelector('.mixed'))problems.push(tag+' gemischte Zahl in Block 1');
           const box=host.querySelector('.addres');
           if(hasRes!==!!box)problems.push(tag+' Ergebnis-Block');
-          if(box){structure.add(box.outerHTML);if(box.querySelectorAll('input').length!==4||box.querySelectorAll('button.kn').length!==1)problems.push(tag+' Felder');}
+          if(box){
+            structure.add('L'+lvl+box.outerHTML.replace(/(class="zop"[^>]*>)[+−]</,'$1±<'));
+            if(box.querySelectorAll('input').length!==(lvl===1?7:4)||box.querySelectorAll('button.kn').length!==1||!!box.querySelector('.mid')!==(lvl===1))problems.push(tag+' Felder');
+          }
         }catch(e){problems.push(tag+' Ansicht: '+e.message);}
         if(hasRes){
-          const r=resOf(tk),base=kind==='fehler'?{sel:tk.wrong,err:tk.errType}:{},chk=(x)=>validateTask(tk,Object.assign({},base,x));
+          const r=resOf(tk),base=baseOf(tk),chk=(x)=>validateTask(tk,Object.assign({},base,x));
           const a1=chk(rd(r)),a2=chk(rd([r[0]+1,r[1]]));
           if(!a1.invalid||!a2.invalid||a1.feedback!==a2.feedback)problems.push(tag+' Kürzen-Feld wird nicht zuerst geprüft');
           if(isFullyReduced(r[0],r[1])){
@@ -1784,7 +1798,7 @@ function runSelfTests(){
       }
     }
     t('Rechnen R01–R03: '+n+' Aufgaben, gleiche Nenner (Leicht bis 24, Knifflig bis 100), Zahlen und Lösbarkeit, richtige Antworten gelten, Tipps (3 Stufen, kurz, verraten das Kürzen nicht), keine gemischte Zahl, Ansicht und Lösung bauen sich',problems.length===0||(console.log(problems.slice(0,6)),false));
-    t('Rechnen: das Ergebnis-Feld mit „gekürzt“ und „Kürzen geht nicht“ sieht bei jeder Aufgabe mit Ergebnis gleich aus; kürzbare und nicht kürzbare Ergebnisse sind gemischt ('+red.y+' kürzbar, '+red.n+' nicht)',structure.size===1&&red.y>(red.y+red.n)*0.25&&red.n>(red.y+red.n)*0.25);
+    t('Rechnen: der Rechenweg-Block (Zwischenschritt nur in Leicht, „Ergebnis“, „gekürzt“ und „Kürzen geht nicht“) sieht bei jeder Aufgabe mit Ergebnis je Stufe gleich aus; kürzbare und nicht kürzbare Ergebnisse sind gemischt ('+red.y+' kürzbar, '+red.n+' nicht)',structure.size===2&&red.y>(red.y+red.n)*0.25&&red.n>(red.y+red.n)*0.25);
     t('Rechnen: Fehlercodes nennerAddiert und andereRechnung werden bei falschen Ergebnissen benannt',codes.has('nennerAddiert')&&codes.has('andereRechnung')&&[...codes].every(c=>['nennerAddiert','andereRechnung','zaehlerNenner','rechenfehler','wert'].includes(c)));
     t('addDiagnose: Nenner mitgerechnet, andere Rechenart, Zähler und Nenner einzeln, Zählerfehler, sonst „wert“; richtig (auch ungekürzt) gibt null',
       addDiagnose(3,2,8,true,5,16)==='nennerAddiert'&&addDiagnose(3,2,8,true,1,8)==='andereRechnung'&&addDiagnose(5,2,8,false,7,8)==='andereRechnung'&&addDiagnose(3,2,8,true,10,32)==='zaehlerNenner'&&addDiagnose(3,2,8,true,6,8)==='rechenfehler'&&addDiagnose(3,2,8,true,5,9)==='wert'&&addDiagnose(3,2,8,true,5,8)===null&&addDiagnose(3,2,8,true,10,16)===null);
@@ -1795,7 +1809,7 @@ function runSelfTests(){
       &&kc([4,6],{r:{n:4,d:6},k:{n:2,d:3}})===null&&kc([4,6],{r:{n:2,d:3},k:{n:2,d:3}})===null&&kc([5,8],{r:{n:5,d:8},kn:true})===null&&kc([5,8],{r:{n:5,d:8},k:{n:5,d:8}})===null);
     /* Ergebnis-Block bedienen: „Kürzen geht nicht“ leert „gekürzt“, Tippen in „gekürzt“ nimmt den Knopf zurück */
     {
-      const tk={type:'R02',level:1,kind:'plus',a:3,c:2,b:8,plus:true,res:[5,8],avoid:[],who:['Lena','Ben'],story:null},st=newState(tk),host=el('div');
+      const tk={type:'R02',level:2,kind:'plus',a:3,c:2,b:8,plus:true,res:[5,8],avoid:[],who:['Lena','Ben'],story:null},st=newState(tk),host=el('div');
       mountTask(host,st,{save(){},done(){}});document.body.append(host);
       const kb=host.querySelector('button.kn'),kn1=host.querySelectorAll('.addres input')[2],kd1=host.querySelectorAll('.addres input')[3];
       kn1.value='5';kn1.dispatchEvent(new Event('input',{bubbles:true}));
@@ -1803,6 +1817,43 @@ function runSelfTests(){
       kn1.value='4';kn1.dispatchEvent(new Event('input',{bubbles:true}));const a2=[st.draft.kn===true,kb.getAttribute('aria-pressed'),st.draft['k.n']];
       host.remove();
       t('Ergebnis-Block: „Kürzen geht nicht“ leert „gekürzt“ und ist gedrückt; neue Eingabe in „gekürzt“ nimmt den Knopf zurück',a1.join('|')==='true|true||'&&a2.join()==='false,false,4');
+    }
+    /* Wie an der Tafel: Zwischenschritt (nur Leicht), Brüche am Bild ablesen, Raster mit Kreuzen, Kuchen und Pizza */
+    {
+      const v=(tk,d)=>validateTask(tk,d);
+      const mk=(o)=>Object.assign({type:'R02',level:1,kind:'plus',a:8,c:3,b:12,plus:true,res:[11,12],avoid:[],who:['Lena','Ben'],story:null},o);
+      const full=(x)=>Object.assign({'r.n':'11','r.d':'12','k.n':'11','k.d':'12'},x);
+      const p=mk(),m=mk({plus:false,a:9,c:3,res:[6,12]}),mfull=(x)=>Object.assign({'r.n':'6','r.d':'12','k.n':'1','k.d':'2'},x);
+      const okP=v(p,full({z1:'8',z2:'3',zn:'12'})),swapP=v(p,full({z1:'3',z2:'8',zn:'12'})),emptyZ=v(p,full()),dbl=v(p,full({z1:'8',z2:'3',zn:'24'})),wrongZ=v(p,full({z1:'8',z2:'4',zn:'12'}));
+      const okM=v(m,mfull({z1:'9',z2:'3',zn:'12'})),swapM=v(m,mfull({z1:'3',z2:'9',zn:'12'}));
+      t('Zwischenschritt (8 + 3)/12 in Leicht: richtig, bei plus auch vertauscht, bei minus nicht; leer wird zuerst verlangt; Nenner verdoppelt und falsche Zähler werden nur am Zwischenschritt markiert; Knifflig hat ihn nicht',
+        okP.correct&&swapP.correct&&emptyZ.invalid&&/Zwischenschritt/.test(emptyZ.feedback)&&dbl.errorCode==='nennerAddiert'&&dbl.marks.zn===false&&!('r.n' in dbl.marks)&&wrongZ.errorCode==='zahl'&&wrongZ.marks.z2===false&&okM.correct&&swapM.errorCode==='vertauscht'&&v(mk({level:2}),full()).correct);
+      const bt=mk({type:'R01',kind:'bild',scatter:false,seed:1}),bm=mk({type:'R01',kind:'bild',scatter:true,seed:5,plus:false,a:9,c:3,res:[6,12]});
+      const rdP={'u.n':'8','u.d':'12','v.n':'3','v.d':'12',op:'+',s1:true},bf=(x)=>Object.assign({},rdP,full({z1:'8',z2:'3',zn:'12'}),x);
+      const rdM=(x)=>Object.assign({'u.n':'9','u.d':'12','v.n':'3','v.d':'12',op:'−',s1:true},mfull({z1:'9',z2:'3',zn:'12'}),x);
+      t('Bild lesen (R01 bild): Brüche ablesen und Rechenzeichen wählen; bei plus ist die Reihenfolge egal, bei minus erst alles Gefärbte; falsches Zeichen, falscher Nenner und falsche Zähler werden benannt; ohne „Weiter“ oder leer gilt es nicht',
+        v(bt,bf()).correct&&v(bt,bf({'u.n':'3','v.n':'8'})).correct&&v(bt,bf({op:'−'})).errorCode==='andereRechnung'&&v(bt,bf({op:'−'})).marks.op===false
+        &&v(bt,bf({'u.d':'11'})).errorCode==='nennerFelder'&&v(bt,bf({'u.d':'11'})).marks['u.d']===false&&v(bt,bf({'v.n':'4'})).errorCode==='zaehlerFelder'
+        &&v(bt,bf({s1:false})).invalid&&v(bt,{}).invalid&&v(bm,rdM()).correct&&v(bm,rdM({'u.n':'3','v.n':'9'})).errorCode==='zaehlerFelder'&&v(bm,rdM({'u.n':'6'})).errorCode==='zaehlerFelder'&&v(bm,rdM({op:'+'})).errorCode==='andereRechnung');
+      const cnt=(n,q)=>n.querySelectorAll(q).length;
+      const g1=addFigure(12,8,3,{mode:'plus'}),g2=addFigure(12,6,3,{mode:'minus'}),g3=addFigure(5,2,1,{mode:'plus'}),g4=addFigure(15,5,5,{mode:'plus',scatter:true,seed:7}),g5=addFigure(30,9,6,{mode:'plus'}),g6=addFigure(12,10,5,{mode:'plus'});
+      const first5=Array.from(g4.querySelectorAll('g.cell')).slice(0,5);
+      t('Raster wie an der Tafel: 12 Felder als 3×4 (8 und 3 in zwei Mustern), bei minus alles Gefärbte mit 3 Kreuzen, 5 Felder als eine Reihe, verstreute Felder liegen nicht nebeneinander, ab 25 ein glatter Balken, über ein Ganzes ein zweites Raster',
+        cnt(g1,'.addgrids g.cell')===12&&cnt(g1,'.addgrids g.cell.on')===8&&cnt(g1,'.addgrids g.cell.on2')===3&&g1.querySelector('svg.fracsvg').getAttribute('viewBox')==='0 0 194 146'
+        &&cnt(g2,'.addgrids g.cell.on')===9&&cnt(g2,'.addgrids g.cell.on2')===0&&cnt(g2,'.addgrids .xmark')===3&&cnt(g2,'.addleg .xmark')===1
+        &&cnt(g3,'.addgrids g.cell')===5&&g3.querySelector('svg.fracsvg').getAttribute('viewBox')==='0 0 242 50'
+        &&cnt(g4,'.addgrids g.cell.on')===5&&cnt(g4,'.addgrids g.cell.on2')===5&&!first5.every(c=>c.classList.contains('on'))
+        &&cnt(g5,'.addgrids g.cell')===0&&cnt(g5,'.addbar')===1&&cnt(g6,'.addgrids svg')===2&&cnt(g6,'.addgrids g.cell.on')===10&&cnt(g6,'.addgrids g.cell.on2')===5);
+      const seen={};
+      for(let i=0;i<400;i++){const tk=TASKS.R01.gen(1+i%2,RNG,{kind:'geschichte'});seen[tk.story]=tk;}
+      const sayOf=(tk)=>{const h=el('div');TASKS.R01.prompt(tk,h);return h.textContent;};
+      t('Geschichten von der Tafel: Schokokuchen plus Apfelkuchen (gleich große Kuchen, plus) und Salamipizza (Anfang minus Ende ergibt das Gegessene, minus, ohne Bild); Text, Rechnung und Lösung stimmen',
+        !!seen.kuchen&&!!seen.pizzaEnde&&seen.kuchen.plus===true&&seen.pizzaEnde.plus===false&&addHasPic(seen.kuchen)&&!addHasPic(seen.pizzaEnde)&&/gleich groß/.test(sayOf(seen.kuchen))&&/gegessen/.test(sayOf(seen.pizzaEnde))
+        &&!/undefined|NaN/.test(sayOf(seen.kuchen)+sayOf(seen.pizzaEnde))&&['kuchen','pizzaEnde'].every(id=>v(seen[id],okDraft(seen[id])).correct)&&seen.pizzaEnde.res[0]===seen.pizzaEnde.a-seen.pizzaEnde.c);
+      const note=NOTES.M17.build([]),noteTxt=note.map(n=>n.textContent).join(' ');
+      t('Wortlaut wie an der Tafel: Merkkasten und Erklärkarte sagen „gleichnamig“, „Zähler“ und „Der Nenner bleibt dabei gleich“, das erste Beispiel ist (5 + 1)/12 mit dem gekürzten 1/2, das zweite (5 − 1)/12 mit 1/3',
+        /Gleichnamig/.test(noteTxt)&&/Zähler addiert oder subtrahiert/.test(noteTxt)&&/Der Nenner bleibt dabei gleich/.test(noteTxt)&&note[0].classList.contains('ex')&&/5 \+ 1/.test(note[0].textContent)&&/5 − 1/.test(note[5].textContent)
+        &&cnt(note[0],'.frac')===5&&cnt(note[5],'.frac')===5&&/gleichnamig/.test(JSON.stringify(INTRO.R01)));
     }
     /* Offene Aufgaben: mehrere Lösungen, per Regel geprüft; Doppelte zählen nicht */
     {
@@ -1831,9 +1882,9 @@ function runSelfTests(){
       let planBad=0;
       for(const id of ['R01','R02','R03'])for(const lvl of [1,2])for(let i=0;i<40;i++){
         const {r,ks}=plan(id,lvl),again=[];for(let k=0;k<5;k++){r.results=Array(k).fill('f');again.push(TASKS[id].ctx(r,lvl).kind);}
-        if(ks.length!==5||ks.join()!==again.join()||(id==='R01'&&(!ks.includes('drei')||!ks.includes('plus')||!ks.includes('minus')||(lvl===1)!==ks.includes('bild')))||(id==='R02'&&(!ks.includes('luecke')||(lvl===2)!==ks.includes('ueber1')))||(id==='R03'&&(ks.filter(k=>k==='fehler').length!==3||ks.filter(k=>k==='finde').length!==2)))planBad++;
+        if(ks.length!==5||ks.join()!==again.join()||(id==='R01'&&(!ks.includes('drei')||!ks.includes('plus')||!ks.includes('minus')||!ks.includes('geschichte')||(lvl===1)!==ks.includes('bild')))||(id==='R02'&&(!ks.includes('luecke')||!ks.includes('geschichte')||(lvl===2)!==ks.includes('ueber1')))||(id==='R03'&&(ks.filter(k=>k==='fehler').length!==3||ks.filter(k=>k==='finde').length!==2)))planBad++;
       }
-      t('Rechnen: Rundenplan hat 5 Arten und bleibt in der Runde gleich; R01 mischt plus und minus und hat ein Bild mit mehreren Aufgaben, R02 Lücken (Knifflig auch über 1), R03 drei Fehlersuchen und zwei offene',planBad===0);
+      t('Rechnen: Rundenplan hat 5 Arten und bleibt in der Runde gleich; R01 mischt plus und minus, hat Geschichte und ein Bild mit mehreren Aufgaben (Leicht auch „Bild lesen“), R02 Geschichte und Lücken (Knifflig auch über 1), R03 drei Fehlersuchen und zwei offene',planBad===0);
       const am=moduleById('addsub'),idx=(id)=>MODULES.findIndex(m=>m.id===id);
       t('Rechnen: das Thema „Brüche addieren und subtrahieren“ ist aktiv, hat im Pfad genau R01, R02, R03 (alle Pflicht, in dieser Reihenfolge) und noch keinen Eingangstest und Abschlusscheck; das Thema Multiplizieren bleibt „geplant“',
         !!am&&am.status==='aktiv'&&am.path.map(m=>m.id).join()==='R01,R02,R03'&&am.path.every(m=>m.must&&!m.final)&&am.practice.join()==='R01,R02,R03'&&!am.quickcheck&&!am.finalId&&idx('addsub')>idx('vergleichen')&&moduleById('rechnen').status==='geplant'&&INTRO.R01&&INTRO.R02&&INTRO.R03&&TASKS.R01.notes.includes('M17'));
