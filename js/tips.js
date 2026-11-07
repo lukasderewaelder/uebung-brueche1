@@ -416,18 +416,19 @@ TIPS.W10=(t)=>{
 /* ---------- Addieren und Subtrahieren, gleiche Nenner (R01–R03). Tipps zum Kürzen stehen bei jeder Aufgabe gleich da und verraten nie, ob es geht ---------- */
 const addSay=(plus)=>plus?'plus':'minus';
 TIPS.R01=(t)=>{
-  const later=(t.kind==='bild'||(t.level===1&&t.b<BAR_FROM))?'':'Jetzt siehst du ein Bild. ';
+  const later=(t.kind==='bild'||!addHasPic(t)||(t.level===1&&t.b<BAR_FROM))?'':'Jetzt siehst du ein Bild. ';
+  const mid=t.level===1?`Im Zwischenschritt stehen die Zähler ${t.a} und ${t.c} über dem Nenner ${t.b}. `:'';
   if(t.kind==='drei')return [
     ['Zähle die Teile im ersten und im zweiten Muster.'],
     [`${later}Das erste Muster hat ${t.p1} Teile, das zweite ${t.p2}. Das Ganze hat ${t.b} Teile.`],
     [`Zusammen sind es ${t.p1+t.p2} Teile. Eine Plusaufgabe passt und zwei Minusaufgaben auch.`]];
   if(t.kind==='bild')return [
-    ['Zähle die Teile im ersten und im zweiten Muster.'],
-    [`Im ersten Muster sind ${t.a} Teile, im zweiten ${t.c}. Das Ganze hat ${t.b} Teile.`],
-    [`Zusammen sind ${t.a+t.c} Teile gefärbt. Prüfe zuletzt das Feld **gekürzt**.`]];
+    [t.plus?'Zähle alle Felder im Raster. Zähle dann die Felder jedes Musters.':'Zähle alle Felder im Raster. Zähle dann alle gefärbten Felder und die durchgekreuzten.'],
+    [t.plus?`Im ersten Muster sind ${t.a} Felder, im zweiten ${t.c}. Das Raster hat ${t.b} Felder.`:`Gefärbt sind ${t.a} Felder, durchgekreuzt ${t.c}. Das Raster hat ${t.b} Felder.`],
+    [`${mid}Danach rechnest du nur die Zähler. Prüfe zuletzt das Feld **gekürzt**.`]];
   return [
-    [t.plus?'Die Stücke sind gleich groß. Füge sie zusammen. Was heißt das für den Nenner?':'Die Stücke sind gleich groß. Nimm Stücke weg. Was heißt das für den Nenner?'],
-    [`${later}Du rechnest mit ${t.a} Stücken und ${t.c} Stücken. Ein Stück ist ${tf(1,t.b)}.`],
+    [t.plus?'Die Brüche sind gleichnamig. Du fügst gleich große Stücke zusammen. Was heißt das für den Nenner?':'Die Brüche sind gleichnamig. Du nimmst gleich große Stücke weg. Was heißt das für den Nenner?'],
+    [`${later}${mid||`Du rechnest mit ${t.a} Stücken und ${t.c} Stücken. `}Ein Stück ist ${tf(1,t.b)}.`],
     [`${t.a} ${addSay(t.plus)} ${t.c} ergibt ${t.res[0]}. Der Nenner ${t.b} bleibt. Prüfe zuletzt das Feld **gekürzt**.`]];
 };
 TIPS.R02=(t)=>{
@@ -446,9 +447,10 @@ TIPS.R02=(t)=>{
       [`Am Anfang sind es ${tf(p1,t.b)}. Danach bleiben ${tf(p3,t.b)}.`],
       [`Rechne ${p1} minus ${p3}. Der Nenner bleibt.`]];
   }
+  const mid=t.level===1?`Im Zwischenschritt stehen die Zähler ${t.a} und ${t.c} über dem Nenner ${t.b}. `:'';
   return [
-    ['Wird zusammengefügt oder weggenommen? Der Nenner sagt, wie groß die Stücke sind.'],
-    [`Jetzt siehst du ein Bild. Rechne nur mit den Zählern ${t.a} und ${t.c}.`],
+    ['Wird addiert oder subtrahiert? Der Nenner sagt, wie groß die Stücke sind.'],
+    [`${addHasPic(t)?'Jetzt siehst du ein Bild. ':''}${mid||`Rechne nur mit den Zählern ${t.a} und ${t.c}.`}`],
     [`${t.a} ${addSay(t.plus)} ${t.c} ergibt ${t.res[0]}. Der Nenner ${t.b} bleibt. Prüfe zuletzt das Feld **gekürzt**.`]];
 };
 TIPS.R03=(t)=>{
