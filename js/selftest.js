@@ -319,22 +319,22 @@ function runSelfTests(){
     /* Themenkarte im Reiter Lernen: immer Kopf-Zeile, Fortschritt und höchstens ein Hauptknopf */
     freshP();
     const c1=moduleCard(mod);
-    t('Themenkarte (neu): Kopf als Zeile zur Themenseite, Fortschritt, genau ein Hauptknopf „Starten“, sonst keine Schaltfläche',!!c1.querySelector('button.tc-head')&&c1.querySelectorAll('button').length===2&&c1.querySelectorAll('.btn.primary').length===1&&c1.querySelector('.btn.primary').textContent.trim()==='Starten'&&!!c1.querySelector('.segn')&&!/Willst du testen|Ohne Test|Lernpfad ansehen|Eingangstest starten/.test(c1.textContent));
+    t('Themenkachel (neu): ein Knopf zur Themenseite mit Symbol, Name, Fortschritt und der Marke „Start“; kein Hauptknopf, kein Eingangstest-Text',c1.tagName==='BUTTON'&&c1.classList.contains('ttile')&&!!c1.querySelector('.ico .ic')&&c1.querySelector('.tt-name').textContent===mod.name&&!!c1.querySelector('.segn')&&c1.querySelector('.tt-tag').textContent.trim()==='Start'&&c1.querySelector('.tt-n').textContent===('0 von '+mod.path.filter(m=>m.must).length)&&c1.querySelectorAll('.btn').length===0&&!/Willst du testen|Ohne Test|Lernpfad ansehen|Eingangstest starten/.test(c1.textContent));
     beispiel();
     const c2=moduleCard(mod);
-    t('Themenkarte (läuft): ein Hauptknopf „Start: Gleiche Anteile erkennen“ öffnet die Station',c2.querySelectorAll('.btn.primary').length===1&&c2.querySelectorAll('button').length===2&&/^Start: Gleiche Anteile erkennen/.test(c2.querySelector('.btn.primary').textContent.trim()));
+    t('Themenkachel (läuft): die Marke sagt „Start“, der Hinweis für Vorlesegeräte nennt die nächste Station',c2.querySelector('.tt-tag').textContent.trim()==='Start'&&/bei Gleiche Anteile erkennen/.test(c2.getAttribute('aria-label')));
     freshP();mod.path.filter(m=>m.must&&!m.final).forEach(m=>{S.passed[m.id+'-L1']=true;});S.placed=true;S.final=true;
     const c3=moduleCard(mod);
-    t('Themenkarte (Urkunde): „Urkunde geschafft“, kein Hauptknopf, nur die Kopfzeile ist ein Knopf',/Urkunde geschafft/.test(c3.textContent)&&!c3.querySelector('.btn.primary')&&c3.querySelectorAll('button').length===1);
+    t('Themenkachel (Urkunde): Marke „Geschafft“ mit Haken, Kachel ist nicht hervorgehoben',c3.classList.contains('done')&&!c3.classList.contains('focus')&&/Geschafft/.test(c3.querySelector('.tt-tag').textContent)&&!!c3.querySelector('.tt-tag .ic')&&/Urkunde geschafft/.test(c3.getAttribute('aria-label')));
     freshP();
-    t('Alle Themenkarten (neu): höchstens ein Hauptknopf und höchstens zwei Knöpfe (Kopfzeile, Aktion); Empfehlung nur als Text',activeModules().every(m=>{const c=moduleCard(m);return c.querySelectorAll('.btn.primary').length===1&&c.querySelectorAll('button').length===2;}));
+    t('Alle Themenkacheln (neu): je ein Knopf mit Name, Fortschritt und einer Marke, keine weiteren Schaltflächen; Empfehlung nur als Text',activeModules().every(m=>{const c=moduleCard(m);return c.tagName==='BUTTON'&&c.querySelectorAll('button,.btn').length===0&&c.querySelectorAll('.tt-tag').length===1&&c.querySelectorAll('.segn i').length===m.path.filter(x=>x.must).length;}));
     /* Reiter Lernen: gelb ist nur die Aktion der Karte, bei der es weitergeht (ein gelber Knopf je Bildschirm) */
     freshP();
     const lt=el('div');lernenTab(lt);
-    t('Reiter Lernen: nur die erste Karte, bei der es weitergeht, hat den gelben Knopf; die anderen Aktionen sind Rahmenknöpfe',lt.querySelectorAll('.btn.primary').length===1&&!!lt.querySelectorAll('.tcard')[0].querySelector('.btn.primary')&&lt.querySelectorAll('.tcard .btn:not(.primary)').length===activeModules().length-1);
+    t('Reiter Lernen: die Kacheln liegen in einem Raster mit zwei Spalten; nur die erste Kachel, bei der es weitergeht, ist hervorgehoben (gelbe Marke)',!!lt.querySelector('.tgrid')&&lt.querySelectorAll('.ttile').length===activeModules().length&&lt.querySelectorAll('.ttile.focus').length===1&&lt.querySelector('.ttile.focus')===lt.querySelectorAll('.ttile')[0]&&lt.querySelectorAll('.btn').length===0&&lt.querySelector('.ttile:not(.focus) .tt-tag')!==null);
     mod.path.filter(m=>m.must&&!m.final).forEach(m=>{S.passed[m.id+'-L1']=true;});S.placed=true;S.final=true;
     const lt2=el('div');lernenTab(lt2);
-    t('Reiter Lernen: ist das erste Thema fertig (Urkunde), wird die nächste Karte gelb',lt2.querySelectorAll('.btn.primary').length===1&&!lt2.querySelectorAll('.tcard')[0].querySelector('.btn')&&!!lt2.querySelectorAll('.tcard')[1].querySelector('.btn.primary'));
+    t('Reiter Lernen: ist das erste Thema fertig (Urkunde), wird die nächste Kachel hervorgehoben',lt2.querySelectorAll('.ttile.focus').length===1&&lt2.querySelectorAll('.ttile')[0].classList.contains('done')&&!lt2.querySelectorAll('.ttile')[0].classList.contains('focus')&&lt2.querySelectorAll('.ttile')[1].classList.contains('focus'));
     freshP();
   }
   /* Bruch-Tresor: Code-Bruch, Schlösser, Tür */
@@ -958,7 +958,7 @@ function runSelfTests(){
       const gate=gateCard(vm5),gbtn=[...gate.querySelectorAll('button')].map(b=>b.textContent.trim());
       t('Einstieg: Eingangstest-Block fragt „Willst du testen, was du schon kannst? Das dauert etwa 5 Minuten.“; „Eingangstest starten“ ist der Hauptknopf, „Ohne Test beginnen“ ein Textlink',gate.textContent.includes('Willst du testen, was du schon kannst? Das dauert etwa 5 Minuten.')&&gbtn.length===2&&gbtn[0]==='Eingangstest starten'&&gbtn[1]==='Ohne Test beginnen'&&gate.querySelectorAll('.btn.primary').length===1&&gate.querySelectorAll('.linkbtn').length===1);
       const mc=moduleCard(vm5);
-      t('Einstieg: die Themenkarte im Reiter Lernen hat nur „Starten“; der Test steht erst auf der Themenseite',[...mc.querySelectorAll('button')].some(b=>b.textContent.trim()==='Starten')&&![...mc.querySelectorAll('button')].some(b=>/Ohne Test|Eingangstest/.test(b.textContent)));
+      t('Einstieg: die Themenkachel im Reiter Lernen hat nur die Marke „Start“; der Test steht erst auf der Themenseite',mc.querySelector('.tt-tag').textContent.trim()==='Start'&&!/Ohne Test|Eingangstest/.test(mc.textContent));
       startOhneTest(vm5);
       t('Ohne Test beginnen: Pfad ist gewählt, der Pfad ist sichtbar (kein Eingangstest davor) und die erste Station G01 öffnet sich',S.modus.veraendern==='pfad'&&lernenZustand(vm5)==='pfad'&&S.view.kind==='practice'&&S.view.id==='G01'&&!qstate(vm5).placed);
       startOhneTest(zs5);
