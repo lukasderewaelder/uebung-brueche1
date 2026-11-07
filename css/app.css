@@ -854,21 +854,22 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 .help svg.nline .nl-mark,.pick svg.nline .nl-mark{fill:var(--mark);stroke:var(--ink)}
 .help svg.nline .nl-cell{stroke:var(--ink)}
 
-/* Reiter „Lernen“: Themenkarten und geplante Themen */
-.tcard{margin:0.75rem 0;padding:0.875rem;background:var(--bp-2);border:3px double var(--chalk)}
-/* Kopf der Themenkarte: eine ganze Zeile zur Themenseite (Pfeil rechts), kein Rahmenknopf */
-.tc-head{display:grid;grid-template-columns:2.5rem minmax(0,1fr) auto;gap:0.75rem;align-items:center;width:100%;min-height:max(48px,3rem);padding:0;background:none;border:0;color:var(--chalk);font:inherit;text-align:left;cursor:pointer}
-.tc-head .ico{width:2.5rem;height:2.5rem;color:var(--amber)}
-.tc-head .ico .ic{width:100%;height:100%}
-.tc-tx{display:flex;flex-direction:column;gap:0.125rem;min-width:0}
-.tc-name{font-size:1.15rem;overflow-wrap:anywhere}
-.tc-tx small{color:var(--chalk-dim);font-size:.95rem}
-.tc-head>.ic{width:1.1rem;height:1.1rem;color:var(--chalk-dim)}
-.tc-head:active .tc-name{color:var(--amber)}
-.tcard>.btn{width:100%;margin-top:0.25rem}
-.tc-done{display:flex;align-items:center;gap:0.5rem;margin:0.25rem 0 0;font-weight:700;color:var(--ok)}
-.tc-done .ic{width:1.25rem;height:1.25rem;flex:none}
-.tc-prog{display:flex;align-items:center;gap:0.75rem;margin:0.75rem 0}
+/* Reiter „Lernen“: Themenkacheln (quadratisch, zwei nebeneinander) und geplante Themen. Bei großer Schrift wächst die Kachel nach unten, statt abzuschneiden. */
+.tgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0.75rem;margin:0.75rem 0;max-width:32rem}
+.ttile{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:0.375rem;aspect-ratio:1/1;width:100%;min-width:0;padding:0.75rem;text-align:left;background:var(--bp-2);color:var(--chalk);border:3px double var(--chalk);box-shadow:0 3px 0 rgba(0,0,0,.35);font:inherit;cursor:pointer}
+.ttile .ico{width:2rem;height:2rem;color:var(--amber)}
+.ttile .ico .ic{width:100%;height:100%}
+.tt-name{font-size:1.05rem;line-height:1.2;overflow-wrap:anywhere}
+.ttile .segn{width:100%;gap:0.125rem}
+.ttile .segn i{height:0.625rem;max-width:none}
+.tt-row{display:flex;align-items:center;justify-content:space-between;gap:0.375rem;width:100%;font:700 .8rem var(--font-mono)}
+.tt-tag{display:inline-flex;align-items:center;gap:0.25rem;font:700 .66rem var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--chalk-dim)}
+.tt-tag .ic{width:0.9rem;height:0.9rem}
+.tt-rec{color:var(--chalk-dim);font-size:.72rem;line-height:1.2}
+.ttile.focus{border:3px solid var(--amber)}
+.ttile.focus .tt-tag{padding:0.125rem 0.375rem;background:var(--amber-fill);color:var(--on-amber)}
+.ttile.done .tt-tag{color:var(--ok)}
+.ttile:active{transform:translateY(2px);box-shadow:none}
 .soon{margin-top:1.25rem}
 .soon ul{list-style:none;margin:0;padding:0}
 .soon li{display:flex;align-items:center;gap:0.75rem;padding:0.625rem 0.75rem;margin:0.375rem 0;border:2px dashed var(--chalk-dim);color:var(--chalk-dim)}
@@ -886,10 +887,9 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 .gate-ic{width:2.5rem;height:2.5rem;margin-bottom:0.5rem;color:var(--amber)}
 .gate-ic .ic{width:100%;height:100%}
 .pfadline{display:flex;align-items:center;gap:0.75rem;margin:0.5rem 0 0.875rem}
-.pfadline .segn,.tc-prog .segn{flex:1;max-width:14rem}
+.pfadline .segn{flex:1;max-width:14rem}
 .modushint{margin:0 0 0.75rem;color:var(--chalk-dim)}
 .retake{margin:0.75rem 0 0;text-align:center}
-.tc-note{margin:0.75rem 0 0;color:var(--chalk-dim)}
 .mchk{font:700 .62rem var(--font-mono);letter-spacing:.08em;text-transform:uppercase;padding:0.0625rem 0.375rem;border:1.5px solid var(--chalk-dim);color:var(--chalk-dim)}
 .mchk.sitzt{border-color:var(--ok);color:var(--ok)}
 .mchk.fast{border-color:var(--amber);color:var(--amber)}
