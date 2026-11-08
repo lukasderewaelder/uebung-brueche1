@@ -328,6 +328,14 @@ const INTRO={
     {h:'Die Urkunde',
       say:['Ab '+needOf(TASKS.WA.size)+' richtigen Antworten gibt es die Urkunde.','Aufgaben mit Tipp zählen nur halb.','Alle Pflicht-Stationen müssen vorher fertig sein.']}
   ]},
+  RA:{title:'Abschlusscheck',steps:[
+    {h:'Wie viele Aufgaben?',
+      say:['Der Abschlusscheck hat '+TASKS.RA.size+' Aufgaben.','Sie kommen aus allen fünf Stationen.','Die Reihenfolge ist gemischt.']},
+    {h:'So geht es',
+      say:['Du rechnest wie in den Stationen.','Bilder, Geschichten, Lücken und Fehler kommen vor.','Tipps und die Lösung gibt es wie sonst.']},
+    {h:'Die Urkunde',
+      say:['Ab '+needOf(TASKS.RA.size)+' richtigen Antworten gibt es die Urkunde.','Aufgaben mit Tipp zählen nur halb.','Alle Pflicht-Stationen müssen vorher fertig sein.']}
+  ]},
   /* Vergleichen: Streifen immer gleich lang untereinander; Zeichen < und > stehen in calc zwischen zwei Brüchen */
   W01:{title:'Nenner gleich',steps:[
     {h:'Gleich große Stücke',

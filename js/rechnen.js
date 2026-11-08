@@ -540,3 +540,24 @@ TASKS.R01=addBildTask('R01',{name:'Addieren am Bild',desc:'Brüche am Bild ables
 TASKS.R02=addRechnenTask('R02',{name:'Addieren und rechnen',desc:'Addiere gleichnamige Brüche. Der Nenner bleibt, die Zähler werden addiert.',notes:['M17','M3']});
 TASKS.R03=addBildTask('R03',{name:'Subtrahieren am Bild',desc:'Durchgekreuzte Felder lesen, die Aufgabe notieren und subtrahieren.',notes:['M18']});
 TASKS.R04=addRechnenTask('R04',{name:'Subtrahieren und rechnen',desc:'Subtrahiere gleichnamige Brüche. Der Nenner bleibt, die Zähler werden subtrahiert.',notes:['M18','M3']});
+
+/* ---------- Abschlusscheck „Gleichnamige Brüche“ (RA) ----------
+   10 Aufgaben aus allen fünf Stationen (je zwei Arten), in gemischter Reihenfolge. Eine Runde mit Aufgaben mehrerer Arten wie QA, ZA, WA:
+   gen() liefert Aufgaben der echten Typen, RA reicht prompt/render/validate/solution/hints an den Typ der Aufgabe weiter (proxyOf).
+   Urkunde ab 8 Punkten (ohne Tipp 1, mit Tipp ½) und nach allen Pflicht-Stationen. Gehört zum Thema „Gleichnamige Brüche“ (Block 1);
+   die späteren Blöcke (unterschiedlich benannt, gemischte Zahlen) bekommen je ein eigenes Thema mit eigenem Check. */
+const RA_SLOTS={
+  1:[['R01','bild'],['R02','plus'],['R03','bild'],['R04','minus'],['R05','art'],['R02','luecke'],['R04','geschichte'],['R01','geschichte'],['R05','fehler'],['R03','minus']],
+  2:[['R01','plus'],['R02','ueber1'],['R03','minus'],['R04','ueber1'],['R05','art'],['R02','luecke'],['R04','geschichte'],['R01','geschichte'],['R05','fehler'],['R03','geschichte']]
+};
+TASKS.RA=proxyOf({area:'Rechnen',name:'Abschlusscheck',desc:RA_SLOTS[1].length+' Aufgaben aus allen Stationen zeigen, was du kannst – am Ende des Lernpfads.',notes:['M17','M18'],size:RA_SLOTS[1].length,
+  finalTap:0,finalLabel:'Aufgaben richtig',
+  ctx(round){
+    if(!Array.isArray(round.plan)||round.plan.length!==RA_SLOTS[1].length)round.plan=RNG.shuffle([...RA_SLOTS[1].keys()]);
+    return {slot:round.plan[Math.min(round.results.length,round.plan.length-1)]};
+  },
+  gen(level,R,ctx){
+    const slots=RA_SLOTS[level]||RA_SLOTS[1],i=ctx&&ctx.slot!=null?ctx.slot:0,[id,kind]=slots[i];
+    return TASKS[id].gen(level,R,{kind});
+  }
+});

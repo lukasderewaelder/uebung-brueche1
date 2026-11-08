@@ -1915,9 +1915,27 @@ function runSelfTests(){
       }
       t('Rechnen: Rundenplan hat 5 Arten und bleibt in der Runde gleich; R01 und R03 haben Geschichte und Bild (Leicht auch „Bild lesen“), R02 und R04 Geschichte und Lücken (Knifflig auch über 1), R05 Rechenart erkennen, ein Bild mit mehreren Aufgaben, Fehler finden und eigene Aufgaben',planBad===0);
       const am=moduleById('addsub'),idx=(id)=>MODULES.findIndex(m=>m.id===id);
-      t('Rechnen: das Thema „Brüche addieren und subtrahieren“ ist aktiv, hat im Pfad genau R01 bis R05 (alle Pflicht, in dieser Reihenfolge, Gruppen Addieren, Subtrahieren, Plus oder minus?) und noch keinen Eingangstest und Abschlusscheck; das Thema Multiplizieren bleibt „geplant“',
-        !!am&&am.status==='aktiv'&&am.path.map(m=>m.id).join()==='R01,R02,R03,R04,R05'&&am.path.every(m=>m.must&&!m.final)&&am.practice.join()==='R01,R02,R03,R04,R05'&&!am.quickcheck&&!am.finalId&&idx('addsub')>idx('vergleichen')&&moduleById('rechnen').status==='geplant'
-        &&['R01','R02','R03','R04','R05'].every(id=>INTRO[id]&&TASKS[id]&&ICON[id]&&document.getElementById('i-'+ICON[id]))&&Object.keys(am.groups).join()==='Addieren,Subtrahieren,Plus oder minus?'&&am.path.every(p=>am.pathGroups[p.grp]&&document.getElementById('i-'+am.pathGroups[p.grp])));
+      t('Rechnen: das Thema „Brüche addieren und subtrahieren“ ist aktiv, Block 1, hat im Pfad genau R01 bis R05 und den Abschlusscheck RA (alle Pflicht, in dieser Reihenfolge, Gruppen Addieren, Subtrahieren, Plus oder minus?, Check) und keinen Eingangstest; das Thema Multiplizieren bleibt „geplant“',
+        !!am&&am.status==='aktiv'&&am.path.map(m=>m.id).join()==='R01,R02,R03,R04,R05,RA'&&am.path.every(m=>m.must)&&am.path.filter(m=>m.final).map(m=>m.id).join()==='RA'&&am.practice.join()==='R01,R02,R03,R04,R05,RA'&&!am.quickcheck&&am.finalId==='RA'&&idx('addsub')>idx('vergleichen')&&moduleById('rechnen').status==='geplant'
+        &&['R01','R02','R03','R04','R05','RA'].every(id=>INTRO[id]&&TASKS[id]&&ICON[id]&&document.getElementById('i-'+ICON[id]))&&Object.keys(am.groups).join()==='Addieren,Subtrahieren,Plus oder minus?,Check Gleichnamig'&&am.path.every(p=>am.pathGroups[p.grp]&&document.getElementById('i-'+am.pathGroups[p.grp])));
+      /* Abschlusscheck RA: zwei Aufgaben aus jeder Station, richtige Antworten gelten, Urkunde nur nach allen Stationen und 8 von 10, nur für dieses Thema */
+      {
+        const am2=moduleById('addsub'),snap2={passed:S.passed,mq:S.mq,days:S.days,perfect:S.perfect,modus:S.modus,unlocked:S.unlocked};
+        let okAll=true,cover=true;
+        for(const lvl of [1,2])for(let k=0;k<25;k++){
+          const rnd={results:[],cur:null,size:TASKS.RA.size},cnt={};
+          for(let i=0;i<TASKS.RA.size;i++){rnd.results=Array(i).fill('f');const tk=TASKS.RA.gen(lvl,RNG,TASKS.RA.ctx(rnd,lvl));cnt[tk.type]=(cnt[tk.type]||0)+1;if(!validateTask(tk,okDraft(tk)).correct)okAll=false;}
+          if(['R01','R02','R03','R04','R05'].some(id=>cnt[id]!==2))cover=false;
+        }
+        S.passed={};S.mq={};S.days={};S.perfect={};S.modus={};S.unlocked={};
+        ['R01','R02','R03','R04','R05'].forEach(x=>{S.passed[x+'-L1']=true;});
+        let ri=onRoundEnd('RA',1,{results:['f','f','f','f','f','f','f','x','x','x'],size:10});
+        const noUrk=ri.ready&&!ri.passed&&!ri.final&&!stationDone('RA');
+        ri=onRoundEnd('RA',1,{results:['f','f','f','f','f','f','f','f','x','x'],size:10});
+        t('Abschlusscheck RA (Thema Gleichnamige Brüche): 10 Aufgaben, zwei aus jeder Station, alle richtigen Antworten gelten; alle Stationen fertig und 7 von 10 ⇒ keine Urkunde, 8 von 10 ⇒ Urkunde nur für dieses Thema',
+          TASKS.RA.size===10&&needOf(10)===8&&okAll&&cover&&noUrk&&ri.final&&stationDone('RA')&&qstate(am2).final&&!S.final&&ri.qmod==='addsub'&&pathState(am2).every(r=>r.done));
+        Object.assign(S,snap2);
+      }
       /* Umstellung der Stände: alte Schlüssel R01–R05 werden einmal verworfen, andere bleiben */
       {
         const old={v:1,progress:{'R01-L1':{first:3},'R05-L2':{first:2},'G01-L1':{first:1}},passed:{'R03-L1':true,'Z01-L1':true},rounds:{'R02-L1':{results:[]}},intro:{R01:true,G01:true},addsubV:undefined};
@@ -1948,7 +1966,7 @@ window.runSelfTests=runSelfTests;
    (Standard: ja, solange keine ids vorgegeben sind). Eingangstests (quick) werden an allen Positionen gemessen. */
 async function runLayoutTests(w=375,h=600,samples=3,ids,intro=true,opts={}){
   const screens=opts.screens!==undefined?opts.screens:!ids;
-  ids=ids||Object.keys(TASKS).filter(id=>!['QA','ZA','WA'].includes(id));
+  ids=ids||Object.keys(TASKS).filter(id=>!['QA','ZA','WA','RA'].includes(id));
   const f=document.createElement('iframe');
   f.style.cssText='position:fixed;left:0;top:0;width:'+w+'px;height:'+h+'px;border:0;visibility:hidden;pointer-events:none';
   f.src='index.html?layouttest='+Date.now();

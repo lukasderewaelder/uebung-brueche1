@@ -7,7 +7,7 @@
      Was der Eingangstest als „sitzt“ markiert, steht als Markierung in der Liste; die Erklärung bietet dann „Kenne ich schon“.
    · Die frühere „Meine Übersicht“ (und die Wahl „Wie möchtest du lernen?“) gibt es nicht mehr.
    ===================================================================== */
-const PATH_ACC={LAB:'mix',Q00:'ok',ZQ:'ok',QA:'ok',ZA:'ok',WQ:'ok',WA:'ok'};
+const PATH_ACC={LAB:'mix',Q00:'ok',ZQ:'ok',QA:'ok',ZA:'ok',WQ:'ok',WA:'ok',RA:'ok'};
 /* Thema, zu dem ein Abschlusscheck (finalId) gehört */
 const finalModOf=(id)=>activeModules().find(m=>m.finalId===id)||null;
 /* Hinweis „Erst …“ (modules.js recommends): nur solange das empfohlene Thema nicht abgeschlossen ist, keine Sperre */

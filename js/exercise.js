@@ -337,7 +337,7 @@ const openEntry=(id)=>{if(!isGame(id))S.last=id;go({kind:isGame(id)?'game':'prac
 function setLevel(id,l){S.levelByType[id]=l;persist();renderAll();}
 
 /* Symbole und Kennfarbe je Übung (erw = Erweitern/Orange, kue = Kürzen/Petrol) */
-const ICON={QA:'plakette',ZA:'plakette',ZQ:'haken',Z01:'lineal',Z02:'lupe',Z03:'lineal',Z04:'aus',Z05:'wechsel',Z06:'netz',Z07:'lineal',Z08:'wechsel',Q00:'haken',G01:'lineal',T01:'teiler',T02:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'wechsel',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor',W01:'balken',W02:'balken',W03:'wechsel',W04:'luecke',W05:'aus',W06:'lineal',W07:'frage',W08:'netz',W09:'lineal',W10:'lupe',WQ:'haken',WA:'plakette',S03:'wechsel',R01:'plus',R02:'plus',R03:'minus',R04:'minus',R05:'plusminus'};
+const ICON={QA:'plakette',ZA:'plakette',RA:'plakette',ZQ:'haken',Z01:'lineal',Z02:'lupe',Z03:'lineal',Z04:'aus',Z05:'wechsel',Z06:'netz',Z07:'lineal',Z08:'wechsel',Q00:'haken',G01:'lineal',T01:'teiler',T02:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'wechsel',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor',W01:'balken',W02:'balken',W03:'wechsel',W04:'luecke',W05:'aus',W06:'lineal',W07:'frage',W08:'netz',W09:'lineal',W10:'lupe',WQ:'haken',WA:'plakette',S03:'wechsel',R01:'plus',R02:'plus',R03:'minus',R04:'minus',R05:'plusminus'};
 const ACC={G02:'erw',O01:'erw',G03:'kue',G04:'kue',T01:'kue',T02:'kue',O02:'kue',G05:'mix'};
 function backTarget(){
   const v=S.view;
@@ -561,7 +561,7 @@ function renderSummary(main,id,lvl,key,round){
 /* Ergebnis des Abschlusschecks (QA, ZA): Punkte, Antippfragen und Rechenaufgaben getrennt, Urkunde */
 function renderFinalSummary(main,id,lvl,key,round){
   const info=round.info||{},fm=finalModOf(id),sc=roundScore(round.results,round.size);
-  const tapN=TASKS[id].finalTap||(id==='ZA'?ZA_TAP:QA_TAP),tap=round.results.slice(0,tapN),calc=round.results.slice(tapN);
+  const tapN=TASKS[id].finalTap!=null?TASKS[id].finalTap:(id==='ZA'?ZA_TAP:QA_TAP),tap=round.results.slice(0,tapN),calc=round.results.slice(tapN); /* finalTap 0: keine Antippfragen (RA) */
   const good=(r)=>r.filter(x=>x==='f'||x==='l').length,fmt=(x)=>String(x).replace('.',',');
   const again=()=>{S.rounds[key]={results:[],cur:null,size:TASKS[id].size};persist();renderAll();};
   const btn=(label,fn,primary)=>el('button',{type:'button',class:'btn'+(primary?' primary':''),onclick:fn},label);
@@ -572,7 +572,7 @@ function renderFinalSummary(main,id,lvl,key,round){
   main.append(el('div',{class:'card summary'},el('div',{class:'stampbox'},info.final?'Urkunde':sc.passed?'Bestanden':'Check fertig'),el('p',null),bigStars(sc.passed?3:sc.points>=sc.need*0.6?2:1),
     el('p',null,`${sc.right} von ${round.size} richtig · ${LEVEL_LABEL[lvl]}`),
     el('table',null,
-      el('tr',null,el('td',null,'Zum Antippen richtig'),el('td',null,el('b',null,good(tap)+' von '+tap.length))),
+      tap.length?el('tr',null,el('td',null,'Zum Antippen richtig'),el('td',null,el('b',null,good(tap)+' von '+tap.length))):null,
       el('tr',null,el('td',null,TASKS[id].finalLabel||(id==='ZA'?'Am Zahlenstrahl richtig':'Zum Rechnen richtig')),el('td',null,el('b',null,good(calc)+' von '+calc.length)))),
     ...lines.map(x=>el('p',null,x)),
     el('div',{class:'sumact'},btn('Zum Lernpfad',()=>go(pfadView(id)),true),el('div',{class:'linkrow'},linkBtn('Nochmal',again)))));
