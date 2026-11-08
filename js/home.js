@@ -38,11 +38,14 @@ function bomList(ids,opts={}){
   });
   return el('div',{class:'bom'},...(opts.head===false?[]:[head]),...rows);
 }
-/* Üben: alle Aufgaben eines Themas, nach Gruppen, in einer fortlaufenden Liste */
+/* Eingangstests und Abschlusschecks stehen nur im Lernpfad, nicht in Üben */
+const isCheck=(id)=>!!((typeof QCHK!=='undefined'&&QCHK[id])||finalModOf(id));
+/* Üben: alle Aufgaben eines Themas, nach Gruppen, in einer fortlaufenden Liste (ohne Checks; Gruppen nur mit Checks entfallen) */
 function uebenBody(m){
   const body=el('div',{class:'uebenbody'});let n=0,first=true;
   Object.keys(m.groups).forEach(g=>{
-    const ids=m.groups[g].ids;
+    const ids=m.groups[g].ids.filter(id=>!isCheck(id));
+    if(!ids.length)return;
     body.append(el('h3',{class:'grp'},icon(m.groups[g].icon),g),bomList(ids,{head:first,start:n}));
     n+=ids.length;first=false;
   });
@@ -98,9 +101,9 @@ function renderHome(){
       fold('Alle Ziele',perfectionList()));
   }else{
     /* Üben: frei wählen. Ein Umschalter für alle, je Thema eine aufklappbare Liste (das Thema der letzten Aufgabe ist offen) */
-    const last=S.last&&TASKS[S.last]?S.last:null,lastMod=last?moduleOf(last):null,mods=activeModules();
+    const last=S.last&&TASKS[S.last]&&!isCheck(S.last)?S.last:null,lastMod=last?moduleOf(last):null,mods=activeModules();
     if(last)home.append(bigBtn('play',()=>openEntry(last),'Weiter üben',TASKS[last].name,LEVEL_LABEL[levelOf(last)],'go'));
-    home.append(el('h1',null,'Üben'),listLevel(PRACTICE_ORDER));
+    home.append(el('h1',null,'Üben'),listLevel(PRACTICE_ORDER.filter(id=>!isCheck(id))));
     mods.forEach(m=>home.append(fold(m.name,uebenBody(m),lastMod?lastMod.id===m.id:m===mods[0])));
   }
   root.append(home,bottomNav());app.append(root);
