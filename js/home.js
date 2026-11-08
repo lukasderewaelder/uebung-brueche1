@@ -23,11 +23,11 @@ function bomList(ids,opts={}){
   const head=el('div',{class:'bomhead'},el('span',null,'Nr.'),el('span',null,'Bezeichnung'),el('span',null,'Leicht'),el('span',null,'Knifflig'),el('span'));
   const no=(i)=>String((opts.start||0)+i+1).padStart(2,'0');
   const rows=ids.map((id,i)=>{
-    if(id==='LAB'){
-      const done=!!(S.lab&&S.lab.done);
-      return el('button',{type:'button',class:'bomrow','data-acc':'mix',onclick:()=>go({kind:'lab'})},
+    if(isLab(id)){
+      const L=LABS[id],done=L.done();
+      return el('button',{type:'button',class:'bomrow','data-acc':'mix',onclick:()=>openLab(id)},
         el('span',{class:'pos'},no(i)),
-        el('span',{class:'nm'},el('b',null,'Bruchlabor'),el('small',null,'Erweitern und Kürzen ausprobieren – mit Streifen oder Kreis.')),
+        el('span',{class:'nm'},el('b',null,L.name),el('small',null,L.desc)),
         el('span',{class:'labstat'+(done?' done':'')},done?icon('haken'):null,done?'Geschafft':'Neu'),icon('weiter'));
     }
     const [s1,s2]=starCols(id);
@@ -143,7 +143,7 @@ function renderAll(){
   else if(v.kind==='game'&&v.id==='S01')renderMemory(v.id);
   else if(v.kind==='game'&&v.id==='S02')renderVault(v.id);
   else if(v.kind==='game'&&v.id==='S03')renderDuell(v.id);
-  else if(v.kind==='lab')renderLab();
+  else if(v.kind==='lab')(LABS[v.id]||LABS.LAB).render();
   else renderHome();
   if(!Store.ok)app.append(el('div',{class:'note-storage'},
     el('p',null,'Hinweis: Der Browser erlaubt kein lokales Speichern. Dein Fortschritt bleibt nur erhalten, solange diese Seite geöffnet ist.'),

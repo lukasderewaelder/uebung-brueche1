@@ -22,6 +22,16 @@ const INTRO={
     {h:'Deine drei Aufträge',
       say:['Auftrag 1: Erweitere einen Bruch.','Auftrag 2: Kürze einen Bruch.','Auftrag 3: Finde heraus, was gleich bleibt.','Mit **Rückgängig** nimmst du einen Schritt zurück.']}
   ]},
+  RLAB:{title:'Bruchlabor Plus und Minus',steps:[
+    {h:'Zahlen einstellen',
+      say:['Du stellst den Nenner und zwei Anteile ein.','Das Raster zeigt die Anteile.','Darunter steht die Rechnung.'],
+      add:{d:8,p1:3,p2:2,mode:'plus',chain:true}},
+    {h:'Plus und Minus',
+      say:['Bei **Plus** fügst du zwei Anteile zusammen.','Bei **Minus** nimmst du Felder weg.','Weggenommene Felder werden durchgekreuzt.'],
+      add:{d:8,p1:3,p2:2,mode:'minus'}},
+    {h:'Deine drei Aufträge',
+      say:['Auftrag 1: Addiere.','Auftrag 2: Subtrahiere.','Auftrag 3: Finde heraus, was gleich bleibt.','Mit **Rückgängig** nimmst du einen Schritt zurück.']}
+  ]},
   G01:{title:'Gleiche Anteile erkennen',steps:[
     {h:'Zwei Bilder, gleich viel',
       say:['Diese zwei Streifen zeigen denselben Anteil.','Der untere hat mehr Teile, aber kleinere.','Die gefärbte Fläche ist gleich groß.'],
@@ -544,7 +554,7 @@ const introSeen=(id)=>!!(S.intro&&S.intro[id]===true);
 /* Zu welcher Ansicht gehört eine Erklärung? Bruchlabor und jede Übung des Lernpfads – nicht die Spiele */
 function introIdOf(v){
   if(!v)return null;
-  if(v.kind==='lab')return 'LAB';
+  if(v.kind==='lab')return LABS[v.id]?v.id:'LAB';
   if(v.kind==='practice'&&typeof v.id==='string'&&hasIntro(v.id)&&TASKS[v.id])return v.id;
   return null;
 }
@@ -565,7 +575,7 @@ function migrateIntro(st){
   });
   PATH.forEach(m=>{
     let seen;
-    if(m.id==='LAB')seen=!!(st.lab&&(st.lab.done||(st.lab.did&&(st.lab.did.x||st.lab.did.d))));
+    if(isLab(m.id))seen=m.id==='LAB'?!!(st.lab&&(st.lab.done||(st.lab.did&&(st.lab.did.x||st.lab.did.d)))):!!(st.labR&&(st.labR.done||(st.labR.did&&(st.labR.did.plus||st.labR.did.minus))));
     else seen=worked(m.id)||(m.id==='QA'&&!!st.final)||(m.id==='ZA'&&!!(st.mq&&st.mq.zahlenstrahl&&st.mq.zahlenstrahl.final));
     if(seen)st.intro[m.id]=true;
   });
@@ -704,7 +714,7 @@ function introLineTry(spec){
 /* ---------- Probeaufgabe auf der ersten Karte ---------- */
 /* Eine kleine Aufgabe (Leicht) der Station selbst: zählt nicht für Sterne, Punkte und Serie (cb.probe). Danach kommt die Erklärung.
    Die Probe hat dasselbe Bedienpult wie eine Übung (Zahlentasten oder Meldung, darunter Tipp | Kenne ich schon | Prüfen/Weiter). */
-const introHasProbe=(id)=>!!(TASKS[id]&&!TASKS[id].quick&&!finalModOf(id)&&id!=='LAB');
+const introHasProbe=(id)=>!!(TASKS[id]&&!TASKS[id].quick&&!finalModOf(id)&&!isLab(id));
 const PROBE_STEP={h:'Probiere es aus',say:[],probe:true}; /* der Hinweis „Fehler sind erlaubt“ steht in der Schrittzeile */
 function buildProbe(id){
   const st=newState(generateTask(id,1)),host=el('div',{class:'probetask'}),msg=el('div',{class:'dockmsg'});

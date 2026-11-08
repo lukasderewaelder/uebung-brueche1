@@ -149,6 +149,70 @@ function runSelfTests(){
   S.lab=keepLab;persist();
   t('Labor: Erklärungen nennen Rechnung, keine Pauschalregel zur 2',labTell([2,3],[6,9],'x',3).includes('2 · 3 = 6 und 3 · 3 = 9')&&labTell([6,9],[2,3],'d',3).includes('nicht mehr')&&labWhy([6,9],'d',2).includes('nicht beide durch 2')&&!labWhy([6,9],'d',2).includes('IMMER'));
   t('Labor: Frage hat genau eine richtige Antwort',LAB_QUIZ.filter(o=>o.id==='wert').length===1&&LAB_QUIZ.every(o=>o.id==='wert'||LAB_WRONG[o.id]));
+  /* Bruchlabor Plus und Minus (RLAB): Regeln der Stellschrauben, Auftragsfolge, Ansicht und Bedienung, Einbindung */
+  {
+    let bad=0,steps=0;
+    const okAll=RLAB_START.every(s=>rlabValid('plus',s[0],s[1],s[2])&&rlabValid('minus',s[0],s[1]+s[2],s[2]));
+    for(let i=0;i<400;i++){
+      const s=RNG.pick(RLAB_START),op=RNG.pick(['plus','minus']),L={op,d:s[0],a:op==='plus'?s[1]:s[1]+s[2],c:s[2]};
+      for(let k=0;k<14;k++){
+        const key=RNG.pick(['d','a','c']),delta=RNG.pick([-1,1]),r=rlabTry(L,key,delta);
+        if(r.to){
+          if(!rlabValid(L.op,r.to.d,r.to.a,r.to.c))bad++;
+          Object.assign(L,r.to);steps++;
+          if(rlabResult(L)<1||rlabResult(L)>L.d)bad++;
+        }else{
+          const n={d:L.d,a:L.a,c:L.c};n[key]+=delta;
+          if(!r.why||/undefined|NaN/.test(r.why)||(key!=='d'&&rlabValid(L.op,n.d,n.a,n.c)))bad++;
+        }
+      }
+      const op2=op==='plus'?'minus':'plus',f=rlabFit(op2,L.d,L.a,L.c);
+      if(!rlabValid(op2,L.d,f[0],f[1]))bad++;
+    }
+    t('Bruchlabor Plus und Minus: alle Startaufgaben gültig, jede Stellschraube hält die Regeln (plus: höchstens ein Ganzes, minus: Rest mindestens 1, 3–16 Teile), Ablehnungen nennen einen Grund ('+steps+' Schritte)',okAll&&bad===0&&steps>1000);
+    const lp=(p,m,sk,dn)=>rlabPhase({did:{plus:p,minus:m},skip:sk,done:dn});
+    t('Bruchlabor Plus und Minus: Auftragsfolge plus, minus, Frage, frei',lp(false,false,false,false)==='plus'&&lp(true,false,false,false)==='minus'&&lp(false,true,false,false)==='plus'&&lp(true,true,false,false)==='quiz'&&lp(true,true,true,false)==='play'&&lp(true,true,false,true)==='free');
+    t('Bruchlabor Plus und Minus: Frage hat genau eine richtige Antwort („Der Nenner“), jede falsche hat einen Satz; Sätze zur Rechnung nennen Nenner und Zähler',
+      RLAB_QUIZ.filter(o=>o.id==='nenner').length===1&&RLAB_QUIZ.every(o=>o.id==='nenner'||RLAB_WRONG[o.id])&&/Nenner bleibt 8/.test(rlabTell({op:'plus',d:8,a:3,c:2}))&&/3 \+ 2 = 5/.test(rlabTell({op:'plus',d:8,a:3,c:2}))&&/5 − 2 = 3/.test(rlabTell({op:'minus',d:8,a:5,c:2}))&&/ganze Raster/.test(rlabTell({op:'plus',d:8,a:5,c:3})));
+    const ch=(L)=>rlabChain(L);
+    t('Bruchlabor Plus und Minus: Rechnung mit Bruchstrich (a/d ± c/d = (a ± c)/d = n/d), gekürzt nur wenn es geht, bei einem Ganzen „= 1“',
+      ch({op:'plus',d:12,a:5,c:1}).querySelectorAll('.frac').length===5&&ch({op:'plus',d:12,a:5,c:2}).querySelectorAll('.frac').length===4&&ch({op:'plus',d:8,a:5,c:3}).querySelectorAll('.frac').length===4&&/= *1$|=1$/.test(ch({op:'plus',d:8,a:5,c:3}).textContent.replace(/\s/g,''))
+      &&/5−1/.test(ch({op:'minus',d:12,a:5,c:1}).textContent.replace(/\s/g,'')));
+    const keepR=S.labR,keepV=S.view,keepI=S.intro;
+    S.intro=Object.assign({},S.intro,{RLAB:true});
+    S.labR=Object.assign(rlabDefault(),{d:8,a:7,c:7}); /* kaputter Zustand */
+    const sane=rlabState();
+    t('Bruchlabor Plus und Minus: kaputter Zustand wird zurückgesetzt, gültiger bleibt',sane.d===8&&sane.a===3&&sane.c===2&&(S.labR=Object.assign(rlabDefault(),{op:'minus',d:10,a:7,c:2}),rlabState().a===7&&rlabState().op==='minus'));
+    S.labR=rlabDefault();S.view={kind:'lab',id:'RLAB'};renderAll();
+    const q=(s)=>document.querySelector(s),qa=(s)=>[...document.querySelectorAll(s)],btn=(i,j)=>qa('.rlabrow')[i].querySelectorAll('button')[j];
+    const hasUi=!!q('.rlab')&&qa('.rlabrow').length===3&&!!q('.rlab .addfig')&&qa('.rlabchain .frac').length>=4&&/Auftrag 1/.test(q('.rlab .prompt').textContent)&&qa('.seg.labseg button').length===2;
+    btn(1,1).click();btn(2,1).click();            /* erster Anteil 4, zweiter Anteil 3 (Summe 7 von 8) */
+    const afterPlus=[S.labR.a,S.labR.c,S.labR.did.plus,/Auftrag 2/.test(q('.rlab .prompt').textContent),qa('.rlabrow')[1].querySelector('.rv').textContent];
+    btn(1,1).click();                              /* 5 + 3 = 8: das ganze Raster */
+    btn(1,1).click();                              /* 6 + 3 wäre mehr als ein Ganzes: abgelehnt, Satz */
+    const refused=[S.labR.a,/Ganzes/.test(q('.rlab .labsay').textContent),btn(1,1).classList.contains('off')];
+    qa('.seg.labseg button')[1].click();           /* Minus: Anfang 5, weggenommen 3 */
+    const asMinus=[S.labR.op,qa('.rlabrow .lbl').map(x=>x.textContent).join(),qa('.rlab .addfig .xmark').length>0];
+    btn(1,1).click();btn(2,1).click();             /* Anfang 6, weggenommen 4: zwei Änderungen bei Minus */
+    const afterMinus=[S.labR.did.minus,qa('.rlab .labquiz .tile').length===4,q('.rlab .rlabctl').hidden===true];
+    const wrong=qa('.rlab .labquiz .tile').find(b=>/Der Zähler/.test(b.textContent));wrong.click();
+    const wrongOk=wrong.disabled&&/ändern sich/.test(q('.rlab .labsay').textContent)&&!S.labR.done;
+    qa('.rlab .labquiz .tile').find(b=>/Der Nenner/.test(b.textContent)).click();
+    const doneOk=S.labR.done===true&&/Genau/.test(q('.rlab .labsay').textContent)&&LABS.RLAB.done()&&/Auftrag geschafft/.test(q('.rlab .prompt').textContent);
+    q('.rlab .primaryrow .btn').click();           /* Rückgängig */
+    t('Bruchlabor Plus und Minus: Ansicht (Raster, Rechnung, drei Stellschrauben, Plus/Minus), Bedienung, Auftragswechsel, Ablehnung über ein Ganzes, Minus mit Kreuzen und neuen Beschriftungen',
+      hasUi&&afterPlus.join()==='4,3,true,true,4'&&refused[0]===5&&refused[1]&&refused[2]&&asMinus[0]==='minus'&&/Anfang/.test(asMinus[1])&&/Wegnehmen/.test(asMinus[1])&&asMinus[2]);
+    t('Bruchlabor Plus und Minus: Frage nach den zwei Aufträgen, falsche Antwort wird benannt, richtige schließt ab (Labor geschafft), Rückgängig geht',afterMinus.every(Boolean)&&wrongOk&&doneOk&&S.labR.hist.length>0);
+    /* Einbindung: Tabelle, Pfad, Navigation, Erklärung, Merkkasten-Knopf, Üben-Zeile */
+    S.view={kind:'lab',id:'RLAB',from:'pfad'};const bk=backTarget();
+    S.view={kind:'lab',id:'RLAB'};const bk2=backTarget();
+    const labRow=bomList(['RLAB'],{head:false});
+    const nf=noteFor('R01',null).filter(n=>n.classList.contains('labnote')),nf5=noteFor('R05',null).filter(n=>n.classList.contains('labnote')),nf2=noteFor('G01',null).filter(n=>n.classList&&n.classList.contains('labnote'));
+    t('Bruchlabor Plus und Minus: eingebunden (Tabelle LABS, Pfad ohne Pflicht vor R01, Zurück zum Thema, Erklärung mit 3 Karten, Knopf im Merkkasten der Addieren-Stationen, Zeile in Üben)',
+      isLab('LAB')&&isLab('RLAB')&&!isLab('R01')&&pfadView('RLAB').thema==='addsub'&&bk.thema==='addsub'&&bk2.tab==='ueben'&&introIdOf({kind:'lab',id:'RLAB'})==='RLAB'&&introIdOf({kind:'lab'})==='LAB'&&INTRO.RLAB.steps.length===3
+      &&nf.length===1&&nf5.length===1&&nf2.length===1&&labRow.textContent.includes('Bruchlabor Plus und Minus')&&stationTitle('RLAB')==='Bruchlabor Plus und Minus'&&LABS.RLAB.started()===true);
+    S.labR=keepR;S.view=keepV;S.intro=keepI;persist();
+  }
   /* G01: Zahl richtiger Karten wechselt; Streifen/Kreis nur bei kleinen Nennern, große Nenner nur als Raster */
   for(const lvl of [1,2]){
     const counts=new Set();let badRep=0,badN=0,dup=0;
@@ -741,7 +805,7 @@ function runSelfTests(){
     Object.assign(S,snap);
   }
   /* Themen-Registry */
-  t('Registry: jede Aufgabe, Gruppe und jedes Bauteil eines aktiven Themas gibt es',activeModules().every(m=>(m.practice||[]).every(id=>TASKS[id])&&Object.values(m.groups||{}).every(g=>g.ids.every(id=>id==='LAB'||TASKS[id]))&&(m.path||[]).every(p=>p.id==='LAB'||TASKS[p.id])));
+  t('Registry: jede Aufgabe, Gruppe und jedes Bauteil eines aktiven Themas gibt es',activeModules().every(m=>(m.practice||[]).every(id=>TASKS[id])&&Object.values(m.groups||{}).every(g=>g.ids.every(id=>isLab(id)||TASKS[id]))&&(m.path||[]).every(p=>isLab(p.id)||TASKS[p.id])));
   t('Registry: geplante Themen haben keine Aufgaben, keine Gruppen, keinen Lernpfad',plannedModules().length>0&&plannedModules().every(m=>!m.practice&&!m.groups&&!m.path));
   t('Registry: Themen-IDs und Aufgaben-IDs sind eindeutig',new Set(MODULES.map(m=>m.id)).size===MODULES.length&&new Set(PRACTICE_ORDER).size===PRACTICE_ORDER.length&&new Set(PATH.map(p=>p.id)).size===PATH.length);
   t('Registry: Rang zählt „Erweitern und Kürzen“ (19 Übungen, 14 Stationen)',rankPractice().length===19&&rankPath().length===14&&moduleOf('G02').id==='veraendern'&&moduleOf('Entdecken').id==='veraendern');
@@ -977,8 +1041,8 @@ function runSelfTests(){
       const bad=[];
       activeModules().forEach(m=>{
         m.path.forEach(p=>{if(!(GROUPS[p.grp]&&GROUPS[p.grp].ids.includes(p.id)))bad.push(m.id+' '+p.id+' ↛ '+p.grp);});
-        Object.keys(m.groups).forEach(g=>{if(m.groups[g].ids.some(id=>id!=='LAB'&&!m.practice.includes(id)))bad.push('Gruppe '+g+' hat fremde Aufgabe');});
-        const inGroups=[].concat(...Object.values(m.groups).map(g=>g.ids)).filter(id=>id!=='LAB');
+        Object.keys(m.groups).forEach(g=>{if(m.groups[g].ids.some(id=>!isLab(id)&&!m.practice.includes(id)))bad.push('Gruppe '+g+' hat fremde Aufgabe');});
+        const inGroups=[].concat(...Object.values(m.groups).map(g=>g.ids)).filter(id=>!isLab(id));
         if(new Set(inGroups).size!==inGroups.length||m.practice.some(id=>!inGroups.includes(id)))bad.push(m.id+' Aufgaben nicht in genau einer Gruppe');
       });
       t('Gruppen: jede Station des Pfads steht im Üben in derselben Gruppe, jede Aufgabe in genau einer Gruppe, Gruppennamen sind eindeutig',(bad.length===0&&Object.keys(GROUPS).length===activeModules().reduce((n,m)=>n+Object.keys(m.groups).length,0))||(console.log(bad),false));
@@ -1916,8 +1980,8 @@ function runSelfTests(){
       t('Rechnen: Rundenplan hat 5 Arten und bleibt in der Runde gleich; R01 und R03 haben Geschichte und Bild (Leicht auch „Bild lesen“), R02 und R04 Geschichte und Lücken (Knifflig auch über 1), R05 Rechenart erkennen, ein Bild mit mehreren Aufgaben, Fehler finden und eigene Aufgaben',planBad===0);
       const am=moduleById('addsub'),idx=(id)=>MODULES.findIndex(m=>m.id===id);
       t('Rechnen: das Thema „Brüche addieren und subtrahieren“ ist aktiv, Block 1, hat im Pfad genau R01 bis R05 und den Abschlusscheck RA (alle Pflicht, in dieser Reihenfolge, Gruppen Addieren, Subtrahieren, Plus oder minus?, Check) und keinen Eingangstest; das Thema Multiplizieren bleibt „geplant“',
-        !!am&&am.status==='aktiv'&&am.path.map(m=>m.id).join()==='R01,R02,R03,R04,R05,RA'&&am.path.every(m=>m.must)&&am.path.filter(m=>m.final).map(m=>m.id).join()==='RA'&&am.practice.join()==='R01,R02,R03,R04,R05,RA'&&!am.quickcheck&&am.finalId==='RA'&&idx('addsub')>idx('vergleichen')&&moduleById('rechnen').status==='geplant'
-        &&['R01','R02','R03','R04','R05','RA'].every(id=>INTRO[id]&&TASKS[id]&&ICON[id]&&document.getElementById('i-'+ICON[id]))&&Object.keys(am.groups).join()==='Addieren,Subtrahieren,Plus oder minus?,Check Gleichnamig'&&am.path.every(p=>am.pathGroups[p.grp]&&document.getElementById('i-'+am.pathGroups[p.grp])));
+        !!am&&am.status==='aktiv'&&am.path.map(m=>m.id).join()==='RLAB,R01,R02,R03,R04,R05,RA'&&am.path.filter(m=>m.id!=='RLAB').every(m=>m.must)&&!am.path.find(m=>m.id==='RLAB').must&&am.path.filter(m=>m.final).map(m=>m.id).join()==='RA'&&am.practice.join()==='R01,R02,R03,R04,R05,RA'&&!am.quickcheck&&am.finalId==='RA'&&idx('addsub')>idx('vergleichen')&&moduleById('rechnen').status==='geplant'
+        &&['R01','R02','R03','R04','R05','RA'].every(id=>INTRO[id]&&TASKS[id]&&ICON[id]&&document.getElementById('i-'+ICON[id]))&&Object.keys(am.groups).join()==='Ausprobieren,Addieren,Subtrahieren,Plus oder minus?,Check Gleichnamig'&&am.path.every(p=>am.pathGroups[p.grp]&&document.getElementById('i-'+am.pathGroups[p.grp])));
       /* Abschlusscheck RA: zwei Aufgaben aus jeder Station, richtige Antworten gelten, Urkunde nur nach allen Stationen und 8 von 10, nur für dieses Thema */
       {
         const am2=moduleById('addsub'),snap2={passed:S.passed,mq:S.mq,days:S.days,perfect:S.perfect,modus:S.modus,unlocked:S.unlocked};
@@ -1933,7 +1997,7 @@ function runSelfTests(){
         const noUrk=ri.ready&&!ri.passed&&!ri.final&&!stationDone('RA');
         ri=onRoundEnd('RA',1,{results:['f','f','f','f','f','f','f','f','x','x'],size:10});
         t('Abschlusscheck RA (Thema Gleichnamige Brüche): 10 Aufgaben, zwei aus jeder Station, alle richtigen Antworten gelten; alle Stationen fertig und 7 von 10 ⇒ keine Urkunde, 8 von 10 ⇒ Urkunde nur für dieses Thema',
-          TASKS.RA.size===10&&needOf(10)===8&&okAll&&cover&&noUrk&&ri.final&&stationDone('RA')&&qstate(am2).final&&!S.final&&ri.qmod==='addsub'&&pathState(am2).every(r=>r.done));
+          TASKS.RA.size===10&&needOf(10)===8&&okAll&&cover&&noUrk&&ri.final&&stationDone('RA')&&qstate(am2).final&&!S.final&&ri.qmod==='addsub'&&pathState(am2).filter(r=>r.must).every(r=>r.done));
         Object.assign(S,snap2);
       }
       /* Umstellung der Stände: alte Schlüssel R01–R05 werden einmal verworfen, andere bleiben */
@@ -2024,7 +2088,7 @@ async function runLayoutTests(w=375,h=600,samples=3,ids,intro=true,opts={}){
   if(intro){
     for(const id of Object.keys(INTRO)){
       const r=cw.eval(`(()=>{
-        S.intro={};S.rounds={};S.view=${id==='LAB'?"{kind:'lab'}":`{kind:'practice',id:'${id}'}`};
+        S.intro={};S.rounds={};S.view=${isLab(id)?`{kind:'lab',id:'${id}'}`:`{kind:'practice',id:'${id}'}`};
         try{renderAll();}catch(e){return {err:e.message};}
         let worst=-1,n=0,tipps=-1,g=0,bx=0,wo='';
         const chk=()=>{const x=__ovx();if(x>bx){bx=x;wo='Karte '+(n)+': '+__off();}};
@@ -2045,7 +2109,7 @@ async function runLayoutTests(w=375,h=600,samples=3,ids,intro=true,opts={}){
       out[name]=r&&r.err?'FEHLER '+r.err:{neu:-1,teil2:-1,pruefen:-1,tipps:-1,breit:r?r.breit:0,wo:r?r.wo:''};
     };
     const page=(v)=>`S.view=${v};renderAll();document.querySelectorAll('#app details').forEach(d=>{d.open=true;});window.scrollTo(0,0);const x=__ovx();return {breit:x,wo:x?__off():''};`;
-    const views=[['Seite Lernen',"{kind:'home',tab:'pfad'}"],['Seite Üben',"{kind:'home',tab:'ueben'}"],['Seite Spiele',"{kind:'home',tab:'spiele'}"],['Seite Ich',"{kind:'home',tab:'rang'}"],['Seite Labor',"{kind:'lab'}"]];
+    const views=[['Seite Lernen',"{kind:'home',tab:'pfad'}"],['Seite Üben',"{kind:'home',tab:'ueben'}"],['Seite Spiele',"{kind:'home',tab:'spiele'}"],['Seite Ich',"{kind:'home',tab:'rang'}"],['Seite Labor',"{kind:'lab'}"],['Seite Labor Plus und Minus',"{kind:'lab',id:'RLAB'}"]];
     activeModules().forEach(m=>views.push(['Seite Thema '+m.name,`{kind:'home',tab:'pfad',thema:'${m.id}'}`]));
     Object.keys(GAMES).forEach(g=>[1,2].forEach(l=>views.push(['Spiel '+g+' '+LEVEL_LABEL[l],`S.levelByType['${g}']=${l};{kind:'game',id:'${g}'}`])));
     views.forEach(([name,v])=>wide(name,v.startsWith('S.levelByType')?`${v.split(';')[0]};${page(v.split(';')[1])}`:page(v)));
@@ -2117,10 +2181,10 @@ async function runFracScan(samples=3,ids,opts={}){
   }
   /* Erklärkarten, Seiten, Spiele */
   for(const id of Object.keys(INTRO)){
-    const r=cw.eval(`(()=>{try{S.intro={};S.rounds={};S.view=${id==='LAB'?"{kind:'lab'}":`{kind:'practice',id:'${id}'}`};renderAll();let g=0;while(document.querySelector('.introwork')&&g++<14){__scan('Erklärung ${id} Karte '+g);document.querySelector('.page').introApi.next();}return null;}catch(e){return e.message;}})()`);
+    const r=cw.eval(`(()=>{try{S.intro={};S.rounds={};S.view=${isLab(id)?`{kind:'lab',id:'${id}'}`:`{kind:'practice',id:'${id}'}`};renderAll();let g=0;while(document.querySelector('.introwork')&&g++<14){__scan('Erklärung ${id} Karte '+g);document.querySelector('.page').introApi.next();}return null;}catch(e){return e.message;}})()`);
     if(r)errs.push('Erklärung '+id+': '+r);
   }
-  const views=[['Lernen',"{kind:'home',tab:'pfad'}"],['Üben',"{kind:'home',tab:'ueben'}"],['Spiele',"{kind:'home',tab:'spiele'}"],['Ich',"{kind:'home',tab:'rang'}"],['Labor',"{kind:'lab'}"]];
+  const views=[['Lernen',"{kind:'home',tab:'pfad'}"],['Üben',"{kind:'home',tab:'ueben'}"],['Spiele',"{kind:'home',tab:'spiele'}"],['Ich',"{kind:'home',tab:'rang'}"],['Labor',"{kind:'lab'}"],['Labor Plus und Minus',"{kind:'lab',id:'RLAB'}"]];
   activeModules().forEach(m=>views.push(['Thema '+m.name,`{kind:'home',tab:'pfad',thema:'${m.id}'}`]));
   Object.keys(GAMES).forEach(g=>views.push(['Spiel '+g,`{kind:'game',id:'${g}'}`]));
   views.forEach(([n,v])=>{const r=cw.eval(`(()=>{try{S.view=${v};renderAll();document.querySelectorAll('#app details').forEach(d=>{d.open=true;});__scan('Seite ${n}');return null;}catch(e){return e.message;}})()`);if(r)errs.push('Seite '+n+': '+r);});

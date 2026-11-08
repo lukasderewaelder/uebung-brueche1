@@ -342,7 +342,7 @@ const ACC={G02:'erw',O01:'erw',G03:'kue',G04:'kue',T01:'kue',T02:'kue',O02:'kue'
 function backTarget(){
   const v=S.view;
   if(v.from==='opt'&&v.back)return v.back;
-  if(v.from==='pfad'&&(v.kind==='practice'||v.kind==='lab'))return pfadView(v.kind==='lab'?'LAB':v.id);
+  if(v.from==='pfad'&&(v.kind==='practice'||v.kind==='lab'))return pfadView(v.kind==='lab'?(v.id||'LAB'):v.id);
   if(v.kind==='home'&&v.tab==='pfad'&&v.thema)return {kind:'home',tab:'pfad'};
   if(v.kind==='practice')return {kind:'home',tab:'ueben'};
   if(v.kind==='game')return {kind:'home',tab:'spiele'};

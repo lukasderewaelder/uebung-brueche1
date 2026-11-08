@@ -212,7 +212,8 @@ function noteFor(typeId,task){
     const n=NOTES[id];
     return el('section',{class:'note','aria-label':'Merkkasten '+id},el('h3',null,id+' · '+n.title),...n.build(avoid));
   });
-  if(ids.some(id=>id==='M1'||id==='M2'||id==='M3'))out.push(el('p',{class:'labnote'},labLink()));
+  if(ids.some(id=>id==='M1'||id==='M2'||id==='M3'))out.push(el('p',{class:'labnote'},labLink('LAB')));
+  if(ids.some(id=>id==='M17'||id==='M18'))out.push(el('p',{class:'labnote'},labLink('RLAB')));
   return out;
 }
 

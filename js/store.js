@@ -14,7 +14,7 @@ const Store={
   },
   clear(){try{localStorage.removeItem(KEY);}catch(e){this.ok=false;}}
 };
-const defaultState=()=>({v:1,modus:{},levelByType:{},rounds:{},progress:{},games:{},skills:{},lab:null,passed:{},checked:{},days:{},perfect:{},intro:{},ui:{size:'m',theme:'auto'},view:{kind:'home'}});
+const defaultState=()=>({v:1,modus:{},levelByType:{},rounds:{},progress:{},games:{},skills:{},lab:null,labR:null,passed:{},checked:{},days:{},perfect:{},intro:{},ui:{size:'m',theme:'auto'},view:{kind:'home'}});
 let S=Object.assign(defaultState(),Store.load()||{});
 function persist(){Store.save(S);}
 /* Umstellung der Stationen R01–R05 („Addieren und Subtrahieren“ hat seit Version 2 fünf neu geschnittene Bausteine statt drei): Stände der alten Bausteine passen nicht mehr und werden einmal verworfen */
