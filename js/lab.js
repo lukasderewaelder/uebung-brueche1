@@ -80,9 +80,21 @@ function labFigure(L){
   return wrap;
 }
 
+/* Labore: eine Tabelle statt Sonderfall „LAB“. LAB (Erweitern und Kürzen, Zustand S.lab) und RLAB (Plus und Minus, Zustand S.labR, js/rechnen-lab.js).
+   Je Labor: name, desc (Zeile in Üben), done() (Entdeckerauftrag geschafft), started() (schon ausprobiert), render() */
+const LABS={
+  LAB:{name:'Bruchlabor',desc:'Erweitern und Kürzen ausprobieren – mit Streifen oder Kreis.',
+    done:()=>!!(S.lab&&S.lab.done),
+    started:()=>!!(S.lab&&(S.lab.done||(S.lab.did&&(S.lab.did.x||S.lab.did.d)))),
+    render:()=>renderLab()}
+};
+const isLab=(id)=>Object.prototype.hasOwnProperty.call(LABS,id);
+/* Labor öffnen (ohne Kennung: das Labor zu Erweitern und Kürzen) */
+const openLab=(id,from)=>go(Object.assign({kind:'lab',id:id||'LAB'},from?{from}:{}));
+
 /* Knopf „Im Labor ausprobieren“ für die Merkkästen */
-function labLink(){
-  return el('button',{type:'button',class:'btn labbtn',onclick:()=>go({kind:'lab'})},icon('kolben'),'Im Labor ausprobieren');
+function labLink(id){
+  return el('button',{type:'button',class:'btn labbtn',onclick:()=>openLab(id)},icon('kolben'),'Im Labor ausprobieren');
 }
 
 function renderLab(){
@@ -171,7 +183,7 @@ function renderLab(){
     promptEl.replaceChildren(el('p',{class:'q'},LAB_PROMPT[ph]));
     if(ph==='play')promptEl.append(el('button',{type:'button',class:'btn small',onclick:()=>{L.skip=false;persist();sayText('');draw();}},'Auftrag 3 starten'));
     stage.replaceChildren(labFigure(L));
-    tbPhase.textContent=ph==='free'?'Frei':'Auftrag '+(ph==='x'?1:ph==='d'?2:3)+'/3';
+    tbPhase.textContent=ph==='free'?'Frei':'Auftrag '+(ph==='x'?1:ph==='d'?2:3)+' von 3';
     tbMode.textContent=L.mode==='strip'?'Streifen':'Kreis';
     undoBtn.disabled=!L.hist.length;
     ctl.replaceChildren(ph==='quiz'?quizBox():chipRows());

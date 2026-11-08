@@ -64,7 +64,7 @@ let toastTimer=null;
 function toast(text,cls){
   let t=document.getElementById('toast');
   if(!t){t=el('div',{id:'toast','aria-live':'polite'});document.body.append(t);}
-  t.className='toast '+(cls||'');t.textContent=text;
+  t.className='toast '+(cls||'');setText(t,text);
   const bar=document.querySelector('.actionbar');
   const top=bar?bar.getBoundingClientRect().top:innerHeight-72;
   t.style.bottom=Math.max(8,Math.round(innerHeight-top+8))+'px';
@@ -337,12 +337,12 @@ const openEntry=(id)=>{if(!isGame(id))S.last=id;go({kind:isGame(id)?'game':'prac
 function setLevel(id,l){S.levelByType[id]=l;persist();renderAll();}
 
 /* Symbole und Kennfarbe je Übung (erw = Erweitern/Orange, kue = Kürzen/Petrol) */
-const ICON={QA:'plakette',ZA:'plakette',ZQ:'haken',Z01:'lineal',Z02:'lupe',Z03:'lineal',Z04:'aus',Z05:'wechsel',Z06:'netz',Z07:'lineal',Z08:'wechsel',Q00:'haken',G01:'lineal',T01:'teiler',T02:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'wechsel',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor',W01:'balken',W02:'balken',W03:'wechsel',W04:'luecke',W05:'aus',W06:'lineal',W07:'frage',W08:'netz',W09:'lineal',W10:'lupe',WQ:'haken',WA:'plakette',S03:'wechsel',R01:'balken',R02:'wechsel',R03:'lupe'};
+const ICON={QA:'plakette',ZA:'plakette',RA:'plakette',ZQ:'haken',Z01:'lineal',Z02:'lupe',Z03:'lineal',Z04:'aus',Z05:'wechsel',Z06:'netz',Z07:'lineal',Z08:'wechsel',Q00:'haken',G01:'lineal',T01:'teiler',T02:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'wechsel',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor',W01:'balken',W02:'balken',W03:'wechsel',W04:'luecke',W05:'aus',W06:'lineal',W07:'frage',W08:'netz',W09:'lineal',W10:'lupe',WQ:'haken',WA:'plakette',S03:'wechsel',R01:'plus',R02:'plus',R03:'minus',R04:'minus',R05:'plusminus'};
 const ACC={G02:'erw',O01:'erw',G03:'kue',G04:'kue',T01:'kue',T02:'kue',O02:'kue',G05:'mix'};
 function backTarget(){
   const v=S.view;
   if(v.from==='opt'&&v.back)return v.back;
-  if(v.from==='pfad'&&(v.kind==='practice'||v.kind==='lab'))return pfadView(v.kind==='lab'?'LAB':v.id);
+  if(v.from==='pfad'&&(v.kind==='practice'||v.kind==='lab'))return pfadView(v.kind==='lab'?(v.id||'LAB'):v.id);
   if(v.kind==='home'&&v.tab==='pfad'&&v.thema)return {kind:'home',tab:'pfad'};
   if(v.kind==='practice')return {kind:'home',tab:'ueben'};
   if(v.kind==='game')return {kind:'home',tab:'spiele'};
@@ -370,14 +370,18 @@ function levelControl(id){
 }
 /* Hilfespalte: rechts auf dem Desktop, Schublade (Tablet), Bottom-Sheet (Smartphone) */
 function helpPanel(introId){
-  const body=el('div'),stats=el('div');
+  const body=el('div',{class:'helpbody'}),stats=el('div');
   const aside=el('aside',{class:'help','aria-label':'Merkkasten und Fortschritt'});
   const det=el('details',{class:'statsbox'},el('summary',null,icon('balken'),' Dein Fortschritt'),stats);
   /* Knopf „Erklärung“: die Anleitung des Bauteils noch einmal ansehen (nur Bauteile mit Erklärung) */
   const intro=introId&&hasIntro(introId)?el('p',{class:'helpintro'},el('button',{type:'button',class:'btn small helpintrobtn',onclick:openIntro},icon('gluehbirne'),'Erklärung')):null;
   aside.append(el('div',{class:'helphead'},el('h2',null,'Merkkasten'),el('button',{type:'button',class:'btn small helpclose',onclick:()=>setHelp(false)},'Schließen')),intro,body,det);
   if(helpOpen)aside.classList.add('open');
-  return {el:aside,setNotes(nodes){body.replaceChildren(...nodes);},setStats(n){stats.replaceChildren(n);}};
+  return {el:aside,setNotes(nodes){
+    const n=nodes.filter(x=>x&&x.classList&&x.classList.contains('note')).length; /* mehrere Merkkästen stehen im Pop-up nebeneinander */
+    body.classList.toggle('multi',n>1);body.style.setProperty('--nn',String(Math.min(3,Math.max(1,n))));
+    body.replaceChildren(...nodes);
+  },setStats(n){stats.replaceChildren(n);}};
 }
 function statsBlock(key,extra){
   const P=prog(key);
@@ -557,7 +561,7 @@ function renderSummary(main,id,lvl,key,round){
 /* Ergebnis des Abschlusschecks (QA, ZA): Punkte, Antippfragen und Rechenaufgaben getrennt, Urkunde */
 function renderFinalSummary(main,id,lvl,key,round){
   const info=round.info||{},fm=finalModOf(id),sc=roundScore(round.results,round.size);
-  const tapN=TASKS[id].finalTap||(id==='ZA'?ZA_TAP:QA_TAP),tap=round.results.slice(0,tapN),calc=round.results.slice(tapN);
+  const tapN=TASKS[id].finalTap!=null?TASKS[id].finalTap:(id==='ZA'?ZA_TAP:QA_TAP),tap=round.results.slice(0,tapN),calc=round.results.slice(tapN); /* finalTap 0: keine Antippfragen (RA) */
   const good=(r)=>r.filter(x=>x==='f'||x==='l').length,fmt=(x)=>String(x).replace('.',',');
   const again=()=>{S.rounds[key]={results:[],cur:null,size:TASKS[id].size};persist();renderAll();};
   const btn=(label,fn,primary)=>el('button',{type:'button',class:'btn'+(primary?' primary':''),onclick:fn},label);
@@ -568,7 +572,7 @@ function renderFinalSummary(main,id,lvl,key,round){
   main.append(el('div',{class:'card summary'},el('div',{class:'stampbox'},info.final?'Urkunde':sc.passed?'Bestanden':'Check fertig'),el('p',null),bigStars(sc.passed?3:sc.points>=sc.need*0.6?2:1),
     el('p',null,`${sc.right} von ${round.size} richtig · ${LEVEL_LABEL[lvl]}`),
     el('table',null,
-      el('tr',null,el('td',null,'Zum Antippen richtig'),el('td',null,el('b',null,good(tap)+' von '+tap.length))),
+      tap.length?el('tr',null,el('td',null,'Zum Antippen richtig'),el('td',null,el('b',null,good(tap)+' von '+tap.length))):null,
       el('tr',null,el('td',null,TASKS[id].finalLabel||(id==='ZA'?'Am Zahlenstrahl richtig':'Zum Rechnen richtig')),el('td',null,el('b',null,good(calc)+' von '+calc.length)))),
     ...lines.map(x=>el('p',null,x)),
     el('div',{class:'sumact'},btn('Zum Lernpfad',()=>go(pfadView(id)),true),el('div',{class:'linkrow'},linkBtn('Nochmal',again)))));

@@ -149,6 +149,70 @@ function runSelfTests(){
   S.lab=keepLab;persist();
   t('Labor: Erklärungen nennen Rechnung, keine Pauschalregel zur 2',labTell([2,3],[6,9],'x',3).includes('2 · 3 = 6 und 3 · 3 = 9')&&labTell([6,9],[2,3],'d',3).includes('nicht mehr')&&labWhy([6,9],'d',2).includes('nicht beide durch 2')&&!labWhy([6,9],'d',2).includes('IMMER'));
   t('Labor: Frage hat genau eine richtige Antwort',LAB_QUIZ.filter(o=>o.id==='wert').length===1&&LAB_QUIZ.every(o=>o.id==='wert'||LAB_WRONG[o.id]));
+  /* Bruchlabor Plus und Minus (RLAB): Regeln der Stellschrauben, Auftragsfolge, Ansicht und Bedienung, Einbindung */
+  {
+    let bad=0,steps=0;
+    const okAll=RLAB_START.every(s=>rlabValid('plus',s[0],s[1],s[2])&&rlabValid('minus',s[0],s[1]+s[2],s[2]));
+    for(let i=0;i<400;i++){
+      const s=RNG.pick(RLAB_START),op=RNG.pick(['plus','minus']),L={op,d:s[0],a:op==='plus'?s[1]:s[1]+s[2],c:s[2]};
+      for(let k=0;k<14;k++){
+        const key=RNG.pick(['d','a','c']),delta=RNG.pick([-1,1]),r=rlabTry(L,key,delta);
+        if(r.to){
+          if(!rlabValid(L.op,r.to.d,r.to.a,r.to.c))bad++;
+          Object.assign(L,r.to);steps++;
+          if(rlabResult(L)<1||rlabResult(L)>L.d)bad++;
+        }else{
+          const n={d:L.d,a:L.a,c:L.c};n[key]+=delta;
+          if(!r.why||/undefined|NaN/.test(r.why)||(key!=='d'&&rlabValid(L.op,n.d,n.a,n.c)))bad++;
+        }
+      }
+      const op2=op==='plus'?'minus':'plus',f=rlabFit(op2,L.d,L.a,L.c);
+      if(!rlabValid(op2,L.d,f[0],f[1]))bad++;
+    }
+    t('Bruchlabor Plus und Minus: alle Startaufgaben gültig, jede Stellschraube hält die Regeln (plus: höchstens ein Ganzes, minus: Rest mindestens 1, 3–16 Teile), Ablehnungen nennen einen Grund ('+steps+' Schritte)',okAll&&bad===0&&steps>1000);
+    const lp=(p,m,sk,dn)=>rlabPhase({did:{plus:p,minus:m},skip:sk,done:dn});
+    t('Bruchlabor Plus und Minus: Auftragsfolge plus, minus, Frage, frei',lp(false,false,false,false)==='plus'&&lp(true,false,false,false)==='minus'&&lp(false,true,false,false)==='plus'&&lp(true,true,false,false)==='quiz'&&lp(true,true,true,false)==='play'&&lp(true,true,false,true)==='free');
+    t('Bruchlabor Plus und Minus: Frage hat genau eine richtige Antwort („Der Nenner“), jede falsche hat einen Satz; Sätze zur Rechnung nennen Nenner und Zähler',
+      RLAB_QUIZ.filter(o=>o.id==='nenner').length===1&&RLAB_QUIZ.every(o=>o.id==='nenner'||RLAB_WRONG[o.id])&&/Nenner bleibt 8/.test(rlabTell({op:'plus',d:8,a:3,c:2}))&&/3 \+ 2 = 5/.test(rlabTell({op:'plus',d:8,a:3,c:2}))&&/5 − 2 = 3/.test(rlabTell({op:'minus',d:8,a:5,c:2}))&&/ganze Raster/.test(rlabTell({op:'plus',d:8,a:5,c:3})));
+    const ch=(L)=>rlabChain(L);
+    t('Bruchlabor Plus und Minus: Rechnung mit Bruchstrich (a/d ± c/d = (a ± c)/d = n/d), gekürzt nur wenn es geht, bei einem Ganzen „= 1“',
+      ch({op:'plus',d:12,a:5,c:1}).querySelectorAll('.frac').length===5&&ch({op:'plus',d:12,a:5,c:2}).querySelectorAll('.frac').length===4&&ch({op:'plus',d:8,a:5,c:3}).querySelectorAll('.frac').length===4&&/= *1$|=1$/.test(ch({op:'plus',d:8,a:5,c:3}).textContent.replace(/\s/g,''))
+      &&/5−1/.test(ch({op:'minus',d:12,a:5,c:1}).textContent.replace(/\s/g,'')));
+    const keepR=S.labR,keepV=S.view,keepI=S.intro;
+    S.intro=Object.assign({},S.intro,{RLAB:true});
+    S.labR=Object.assign(rlabDefault(),{d:8,a:7,c:7}); /* kaputter Zustand */
+    const sane=rlabState();
+    t('Bruchlabor Plus und Minus: kaputter Zustand wird zurückgesetzt, gültiger bleibt',sane.d===8&&sane.a===3&&sane.c===2&&(S.labR=Object.assign(rlabDefault(),{op:'minus',d:10,a:7,c:2}),rlabState().a===7&&rlabState().op==='minus'));
+    S.labR=rlabDefault();S.view={kind:'lab',id:'RLAB'};renderAll();
+    const q=(s)=>document.querySelector(s),qa=(s)=>[...document.querySelectorAll(s)],btn=(i,j)=>qa('.rlabrow')[i].querySelectorAll('button')[j];
+    const hasUi=!!q('.rlab')&&qa('.rlabrow').length===3&&!!q('.rlab .addfig')&&qa('.rlabchain .frac').length>=4&&/Auftrag 1/.test(q('.rlab .prompt').textContent)&&qa('.seg.labseg button').length===2;
+    btn(1,1).click();btn(2,1).click();            /* erster Anteil 4, zweiter Anteil 3 (Summe 7 von 8) */
+    const afterPlus=[S.labR.a,S.labR.c,S.labR.did.plus,/Auftrag 2/.test(q('.rlab .prompt').textContent),qa('.rlabrow')[1].querySelector('.rv').textContent];
+    btn(1,1).click();                              /* 5 + 3 = 8: das ganze Raster */
+    btn(1,1).click();                              /* 6 + 3 wäre mehr als ein Ganzes: abgelehnt, Satz */
+    const refused=[S.labR.a,/Ganzes/.test(q('.rlab .labsay').textContent),btn(1,1).classList.contains('off')];
+    qa('.seg.labseg button')[1].click();           /* Minus: Anfang 5, weggenommen 3 */
+    const asMinus=[S.labR.op,qa('.rlabrow .lbl').map(x=>x.textContent).join(),qa('.rlab .addfig .xmark').length>0];
+    btn(1,1).click();btn(2,1).click();             /* Anfang 6, weggenommen 4: zwei Änderungen bei Minus */
+    const afterMinus=[S.labR.did.minus,qa('.rlab .labquiz .tile').length===4,q('.rlab .rlabctl').hidden===true];
+    const wrong=qa('.rlab .labquiz .tile').find(b=>/Der Zähler/.test(b.textContent));wrong.click();
+    const wrongOk=wrong.disabled&&/ändern sich/.test(q('.rlab .labsay').textContent)&&!S.labR.done;
+    qa('.rlab .labquiz .tile').find(b=>/Der Nenner/.test(b.textContent)).click();
+    const doneOk=S.labR.done===true&&/Genau/.test(q('.rlab .labsay').textContent)&&LABS.RLAB.done()&&/Auftrag geschafft/.test(q('.rlab .prompt').textContent);
+    q('.rlab .primaryrow .btn').click();           /* Rückgängig */
+    t('Bruchlabor Plus und Minus: Ansicht (Raster, Rechnung, drei Stellschrauben, Plus/Minus), Bedienung, Auftragswechsel, Ablehnung über ein Ganzes, Minus mit Kreuzen und neuen Beschriftungen',
+      hasUi&&afterPlus.join()==='4,3,true,true,4'&&refused[0]===5&&refused[1]&&refused[2]&&asMinus[0]==='minus'&&/Anfang/.test(asMinus[1])&&/Wegnehmen/.test(asMinus[1])&&asMinus[2]);
+    t('Bruchlabor Plus und Minus: Frage nach den zwei Aufträgen, falsche Antwort wird benannt, richtige schließt ab (Labor geschafft), Rückgängig geht',afterMinus.every(Boolean)&&wrongOk&&doneOk&&S.labR.hist.length>0);
+    /* Einbindung: Tabelle, Pfad, Navigation, Erklärung, Merkkasten-Knopf, Üben-Zeile */
+    S.view={kind:'lab',id:'RLAB',from:'pfad'};const bk=backTarget();
+    S.view={kind:'lab',id:'RLAB'};const bk2=backTarget();
+    const labRow=bomList(['RLAB'],{head:false});
+    const nf=noteFor('R01',null).filter(n=>n.classList.contains('labnote')),nf5=noteFor('R05',null).filter(n=>n.classList.contains('labnote')),nf2=noteFor('G01',null).filter(n=>n.classList&&n.classList.contains('labnote'));
+    t('Bruchlabor Plus und Minus: eingebunden (Tabelle LABS, Pfad ohne Pflicht vor R01, Zurück zum Thema, Erklärung mit 3 Karten, Knopf im Merkkasten der Addieren-Stationen, Zeile in Üben)',
+      isLab('LAB')&&isLab('RLAB')&&!isLab('R01')&&pfadView('RLAB').thema==='addsub'&&bk.thema==='addsub'&&bk2.tab==='ueben'&&introIdOf({kind:'lab',id:'RLAB'})==='RLAB'&&introIdOf({kind:'lab'})==='LAB'&&INTRO.RLAB.steps.length===3
+      &&nf.length===1&&nf5.length===1&&nf2.length===1&&labRow.textContent.includes('Bruchlabor Plus und Minus')&&stationTitle('RLAB')==='Bruchlabor Plus und Minus'&&LABS.RLAB.started()===true);
+    S.labR=keepR;S.view=keepV;S.intro=keepI;persist();
+  }
   /* G01: Zahl richtiger Karten wechselt; Streifen/Kreis nur bei kleinen Nennern, große Nenner nur als Raster */
   for(const lvl of [1,2]){
     const counts=new Set();let badRep=0,badN=0,dup=0;
@@ -509,7 +573,15 @@ function runSelfTests(){
   t('Zahlengerade: 3/4 liegt bei 3/8 der Länge, 1 genau in der Mitte; außerhalb und Nenner 0 entfallen',ng.marks.length===2&&Math.abs(ng.marks[0].x-(ng.pad+0.375*(ng.W-2*ng.pad)))<1e-9&&Math.abs(ng.ticks[4].x-ng.W/2)<1e-9);
   t('Zahlengerade: Beschriftung „n/d“ standardmäßig, leer = ohne',ng.marks[0].text==='3/4'&&ng.marks[1].text==='');
   const nlSvg=drawNumberLine({from:0,to:1,parts:3,marks:[{n:2,d:3}]});
-  t('Zahlengerade: SVG hat Achse, 4 Teilstriche, 2 Zahlen (0, 1) und eine Marke',nlSvg.querySelectorAll('.nl-axis').length===1&&nlSvg.querySelectorAll('.nl-tick').length===4&&nlSvg.querySelectorAll('.nl-num').length===2&&nlSvg.querySelectorAll('.nl-mark').length===1&&nlSvg.querySelector('.nl-lab').textContent==='2/3');
+  t('Zahlengerade: SVG hat Achse, 4 Teilstriche, 2 Zahlen (0, 1) und eine Marke',nlSvg.querySelectorAll('.nl-axis').length===1&&nlSvg.querySelectorAll('.nl-tick').length===4&&nlSvg.querySelectorAll('.nl-num').length===2&&nlSvg.querySelectorAll('.nl-mark').length===1&&[...nlSvg.querySelectorAll('.nl-lab')].map(x=>x.textContent).join('/')==='2/3'&&nlSvg.querySelectorAll('.nl-fl').length===1);
+  /* Bruchstrich überall: Texte mit „a/b“ und „w a/b“ werden zur Bruchdarstellung, Beschriftungen am Strahl mit Strich; Zähler wie „3 von 10“ bleiben Text */
+  const ftx=el('p',null,'Gekürzt: 5/8. Dann 2 3/4 und 12 5/3 sowie https://x.de/a/b.');
+  t('Bruchstrich: „5/8“ im Text wird ein Bruch mit Strich, „2 3/4“ eine gemischte Zahl, ein Link bleibt Text',ftx.querySelectorAll('.frac').length===3&&ftx.querySelectorAll('.mixed').length===1&&ftx.textContent.includes('https://x.de/a/b')&&!/\d\/\d/.test(ftx.textContent));
+  t('Bruchstrich: Text ohne Schrägstrich bleibt unverändert (Zeichenkette, keine Elemente)',fracText('Der Nenner 24 bleibt.')==='Der Nenner 24 bleibt.'&&Array.isArray(fracText('1/2')));
+  const nlMix=drawNumberLine({from:0,to:2,parts:4,marks:[{n:7,d:4,text:'1 3/4'},{i:1,text:'A'}]});
+  t('Zahlengerade: gemischte Beschriftung „1 3/4“ mit Strich (3 Texte, 1 Strich), Buchstabe bleibt einfacher Text',nlMix.querySelectorAll('.nl-fl').length===1&&[...nlMix.querySelectorAll('.nl-lab')].map(x=>x.textContent).join('|')==='3|4|1|A');
+  const sT=el('div');setText(sT,'Noch 3/4 übrig');
+  t('Bruchstrich: setText setzt Text mit Bruchstrich (Toast, Meldungen)',sT.querySelectorAll('.frac').length===1&&sT.textContent.startsWith('Noch '));
   /* Zahlenstrahl: Einteilung, Striche, Ausschnitt (Lupe) */
   t('Einteilung: Nenner geht auf (3 in 12, 5 in 10), geht nicht auf (4 in 10, 3 in 8); gemeinsamer Nenner 3, 8 → 24 und 4, 6, 12 → 12',fitsDivision(3,12)&&fitsDivision(5,10)&&!fitsDivision(4,10)&&!fitsDivision(3,8)&&commonDenominator([3,8])===24&&commonDenominator([4,6,12])===12&&commonDenominator([5])===5);
   t('Strichnummer: 3/5 bei 10 Teilen ist Strich 6, 1/2 bei 8 Teilen Strich 4, 1/3 bei 10 Teilen keiner',tickOf(3,5,10)===6&&tickOf(1,2,8)===4&&tickOf(1,3,10)===null&&tickOf(7,4,4)===7);
@@ -733,7 +805,7 @@ function runSelfTests(){
     Object.assign(S,snap);
   }
   /* Themen-Registry */
-  t('Registry: jede Aufgabe, Gruppe und jedes Bauteil eines aktiven Themas gibt es',activeModules().every(m=>(m.practice||[]).every(id=>TASKS[id])&&Object.values(m.groups||{}).every(g=>g.ids.every(id=>id==='LAB'||TASKS[id]))&&(m.path||[]).every(p=>p.id==='LAB'||TASKS[p.id])));
+  t('Registry: jede Aufgabe, Gruppe und jedes Bauteil eines aktiven Themas gibt es',activeModules().every(m=>(m.practice||[]).every(id=>TASKS[id])&&Object.values(m.groups||{}).every(g=>g.ids.every(id=>isLab(id)||TASKS[id]))&&(m.path||[]).every(p=>isLab(p.id)||TASKS[p.id])));
   t('Registry: geplante Themen haben keine Aufgaben, keine Gruppen, keinen Lernpfad',plannedModules().length>0&&plannedModules().every(m=>!m.practice&&!m.groups&&!m.path));
   t('Registry: Themen-IDs und Aufgaben-IDs sind eindeutig',new Set(MODULES.map(m=>m.id)).size===MODULES.length&&new Set(PRACTICE_ORDER).size===PRACTICE_ORDER.length&&new Set(PATH.map(p=>p.id)).size===PATH.length);
   t('Registry: Rang zählt „Erweitern und Kürzen“ (19 Übungen, 14 Stationen)',rankPractice().length===19&&rankPath().length===14&&moduleOf('G02').id==='veraendern'&&moduleOf('Entdecken').id==='veraendern');
@@ -969,8 +1041,8 @@ function runSelfTests(){
       const bad=[];
       activeModules().forEach(m=>{
         m.path.forEach(p=>{if(!(GROUPS[p.grp]&&GROUPS[p.grp].ids.includes(p.id)))bad.push(m.id+' '+p.id+' ↛ '+p.grp);});
-        Object.keys(m.groups).forEach(g=>{if(m.groups[g].ids.some(id=>id!=='LAB'&&!m.practice.includes(id)))bad.push('Gruppe '+g+' hat fremde Aufgabe');});
-        const inGroups=[].concat(...Object.values(m.groups).map(g=>g.ids)).filter(id=>id!=='LAB');
+        Object.keys(m.groups).forEach(g=>{if(m.groups[g].ids.some(id=>!isLab(id)&&!m.practice.includes(id)))bad.push('Gruppe '+g+' hat fremde Aufgabe');});
+        const inGroups=[].concat(...Object.values(m.groups).map(g=>g.ids)).filter(id=>!isLab(id));
         if(new Set(inGroups).size!==inGroups.length||m.practice.some(id=>!inGroups.includes(id)))bad.push(m.id+' Aufgaben nicht in genau einer Gruppe');
       });
       t('Gruppen: jede Station des Pfads steht im Üben in derselben Gruppe, jede Aufgabe in genau einer Gruppe, Gruppennamen sind eindeutig',(bad.length===0&&Object.keys(GROUPS).length===activeModules().reduce((n,m)=>n+Object.keys(m.groups).length,0))||(console.log(bad),false));
@@ -1008,8 +1080,9 @@ function runSelfTests(){
     try{
       S.last=null;S.view={kind:'home',tab:'ueben'};renderAll();
       const folds=[...app.querySelectorAll('details.fold')];
-      t('Üben: ein Umschalter für alle, je Thema eine Liste (das erste geöffnet), jede Aufgabe ohne Zwischenseite erreichbar',app.querySelectorAll('.levelrow').length===1&&folds.length===activeModules().length&&folds[0].open&&folds.slice(1).every(d=>!d.open)&&activeModules().every((m,i)=>folds[i].querySelectorAll('.bomrow').length===Object.values(m.groups).reduce((n,g)=>n+g.ids.length,0))&&!app.querySelector('.menu')&&app.querySelectorAll('.btn.primary,.bigbtn').length===0);
-      t('Üben: die Gruppen stehen als Überschriften, die Nummern laufen je Thema durch (Kopfzeile nur einmal)',activeModules().every((m,i)=>folds[i].querySelectorAll('h3.grp').length===Object.keys(m.groups).length&&folds[i].querySelectorAll('.bomhead').length===1&&[...folds[i].querySelectorAll('.bomrow .pos')].map(e=>e.textContent).join()===[...Array(folds[i].querySelectorAll('.bomrow').length).keys()].map(k=>String(k+1).padStart(2,'0')).join()));
+      t('Üben: ein Umschalter für alle, je Thema eine Liste (das erste geöffnet), jede Aufgabe ohne Zwischenseite erreichbar',app.querySelectorAll('.levelrow').length===1&&folds.length===activeModules().length&&folds[0].open&&folds.slice(1).every(d=>!d.open)&&activeModules().every((m,i)=>folds[i].querySelectorAll('.bomrow').length===Object.values(m.groups).reduce((n,g)=>n+g.ids.filter(id=>!isCheck(id)).length,0))&&!app.querySelector('.menu')&&app.querySelectorAll('.btn.primary,.bigbtn').length===0);
+      t('Üben: keine Eingangstests und Abschlusschecks (die stehen nur im Lernpfad)',!/Eingangstest|Abschlusscheck/.test(app.textContent)&&['Q00','QA','ZQ','ZA','WQ','WA','RA'].every(isCheck)&&!isCheck('R01')&&!isCheck('LAB'));
+      t('Üben: die Gruppen stehen als Überschriften, die Nummern laufen je Thema durch (Kopfzeile nur einmal)',activeModules().every((m,i)=>folds[i].querySelectorAll('h3.grp').length===Object.values(m.groups).filter(g=>g.ids.some(id=>!isCheck(id))).length&&folds[i].querySelectorAll('.bomhead').length===1&&[...folds[i].querySelectorAll('.bomrow .pos')].map(e=>e.textContent).join()===[...Array(folds[i].querySelectorAll('.bomrow').length).keys()].map(k=>String(k+1).padStart(2,'0')).join()));
       S.last='W05';renderAll();
       const folds2=[...app.querySelectorAll('details.fold')],vi=activeModules().findIndex(m=>m.id==='vergleichen');
       t('Üben: „Weiter üben“ ist der einzige Hauptknopf; das Thema der letzten Aufgabe ist geöffnet',app.querySelectorAll('.bigbtn.go').length===1&&/Weiter üben/.test(app.querySelector('.bigbtn.go').textContent)&&folds2[vi].open&&folds2.filter(d=>d.open).length===1);
@@ -1089,7 +1162,7 @@ function runSelfTests(){
       const f=nodes[0];if(f.classList.contains('ex')||/^Beispiel/.test(f.textContent))firstOK++;
       nodes.filter(n=>n.tagName==='P'||n.classList.contains('rule')).forEach(n=>n.textContent.split(/[.!?]\s+/).forEach(s=>{longest=Math.max(longest,words(s));}));
     });
-    t('Merkkästen: alle 17 (M1–M17) bauen sich, beginnen mit dem Beispiel, Sätze höchstens 14 Wörter (längster: '+longest+')',ids.length===17&&bad.length===0&&firstOK===17&&longest<=14);
+    t('Merkkästen: alle 18 (M1–M18) bauen sich, beginnen mit dem Beispiel, Sätze höchstens 14 Wörter (längster: '+longest+')',ids.length===18&&bad.length===0&&firstOK===18&&longest<=14);
     const txt=(id)=>NOTES[id].build([]).map(n=>n.textContent).join(' ');
     t('Merkkästen: Fachwörter kommen nach dem Beispiel mit Erklärung (Erweiterungszahl, Kürzungszahl, Quersumme, Dezimalbruch, gemischte Zahl, kgV)',txt('M2').includes('Erweiterungszahl. Sie ist mindestens 2')&&txt('M3').includes('Kürzungszahl. Sie ist mindestens 2')&&txt('M7').includes('Quersumme bekommst du, wenn du alle Ziffern addierst')&&txt('M4').includes('heißt Dezimalbruch')&&txt('M6').includes('Natürliche Zahlen sind 1, 2, 3')&&txt('M10').includes('kleinstes gemeinsames Vielfaches (kgV)'));
     /* Schrift: Menü und Rang-Chip mindestens 16 px */
@@ -1703,7 +1776,7 @@ function runSelfTests(){
       t('Bruch-Duell: Knifflig hat fünf Karten im Rätsel und eigenen Spielstand',(()=>{const r2=S.games[keyOf('S03',2)];app.querySelectorAll('.seg button')[1].click();return r2&&r2.state.level===2&&app.querySelectorAll('.ordslot').length===5;})());
     }finally{Object.assign(S,keepG);persist();renderAll();}
   }
-  /* Addieren und Subtrahieren, Teil 1 (R01–R03): gleiche Nenner. Zahlenraum, Lösbarkeit, Ergebnis-Block (Kürzen-Feld bei jeder Aufgabe, ohne etwas zu verraten),
+  /* Addieren und Subtrahieren, Teil 1 (R01–R05): gleiche Nenner. Zahlenraum, Lösbarkeit, Ergebnis-Block (Kürzen-Feld bei jeder Aufgabe, ohne etwas zu verraten),
      Fehlercodes, offene Aufgaben, Rundenplan, Reihenfolge im Pfad, Tipps, Ansicht */
   {
     const problems=[],codes=new Set(),red={y:0,n:0},structure=new Set();let n=0;
@@ -1715,6 +1788,7 @@ function runSelfTests(){
       const ct=tk.kind==='fehler'?addCalcTask(tk.calcs[tk.wrong]):tk,d=tk.kind==='fehler'?{sel:tk.wrong,err:tk.errType}:{};
       if(tk.level===1)Object.assign(d,{z1:String(ct.a),z2:String(ct.c),zn:String(ct.b)});
       if(tk.kind==='bild')Object.assign(d,{'u.n':String(tk.a),'u.d':String(tk.b),'v.n':String(tk.c),'v.d':String(tk.b),op:tk.plus?'+':'−',s1:true});
+      if(tk.kind==='art')d.art=tk.plus?'plus':'minus';
       return d;
     };
     const okDraft=(tk)=>{
@@ -1725,10 +1799,13 @@ function runSelfTests(){
       return Object.assign(baseOf(tk),rd(r),kd(r));
     };
     const words=(s)=>s.replace(/\*\*/g,'').replace(/\{\d+\|\d+\}/g,'x').split(/[.!?]\s+/).some(x=>x.split(/\s+/).filter(Boolean).length>14);
-    for(const id of ['R01','R02','R03'])for(const lvl of [1,2])for(const kind of TASKS[id].layoutKinds(lvl))for(let i=0;i<60;i++){
+    for(const id of ['R01','R02','R03','R04','R05'])for(const lvl of [1,2])for(const kind of TASKS[id].layoutKinds(lvl))for(let i=0;i<60;i++){
       const tk=TASKS[id].gen(lvl,RNG,{kind});n++;
-      const lim=lvl===1?24:100,tag=id+'-L'+lvl+' '+kind,hasRes=['plus','minus','ueber1','bild','geschichte','fehler'].includes(kind);
+      const lim=lvl===1?24:100,tag=id+'-L'+lvl+' '+kind,hasRes=['plus','minus','ueber1','bild','geschichte','art','fehler'].includes(kind);
       if(tk.type!==id||tk.kind!==kind)problems.push(tag+' Art');
+      /* feste Rechenart je Station: R01 und R02 addieren, R03 und R04 subtrahieren (R05 mischt) */
+      if(id!=='R05'&&kind!=='luecke'&&tk.plus!==(id==='R01'||id==='R02'))problems.push(tag+' Rechenart der Station');
+      if(id!=='R05'&&kind==='luecke'&&tk.plus!==(id==='R01'||id==='R02'))problems.push(tag+' Rechenart der Station (Lücke)');
       if(!Array.isArray(tk.avoid)||!tk.avoid.length)problems.push(tag+' avoid');
       if(!Number.isInteger(tk.b)||tk.b<4||tk.b>lim)problems.push(tag+' Nenner');
       if(hasRes&&kind!=='fehler'){
@@ -1736,9 +1813,10 @@ function runSelfTests(){
         if(!(tk.a>=1&&tk.c>=1)||tk.res[1]!==tk.b||tk.res[0]!==(tk.plus?tk.a+tk.c:tk.a-tk.c)||tk.res[0]<1||tk.res[0]%tk.b===0)problems.push(tag+' Zahlen');
         if(tk.c>=tk.b||(tk.plus&&tk.a>=tk.b)||(over&&lvl===1&&kind!=='ueber1')||(kind==='plus'&&tk.plus!==true)||(kind==='minus'&&tk.plus!==false))problems.push(tag+' echt oder unecht');
         if(kind==='bild'&&(tk.b>16||lvl!==1||!Number.isInteger(tk.seed)||typeof tk.scatter!=='boolean'))problems.push(tag+' Bild');
-        if(kind==='geschichte'){
+        if(kind==='geschichte'||kind==='art'){
           const S=ADD_STORIES[tk.story];
           if(!S||S.plus!==tk.plus||(over&&!S.big)||!tk.who||tk.who.length!==2)problems.push(tag+' Geschichte passt nicht zur Rechenart');
+          if((id==='R01'||id==='R03')&&S&&S.pic===false)problems.push(tag+' Geschichte ohne Bild in einer Bild-Station');
         }
         if(kind!=='bild'){if(isFullyReduced(tk.res[0],tk.res[1]))red.n++;else red.y++;}
       }
@@ -1797,7 +1875,7 @@ function runSelfTests(){
         }
       }
     }
-    t('Rechnen R01–R03: '+n+' Aufgaben, gleiche Nenner (Leicht bis 24, Knifflig bis 100), Zahlen und Lösbarkeit, richtige Antworten gelten, Tipps (3 Stufen, kurz, verraten das Kürzen nicht), keine gemischte Zahl, Ansicht und Lösung bauen sich',problems.length===0||(console.log(problems.slice(0,6)),false));
+    t('Rechnen R01–R05: '+n+' Aufgaben, gleiche Nenner (Leicht bis 24, Knifflig bis 100), Zahlen und Lösbarkeit, richtige Antworten gelten, Tipps (3 Stufen, kurz, verraten das Kürzen nicht), keine gemischte Zahl, Ansicht und Lösung bauen sich',problems.length===0||(console.log(problems.slice(0,6)),false));
     t('Rechnen: der Rechenweg-Block (Zwischenschritt nur in Leicht, „Ergebnis“, „gekürzt“ und „Kürzen geht nicht“) sieht bei jeder Aufgabe mit Ergebnis je Stufe gleich aus; kürzbare und nicht kürzbare Ergebnisse sind gemischt ('+red.y+' kürzbar, '+red.n+' nicht)',structure.size===2&&red.y>(red.y+red.n)*0.25&&red.n>(red.y+red.n)*0.25);
     t('Rechnen: Fehlercodes nennerAddiert und andereRechnung werden bei falschen Ergebnissen benannt',codes.has('nennerAddiert')&&codes.has('andereRechnung')&&[...codes].every(c=>['nennerAddiert','andereRechnung','zaehlerNenner','rechenfehler','wert'].includes(c)));
     t('addDiagnose: Nenner mitgerechnet, andere Rechenart, Zähler und Nenner einzeln, Zählerfehler, sonst „wert“; richtig (auch ungekürzt) gibt null',
@@ -1828,7 +1906,7 @@ function runSelfTests(){
       const okM=v(m,mfull({z1:'9',z2:'3',zn:'12'})),swapM=v(m,mfull({z1:'3',z2:'9',zn:'12'}));
       t('Zwischenschritt (8 + 3)/12 in Leicht: richtig, bei plus auch vertauscht, bei minus nicht; leer wird zuerst verlangt; Nenner verdoppelt und falsche Zähler werden nur am Zwischenschritt markiert; Knifflig hat ihn nicht',
         okP.correct&&swapP.correct&&emptyZ.invalid&&/Zwischenschritt/.test(emptyZ.feedback)&&dbl.errorCode==='nennerAddiert'&&dbl.marks.zn===false&&!('r.n' in dbl.marks)&&wrongZ.errorCode==='zahl'&&wrongZ.marks.z2===false&&okM.correct&&swapM.errorCode==='vertauscht'&&v(mk({level:2}),full()).correct);
-      const bt=mk({type:'R01',kind:'bild',scatter:false,seed:1}),bm=mk({type:'R01',kind:'bild',scatter:true,seed:5,plus:false,a:9,c:3,res:[6,12]});
+      const bt=mk({type:'R01',kind:'bild',scatter:false,seed:1}),bm=mk({type:'R03',kind:'bild',scatter:true,seed:5,plus:false,a:9,c:3,res:[6,12]});
       const rdP={'u.n':'8','u.d':'12','v.n':'3','v.d':'12',op:'+',s1:true},bf=(x)=>Object.assign({},rdP,full({z1:'8',z2:'3',zn:'12'}),x);
       const rdM=(x)=>Object.assign({'u.n':'9','u.d':'12','v.n':'3','v.d':'12',op:'−',s1:true},mfull({z1:'9',z2:'3',zn:'12'}),x);
       t('Bild lesen (R01 bild): Brüche ablesen und Rechenzeichen wählen; bei plus ist die Reihenfolge egal, bei minus erst alles Gefärbte; falsches Zeichen, falscher Nenner und falsche Zähler werden benannt; ohne „Weiter“ oder leer gilt es nicht',
@@ -1854,48 +1932,83 @@ function runSelfTests(){
         &&cnt(s5,'.acap')===3&&s5.querySelector('.acap').textContent==='Schokokuchen'&&cnt(s1,'.acap')===0);
       const seen={};
       for(let i=0;i<400;i++){const tk=TASKS.R01.gen(1+i%2,RNG,{kind:'geschichte'});seen[tk.story]=tk;}
-      const sayOf=(tk)=>{const h=el('div');TASKS.R01.prompt(tk,h);return h.textContent;};
-      t('Geschichten von der Tafel: Schokokuchen plus Apfelkuchen (gleich große Kuchen, plus) und Salamipizza (Anfang minus Ende ergibt das Gegessene, minus, ohne Bild); Text, Rechnung und Lösung stimmen',
+      for(let i=0;i<400;i++){const tk=TASKS.R04.gen(1+i%2,RNG,{kind:'geschichte'});if(tk.story==='pizzaEnde')seen.pizzaEnde=tk;}
+      const sayOf=(tk)=>{const h=el('div');TASKS[tk.type].prompt(tk,h);return h.textContent;};
+      t('Geschichten von der Tafel: Schokokuchen plus Apfelkuchen (gleich große Kuchen, plus, R01 mit Bild) und Salamipizza (Anfang minus Ende ergibt das Gegessene, minus, ohne Bild, R04); Text, Rechnung und Lösung stimmen',
         !!seen.kuchen&&!!seen.pizzaEnde&&seen.kuchen.plus===true&&seen.pizzaEnde.plus===false&&addHasPic(seen.kuchen)&&!addHasPic(seen.pizzaEnde)&&/gleich groß/.test(sayOf(seen.kuchen))&&/gegessen/.test(sayOf(seen.pizzaEnde))
         &&!/undefined|NaN/.test(sayOf(seen.kuchen)+sayOf(seen.pizzaEnde))&&['kuchen','pizzaEnde'].every(id=>v(seen[id],okDraft(seen[id])).correct)&&seen.pizzaEnde.res[0]===seen.pizzaEnde.a-seen.pizzaEnde.c);
-      const note=NOTES.M17.build([]),noteTxt=note.map(n=>n.textContent).join(' ');
-      t('Wortlaut wie an der Tafel: Merkkasten und Erklärkarte sagen „gleichnamig“, „Zähler“ und „Der Nenner bleibt dabei gleich“, das erste Beispiel ist (5 + 1)/12 mit dem gekürzten 1/2, das zweite (5 − 1)/12 mit 1/3',
-        /Gleichnamig/.test(noteTxt)&&/Zähler addiert oder subtrahiert/.test(noteTxt)&&/Der Nenner bleibt dabei gleich/.test(noteTxt)&&note[0].classList.contains('ex')&&/5 \+ 1/.test(note[0].textContent)&&/5 − 1/.test(note[5].textContent)
-        &&cnt(note[0],'.frac')===5&&cnt(note[5],'.frac')===5&&/gleichnamig/.test(JSON.stringify(INTRO.R01)));
+      const note=NOTES.M17.build([]),note18=NOTES.M18.build([]),noteTxt=note.map(n=>n.textContent).join(' '),noteTxt18=note18.map(n=>n.textContent).join(' ');
+      t('Wortlaut wie an der Tafel: zwei Merkkästen, M17 Addieren und M18 Subtrahieren, sagen „gleichnamig“, „Zähler“ und „Der Nenner bleibt dabei gleich“; das erste Beispiel ist (5 + 1)/12 mit dem gekürzten 1/2, das zweite (5 − 1)/12 mit 1/3',
+        /Gleichnamig/.test(noteTxt)&&/Zähler addiert/.test(noteTxt)&&!/subtrahier/.test(noteTxt)&&/Der Nenner bleibt dabei gleich/.test(noteTxt)&&/Zähler subtrahiert/.test(noteTxt18)&&/Der Nenner bleibt dabei gleich/.test(noteTxt18)
+        &&note[0].classList.contains('ex')&&/5 \+ 1/.test(note[0].textContent)&&/5 − 1/.test(note18[0].textContent)&&cnt(note[0],'.frac')===5&&cnt(note18[0],'.frac')===5&&cnt(note18[1],'.xmark')===2&&/gleichnamig/.test(JSON.stringify(INTRO.R01)));
+      t('Merkkästen je Baustein: R01 und R02 zeigen nur M17 (R02 dazu M3), R03 und R04 nur M18, R05 beide',
+        TASKS.R01.notes.join()==='M17'&&TASKS.R02.notes.join()==='M17,M3'&&TASKS.R03.notes.join()==='M18'&&TASKS.R04.notes.join()==='M18,M3'&&TASKS.R05.notes.join()==='M17,M18'&&noteFor('R05',null).filter(n=>n.classList.contains('note')).length===2);
     }
     /* Offene Aufgaben: mehrere Lösungen, per Regel geprüft; Doppelte zählen nicht */
     {
-      const d1={type:'R01',level:1,kind:'drei',b:8,p1:3,p2:2,need:2},d2={type:'R01',level:2,kind:'drei',b:12,p1:3,p2:5,need:3};
+      const d1={type:'R05',level:1,kind:'drei',b:8,p1:3,p2:2,need:2},d2={type:'R05',level:2,kind:'drei',b:12,p1:3,p2:5,need:3};
       const v=(tk,d)=>validateTask(tk,d);
       const one={rows:2,q0x:'3',q0y:'2',q0z:'5',q0o:'+'},two=Object.assign({},one,{q1x:'5',q1y:'2',q1z:'3',q1o:'−'});
-      t('R01 Ein Bild, drei Aufgaben: eine Rechnung reicht nicht (Leicht braucht 2), zwei verschiedene gelten; Knifflig braucht 3',
+      t('R05 Ein Bild, drei Aufgaben: eine Rechnung reicht nicht (Leicht braucht 2), zwei verschiedene gelten; Knifflig braucht 3',
         !v(d1,one).correct&&v(d1,one).soft&&/1 von 2/.test(v(d1,one).feedback)&&v(d1,two).correct&&!v(d2,Object.assign({},two,{q1x:'8',q1y:'5',q1z:'3',rows:3})).correct&&v(d2,Object.assign({rows:3,q0x:'3',q0y:'5',q0z:'8',q0o:'+',q1x:'8',q1y:'5',q1z:'3',q1o:'−',q2x:'8',q2y:'3',q2z:'5',q2o:'−'})).correct);
       const dup=v(d1,Object.assign({},one,{q1x:'2',q1y:'3',q1z:'5',q1o:'+'})),notBild=v(d1,Object.assign({},one,{q1x:'1',q1y:'1',q1z:'2',q1o:'+'})),falsch=v(d1,Object.assign({},one,{q1x:'5',q1y:'2',q1z:'4',q1o:'−'})),ohneZeichen=v(d1,Object.assign({},one,{q1x:'5',q1y:'2',q1z:'3'}));
-      t('R01 offen: dieselbe Aufgabe mit vertauschten Zahlen zählt nicht doppelt, passt-nicht-zum-Bild und falsche Rechnung werden unterschieden, fehlendes Rechenzeichen wird verlangt',
+      t('R05 offen: dieselbe Aufgabe mit vertauschten Zahlen zählt nicht doppelt, passt-nicht-zum-Bild und falsche Rechnung werden unterschieden, fehlendes Rechenzeichen wird verlangt',
         !dup.correct&&/schon/.test(dup.feedback)&&dup.marks.q1x===false&&/nicht zum Bild/.test(notBild.feedback)&&/nicht\./.test(falsch.feedback)&&/Fülle alle Felder/.test(ohneZeichen.feedback)&&!dup.soft);
-      const f1={type:'R03',level:1,kind:'finde',b:12,mode:'summe',T:9,need:2},f2={type:'R03',level:2,kind:'finde',b:50,mode:'differenz',T:3,need:3};
+      const f1={type:'R05',level:1,kind:'finde',b:12,mode:'summe',T:9,need:2},f2={type:'R05',level:2,kind:'finde',b:50,mode:'differenz',T:3,need:3};
       const pair=(tk,l)=>{const d={rows:l.length};l.forEach(([x,y],i)=>{d['f'+i+'x']=String(x);d['f'+i+'y']=String(y);});return validateTask(tk,d);};
-      t('R03 Finde Brüche: zwei Summen mit Zählersumme 9 (auch andere Paare) gelten, vertauschte Paare und Zählersummen ≠ 9 nicht; Unterschied 3 braucht 3 Paare mit erstem Zähler < 50',
+      t('R05 Finde Brüche: zwei Summen mit Zählersumme 9 (auch andere Paare) gelten, vertauschte Paare und Zählersummen ≠ 9 nicht; Unterschied 3 braucht 3 Paare mit erstem Zähler < 50',
         pair(f1,[[2,7],[4,5]]).correct&&pair(f1,[[1,8]]).soft&&!pair(f1,[[2,7],[7,2]]).correct&&!pair(f1,[[2,7],[3,5]]).correct&&pair(f2,[[4,1],[10,7],[49,46]]).correct&&!pair(f2,[[4,1],[10,7]]).correct&&!pair(f2,[[53,50],[4,1],[5,2]]).correct);
-      const fe=TASKS.R03.gen(1,RNG,{kind:'fehler'}),ok=okDraft(fe);
-      t('R03 Fehler finden: falsche Rechnung wählen, Fehlerart wählen, berichtigen (mit Kürzen-Feld); jede Stufe hat ihren Fehlercode',
+      const fe=TASKS.R05.gen(1,RNG,{kind:'fehler'}),ok=okDraft(fe);
+      t('R05 Fehler finden: falsche Rechnung wählen, Fehlerart wählen, berichtigen (mit Kürzen-Feld); jede Stufe hat ihren Fehlercode',
         validateTask(fe,Object.assign({},ok,{sel:(fe.wrong+1)%4})).errorCode==='sel'&&validateTask(fe,Object.assign({},ok,{err:ADD_ERR.find(e=>e!==fe.errType)})).errorCode==='err'&&validateTask(fe,Object.assign({},ok,{sel:undefined})).invalid&&validateTask(fe,Object.assign({},ok,{err:undefined})).invalid&&validateTask(fe,ok).correct);
-      const lu={type:'R02',level:1,kind:'luecke',b:8,plus:true,blank:1,p:[3,2,5],x:2,avoid:[]},lm={type:'R02',level:1,kind:'luecke',b:8,plus:false,blank:0,p:[6,2,4],x:6,avoid:[]};
-      t('R02 Lücken: die fehlende Zahl stimmt oder nicht; häufige Richtungsfehler (addiert statt weggenommen) werden benannt',
+      const lu={type:'R02',level:1,kind:'luecke',b:8,plus:true,blank:1,p:[3,2,5],x:2,avoid:[]},lm={type:'R04',level:1,kind:'luecke',b:8,plus:false,blank:0,p:[6,2,4],x:6,avoid:[]};
+      t('R02 und R04 Lücken: die fehlende Zahl stimmt oder nicht; häufige Richtungsfehler (addiert statt weggenommen) werden benannt',
         validateTask(lu,{x:'2'}).correct&&validateTask(lu,{x:'8'}).errorCode==='luecke'&&/Nimm den bekannten Teil weg/.test(validateTask(lu,{x:'8'}).feedback)&&validateTask(lm,{x:'6'}).correct&&/wovon weggenommen/.test(validateTask(lm,{x:'2'}).feedback)&&validateTask(lu,{}).invalid);
     }
     /* Rundenplan, Reihenfolge und Anmeldung */
     {
       const plan=(id,lvl)=>{const r={results:[],cur:null},ks=[];for(let i=0;i<5;i++){r.results=Array(i).fill('f');ks.push(TASKS[id].ctx(r,lvl).kind);}return {r,ks};};
       let planBad=0;
-      for(const id of ['R01','R02','R03'])for(const lvl of [1,2])for(let i=0;i<40;i++){
+      for(const id of ['R01','R02','R03','R04','R05'])for(const lvl of [1,2])for(let i=0;i<40;i++){
         const {r,ks}=plan(id,lvl),again=[];for(let k=0;k<5;k++){r.results=Array(k).fill('f');again.push(TASKS[id].ctx(r,lvl).kind);}
-        if(ks.length!==5||ks.join()!==again.join()||(id==='R01'&&(!ks.includes('drei')||!ks.includes('plus')||!ks.includes('minus')||!ks.includes('geschichte')||(lvl===1)!==ks.includes('bild')))||(id==='R02'&&(!ks.includes('luecke')||!ks.includes('geschichte')||(lvl===2)!==ks.includes('ueber1')))||(id==='R03'&&(ks.filter(k=>k==='fehler').length!==3||ks.filter(k=>k==='finde').length!==2)))planBad++;
+        const has=(k)=>ks.includes(k),cnt=(k)=>ks.filter(x=>x===k).length;
+        const bildSt=(id==='R01'&&(!has('plus')||has('minus'))||id==='R03'&&(!has('minus')||has('plus')))&&true;
+        if(ks.length!==5||ks.join()!==again.join())planBad++;
+        else if((id==='R01'||id==='R03')&&(!has('geschichte')||(lvl===1)!==has('bild')||bildSt||has('drei')||has('luecke')))planBad++;
+        else if((id==='R02'||id==='R04')&&(!has('luecke')||!has('geschichte')||(lvl===2)!==has('ueber1')||has('bild')||has('drei')||(id==='R02'&&has('minus'))||(id==='R04'&&has('plus'))))planBad++;
+        else if(id==='R05'&&(cnt('drei')!==1||cnt('finde')!==1||!has('fehler')||!has('art')||has('plus')||has('minus')||has('luecke')))planBad++;
       }
-      t('Rechnen: Rundenplan hat 5 Arten und bleibt in der Runde gleich; R01 mischt plus und minus, hat Geschichte und ein Bild mit mehreren Aufgaben (Leicht auch „Bild lesen“), R02 Geschichte und Lücken (Knifflig auch über 1), R03 drei Fehlersuchen und zwei offene',planBad===0);
+      t('Rechnen: Rundenplan hat 5 Arten und bleibt in der Runde gleich; R01 und R03 haben Geschichte und Bild (Leicht auch „Bild lesen“), R02 und R04 Geschichte und Lücken (Knifflig auch über 1), R05 Rechenart erkennen, ein Bild mit mehreren Aufgaben, Fehler finden und eigene Aufgaben',planBad===0);
       const am=moduleById('addsub'),idx=(id)=>MODULES.findIndex(m=>m.id===id);
-      t('Rechnen: das Thema „Brüche addieren und subtrahieren“ ist aktiv, hat im Pfad genau R01, R02, R03 (alle Pflicht, in dieser Reihenfolge) und noch keinen Eingangstest und Abschlusscheck; das Thema Multiplizieren bleibt „geplant“',
-        !!am&&am.status==='aktiv'&&am.path.map(m=>m.id).join()==='R01,R02,R03'&&am.path.every(m=>m.must&&!m.final)&&am.practice.join()==='R01,R02,R03'&&!am.quickcheck&&!am.finalId&&idx('addsub')>idx('vergleichen')&&moduleById('rechnen').status==='geplant'&&INTRO.R01&&INTRO.R02&&INTRO.R03&&TASKS.R01.notes.includes('M17'));
+      t('Rechnen: das Thema „Brüche addieren und subtrahieren“ ist aktiv, Block 1, hat im Pfad genau R01 bis R05 und den Abschlusscheck RA (alle Pflicht, in dieser Reihenfolge, Gruppen Addieren, Subtrahieren, Plus oder minus?, Check) und keinen Eingangstest; das Thema Multiplizieren bleibt „geplant“',
+        !!am&&am.status==='aktiv'&&am.path.map(m=>m.id).join()==='RLAB,R01,R02,R03,R04,R05,RA'&&am.path.filter(m=>m.id!=='RLAB').every(m=>m.must)&&!am.path.find(m=>m.id==='RLAB').must&&am.path.filter(m=>m.final).map(m=>m.id).join()==='RA'&&am.practice.join()==='R01,R02,R03,R04,R05,RA'&&!am.quickcheck&&am.finalId==='RA'&&idx('addsub')>idx('vergleichen')&&moduleById('rechnen').status==='geplant'
+        &&['R01','R02','R03','R04','R05','RA'].every(id=>INTRO[id]&&TASKS[id]&&ICON[id]&&document.getElementById('i-'+ICON[id]))&&Object.keys(am.groups).join()==='Ausprobieren,Addieren,Subtrahieren,Plus oder minus?,Check Gleichnamig'&&am.path.every(p=>am.pathGroups[p.grp]&&document.getElementById('i-'+am.pathGroups[p.grp])));
+      /* Abschlusscheck RA: zwei Aufgaben aus jeder Station, richtige Antworten gelten, Urkunde nur nach allen Stationen und 8 von 10, nur für dieses Thema */
+      {
+        const am2=moduleById('addsub'),snap2={passed:S.passed,mq:S.mq,days:S.days,perfect:S.perfect,modus:S.modus,unlocked:S.unlocked};
+        let okAll=true,cover=true;
+        for(const lvl of [1,2])for(let k=0;k<25;k++){
+          const rnd={results:[],cur:null,size:TASKS.RA.size},cnt={};
+          for(let i=0;i<TASKS.RA.size;i++){rnd.results=Array(i).fill('f');const tk=TASKS.RA.gen(lvl,RNG,TASKS.RA.ctx(rnd,lvl));cnt[tk.type]=(cnt[tk.type]||0)+1;if(!validateTask(tk,okDraft(tk)).correct)okAll=false;}
+          if(['R01','R02','R03','R04','R05'].some(id=>cnt[id]!==2))cover=false;
+        }
+        S.passed={};S.mq={};S.days={};S.perfect={};S.modus={};S.unlocked={};
+        ['R01','R02','R03','R04','R05'].forEach(x=>{S.passed[x+'-L1']=true;});
+        let ri=onRoundEnd('RA',1,{results:['f','f','f','f','f','f','f','x','x','x'],size:10});
+        const noUrk=ri.ready&&!ri.passed&&!ri.final&&!stationDone('RA');
+        ri=onRoundEnd('RA',1,{results:['f','f','f','f','f','f','f','f','x','x'],size:10});
+        t('Abschlusscheck RA (Thema Gleichnamige Brüche): 10 Aufgaben, zwei aus jeder Station, alle richtigen Antworten gelten; alle Stationen fertig und 7 von 10 ⇒ keine Urkunde, 8 von 10 ⇒ Urkunde nur für dieses Thema',
+          TASKS.RA.size===10&&needOf(10)===8&&okAll&&cover&&noUrk&&ri.final&&stationDone('RA')&&qstate(am2).final&&!S.final&&ri.qmod==='addsub'&&pathState(am2).filter(r=>r.must).every(r=>r.done));
+        Object.assign(S,snap2);
+      }
+      /* Umstellung der Stände: alte Schlüssel R01–R05 werden einmal verworfen, andere bleiben */
+      {
+        const old={v:1,progress:{'R01-L1':{first:3},'R05-L2':{first:2},'G01-L1':{first:1}},passed:{'R03-L1':true,'Z01-L1':true},rounds:{'R02-L1':{results:[]}},intro:{R01:true,G01:true},addsubV:undefined};
+        const src=migrateState(old);
+        t('Spielstand: einmalige Umstellung der Bausteine R01–R05 verwirft nur deren alte Stände (Fortschritt, bestanden, Runden, Erklärung) und merkt sich das',
+          !('R01-L1' in src.progress)&&!('R05-L2' in src.progress)&&src.progress['G01-L1']&&!('R03-L1' in src.passed)&&src.passed['Z01-L1']&&!('R02-L1' in src.rounds)&&!('R01' in src.intro)&&src.intro.G01&&src.addsubV===2
+          &&JSON.stringify(migrateState(JSON.parse(JSON.stringify(Object.assign({},old,{addsubV:2,progress:{'R01-L1':{first:1}}})))).progress)==='{"R01-L1":{"first":1}}');
+      }
     }
   }
   const bad=res.filter(r=>!r.ok);
@@ -1918,7 +2031,7 @@ window.runSelfTests=runSelfTests;
    (Standard: ja, solange keine ids vorgegeben sind). Eingangstests (quick) werden an allen Positionen gemessen. */
 async function runLayoutTests(w=375,h=600,samples=3,ids,intro=true,opts={}){
   const screens=opts.screens!==undefined?opts.screens:!ids;
-  ids=ids||Object.keys(TASKS).filter(id=>!['QA','ZA','WA'].includes(id));
+  ids=ids||Object.keys(TASKS).filter(id=>!['QA','ZA','WA','RA'].includes(id));
   const f=document.createElement('iframe');
   f.style.cssText='position:fixed;left:0;top:0;width:'+w+'px;height:'+h+'px;border:0;visibility:hidden;pointer-events:none';
   f.src='index.html?layouttest='+Date.now();
@@ -1976,7 +2089,7 @@ async function runLayoutTests(w=375,h=600,samples=3,ids,intro=true,opts={}){
   if(intro){
     for(const id of Object.keys(INTRO)){
       const r=cw.eval(`(()=>{
-        S.intro={};S.rounds={};S.view=${id==='LAB'?"{kind:'lab'}":`{kind:'practice',id:'${id}'}`};
+        S.intro={};S.rounds={};S.view=${isLab(id)?`{kind:'lab',id:'${id}'}`:`{kind:'practice',id:'${id}'}`};
         try{renderAll();}catch(e){return {err:e.message};}
         let worst=-1,n=0,tipps=-1,g=0,bx=0,wo='';
         const chk=()=>{const x=__ovx();if(x>bx){bx=x;wo='Karte '+(n)+': '+__off();}};
@@ -1997,7 +2110,7 @@ async function runLayoutTests(w=375,h=600,samples=3,ids,intro=true,opts={}){
       out[name]=r&&r.err?'FEHLER '+r.err:{neu:-1,teil2:-1,pruefen:-1,tipps:-1,breit:r?r.breit:0,wo:r?r.wo:''};
     };
     const page=(v)=>`S.view=${v};renderAll();document.querySelectorAll('#app details').forEach(d=>{d.open=true;});window.scrollTo(0,0);const x=__ovx();return {breit:x,wo:x?__off():''};`;
-    const views=[['Seite Lernen',"{kind:'home',tab:'pfad'}"],['Seite Üben',"{kind:'home',tab:'ueben'}"],['Seite Spiele',"{kind:'home',tab:'spiele'}"],['Seite Ich',"{kind:'home',tab:'rang'}"],['Seite Labor',"{kind:'lab'}"]];
+    const views=[['Seite Lernen',"{kind:'home',tab:'pfad'}"],['Seite Üben',"{kind:'home',tab:'ueben'}"],['Seite Spiele',"{kind:'home',tab:'spiele'}"],['Seite Ich',"{kind:'home',tab:'rang'}"],['Seite Labor',"{kind:'lab'}"],['Seite Labor Plus und Minus',"{kind:'lab',id:'RLAB'}"]];
     activeModules().forEach(m=>views.push(['Seite Thema '+m.name,`{kind:'home',tab:'pfad',thema:'${m.id}'}`]));
     Object.keys(GAMES).forEach(g=>[1,2].forEach(l=>views.push(['Spiel '+g+' '+LEVEL_LABEL[l],`S.levelByType['${g}']=${l};{kind:'game',id:'${g}'}`])));
     views.forEach(([name,v])=>wide(name,v.startsWith('S.levelByType')?`${v.split(';')[0]};${page(v.split(';')[1])}`:page(v)));
@@ -2025,4 +2138,61 @@ async function runLayoutTests(w=375,h=600,samples=3,ids,intro=true,opts={}){
   if(bad.length)console.log('Zu hoch (Pixel über dem Rand):\n'+bad.join('\n'));
   if(wideList.length)console.log('Zu breit (Pixel über dem Rand):\n'+wideList.join('\n'));
   return {total:Object.keys(out).length,tooHigh:bad,tooWide:wideList,detail:out};
+}
+
+/* =====================================================================
+   Bruchstrich überall: sichtbarer Text darf keinen Bruch als „a/b“ enthalten (Brüche stehen immer mit Bruchstrich).
+   Läuft in einem unsichtbaren Rahmen: jede Übung, beide Niveaus, Tipps, Prüfen, Lösung, Merkkasten, Erklärkarten und Seiten.
+   runFracScan(samples, ids) → {hits:[…]}; leer = in Ordnung.
+   ===================================================================== */
+async function runFracScan(samples=3,ids,opts={}){
+  ids=ids||Object.keys(TASKS);
+  const f=document.createElement('iframe');
+  f.style.cssText='position:fixed;left:0;top:0;width:'+(opts.w||900)+'px;height:'+(opts.h||700)+'px;border:0;visibility:hidden;pointer-events:none';
+  f.src='index.html?fracscan='+Date.now();
+  document.body.append(f);
+  await new Promise(r=>{f.onload=r;});
+  const cw=f.contentWindow;
+  cw.eval(`persist=function(){};
+    window.__hits=new Map();
+    window.__scan=(tag)=>{const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode())){const p=n.parentElement;if(!p||p.closest('script,style'))continue;const t=n.nodeValue,m=/\\d\\s*\\/\\s*\\d/.exec(t);if(m){const fr='…'+t.slice(Math.max(0,m.index-24),m.index+18).replace(/\\s+/g,' ')+'…';if(!window.__hits.has(fr))window.__hits.set(fr,tag);}}};
+    window.__btn=(t)=>[...document.querySelectorAll('.actionbar button, .card button, .modal button')].find(b=>b.textContent.trim().startsWith(t)&&!b.disabled);
+    S.modus={veraendern:'frei',zahlenstrahl:'frei',vergleichen:'frei',addsub:'frei'};S.unlocked={veraendern:true,zahlenstrahl:true,vergleichen:true,addsub:true};Object.keys(INTRO).forEach(k=>S.intro[k]=true);`);
+  const errs=[];
+  for(const id of ids){
+    for(const lvl of [1,2]){
+      const kinds=(TASKS[id].layoutKinds&&TASKS[id].layoutKinds(lvl))||[null];
+      for(const kind of kinds){
+        const rs=kind?`{'${keyOf(id,lvl)}':{results:[],cur:null,size:${TASKS[id].size},${TASKS[id].planKey||'cmp'}:Array(${TASKS[id].size}).fill('${kind}')}}`:'{}';
+        for(let i=0;i<samples;i++){
+          const r=cw.eval(`(()=>{try{
+            S.levelByType['${id}']=${lvl};S.rounds=${rs};S.view={kind:'practice',id:'${id}'};renderAll();
+            const tg='${id}-L${lvl}${kind?' '+kind:''}';
+            __scan(tg+' Aufgabe');
+            for(let k=0;k<5;k++){const t=__btn('Tipp');if(t){t.click();__scan(tg+' Tipp '+(k+1));}}
+            setHelp(true);__scan(tg+' Merkkasten');setHelp(false);
+            const b=__btn('Prüfen');if(b){b.click();__scan(tg+' Prüfen');}
+            const s=__btn('Lösung');if(s){s.click();__scan(tg+' Lösung');}
+            document.querySelectorAll('.modal .btn, .modal button').forEach(x=>{});
+            return null;}catch(e){return e.message;}})()`);
+          if(r)errs.push(id+': '+r);
+        }
+      }
+    }
+  }
+  /* Erklärkarten, Seiten, Spiele */
+  for(const id of Object.keys(INTRO)){
+    const r=cw.eval(`(()=>{try{S.intro={};S.rounds={};S.view=${isLab(id)?`{kind:'lab',id:'${id}'}`:`{kind:'practice',id:'${id}'}`};renderAll();let g=0;while(document.querySelector('.introwork')&&g++<14){__scan('Erklärung ${id} Karte '+g);document.querySelector('.page').introApi.next();}return null;}catch(e){return e.message;}})()`);
+    if(r)errs.push('Erklärung '+id+': '+r);
+  }
+  const views=[['Lernen',"{kind:'home',tab:'pfad'}"],['Üben',"{kind:'home',tab:'ueben'}"],['Spiele',"{kind:'home',tab:'spiele'}"],['Ich',"{kind:'home',tab:'rang'}"],['Labor',"{kind:'lab'}"],['Labor Plus und Minus',"{kind:'lab',id:'RLAB'}"]];
+  activeModules().forEach(m=>views.push(['Thema '+m.name,`{kind:'home',tab:'pfad',thema:'${m.id}'}`]));
+  Object.keys(GAMES).forEach(g=>views.push(['Spiel '+g,`{kind:'game',id:'${g}'}`]));
+  views.forEach(([n,v])=>{const r=cw.eval(`(()=>{try{S.view=${v};renderAll();document.querySelectorAll('#app details').forEach(d=>{d.open=true;});__scan('Seite ${n}');return null;}catch(e){return e.message;}})()`);if(r)errs.push('Seite '+n+': '+r);});
+  const hits=[...cw.__hits].map(([fr,tag])=>fr+'   ← '+tag);
+  f.remove();
+  console.log('Bruchstrich-Prüfung: '+hits.length+' Stelle(n) mit Schrägstrich-Bruch, '+errs.length+' Fehler');
+  if(hits.length)console.log(hits.join('\n'));
+  if(errs.length)console.log(errs.join('\n'));
+  return {hits,errs};
 }

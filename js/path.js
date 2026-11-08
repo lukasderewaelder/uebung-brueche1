@@ -7,7 +7,7 @@
      Was der Eingangstest als „sitzt“ markiert, steht als Markierung in der Liste; die Erklärung bietet dann „Kenne ich schon“.
    · Die frühere „Meine Übersicht“ (und die Wahl „Wie möchtest du lernen?“) gibt es nicht mehr.
    ===================================================================== */
-const PATH_ACC={LAB:'mix',Q00:'ok',ZQ:'ok',QA:'ok',ZA:'ok',WQ:'ok',WA:'ok'};
+const PATH_ACC={LAB:'mix',RLAB:'mix',Q00:'ok',ZQ:'ok',QA:'ok',ZA:'ok',WQ:'ok',WA:'ok',RA:'ok'};
 /* Thema, zu dem ein Abschlusscheck (finalId) gehört */
 const finalModOf=(id)=>activeModules().find(m=>m.finalId===id)||null;
 /* Hinweis „Erst …“ (modules.js recommends): nur solange das empfohlene Thema nicht abgeschlossen ist, keine Sperre */
@@ -25,7 +25,7 @@ function qstate(mod){
 }
 const qmodOf=(id)=>activeModules().find(m=>m.qid===id)||null; /* Thema, zu dem ein Eingangstest gehört */
 function stationDone(id){
-  if(id==='LAB')return !!(S.lab&&S.lab.done);
+  if(isLab(id))return LABS[id].done();
   const fm=finalModOf(id);
   if(fm)return !!qstate(fm).final; /* der Abschlusscheck: fertig = Urkunde */
   return stationPassed(id);
@@ -54,7 +54,7 @@ const isUnlocked=(mod)=>!!(S.unlocked&&S.unlocked[mod.id]);
 function eingestuft(mod){
   const ids=(mod.path||[]).map(m=>m.id),mine=(o)=>Object.keys(o||{}).some(k=>ids.includes(k.replace(/-L\d$/,'')));
   const q=mod.quickcheck?qstate(mod):null;
-  return !!(!!modusOf(mod)||(q&&(q.placed||q.final))||(ids.includes('LAB')&&S.lab&&S.lab.done)||mine(S.passed)||mine(S.checked));
+  return !!(!!modusOf(mod)||(q&&(q.placed||q.final))||ids.some(x=>isLab(x)&&LABS[x].done())||mine(S.passed)||mine(S.checked));
 }
 const modusOf=(mod)=>{const m=S.modus&&S.modus[mod.id];return m==='pfad'||m==='frei'?m:null;};
 /* 'gate' (erst der Eingangstest, Block auf der Themenseite) oder 'pfad'. Es gibt nur einen Pfad: Was der Eingangstest als „sitzt“ markiert,
@@ -183,7 +183,7 @@ function migrate6(st){
 
 /* ---------- Wege zu den Bauteilen ---------- */
 function openStation(id){
-  if(id==='LAB')go({kind:'lab',from:'pfad'});
+  if(isLab(id))openLab(id,'pfad');
   else{S.last=id;go({kind:'practice',id,from:'pfad'});}
 }
 /* ---------- Bauteil zurücksetzen: angefangene Runden (Leicht und Knifflig) und Erklärung; Fertig, Sterne und Punkte bleiben ---------- */
@@ -230,7 +230,7 @@ function modNode(r,pos){
   const state=r.done?'done':next?'next':r.locked?'locked':'open';
   const tag=r.done?'Fertig':next?'Als Nächstes':r.locked?'Gesperrt':r.must?'Offen':'Freiwillig';
   const chk=checkMark(id);
-  const stars=(id==='LAB'||m.final)?null:starNodes((S.passed[id+'-L1']?1:0)+(S.passed[id+'-L2']?1:0),2);
+  const stars=(isLab(id)||m.final)?null:starNodes((S.passed[id+'-L1']?1:0)+(S.passed[id+'-L2']?1:0),2);
   const li=el('li',{class:'mod '+state+(r.must?'':' frei'),'data-acc':ACC[id]||PATH_ACC[id]||null});
   li.append(el('span',{class:'lamp','aria-hidden':'true'},r.done?icon('haken'):r.locked?icon('schloss'):null),
     el('button',{type:'button',class:'modbtn','aria-label':title+': '+tag.toLowerCase()+(chk?', Eingangstest: '+CHECK_TEXT[chk]:'')+(r.must||tag==='Freiwillig'?'':', freiwillig'),onclick:()=>r.locked?lockSheet(r):openStation(id)},
@@ -295,7 +295,7 @@ function pfadTab(home,mod){
   else{
     if(rec)home.append(el('p',{class:'modushint'},'Empfohlen: erst '+rec.name+'. Du kannst aber auch gleich anfangen.'));
     const go1=info.go1;
-    if(go1)home.append(bigBtn('play',()=>openStation(go1.id),startWord(info.rows,go1)+': '+stationTitle(go1.id),go1.m.final||go1.id==='LAB'?null:LEVEL_LABEL[levelOf(go1.id)],null,'go'));
+    if(go1)home.append(bigBtn('play',()=>openStation(go1.id),startWord(info.rows,go1)+': '+stationTitle(go1.id),go1.m.final||isLab(go1.id)?null:LEVEL_LABEL[levelOf(go1.id)],null,'go'));
     else home.append(el('div',{class:'msg ok'},'Alle Pflicht-Stationen sind fertig – stark! '+(info.rows.some(r=>!r.must)?'Probiere die freiwilligen Stationen oder ein Spiel.':'Probiere ein Spiel oder ein anderes Thema.')));
   }
   home.append(fold('Alle Stationen',pfadMap(info.rows)));

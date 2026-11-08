@@ -22,6 +22,16 @@ const INTRO={
     {h:'Deine drei Aufträge',
       say:['Auftrag 1: Erweitere einen Bruch.','Auftrag 2: Kürze einen Bruch.','Auftrag 3: Finde heraus, was gleich bleibt.','Mit **Rückgängig** nimmst du einen Schritt zurück.']}
   ]},
+  RLAB:{title:'Bruchlabor Plus und Minus',steps:[
+    {h:'Zahlen einstellen',
+      say:['Du stellst den Nenner und zwei Anteile ein.','Das Raster zeigt die Anteile.','Darunter steht die Rechnung.'],
+      add:{d:8,p1:3,p2:2,mode:'plus',chain:true}},
+    {h:'Plus und Minus',
+      say:['Bei **Plus** fügst du zwei Anteile zusammen.','Bei **Minus** nimmst du Felder weg.','Weggenommene Felder werden durchgekreuzt.'],
+      add:{d:8,p1:3,p2:2,mode:'minus'}},
+    {h:'Deine drei Aufträge',
+      say:['Auftrag 1: Addiere.','Auftrag 2: Subtrahiere.','Auftrag 3: Finde heraus, was gleich bleibt.','Mit **Rückgängig** nimmst du einen Schritt zurück.']}
+  ]},
   G01:{title:'Gleiche Anteile erkennen',steps:[
     {h:'Zwei Bilder, gleich viel',
       say:['Diese zwei Streifen zeigen denselben Anteil.','Der untere hat mehr Teile, aber kleinere.','Die gefärbte Fläche ist gleich groß.'],
@@ -328,6 +338,14 @@ const INTRO={
     {h:'Die Urkunde',
       say:['Ab '+needOf(TASKS.WA.size)+' richtigen Antworten gibt es die Urkunde.','Aufgaben mit Tipp zählen nur halb.','Alle Pflicht-Stationen müssen vorher fertig sein.']}
   ]},
+  RA:{title:'Abschlusscheck',steps:[
+    {h:'Wie viele Aufgaben?',
+      say:['Der Abschlusscheck hat '+TASKS.RA.size+' Aufgaben.','Sie kommen aus allen fünf Stationen.','Die Reihenfolge ist gemischt.']},
+    {h:'So geht es',
+      say:['Du rechnest wie in den Stationen.','Bilder, Geschichten, Lücken und Fehler kommen vor.','Tipps und die Lösung gibt es wie sonst.']},
+    {h:'Die Urkunde',
+      say:['Ab '+needOf(TASKS.RA.size)+' richtigen Antworten gibt es die Urkunde.','Aufgaben mit Tipp zählen nur halb.','Alle Pflicht-Stationen müssen vorher fertig sein.']}
+  ]},
   /* Vergleichen: Streifen immer gleich lang untereinander; Zeichen < und > stehen in calc zwischen zwei Brüchen */
   W01:{title:'Nenner gleich',steps:[
     {h:'Gleich große Stücke',
@@ -463,45 +481,67 @@ const INTRO={
     {h:'So antwortest du',
       say:['Manchmal nennst du einen Bruch dazwischen.','Schreibe ihn in die Felder.','Manchmal prüfst du eine Behauptung.']}
   ]},
-  /* Addieren und Subtrahieren, gleiche Nenner: add = Bild mit zwei Anteilen {d,p1,p2,mode} (rechnen-widgets.js) */
+  /* Addieren und Subtrahieren, gleiche Nenner (R01 bis R05): add = Bild mit zwei Anteilen {d,p1,p2,mode} (rechnen-widgets.js) */
   /* Wörter und Beispiele wie das Tafelbild: Raster mit zwei Mustern, gleichnamig, Zwischenschritt (8 + 3)/12, Kreuze beim Subtrahieren */
-  R01:{title:'Bild und Rechnung',steps:[
+  R01:{title:'Addieren am Bild',steps:[
     {h:'Ein Bild lesen',
       say:['Das Raster hat 12 gleich große Felder. Das ist der Nenner.','Das erste Muster zeigt {8|12}.','Das zweite Muster zeigt {3|12}.','Zähle die Felder jedes Musters. Das sind die Zähler.'],
       add:{d:12,p1:8,p2:3,mode:'plus'}},
     {h:'Addieren: nur die Zähler',
       say:['Die Brüche sind gleichnamig: Sie haben denselben Nenner.','Du addierst nur die Zähler.','Der Nenner bleibt dabei gleich.'],
       add:{d:12,p1:8,p2:3,mode:'plus',chain:true,nofig:true}},
-    {h:'Subtrahieren: durchkreuzen',
-      say:['Du kannst auch wegnehmen.','Von {9|12} nimmst du {3|12} weg.','Die weggenommenen Felder kreuzt du durch.'],
-      add:{d:12,p1:6,p2:3,mode:'minus'},calc:[[[9,12],'−',[3,12],'=',[6,12]]]},
-    {h:'Ein Bild, drei Aufgaben',
-      say:['In dasselbe Bild passt eine Plusaufgabe.','Es passen auch zwei Minusaufgaben.','Finde sie alle.'],
-      add:{d:8,p1:3,p2:2,mode:'plus'},calc:[[[3,8],'+',[2,8],'=',[5,8]],[[5,8],'−',[2,8],'=',[3,8]],[[5,8],'−',[3,8],'=',[2,8]]]},
     {h:'So antwortest du',
       say:['In Leicht schreibst du zuerst den **Zwischenschritt**.','Dann kommt das **Ergebnis**.','Das Feld **gekürzt** gibt es immer. Geht kürzen nicht, tippe **Kürzen geht nicht**.']}
   ]},
-  R02:{title:'Gleichnamig rechnen',steps:[
-    {h:'Nur die Zähler rechnen',
-      say:['Gleichnamige Brüche haben gleich große Teile.','Du addierst oder subtrahierst nur die Zähler.','Der Nenner bleibt, wie er ist.'],
-      calc:[[[2,10],'+',[5,10],'=',[7,10]],[[7,10],'−',[2,10],'=',[5,10]]]},
-    {h:'Plus oder minus?',
-      say:['Wörter wie zusammen und noch dazu bedeuten plus.','Wörter wie übrig und ausgießen bedeuten minus.','Lies genau, was passiert.']},
-    {h:'Anfang und Ende',
-      say:['Manchmal sind Anfang und Ende bekannt.','Gesucht ist, wie viel dazwischen verbraucht wurde.','Dann rechnest du Anfang minus Ende.'],
-      calc:[[[9,12],'−',[3,12],'=',[6,12]]]},
+  R02:{title:'Addieren und rechnen',steps:[
+    {h:'Nur die Zähler addieren',
+      say:['Gleichnamige Brüche haben gleich große Teile.','Du addierst nur die Zähler.','Der Nenner bleibt, wie er ist.'],
+      calc:[[[2,10],'+',[5,10],'=',[7,10]]]},
+    {h:'Geschichten lesen',
+      say:['Wörter wie zusammen und noch dazu bedeuten plus.','Lies genau, was passiert.','Dann rechnest du mit den Brüchen aus der Geschichte.']},
+    {h:'Mehr als ein Ganzes',
+      say:['Manchmal ist die Summe größer als der Nenner.','Dann ist das Ergebnis mehr als ein Ganzes.','Das ist erlaubt. Der Nenner bleibt trotzdem gleich.'],
+      calc:[[[7,9],'+',[5,9],'=',[12,9]]]},
     {h:'Lücken füllen',
-      say:['Manchmal fehlt eine Zahl in der Rechnung.','Dann fügst du zusammen oder nimmst weg.','Setze deine Zahl ein und prüfe.'],
+      say:['Manchmal fehlt eine Zahl in der Rechnung.','Dann nimmst du den bekannten Teil weg.','Setze deine Zahl ein und prüfe.'],
       calc:[[[3,9],'+',['?',9],'=',[8,9]]]},
     {h:'So antwortest du',
       say:['In Leicht schreibst du bei Rechnungen zuerst den **Zwischenschritt**.','Dann füllst du **Ergebnis** und **gekürzt** aus.','Bei Lücken trägst du nur die fehlende Zahl ein.']}
   ]},
-  R03:{title:'Fehler und eigene Aufgaben',steps:[
+  R03:{title:'Subtrahieren am Bild',steps:[
+    {h:'Durchkreuzen',
+      say:['Das Raster hat 12 gleich große Felder. Das ist der Nenner.','{9|12} sind gefärbt.','Davon sind {3|12} durchgekreuzt: Sie werden weggenommen.','Zähle alle gefärbten Felder, dann die durchgekreuzten.'],
+      add:{d:12,p1:6,p2:3,mode:'minus'}},
+    {h:'Subtrahieren: nur die Zähler',
+      say:['Die Brüche sind gleichnamig: Sie haben denselben Nenner.','Du subtrahierst nur die Zähler.','Der Nenner bleibt dabei gleich.'],
+      add:{d:12,p1:6,p2:3,mode:'minus',chain:true,nofig:true}},
+    {h:'So antwortest du',
+      say:['In Leicht schreibst du zuerst den **Zwischenschritt**.','Dann kommt das **Ergebnis**.','Das Feld **gekürzt** gibt es immer. Geht kürzen nicht, tippe **Kürzen geht nicht**.']}
+  ]},
+  R04:{title:'Subtrahieren und rechnen',steps:[
+    {h:'Nur die Zähler subtrahieren',
+      say:['Gleichnamige Brüche haben gleich große Teile.','Du subtrahierst nur die Zähler.','Der Nenner bleibt, wie er ist.'],
+      calc:[[[7,10],'−',[2,10],'=',[5,10]]]},
+    {h:'Geschichten lesen',
+      say:['Wörter wie übrig und ausgießen bedeuten minus.','Lies genau, was passiert.','Dann rechnest du mit den Brüchen aus der Geschichte.']},
+    {h:'Anfang und Ende',
+      say:['Manchmal sind Anfang und Ende bekannt.','Gesucht ist, wie viel dazwischen verbraucht wurde.','Dann rechnest du Anfang minus Ende.'],
+      calc:[[[9,12],'−',[3,12],'=',[6,12]]]},
+    {h:'Lücken füllen',
+      say:['Manchmal fehlt eine Zahl in der Rechnung.','Dann rechnest du vom Anfang zum Rest oder zurück.','Setze deine Zahl ein und prüfe.'],
+      calc:[[[8,9],'−',['?',9],'=',[3,9]]]},
+    {h:'So antwortest du',
+      say:['In Leicht schreibst du bei Rechnungen zuerst den **Zwischenschritt**.','Dann füllst du **Ergebnis** und **gekürzt** aus.','Bei Lücken trägst du nur die fehlende Zahl ein.']}
+  ]},
+  R05:{title:'Plus oder minus?',steps:[
+    {h:'Plus oder minus?',
+      say:['Erst überlegst du: Wird zusammengefügt oder weggenommen?','Wörter wie zusammen bedeuten plus. Wörter wie übrig bedeuten minus.','Dann rechnest du den Rechenweg.']},
+    {h:'Ein Bild, drei Aufgaben',
+      say:['In dasselbe Bild passt eine Plusaufgabe.','Es passen auch zwei Minusaufgaben.','Finde sie alle.'],
+      add:{d:8,p1:3,p2:2,mode:'plus'},calc:[[[3,8],'+',[2,8],'=',[5,8]],[[5,8],'−',[2,8],'=',[3,8]],[[5,8],'−',[3,8],'=',[2,8]]]},
     {h:'Fehler finden',
-      say:['Vier Rechnungen stehen da. Eine ist falsch.','Tippe sie an.','Dann sagst du, was falsch war.'],
+      say:['Vier Rechnungen stehen da. Eine ist falsch.','Typische Fehler: Der Nenner wird mitgerechnet. Plus und minus werden verwechselt.','Oder ein Zähler stimmt nicht. Tippe die falsche Rechnung an.'],
       calc:[{wrong:true,t:[[3,8],'+',[2,8],'=',[5,16]]}]},
-    {h:'Typische Fehler',
-      say:['Der Nenner wird mitgerechnet.','Plus und minus werden verwechselt.','Ein Zähler wird falsch gerechnet.']},
     {h:'Viele Lösungen',
       say:['Manchmal gibt es mehr als eine richtige Antwort.','Finde Rechnungen mit demselben Ergebnis.'],
       calc:[[[1,8],'+',[5,8],'=',[6,8]],[[2,8],'+',[4,8],'=',[6,8]]]},
@@ -514,7 +554,7 @@ const introSeen=(id)=>!!(S.intro&&S.intro[id]===true);
 /* Zu welcher Ansicht gehört eine Erklärung? Bruchlabor und jede Übung des Lernpfads – nicht die Spiele */
 function introIdOf(v){
   if(!v)return null;
-  if(v.kind==='lab')return 'LAB';
+  if(v.kind==='lab')return LABS[v.id]?v.id:'LAB';
   if(v.kind==='practice'&&typeof v.id==='string'&&hasIntro(v.id)&&TASKS[v.id])return v.id;
   return null;
 }
@@ -535,7 +575,7 @@ function migrateIntro(st){
   });
   PATH.forEach(m=>{
     let seen;
-    if(m.id==='LAB')seen=!!(st.lab&&(st.lab.done||(st.lab.did&&(st.lab.did.x||st.lab.did.d))));
+    if(isLab(m.id))seen=m.id==='LAB'?!!(st.lab&&(st.lab.done||(st.lab.did&&(st.lab.did.x||st.lab.did.d)))):!!(st.labR&&(st.labR.done||(st.labR.did&&(st.labR.did.plus||st.labR.did.minus))));
     else seen=worked(m.id)||(m.id==='QA'&&!!st.final)||(m.id==='ZA'&&!!(st.mq&&st.mq.zahlenstrahl&&st.mq.zahlenstrahl.final));
     if(seen)st.intro[m.id]=true;
   });
@@ -674,7 +714,7 @@ function introLineTry(spec){
 /* ---------- Probeaufgabe auf der ersten Karte ---------- */
 /* Eine kleine Aufgabe (Leicht) der Station selbst: zählt nicht für Sterne, Punkte und Serie (cb.probe). Danach kommt die Erklärung.
    Die Probe hat dasselbe Bedienpult wie eine Übung (Zahlentasten oder Meldung, darunter Tipp | Kenne ich schon | Prüfen/Weiter). */
-const introHasProbe=(id)=>!!(TASKS[id]&&!TASKS[id].quick&&!finalModOf(id)&&id!=='LAB');
+const introHasProbe=(id)=>!!(TASKS[id]&&!TASKS[id].quick&&!finalModOf(id)&&!isLab(id));
 const PROBE_STEP={h:'Probiere es aus',say:[],probe:true}; /* der Hinweis „Fehler sind erlaubt“ steht in der Schrittzeile */
 function buildProbe(id){
   const st=newState(generateTask(id,1)),host=el('div',{class:'probetask'}),msg=el('div',{class:'dockmsg'});

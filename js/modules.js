@@ -79,17 +79,27 @@ const MODULES=[
     ],
     pathGroups:{'Zwei Regeln':'balken','Fehlt zum Ganzen':'luecke','Mehr Wege':'aus',Ordnen:'netz','Check Vergleichen':'plakette'}
   },
-  /* Addieren und Subtrahieren, Teil 1: gleiche Nenner (R01–R03). Reihenfolge des Themas: gleichnamig, unterschiedlich benannt, gemischte Zahlen (kommen später, mit Eingangstest RQ und Abschlusscheck RA). */
-  {id:'addsub',name:'Brüche addieren und subtrahieren',desc:'Teil 1: Gleichnamige Brüche addieren und subtrahieren.',icon:'wechsel',status:'aktiv',rank:false,recommends:'veraendern',
+  /* Addieren und Subtrahieren, Teil 1: gleiche Nenner (R01–R05: Addieren am Bild, Addieren und rechnen, Subtrahieren am Bild, Subtrahieren und rechnen, Plus oder minus?).
+     Reihenfolge des Themas: gleichnamig, unterschiedlich benannt, gemischte Zahlen (kommen später, mit Abschlusschecks je Block). */
+  {id:'addsub',name:'Gleichnamige Brüche addieren und subtrahieren',desc:'Der Nenner bleibt, die Zähler werden addiert oder subtrahiert.',icon:'plusminus',status:'aktiv',rank:false,recommends:'veraendern',
+    finalId:'RA',finalText:'Du kannst gleichnamige Brüche addieren und subtrahieren. Stark!',
     groups:{
-      'Gleichnamige Brüche':{pat:'dots',icon:'balken',text:'Bild lesen, Zähler addieren und subtrahieren, Nenner bleibt',ids:['R01','R02','R03']}
+      'Ausprobieren':{pat:'dots',icon:'lupe',text:'Labor: Plus und Minus ausprobieren',ids:['RLAB']},
+      'Addieren':{pat:'dots',icon:'plus',text:'Bild lesen, Zähler addieren, Nenner bleibt',ids:['R01','R02']},
+      'Subtrahieren':{pat:'dash',icon:'minus',text:'Durchkreuzen, Zähler subtrahieren, Nenner bleibt',ids:['R03','R04']},
+      'Plus oder minus?':{pat:'hatch',icon:'plusminus',text:'Rechenart erkennen, Fehler finden, eigene Aufgaben',ids:['R05']},
+      'Check Gleichnamig':{pat:'dots',icon:'plakette',text:'Abschlusscheck',ids:['RA']}
     },
-    practice:['R01','R02','R03'],
-    /* Lernpfad: alle Bauteile sind Pflicht, in dieser Reihenfolge */
+    practice:['R01','R02','R03','R04','R05','RA'],
+    /* Lernpfad: alle Bauteile sind Pflicht, in dieser Reihenfolge; am Ende der Abschlusscheck mit der Urkunde dieses Themas */
     path:[
-      {id:'R01',grp:'Gleichnamige Brüche',must:true},{id:'R02',grp:'Gleichnamige Brüche',must:true},{id:'R03',grp:'Gleichnamige Brüche',must:true}
+      {id:'RLAB',grp:'Ausprobieren',title:'Bruchlabor Plus und Minus',desc:'Addieren und Subtrahieren ausprobieren.'},
+      {id:'R01',grp:'Addieren',must:true},{id:'R02',grp:'Addieren',must:true},
+      {id:'R03',grp:'Subtrahieren',must:true},{id:'R04',grp:'Subtrahieren',must:true},
+      {id:'R05',grp:'Plus oder minus?',must:true},
+      {id:'RA',grp:'Check Gleichnamig',must:true,final:true,title:'Abschlusscheck',desc:TASKS.RA.size+' Aufgaben zeigen, was du kannst. Ab '+needOf(TASKS.RA.size)+' richtig gibt es die Urkunde.'}
     ],
-    pathGroups:{'Gleichnamige Brüche':'balken'}
+    pathGroups:{'Ausprobieren':'lupe','Addieren':'plus','Subtrahieren':'minus','Plus oder minus?':'plusminus','Check Gleichnamig':'plakette'}
   },
   {id:'rechnen',name:'Brüche multiplizieren und dividieren',desc:'Malnehmen und teilen mit Brüchen.',icon:'winkel',status:'geplant'}
 ];

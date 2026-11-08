@@ -23,11 +23,11 @@ function bomList(ids,opts={}){
   const head=el('div',{class:'bomhead'},el('span',null,'Nr.'),el('span',null,'Bezeichnung'),el('span',null,'Leicht'),el('span',null,'Knifflig'),el('span'));
   const no=(i)=>String((opts.start||0)+i+1).padStart(2,'0');
   const rows=ids.map((id,i)=>{
-    if(id==='LAB'){
-      const done=!!(S.lab&&S.lab.done);
-      return el('button',{type:'button',class:'bomrow','data-acc':'mix',onclick:()=>go({kind:'lab'})},
+    if(isLab(id)){
+      const L=LABS[id],done=L.done();
+      return el('button',{type:'button',class:'bomrow','data-acc':'mix',onclick:()=>openLab(id)},
         el('span',{class:'pos'},no(i)),
-        el('span',{class:'nm'},el('b',null,'Bruchlabor'),el('small',null,'Erweitern und Kürzen ausprobieren – mit Streifen oder Kreis.')),
+        el('span',{class:'nm'},el('b',null,L.name),el('small',null,L.desc)),
         el('span',{class:'labstat'+(done?' done':'')},done?icon('haken'):null,done?'Geschafft':'Neu'),icon('weiter'));
     }
     const [s1,s2]=starCols(id);
@@ -38,11 +38,14 @@ function bomList(ids,opts={}){
   });
   return el('div',{class:'bom'},...(opts.head===false?[]:[head]),...rows);
 }
-/* Üben: alle Aufgaben eines Themas, nach Gruppen, in einer fortlaufenden Liste */
+/* Eingangstests und Abschlusschecks stehen nur im Lernpfad, nicht in Üben */
+const isCheck=(id)=>!!((typeof QCHK!=='undefined'&&QCHK[id])||finalModOf(id));
+/* Üben: alle Aufgaben eines Themas, nach Gruppen, in einer fortlaufenden Liste (ohne Checks; Gruppen nur mit Checks entfallen) */
 function uebenBody(m){
   const body=el('div',{class:'uebenbody'});let n=0,first=true;
   Object.keys(m.groups).forEach(g=>{
-    const ids=m.groups[g].ids;
+    const ids=m.groups[g].ids.filter(id=>!isCheck(id));
+    if(!ids.length)return;
     body.append(el('h3',{class:'grp'},icon(m.groups[g].icon),g),bomList(ids,{head:first,start:n}));
     n+=ids.length;first=false;
   });
@@ -98,9 +101,9 @@ function renderHome(){
       fold('Alle Ziele',perfectionList()));
   }else{
     /* Üben: frei wählen. Ein Umschalter für alle, je Thema eine aufklappbare Liste (das Thema der letzten Aufgabe ist offen) */
-    const last=S.last&&TASKS[S.last]?S.last:null,lastMod=last?moduleOf(last):null,mods=activeModules();
+    const last=S.last&&TASKS[S.last]&&!isCheck(S.last)?S.last:null,lastMod=last?moduleOf(last):null,mods=activeModules();
     if(last)home.append(bigBtn('play',()=>openEntry(last),'Weiter üben',TASKS[last].name,LEVEL_LABEL[levelOf(last)],'go'));
-    home.append(el('h1',null,'Üben'),listLevel(PRACTICE_ORDER));
+    home.append(el('h1',null,'Üben'),listLevel(PRACTICE_ORDER.filter(id=>!isCheck(id))));
     mods.forEach(m=>home.append(fold(m.name,uebenBody(m),lastMod?lastMod.id===m.id:m===mods[0])));
   }
   root.append(home,bottomNav());app.append(root);
@@ -143,7 +146,7 @@ function renderAll(){
   else if(v.kind==='game'&&v.id==='S01')renderMemory(v.id);
   else if(v.kind==='game'&&v.id==='S02')renderVault(v.id);
   else if(v.kind==='game'&&v.id==='S03')renderDuell(v.id);
-  else if(v.kind==='lab')renderLab();
+  else if(v.kind==='lab')(LABS[v.id]||LABS.LAB).render();
   else renderHome();
   if(!Store.ok)app.append(el('div',{class:'note-storage'},
     el('p',null,'Hinweis: Der Browser erlaubt kein lokales Speichern. Dein Fortschritt bleibt nur erhalten, solange diese Seite geöffnet ist.'),

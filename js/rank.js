@@ -93,7 +93,7 @@ function perfectionList(){
       return el('div',{class:'prow'+(done?' done':'')},
         el('span',{class:'pm','aria-hidden':'true'},icon(done?'haken':'schloss')),
         el('span',{class:'pt'},it.label,el('span',{class:'pbar','aria-hidden':'true'},el('i',{style:'width:'+Math.round(100*Math.min(1,it.have/it.need))+'%'}))),
-        el('b',{class:'pn'},it.have+'/'+it.need));
+        el('b',{class:'pn'},it.have+' von '+it.need));
     }));
 }
 
