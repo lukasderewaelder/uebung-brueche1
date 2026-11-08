@@ -413,15 +413,20 @@ TIPS.W10=(t)=>{
     [t.kind==='claim'?`Dazwischen liegt zum Beispiel ${tf(B.lo+1,B.M)}.`:`Zwischen ${B.lo} und ${B.hi} liegt zum Beispiel die Zahl ${B.lo+1}.`]];
 };
 
-/* ---------- Addieren und Subtrahieren, gleiche Nenner (R01–R03). Tipps zum Kürzen stehen bei jeder Aufgabe gleich da und verraten nie, ob es geht ---------- */
+/* ---------- Addieren und Subtrahieren, gleiche Nenner (R01–R05). Tipps zum Kürzen stehen bei jeder Aufgabe gleich da und verraten nie, ob es geht ---------- */
 const addSay=(plus)=>plus?'plus':'minus';
-TIPS.R01=(t)=>{
-  const later=(t.kind==='bild'||!addHasPic(t)||(t.level===1&&t.b<BAR_FROM))?'':'Jetzt siehst du ein Bild. ';
-  const mid=t.level===1?`Im Zwischenschritt stehen die Zähler ${t.a} und ${t.c} über dem Nenner ${t.b}. `:'';
-  if(t.kind==='drei')return [
+/* „Ein Bild, mehrere Aufgaben“ (R05) */
+const tipsDrei=(t)=>{
+  const later=(t.level===1&&t.b<BAR_FROM)?'':'Jetzt siehst du ein Bild. ';
+  return [
     ['Zähle die Teile im ersten und im zweiten Muster.'],
     [`${later}Das erste Muster hat ${t.p1} Teile, das zweite ${t.p2}. Das Ganze hat ${t.b} Teile.`],
     [`Zusammen sind es ${t.p1+t.p2} Teile. Eine Plusaufgabe passt und zwei Minusaufgaben auch.`]];
+};
+/* R01 Addieren am Bild und R03 Subtrahieren am Bild */
+const tipsBild=(t)=>{
+  const later=(t.kind==='bild'||!addHasPic(t)||(t.level===1&&t.b<BAR_FROM))?'':'Jetzt siehst du ein Bild. ';
+  const mid=t.level===1?`Im Zwischenschritt stehen die Zähler ${t.a} und ${t.c} über dem Nenner ${t.b}. `:'';
   if(t.kind==='bild')return [
     [t.plus?'Zähle alle Felder im Raster. Zähle dann die Felder jedes Musters.':'Zähle alle Felder im Raster. Zähle dann alle gefärbten Felder und die durchgekreuzten.'],
     [t.plus?`Im ersten Muster sind ${t.a} Felder, im zweiten ${t.c}. Das Raster hat ${t.b} Felder.`:`Gefärbt sind ${t.a} Felder, durchgekreuzt ${t.c}. Das Raster hat ${t.b} Felder.`],
@@ -431,7 +436,8 @@ TIPS.R01=(t)=>{
     [`${later}${mid||`Du rechnest mit ${t.a} Stücken und ${t.c} Stücken. `}Ein Stück ist ${tf(1,t.b)}.`],
     [`${t.a} ${addSay(t.plus)} ${t.c} ergibt ${t.res[0]}. Der Nenner ${t.b} bleibt. Prüfe zuletzt das Feld **gekürzt**.`]];
 };
-TIPS.R02=(t)=>{
+/* R02 Addieren und rechnen und R04 Subtrahieren und rechnen */
+const tipsRechnen=(t)=>{
   if(t.kind==='luecke'){
     const [p1,p2,p3]=t.p,k=t.blank===0?p2:p1;
     if(t.plus)return [
@@ -453,7 +459,14 @@ TIPS.R02=(t)=>{
     [`${addHasPic(t)?'Jetzt siehst du ein Bild. ':''}${mid||`Rechne nur mit den Zählern ${t.a} und ${t.c}.`}`],
     [`${t.a} ${addSay(t.plus)} ${t.c} ergibt ${t.res[0]}. Der Nenner ${t.b} bleibt. Prüfe zuletzt das Feld **gekürzt**.`]];
 };
-TIPS.R03=(t)=>{
+TIPS.R01=tipsBild;TIPS.R03=tipsBild;TIPS.R02=tipsRechnen;TIPS.R04=tipsRechnen;
+/* R05 Plus oder minus? */
+TIPS.R05=(t)=>{
+  if(t.kind==='art')return [
+    ['Lies die Geschichte genau. Kommt etwas dazu oder wird etwas weggenommen?'],
+    ['Wörter wie „zusammen“ oder „dazu“ gehören zu plus. Wörter wie „übrig“ oder „weg“ gehören zu minus.'],
+    [`Hier ${t.plus?'wird zusammengefügt: plus':'wird weggenommen: minus'}. ${t.a} ${addSay(t.plus)} ${t.c} ergibt ${t.res[0]}. Der Nenner ${t.b} bleibt. Prüfe zuletzt das Feld **gekürzt**.`]];
+  if(t.kind==='drei')return tipsDrei(t);
   if(t.kind==='finde'){
     const s=t.mode==='summe';
     return [
@@ -499,9 +512,11 @@ const PROOF={
   U05:(t)=>`${t.part} : ${t.g} = ${t.p} und ${t.total} : ${t.g} = ${t.q}. Der Bruch ist fertig gekürzt.`
 };
 PROOF.G04=PROOF.G03;PROOF.V01=PROOF.G03;
-PROOF.R01=(t)=>t.kind==='drei'?null:addProof(t);
+PROOF.R01=(t)=>addProof(t);
+PROOF.R03=PROOF.R01;
 PROOF.R02=(t)=>t.kind==='luecke'?`${t.p[0]} ${addSay(t.plus)} ${t.p[1]} = ${t.p[2]}. Der Nenner ${t.b} bleibt.`:addProof(t);
-PROOF.R03=(t)=>t.kind==='finde'?null:addProof(addCalcTask(t.calcs[t.wrong]));
+PROOF.R04=PROOF.R02;
+PROOF.R05=(t)=>t.kind==='finde'||t.kind==='drei'?null:t.kind==='fehler'?addProof(addCalcTask(t.calcs[t.wrong])):addProof(t);
 function proofText(task){const f=PROOF[task.type];return f?f(task):null;}
 
 /* Anmelden: jede Aufgabe liefert ihre Tipps aus TIPS (die Schnelltests Q00 und ZQ zeigen keine Tipps, behalten aber ihre eigenen) */

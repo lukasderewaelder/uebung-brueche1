@@ -79,17 +79,22 @@ const MODULES=[
     ],
     pathGroups:{'Zwei Regeln':'balken','Fehlt zum Ganzen':'luecke','Mehr Wege':'aus',Ordnen:'netz','Check Vergleichen':'plakette'}
   },
-  /* Addieren und Subtrahieren, Teil 1: gleiche Nenner (R01–R03). Reihenfolge des Themas: gleichnamig, unterschiedlich benannt, gemischte Zahlen (kommen später, mit Eingangstest RQ und Abschlusscheck RA). */
-  {id:'addsub',name:'Brüche addieren und subtrahieren',desc:'Teil 1: Gleichnamige Brüche addieren und subtrahieren.',icon:'wechsel',status:'aktiv',rank:false,recommends:'veraendern',
+  /* Addieren und Subtrahieren, Teil 1: gleiche Nenner (R01–R05: Addieren am Bild, Addieren und rechnen, Subtrahieren am Bild, Subtrahieren und rechnen, Plus oder minus?).
+     Reihenfolge des Themas: gleichnamig, unterschiedlich benannt, gemischte Zahlen (kommen später, mit Abschlusschecks je Block). */
+  {id:'addsub',name:'Brüche addieren und subtrahieren',desc:'Teil 1: Gleichnamige Brüche addieren und subtrahieren.',icon:'plusminus',status:'aktiv',rank:false,recommends:'veraendern',
     groups:{
-      'Gleichnamige Brüche':{pat:'dots',icon:'balken',text:'Bild lesen, Zähler addieren und subtrahieren, Nenner bleibt',ids:['R01','R02','R03']}
+      'Addieren':{pat:'dots',icon:'plus',text:'Bild lesen, Zähler addieren, Nenner bleibt',ids:['R01','R02']},
+      'Subtrahieren':{pat:'dash',icon:'minus',text:'Durchkreuzen, Zähler subtrahieren, Nenner bleibt',ids:['R03','R04']},
+      'Plus oder minus?':{pat:'hatch',icon:'plusminus',text:'Rechenart erkennen, Fehler finden, eigene Aufgaben',ids:['R05']}
     },
-    practice:['R01','R02','R03'],
+    practice:['R01','R02','R03','R04','R05'],
     /* Lernpfad: alle Bauteile sind Pflicht, in dieser Reihenfolge */
     path:[
-      {id:'R01',grp:'Gleichnamige Brüche',must:true},{id:'R02',grp:'Gleichnamige Brüche',must:true},{id:'R03',grp:'Gleichnamige Brüche',must:true}
+      {id:'R01',grp:'Addieren',must:true},{id:'R02',grp:'Addieren',must:true},
+      {id:'R03',grp:'Subtrahieren',must:true},{id:'R04',grp:'Subtrahieren',must:true},
+      {id:'R05',grp:'Plus oder minus?',must:true}
     ],
-    pathGroups:{'Gleichnamige Brüche':'balken'}
+    pathGroups:{'Addieren':'plus','Subtrahieren':'minus','Plus oder minus?':'plusminus'}
   },
   {id:'rechnen',name:'Brüche multiplizieren und dividieren',desc:'Malnehmen und teilen mit Brüchen.',icon:'winkel',status:'geplant'}
 ];

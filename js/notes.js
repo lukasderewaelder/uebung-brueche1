@@ -176,22 +176,35 @@ const NOTES={
       el('p',null,strong('Merke: '),'Zwischen zwei Brüchen gibt es immer weitere.')
     ];}},
   /* Wortlaut und Beispiele wie das Tafelbild: gleichnamig; Aufgabe = (Zähler ± Zähler) / Nenner = Ergebnis = gekürzt */
-  M17:{title:'Addieren und Subtrahieren',build(avoid){
-    const e=NOTE_EX.M17.find(x=>!avoid.includes(redKey(x[0],x[2]))&&!avoid.includes(redKey(x[1],x[2])))||NOTE_EX.M17[0];
-    const [a,c,b]=e,n=a+c,hi=Math.max(a,c),lo=Math.min(a,c);
+  M17:{title:'Addieren',build(avoid){
+    const [a,c,b]=noteExAdd(avoid);
     return [
       el('div',{class:'ex'},strong('Beispiel: '),addChain(a,c,b,true)),
       addFigure(b,a,c,{mode:'plus',split:true}),
       el('p',null,strong('Gleichnamig'),' heißen Brüche mit gleichem Nenner.'),
-      el('p',null,'Gleichnamige Brüche werden addiert oder subtrahiert, indem man ihre Zähler addiert oder subtrahiert.'),
+      el('p',null,'Gleichnamige Brüche werden addiert, indem man ihre Zähler addiert.'),
       el('p',null,'Der Nenner bleibt dabei gleich.'),
-      el('div',{class:'ex'},addChain(hi,lo,b,false)),
-      el('p',null,strong('Addieren'),' heißt zusammenfügen. ',strong('Subtrahieren'),' heißt wegnehmen.'),
+      el('p',null,strong('Addieren'),' heißt zusammenfügen.'),
+      el('p',null,strong('Merke: '),'Der Nenner wird nicht mitgerechnet. Prüfe am Ende, ob du kürzen kannst.')
+    ];}},
+  M18:{title:'Subtrahieren',build(avoid){
+    const [a,c,b]=noteExAdd(avoid),n=a+c;
+    return [
+      el('div',{class:'ex'},strong('Beispiel: '),addChain(a,c,b,false)),
+      addFigure(b,a-c,c,{mode:'minus',split:true}),
+      el('p',null,'Gleichnamige Brüche werden subtrahiert, indem man ihre Zähler subtrahiert.'),
+      el('p',null,'Der Nenner bleibt dabei gleich.'),
+      el('p',null,strong('Subtrahieren'),' heißt wegnehmen. Die weggenommenen Felder werden durchgekreuzt.'),
       el('p',null,strong('Ein Bild, drei Aufgaben:')),
-      el('div',{class:'ex'},eq(frac(a,b),'+',frac(c,b),'=',frac(n,b)),eq(frac(n,b),'−',frac(c,b),'=',frac(a,b)),eq(frac(n,b),'−',frac(a,b),'=',frac(c,b))),
+      el('div',{class:'ex'},eq(frac(c,b),'+',frac(a-c,b),'=',frac(a,b)),eq(frac(a,b),'−',frac(c,b),'=',frac(a-c,b)),eq(frac(a,b),'−',frac(a-c,b),'=',frac(c,b))),
       el('p',null,strong('Merke: '),'Der Nenner wird nicht mitgerechnet. Prüfe am Ende, ob du kürzen kannst.')
     ];}}
 };
+/* Beispiel für M17 und M18 [a, c, b] mit a > c (a/b − c/b) und a + c < b für M17 (Summe unter einem Ganzen); Aufgaben der Runde (avoid) werden nicht gezeigt */
+function noteExAdd(avoid){
+  const L=NOTE_EX.M17;
+  return L.map(x=>[Math.max(x[0],x[1]),Math.min(x[0],x[1]),x[2]]).find(x=>!avoid.includes(redKey(x[0],x[2]))&&!avoid.includes(redKey(x[1],x[2])))||[5,1,12];
+}
 /* noteFor(task): Merkkästen zur Aufgabe, ohne die Aufgabe zu lösen */
 function noteFor(typeId,task){
   const avoid=(task&&task.avoid)||[],T=TASKS[typeId],ids=T.notesFor?T.notesFor(task):T.notes;
