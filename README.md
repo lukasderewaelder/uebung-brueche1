@@ -37,6 +37,8 @@ Die Aufgabenformate im Thema Brüche addieren und subtrahieren folgen didaktisch
 
 Blaupausen-Look: Aufgaben sind Zeichenblätter mit Schriftfeld, Erweitern (orange, ×) und Kürzen (petrol, ÷) haben feste Farben, Hilfen liegen auf hellem Pauspapier. Eigene Linien-Symbole statt Emoji, nur System-Schriften.
 
+App-Icon: der Bruch ¾ mit amberfarbenem Bruchstrich auf Blaupausen-Raster. `favicon.svg` (Zahlen als Linienzüge, also ohne Schrift) ist die Vorlage; daraus entstanden `apple-touch-icon.png` (180 px, ohne Rundung, iOS rundet selbst) und `icons/icon-192.png`, `icons/icon-512.png` und `icons/icon-maskable-512.png` (Android, mit Sicherheitsrand). `manifest.webmanifest` benennt die App und die Farben (Anzeige „browser“, keine Offline-Installation). Neu erzeugen: SVG in einer Seite mit festem `<img>` in der gewünschten Größe öffnen und mit `msedge --headless=new --screenshot` (Hintergrund `--default-background-color=00000000`) aufnehmen.
+
 ## Aufbau
 
 `index.html` (Gerüst) lädt `css/app.css` und die Skripte aus `js/` in dieser Reihenfolge (gemeinsamer globaler Gültigkeitsbereich, keine Module nötig):

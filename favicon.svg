@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Bruchwerkstatt: der Bruch drei Viertel">
+<title>Bruchwerkstatt</title>
+<clipPath id="r"><rect width="512" height="512" rx="112"/></clipPath>
+<g clip-path="url(#r)">
+<rect width="512" height="512" fill="#0d3b66"/>
+<path d="M64 0V512M128 0V512M192 0V512M256 0V512M320 0V512M384 0V512M448 0V512M0 64H512M0 128H512M0 192H512M0 256H512M0 320H512M0 384H512M0 448H512" stroke="#adc8ff" stroke-opacity=".14" stroke-width="3" fill="none"/>
+<g fill="none" stroke="#f2f8ff" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
+<path d="M229.7 106.4A28 28 0 1 1 256 144A32 32 0 1 1 225.9 186.9"/>
+<path d="M282 427V305L212 387H308"/>
+</g>
+<rect x="136" y="247" width="240" height="28" rx="14" fill="#ffc53d"/>
+</g>
+</svg>
