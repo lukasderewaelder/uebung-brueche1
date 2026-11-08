@@ -509,7 +509,15 @@ function runSelfTests(){
   t('Zahlengerade: 3/4 liegt bei 3/8 der Länge, 1 genau in der Mitte; außerhalb und Nenner 0 entfallen',ng.marks.length===2&&Math.abs(ng.marks[0].x-(ng.pad+0.375*(ng.W-2*ng.pad)))<1e-9&&Math.abs(ng.ticks[4].x-ng.W/2)<1e-9);
   t('Zahlengerade: Beschriftung „n/d“ standardmäßig, leer = ohne',ng.marks[0].text==='3/4'&&ng.marks[1].text==='');
   const nlSvg=drawNumberLine({from:0,to:1,parts:3,marks:[{n:2,d:3}]});
-  t('Zahlengerade: SVG hat Achse, 4 Teilstriche, 2 Zahlen (0, 1) und eine Marke',nlSvg.querySelectorAll('.nl-axis').length===1&&nlSvg.querySelectorAll('.nl-tick').length===4&&nlSvg.querySelectorAll('.nl-num').length===2&&nlSvg.querySelectorAll('.nl-mark').length===1&&nlSvg.querySelector('.nl-lab').textContent==='2/3');
+  t('Zahlengerade: SVG hat Achse, 4 Teilstriche, 2 Zahlen (0, 1) und eine Marke',nlSvg.querySelectorAll('.nl-axis').length===1&&nlSvg.querySelectorAll('.nl-tick').length===4&&nlSvg.querySelectorAll('.nl-num').length===2&&nlSvg.querySelectorAll('.nl-mark').length===1&&[...nlSvg.querySelectorAll('.nl-lab')].map(x=>x.textContent).join('/')==='2/3'&&nlSvg.querySelectorAll('.nl-fl').length===1);
+  /* Bruchstrich überall: Texte mit „a/b“ und „w a/b“ werden zur Bruchdarstellung, Beschriftungen am Strahl mit Strich; Zähler wie „3 von 10“ bleiben Text */
+  const ftx=el('p',null,'Gekürzt: 5/8. Dann 2 3/4 und 12 5/3 sowie https://x.de/a/b.');
+  t('Bruchstrich: „5/8“ im Text wird ein Bruch mit Strich, „2 3/4“ eine gemischte Zahl, ein Link bleibt Text',ftx.querySelectorAll('.frac').length===3&&ftx.querySelectorAll('.mixed').length===1&&ftx.textContent.includes('https://x.de/a/b')&&!/\d\/\d/.test(ftx.textContent));
+  t('Bruchstrich: Text ohne Schrägstrich bleibt unverändert (Zeichenkette, keine Elemente)',fracText('Der Nenner 24 bleibt.')==='Der Nenner 24 bleibt.'&&Array.isArray(fracText('1/2')));
+  const nlMix=drawNumberLine({from:0,to:2,parts:4,marks:[{n:7,d:4,text:'1 3/4'},{i:1,text:'A'}]});
+  t('Zahlengerade: gemischte Beschriftung „1 3/4“ mit Strich (3 Texte, 1 Strich), Buchstabe bleibt einfacher Text',nlMix.querySelectorAll('.nl-fl').length===1&&[...nlMix.querySelectorAll('.nl-lab')].map(x=>x.textContent).join('|')==='3|4|1|A');
+  const sT=el('div');setText(sT,'Noch 3/4 übrig');
+  t('Bruchstrich: setText setzt Text mit Bruchstrich (Toast, Meldungen)',sT.querySelectorAll('.frac').length===1&&sT.textContent.startsWith('Noch '));
   /* Zahlenstrahl: Einteilung, Striche, Ausschnitt (Lupe) */
   t('Einteilung: Nenner geht auf (3 in 12, 5 in 10), geht nicht auf (4 in 10, 3 in 8); gemeinsamer Nenner 3, 8 → 24 und 4, 6, 12 → 12',fitsDivision(3,12)&&fitsDivision(5,10)&&!fitsDivision(4,10)&&!fitsDivision(3,8)&&commonDenominator([3,8])===24&&commonDenominator([4,6,12])===12&&commonDenominator([5])===5);
   t('Strichnummer: 3/5 bei 10 Teilen ist Strich 6, 1/2 bei 8 Teilen Strich 4, 1/3 bei 10 Teilen keiner',tickOf(3,5,10)===6&&tickOf(1,2,8)===4&&tickOf(1,3,10)===null&&tickOf(7,4,4)===7);
@@ -2025,4 +2033,61 @@ async function runLayoutTests(w=375,h=600,samples=3,ids,intro=true,opts={}){
   if(bad.length)console.log('Zu hoch (Pixel über dem Rand):\n'+bad.join('\n'));
   if(wideList.length)console.log('Zu breit (Pixel über dem Rand):\n'+wideList.join('\n'));
   return {total:Object.keys(out).length,tooHigh:bad,tooWide:wideList,detail:out};
+}
+
+/* =====================================================================
+   Bruchstrich überall: sichtbarer Text darf keinen Bruch als „a/b“ enthalten (Brüche stehen immer mit Bruchstrich).
+   Läuft in einem unsichtbaren Rahmen: jede Übung, beide Niveaus, Tipps, Prüfen, Lösung, Merkkasten, Erklärkarten und Seiten.
+   runFracScan(samples, ids) → {hits:[…]}; leer = in Ordnung.
+   ===================================================================== */
+async function runFracScan(samples=3,ids,opts={}){
+  ids=ids||Object.keys(TASKS);
+  const f=document.createElement('iframe');
+  f.style.cssText='position:fixed;left:0;top:0;width:'+(opts.w||900)+'px;height:'+(opts.h||700)+'px;border:0;visibility:hidden;pointer-events:none';
+  f.src='index.html?fracscan='+Date.now();
+  document.body.append(f);
+  await new Promise(r=>{f.onload=r;});
+  const cw=f.contentWindow;
+  cw.eval(`persist=function(){};
+    window.__hits=new Map();
+    window.__scan=(tag)=>{const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode())){const p=n.parentElement;if(!p||p.closest('script,style'))continue;const t=n.nodeValue,m=/\\d\\s*\\/\\s*\\d/.exec(t);if(m){const fr='…'+t.slice(Math.max(0,m.index-24),m.index+18).replace(/\\s+/g,' ')+'…';if(!window.__hits.has(fr))window.__hits.set(fr,tag);}}};
+    window.__btn=(t)=>[...document.querySelectorAll('.actionbar button, .card button, .modal button')].find(b=>b.textContent.trim().startsWith(t)&&!b.disabled);
+    S.modus={veraendern:'frei',zahlenstrahl:'frei',vergleichen:'frei',addsub:'frei'};S.unlocked={veraendern:true,zahlenstrahl:true,vergleichen:true,addsub:true};Object.keys(INTRO).forEach(k=>S.intro[k]=true);`);
+  const errs=[];
+  for(const id of ids){
+    for(const lvl of [1,2]){
+      const kinds=(TASKS[id].layoutKinds&&TASKS[id].layoutKinds(lvl))||[null];
+      for(const kind of kinds){
+        const rs=kind?`{'${keyOf(id,lvl)}':{results:[],cur:null,size:${TASKS[id].size},${TASKS[id].planKey||'cmp'}:Array(${TASKS[id].size}).fill('${kind}')}}`:'{}';
+        for(let i=0;i<samples;i++){
+          const r=cw.eval(`(()=>{try{
+            S.levelByType['${id}']=${lvl};S.rounds=${rs};S.view={kind:'practice',id:'${id}'};renderAll();
+            const tg='${id}-L${lvl}${kind?' '+kind:''}';
+            __scan(tg+' Aufgabe');
+            for(let k=0;k<5;k++){const t=__btn('Tipp');if(t){t.click();__scan(tg+' Tipp '+(k+1));}}
+            setHelp(true);__scan(tg+' Merkkasten');setHelp(false);
+            const b=__btn('Prüfen');if(b){b.click();__scan(tg+' Prüfen');}
+            const s=__btn('Lösung');if(s){s.click();__scan(tg+' Lösung');}
+            document.querySelectorAll('.modal .btn, .modal button').forEach(x=>{});
+            return null;}catch(e){return e.message;}})()`);
+          if(r)errs.push(id+': '+r);
+        }
+      }
+    }
+  }
+  /* Erklärkarten, Seiten, Spiele */
+  for(const id of Object.keys(INTRO)){
+    const r=cw.eval(`(()=>{try{S.intro={};S.rounds={};S.view=${id==='LAB'?"{kind:'lab'}":`{kind:'practice',id:'${id}'}`};renderAll();let g=0;while(document.querySelector('.introwork')&&g++<14){__scan('Erklärung ${id} Karte '+g);document.querySelector('.page').introApi.next();}return null;}catch(e){return e.message;}})()`);
+    if(r)errs.push('Erklärung '+id+': '+r);
+  }
+  const views=[['Lernen',"{kind:'home',tab:'pfad'}"],['Üben',"{kind:'home',tab:'ueben'}"],['Spiele',"{kind:'home',tab:'spiele'}"],['Ich',"{kind:'home',tab:'rang'}"],['Labor',"{kind:'lab'}"]];
+  activeModules().forEach(m=>views.push(['Thema '+m.name,`{kind:'home',tab:'pfad',thema:'${m.id}'}`]));
+  Object.keys(GAMES).forEach(g=>views.push(['Spiel '+g,`{kind:'game',id:'${g}'}`]));
+  views.forEach(([n,v])=>{const r=cw.eval(`(()=>{try{S.view=${v};renderAll();document.querySelectorAll('#app details').forEach(d=>{d.open=true;});__scan('Seite ${n}');return null;}catch(e){return e.message;}})()`);if(r)errs.push('Seite '+n+': '+r);});
+  const hits=[...cw.__hits].map(([fr,tag])=>fr+'   ← '+tag);
+  f.remove();
+  console.log('Bruchstrich-Prüfung: '+hits.length+' Stelle(n) mit Schrägstrich-Bruch, '+errs.length+' Fehler');
+  if(hits.length)console.log(hits.join('\n'));
+  if(errs.length)console.log(errs.join('\n'));
+  return {hits,errs};
 }

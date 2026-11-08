@@ -171,7 +171,7 @@ function renderLab(){
     promptEl.replaceChildren(el('p',{class:'q'},LAB_PROMPT[ph]));
     if(ph==='play')promptEl.append(el('button',{type:'button',class:'btn small',onclick:()=>{L.skip=false;persist();sayText('');draw();}},'Auftrag 3 starten'));
     stage.replaceChildren(labFigure(L));
-    tbPhase.textContent=ph==='free'?'Frei':'Auftrag '+(ph==='x'?1:ph==='d'?2:3)+'/3';
+    tbPhase.textContent=ph==='free'?'Frei':'Auftrag '+(ph==='x'?1:ph==='d'?2:3)+' von 3';
     tbMode.textContent=L.mode==='strip'?'Streifen':'Kreis';
     undoBtn.disabled=!L.hist.length;
     ctl.replaceChildren(ph==='quiz'?quizBox():chipRows());

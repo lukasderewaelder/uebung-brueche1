@@ -147,6 +147,18 @@ function numberLineGeometry(from,to,parts,marks,o={}){
   /* idxAt: nächster Strich (im Ausschnitt) zu einer x-Stelle der Zeichnung */
   return {W,H:70+top,pad,len,y:44+top,top,steps,i0,i1,span,sp:len/span,xAt,idxAt:(x)=>Math.max(i0,Math.min(i1,Math.round(i0+(x-pad)/len*span))),ticks,marks:pts};
 }
+/* Beschriftung eines Punktes über dem Strahl: Brüche („n/d“, „w n/d“) mit Bruchstrich, sonst einfacher Text.
+   x: Stelle des Punktes, y: Höhe der Achse. Zähler und Nenner stehen übereinander, der Strich dazwischen. */
+function nlLabel(svg,x,y,text){
+  const m=/^(?:(\d+) )?(\d+)\/(\d+)$/.exec(String(text));
+  if(!m){const tx=S_('text',{class:'nl-lab',x,y:y-16,'text-anchor':'middle'});tx.textContent=text;svg.append(tx);return;}
+  const w=m[1],n=m[2],d=m[3],half=Math.max(n.length,d.length)*4.4+3;
+  const t=(s,yy,anchor,xx)=>{const tx=S_('text',{class:'nl-lab',x:xx,y:yy,'text-anchor':anchor});tx.textContent=s;svg.append(tx);};
+  t(n,y-28.5,'middle',x);
+  svg.append(S_('line',{class:'nl-fl',x1:x-half,x2:x+half,y1:y-25.5,y2:y-25.5}));
+  t(d,y-13,'middle',x);
+  if(w)t(w,y-20.5,'end',x-half-3);
+}
 /* Zeichnung. Weitere Angaben:
    labels: 'wholes' (Standard) | 'ends' (nur from und to) | 'none' | Liste ganzer Zahlen; wholes:false wie 'none'
    strip: {n,d} Bruchstreifen (n von d gefärbt) über der Strecke von from bis from + 1
@@ -188,7 +200,7 @@ function drawNumberLine(opts={}){
   });
   g.marks.forEach(m=>{
     svg.append(S_('circle',{class:'nl-mark'+(m.cls?' '+m.cls:''),cx:m.x,cy:y,r:6}));
-    if(m.text){const tx=S_('text',{class:'nl-lab',x:m.x,y:y-16,'text-anchor':'middle'});tx.textContent=m.text;svg.append(tx);}
+    if(m.text)nlLabel(svg,m.x,y,m.text);
   });
   if(opts.onPick){
     const cap=S_('rect',{class:'nl-cap',x:0,y:g.top,width:g.W,height:g.H-g.top});

@@ -658,7 +658,7 @@ TASKS.O02={area:'Offene Aufgaben',name:'Kürzen-Maschine',desc:'Kürze auf zwei 
     const chips=o02Chips(t);
     const box=el('div',{class:'machine'});
     const msg=el('div',{class:'machsg','aria-live':'polite'});
-    const say=(cls,text,shake)=>{msg.className='machsg'+(cls?' '+cls:'');msg.textContent=text;if(shake){void msg.offsetWidth;msg.classList.add('shake');}};
+    const say=(cls,text,shake)=>{msg.className='machsg'+(cls?' '+cls:'');setText(msg,text);if(shake){void msg.offsetWidth;msg.classList.add('shake');}};
     const rebuild=()=>{
       const [n,m]=pathFraction(t.a,t.b,d.cur);
       const done=isFullyReduced(n,m);

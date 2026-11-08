@@ -64,7 +64,7 @@ let toastTimer=null;
 function toast(text,cls){
   let t=document.getElementById('toast');
   if(!t){t=el('div',{id:'toast','aria-live':'polite'});document.body.append(t);}
-  t.className='toast '+(cls||'');t.textContent=text;
+  t.className='toast '+(cls||'');setText(t,text);
   const bar=document.querySelector('.actionbar');
   const top=bar?bar.getBoundingClientRect().top:innerHeight-72;
   t.style.bottom=Math.max(8,Math.round(innerHeight-top+8))+'px';
@@ -370,14 +370,18 @@ function levelControl(id){
 }
 /* Hilfespalte: rechts auf dem Desktop, Schublade (Tablet), Bottom-Sheet (Smartphone) */
 function helpPanel(introId){
-  const body=el('div'),stats=el('div');
+  const body=el('div',{class:'helpbody'}),stats=el('div');
   const aside=el('aside',{class:'help','aria-label':'Merkkasten und Fortschritt'});
   const det=el('details',{class:'statsbox'},el('summary',null,icon('balken'),' Dein Fortschritt'),stats);
   /* Knopf „Erklärung“: die Anleitung des Bauteils noch einmal ansehen (nur Bauteile mit Erklärung) */
   const intro=introId&&hasIntro(introId)?el('p',{class:'helpintro'},el('button',{type:'button',class:'btn small helpintrobtn',onclick:openIntro},icon('gluehbirne'),'Erklärung')):null;
   aside.append(el('div',{class:'helphead'},el('h2',null,'Merkkasten'),el('button',{type:'button',class:'btn small helpclose',onclick:()=>setHelp(false)},'Schließen')),intro,body,det);
   if(helpOpen)aside.classList.add('open');
-  return {el:aside,setNotes(nodes){body.replaceChildren(...nodes);},setStats(n){stats.replaceChildren(n);}};
+  return {el:aside,setNotes(nodes){
+    const n=nodes.filter(x=>x&&x.classList&&x.classList.contains('note')).length; /* mehrere Merkkästen stehen im Pop-up nebeneinander */
+    body.classList.toggle('multi',n>1);body.style.setProperty('--nn',String(Math.min(3,Math.max(1,n))));
+    body.replaceChildren(...nodes);
+  },setStats(n){stats.replaceChildren(n);}};
 }
 function statsBlock(key,extra){
   const P=prog(key);

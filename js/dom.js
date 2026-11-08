@@ -9,9 +9,34 @@ function el(tag,attrs,...kids){
     else if(k.startsWith('on')&&typeof v==='function')e.addEventListener(k.slice(2),v);
     else e.setAttribute(k,v===true?'':String(v));
   }
-  for(const kid of kids.flat(Infinity)){if(kid==null||kid===false)continue;e.append(kid);}
+  for(const kid of kids.flat(Infinity)){
+    if(kid==null||kid===false)continue;
+    if(typeof kid==='string'&&kid.indexOf('/')>=0)e.append(...[].concat(fracText(kid))); /* Brüche im Text immer mit Bruchstrich */
+    else e.append(kid);
+  }
   return e;
 }
+/* Brüche im Text stehen immer mit Bruchstrich: „a/b“ und „w a/b“ (gemischte Zahl) werden zur Bruchdarstellung, der Rest bleibt Text.
+   Gilt für jeden Text, der über el() eingesetzt wird; Text ohne Schrägstrich bleibt unverändert (Zeichenkette). */
+function fracText(s){
+  if(typeof s!=='string'||s.indexOf('/')<0)return s;
+  const re=/(\d{1,2}) (\d+)\/(\d+)|(\d+)\/(\d+)/g,out=[];
+  let last=0,m;
+  const push=(t)=>{if(t)out.push(t);};
+  while((m=re.exec(s))){
+    push(s.slice(last,m.index));
+    if(m[1]!=null){
+      if(+m[2]<+m[3])out.push(mixed(+m[1],+m[2],+m[3]));
+      else{push(m[1]+' ');out.push(frac(+m[2],+m[3]));}
+    }else out.push(frac(+m[4],+m[5]));
+    last=re.lastIndex;
+  }
+  if(!out.length)return s;
+  push(s.slice(last));
+  return out;
+}
+/* Text eines Elements setzen (mit Bruchstrich, wie el) */
+function setText(node,text){node.replaceChildren(...[].concat(fracText(String(text))));}
 const SVGNS='http://www.w3.org/2000/svg';
 function S_(tag,attrs,...kids){
   const e=document.createElementNS(SVGNS,tag);
