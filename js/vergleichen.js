@@ -337,7 +337,7 @@ TASKS.W04={area:'Vergleichen',name:'Gleich viele Teile fehlen zum Ganzen',desc:'
   },
   prompt(t,h){
     if(t.kind==='claim'||t.kind==='conflict')cmpClaimPrompt(t,h);
-    else if(t.kind==='check')h.append(el('p',{class:'q'},'Vergleiche, was bei jedem Bruch bis zum Ganzen fehlt.'),t.level===1?null:eq(frac(t.a,t.b),'und',frac(t.c,t.d))); /* Leicht: die Brüche stehen schon an den Streifen */
+    else if(t.kind==='check')h.append(el('p',{class:'q'},'Vergleiche, was bei jedem Bruch bis zum Ganzen fehlt.'),t.level===1?'':eq(frac(t.a,t.b),'und',frac(t.c,t.d))); /* Leicht: die Brüche stehen schon an den Streifen */
     else h.append(el('p',{class:'q'},'Bei beiden fehlt etwas zum Ganzen. Welches Zeichen passt?'));
   },
   render(view,host){

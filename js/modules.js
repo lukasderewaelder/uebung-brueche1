@@ -6,6 +6,7 @@
    „Bald“ ohne Link, ohne Aufgaben (keine Platzhalterseiten).
    quickcheck: das Thema hat einen Eingangstest (Aufgabe qid; Fähigkeiten und Stationen in QCHK) vor dem Lernpfad (der Textlink „Ohne Test beginnen“ überspringt ihn);
    finalId: der eigene Abschlusscheck (letzte Station des Pfads, Urkunde, Text finalText). recommends: Thema, das man vorher machen sollte (nur ein Hinweis, keine Sperre).
+   short, sub (freiwillig): kürzerer Name und Zusatzzeile für die Kachel im Reiter „Lernen“ (sonst steht dort name).
    rank: Aufgaben und Lernpfad des Themas zählen für „alles perfekt“ (höchster Rang).
    Neues Thema: Eintrag hier, Aufgabentypen in eigener Datei vor modules.js, Symbole in ICON/ACC (exercise.js).
    ===================================================================== */
@@ -80,8 +81,8 @@ const MODULES=[
     pathGroups:{'Zwei Regeln':'balken','Fehlt zum Ganzen':'luecke','Mehr Wege':'aus',Ordnen:'netz','Check Vergleichen':'plakette'}
   },
   /* Addieren und Subtrahieren, Teil 1: gleiche Nenner (R01–R05: Addieren am Bild, Addieren und rechnen, Subtrahieren am Bild, Subtrahieren und rechnen, Plus oder minus?).
-     Reihenfolge des Themas: gleichnamig, unterschiedlich benannt, gemischte Zahlen (kommen später, mit Abschlusschecks je Block). */
-  {id:'addsub',name:'Gleichnamige Brüche addieren und subtrahieren',desc:'Der Nenner bleibt, die Zähler werden addiert oder subtrahiert.',icon:'plusminus',status:'aktiv',rank:false,quickcheck:true,qid:'RQ',recommends:'veraendern',
+     Reihenfolge: gleichnamig (addsub), ungleichnamig (addsub2, Block 2), gemischte Zahlen (Block 3, kommt später). Jeder Block ist ein eigenes Thema mit eigenem Check. */
+  {id:'addsub',name:'Gleichnamige Brüche addieren und subtrahieren',short:'Addieren und Subtrahieren',sub:'Gleichnamige Brüche',desc:'Der Nenner bleibt, die Zähler werden addiert oder subtrahiert.',icon:'plusminus',status:'aktiv',rank:false,quickcheck:true,qid:'RQ',recommends:'veraendern',
     finalId:'RA',finalText:'Du kannst gleichnamige Brüche addieren und subtrahieren. Stark!',
     groups:{
       'Ausprobieren':{pat:'dots',icon:'lupe',text:'Labor: Plus und Minus ausprobieren',ids:['RLAB']},
@@ -100,6 +101,39 @@ const MODULES=[
       {id:'RA',grp:'Check Gleichnamig',must:true,final:true,title:'Abschlusscheck',desc:TASKS.RA.size+' Aufgaben zeigen, was du kannst. Ab '+needOf(TASKS.RA.size)+' richtig gibt es die Urkunde.'}
     ],
     pathGroups:{'Ausprobieren':'lupe','Addieren':'plus','Subtrahieren':'minus','Plus oder minus?':'plusminus','Check Gleichnamig':'plakette'}
+  },
+  /* Addieren und Subtrahieren, Teil 2: ungleichnamige Brüche (Kürzel H, Konzeptdatei vom 21.11.2026). Gruppennamen sind über alle Themen eindeutig
+     (GROUPS und PATH_GROUPS werden nach Namen gemischt). Die Knobelstationen H08–H13 stehen ohne must im Pfad: sofort offen, zählen nicht für die Urkunde. */
+  {id:'addsub2',name:'Ungleichnamige Brüche addieren und subtrahieren',short:'Addieren und Subtrahieren',sub:'Ungleichnamige Brüche',
+    desc:'Erst den Hauptnenner finden, dann die Zähler addieren oder subtrahieren.',
+    icon:'kreuzraster',status:'aktiv',rank:false,recommends:'addsub',
+    quickcheck:true,qid:'HQ',finalId:'HA',
+    finalText:'Du kannst ungleichnamige Brüche addieren und subtrahieren. Stark!',
+    groups:{
+      'Labor Teilung':{pat:'dots',icon:'lupe',text:'Labor: gemeinsame Teilung ausprobieren',ids:['HLAB']},
+      'Warum erweitern?':{pat:'dash',icon:'frage',text:'Verschieden eingeteilt, Größe schätzen',ids:['H01']},
+      'Hauptnenner':{pat:'hatch',icon:'kreuzraster',text:'Trick 17, Schmetterling und Erweitern',ids:['H02']},
+      'Plus ungleichnamig':{pat:'dots',icon:'plus',text:'Teilung übertragen, Zähler addieren',ids:['H03','H04']},
+      'Minus ungleichnamig':{pat:'dash',icon:'minus',text:'Wegnehmen und ergänzen',ids:['H05','H06']},
+      'Erweitern oder nicht?':{pat:'hatch',icon:'plusminus',text:'Hinschauen, Fehler finden, das gleiche Ganze, Rechenschlange',ids:['H07']},
+      'Knobeln mit Brüchen':{pat:'dots',icon:'zirkel',text:'Rätsel, Muster und das magische Quadrat',ids:['H08','H09','H10','H11','H12','H13']},
+      'Check Ungleichnamig':{pat:'dash',icon:'plakette',text:'Eingangstest und Abschlusscheck',ids:['HQ','HA']}
+    },
+    practice:['HQ','HA','H01','H02','H03','H04','H05','H06','H07','H08','H09','H10','H11','H12','H13'],
+    path:[
+      {id:'HLAB',grp:'Labor Teilung',title:'Bruchlabor Gemeinsame Teilung',desc:'Teilungen übertragen und Brüche zusammenfügen.'},
+      {id:'H01',grp:'Warum erweitern?',must:true},
+      {id:'H02',grp:'Hauptnenner',must:true,note:'Dafür hilft Erweitern und Kürzen.'},
+      {id:'H03',grp:'Plus ungleichnamig',must:true},{id:'H04',grp:'Plus ungleichnamig',must:true},
+      {id:'H05',grp:'Minus ungleichnamig',must:true},{id:'H06',grp:'Minus ungleichnamig',must:true},
+      {id:'H07',grp:'Erweitern oder nicht?',must:true},
+      {id:'H08',grp:'Knobeln mit Brüchen'},{id:'H09',grp:'Knobeln mit Brüchen'},{id:'H10',grp:'Knobeln mit Brüchen'},
+      {id:'H11',grp:'Knobeln mit Brüchen'},{id:'H12',grp:'Knobeln mit Brüchen'},{id:'H13',grp:'Knobeln mit Brüchen'},
+      {id:'HA',grp:'Check Ungleichnamig',must:true,final:true,title:'Abschlusscheck',
+        desc:TASKS.HA.size+' Aufgaben zeigen, was du kannst. Ab '+needOf(TASKS.HA.size)+' richtig gibt es die Urkunde.'}
+    ],
+    pathGroups:{'Labor Teilung':'lupe','Warum erweitern?':'frage','Hauptnenner':'kreuzraster','Plus ungleichnamig':'plus',
+      'Minus ungleichnamig':'minus','Erweitern oder nicht?':'plusminus','Knobeln mit Brüchen':'zirkel','Check Ungleichnamig':'plakette'}
   },
   {id:'rechnen',name:'Brüche multiplizieren und dividieren',desc:'Malnehmen und teilen mit Brüchen.',icon:'winkel',status:'geplant'}
 ];

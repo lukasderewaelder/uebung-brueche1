@@ -4,7 +4,7 @@
    addFigure      Bild zu zwei Anteilen am selben Ganzen wie an der Tafel: ein Raster (Rechteck aus Feldern), Anteil 1 und Anteil 2 in zwei Mustern, bei minus das Weggenommene durchgekreuzt;
                   über ein Ganzes hinaus ein zweites Raster, ab Nenner 25 ein glatter Balken
    addPicBox      zeigt ein Bild sofort oder erst mit dem zweiten Tipp
-   addReadStage   „Lies die Brüche am Bild ab“: zwei Brüche und das Rechenzeichen, dann „Weiter“ (erste Stufe von R01 bild)
+   addReadStage   „Lies die Brüche am Bild ab“: zwei Brüche mit festem Rechenzeichen, dann „Weiter“ (erste Stufe von R01/R03 bild)
    addResult      Rechenweg-Block: Zeile „Zwischenschritt“ (nur Leicht, siehe addMid), die Felder „Ergebnis“ und „gekürzt“ und der Knopf „Kürzen geht nicht“ stehen bei JEDER Aufgabe
    addResultCheck Prüfung dazu: erst der Zwischenschritt, dann (kuerzenCheck in math.js) das Kürzen vor dem Wert, damit nichts verraten wird
    addRows        Zeilen für offene Antworten („+ Zeile“, „Letzte Zeile entfernen“)
@@ -118,12 +118,14 @@ function addPicBox(view,host,build,always){
 }
 
 /* ---------- Erste Stufe: Brüche am Bild ablesen ----------
-   Zwei Brüche mit dem Rechenzeichen dazwischen (Entwurf u.n u.d, v.n v.d, op) und der Knopf „Weiter“ (Entwurf s1 = true). onNext klappt die Stufe zu (twoStage). */
-function addReadStage(view,host,onNext){
+   Zwei Brüche mit dem Rechenzeichen dazwischen (Entwurf u.n u.d, v.n v.d) und der Knopf „Weiter“ (Entwurf s1 = true). onNext klappt die Stufe zu (twoStage).
+   sign ('+' oder '−'): Die Station hat eine feste Rechenart (R01 plus, R03 minus), das Zeichen steht fest da und wird nicht gefragt. */
+function addReadStage(view,host,onNext,sign){
   const d=view.draft;
-  const row=el('div',{class:'addrow addread'},fracInput(view,'u'),addOpToggle(view,'op'),fracInput(view,'v'));
+  d.op=sign;
+  const row=el('div',{class:'addrow addread'},fracInput(view,'u'),op(sign),fracInput(view,'v'));
   const go=el('button',{type:'button',class:'btn small'},'Weiter zum Rechenweg');
-  const full=()=>!!getFrac(d,'u')&&!!getFrac(d,'v')&&(d.op==='+'||d.op==='−');
+  const full=()=>!!getFrac(d,'u')&&!!getFrac(d,'v');
   const upd=()=>{go.disabled=view.locked()||!full();};
   row.addEventListener('input',upd);row.addEventListener('click',upd);
   go.addEventListener('click',()=>{if(view.locked()||!full())return;d.s1=true;view.save();onNext();});

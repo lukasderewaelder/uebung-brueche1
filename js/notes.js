@@ -14,7 +14,8 @@ const NOTE_EX={
   M6:[[2,3,4],[3,1,2],[1,2,5],[4,3,7]],
   M11:{nenner:[[3,8,5,8],[2,7,5,7],[4,9,7,9],[3,10,9,10]],zaehler:[[1,5,1,8],[3,4,3,7],[2,5,2,9],[1,3,1,6]]}, /* Paare a/b, c/d */
   M12:[[8,9,11,12],[5,6,9,10],[7,8,11,12],[4,5,7,8]], /* je Bruch fehlt ein Stück: a/b < c/d */
-  M17:[[5,1,12],[3,2,8],[2,5,9],[4,3,10],[1,4,7]] /* a/b + c/b, als [a, c, b] mit a + c < b; das erste ist das Beispiel von der Tafel */
+  M17:[[5,1,12],[3,2,8],[2,5,9],[4,3,10],[1,4,7]], /* a/b + c/b, als [a, c, b] mit a + c < b; das erste ist das Beispiel von der Tafel */
+  M19:[[2,8,7,10],[1,5,1,11],[3,13,7,4],[2,15,4,5]] /* Hauptnenner finden: a/b und c/d (Konzept Block 2, Kap. 9) */
 };
 const pickEx=(list,keyFn,avoid)=>list.find(x=>!avoid.includes(keyFn(x)))||list[list.length-1];
 
@@ -198,6 +199,39 @@ const NOTES={
       el('p',null,strong('Ein Bild, drei Aufgaben:')),
       el('div',{class:'ex'},eq(frac(c,b),'+',frac(a-c,b),'=',frac(a,b)),eq(frac(a,b),'−',frac(c,b),'=',frac(a-c,b)),eq(frac(a,b),'−',frac(a-c,b),'=',frac(c,b))),
       el('p',null,strong('Merke: '),'Der Nenner wird nicht mitgerechnet. Prüfe am Ende, ob du kürzen kannst.')
+    ];}},
+  /* Block 2: ungleichnamige Brüche (Wortlaut nah am Hefter S. 4 und 5) */
+  M19:{title:'Hauptnenner finden',build(avoid){
+    const [a,b,c,d]=pickEx(NOTE_EX.M19,x=>redKey(x[0],x[1]),avoid);
+    return [
+      el('div',{class:'ex'},strong('Beispiel: '),frac(a,b),' und ',frac(c,d)),
+      trickRow([[a,b],[c,d]]),
+      el('p',null,strong('Trick 17:')),
+      el('p',null,'1. Kreise den größeren Nenner ein.'),
+      el('p',null,'2. Prüfe: Passt der kleinere Nenner ohne Rest hinein?'),
+      el('p',null,'Wenn ja: Das ist der ',strong('Hauptnenner'),'. Wenn nein: Nimm das nächste Vielfache.'),
+      el('p',null,'3. Erweitere beide Brüche auf den Hauptnenner.'),
+      el('p',{class:'rule'},strong('Schmetterling:'),' Das Produkt der Nenner ist immer ein gemeinsamer Nenner. Oft ist er größer als nötig.')
+    ];}},
+  M20:{title:'Ungleichnamige Brüche addieren und subtrahieren',build(){
+    return [
+      el('div',{class:'ex'},strong('Beispiel: '),eq(frac(1,2),'+',frac(1,3),'=',frac(3,6),'+',frac(2,6),'=',frac('3 + 2',6),'=',frac(5,6)),
+        eq(frac(1,2),'−',frac(1,3),'=',frac(3,6),'−',frac(2,6),'=',frac('3 − 2',6),'=',frac(1,6))),
+      crossFigure({b:3,a:1,d:2,c:1,stage:1}),
+      crossFigure({b:3,a:1,d:2,c:1,stage:3}),
+      el('p',null,'Brüche mit verschiedenen Nennern heißen ',strong('ungleichnamig'),'.'),
+      el('p',null,'Möchte man sie addieren oder subtrahieren, macht man sie zuerst gleichnamig.'),
+      el('p',null,'Den gemeinsamen Nenner nennt man ',strong('Hauptnenner'),'.'),
+      el('p',null,strong('Merke: '),'Erst gleich einteilen, dann die Zähler rechnen. Der Nenner bleibt.'),
+      el('p',null,strong('Probe: '),'Beim Addieren wird das Ergebnis größer als jeder der beiden Brüche.')
+    ];}},
+  M21:{title:'Das gleiche Ganze',build(){
+    return [
+      el('div',{class:'ex'},strong('Beispiel: '),'Zwei verschiedene Ganze gegen ein Ganzes'),
+      hnWholes(),
+      el('p',null,'Anteile darfst du nur zusammenzählen, wenn sie zum selben Ganzen gehören.'),
+      el('p',null,frac(1,4),' Kuchen und ',frac(1,4),' Pizza sind nicht ',frac(2,4),' von etwas.'),
+      el('p',null,'Auch Größen müssen passen: Liter zu Liter, Stunde zu Stunde.')
     ];}}
 };
 /* Beispiel für M17 und M18 [a, c, b] mit a > c (a/b − c/b) und a + c < b für M17 (Summe unter einem Ganzen); Aufgaben der Runde (avoid) werden nicht gezeigt */
@@ -214,6 +248,7 @@ function noteFor(typeId,task){
   });
   if(ids.some(id=>id==='M1'||id==='M2'||id==='M3'))out.push(el('p',{class:'labnote'},labLink('LAB')));
   if(ids.some(id=>id==='M17'||id==='M18'))out.push(el('p',{class:'labnote'},labLink('RLAB')));
+  if(ids.some(id=>id==='M19'||id==='M20'))out.push(el('p',{class:'labnote'},labLink('HLAB')));
   return out;
 }
 

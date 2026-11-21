@@ -64,10 +64,11 @@ function moduleCard(m,primary=true){
   const label=m.name+': '+doneN+' von '+must.length+' Stationen fertig, '+(fertig?'Urkunde geschafft':tag.toLowerCase()+(z!=='gate'&&go1?' bei '+stationTitle(go1.id):''))+(rec?'. Empfohlen: erst '+rec.name:'');
   return el('button',{type:'button',class:'ttile'+(primary&&!fertig?' focus':'')+(fertig?' done':''),title:m.desc,'aria-label':label,onclick:()=>go({kind:'home',tab:'pfad',thema:m.id})},
     el('span',{class:'ico','aria-hidden':'true'},icon(m.icon)),
-    el('b',{class:'tt-name'},m.name),
-    seg,
-    el('span',{class:'tt-row'},el('span',{class:'tt-n'},doneN+' von '+must.length),el('span',{class:'tt-tag'},fertig?icon('haken'):null,tag)),
-    rec?el('small',{class:'tt-rec'},'Empfohlen: erst '+rec.name+'.'):null);
+    el('b',{class:'tt-name'},m.short||m.name),
+    m.sub?el('small',{class:'tt-sub'},m.sub):null,
+    rec?el('small',{class:'tt-rec'},'Empfohlen: erst '+rec.name+'.'):null,
+    el('span',{class:'tt-foot'},seg,
+      el('span',{class:'tt-row'},el('span',{class:'tt-n'},doneN+' von '+must.length),el('span',{class:'tt-tag'},fertig?icon('haken'):null,tag))));
 }
 function lernenTab(home){
   const focus=activeModules().find(m=>lernenZustand(m)==='gate'||pfadInfo(m).go1); /* das Thema, bei dem es weitergeht */
@@ -90,8 +91,8 @@ function renderHome(){
   if(tab==='pfad'){
     if(thema)pfadTab(home,thema);else lernenTab(home);
   }else if(tab==='spiele'){
-    home.append(el('h1',null,'Spiele'),listLevel(['S01','S02','S03']),el('div',{class:'menu'},
-      ...['S01','S02','S03'].map(id=>{const r=S.games[keyOf(id,levelOf(id))];return bigBtn(ICON[id],()=>openEntry(id),GAMES[id].name,GAMES[id].desc,[r?`Runden: ${r.played}`:'',id==='S02'&&lootOf().length?`Sammelkarten: ${lootOf().length} von ${LOOT.length}`:''].filter(Boolean).join(' · '),'',null,id==='S01'?'dots':id==='S02'?'hatch':'dash');})));
+    home.append(el('h1',null,'Spiele'),listLevel(GAME_IDS),el('div',{class:'menu'},
+      ...GAME_IDS.map(id=>{const r=S.games[keyOf(id,levelOf(id))];return bigBtn(ICON[id],()=>openEntry(id),GAMES[id].name,GAMES[id].desc,[r?`Runden: ${r.played}`:'',id==='S02'&&lootOf().length?`Sammelkarten: ${lootOf().length} von ${LOOT.length}`:'',id==='S04'&&snakesOf().length?`Sammelkarten: ${snakesOf().length} von ${SNAKES.length}`:''].filter(Boolean).join(' · '),'',null,id==='S01'?'dots':id==='S02'?'hatch':id==='S03'?'dash':'dots');})));
   }else if(tab==='rang'){
     const total=Object.values(S.progress).reduce((a,p)=>a+p.done,0);
     home.append(el('div',{class:'ichhead'},el('h1',null,'Ich'),linkBtn('Einstellungen',openOptions,'zahnrad')),
@@ -146,6 +147,7 @@ function renderAll(){
   else if(v.kind==='game'&&v.id==='S01')renderMemory(v.id);
   else if(v.kind==='game'&&v.id==='S02')renderVault(v.id);
   else if(v.kind==='game'&&v.id==='S03')renderDuell(v.id);
+  else if(v.kind==='game'&&v.id==='S04')renderSchlange(v.id);
   else if(v.kind==='lab')(LABS[v.id]||LABS.LAB).render();
   else renderHome();
   if(!Store.ok)app.append(el('div',{class:'note-storage'},

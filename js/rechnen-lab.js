@@ -163,6 +163,7 @@ function renderRLab(){
     bPlus.setAttribute('aria-pressed',String(L.op==='plus'));
     bMinus.setAttribute('aria-pressed',String(L.op==='minus'));
     promptEl.replaceChildren(el('p',{class:'q'},RLAB_PROMPT[ph]));
+    if(ph==='free'){const nb=labNextBtn('RLAB');if(nb)promptEl.append(nb);}
     if(ph==='play')promptEl.append(el('button',{type:'button',class:'btn small',onclick:()=>{L.skip=false;persist();sayText('');draw();}},'Auftrag 3 starten'));
     stage.replaceChildren(rlabFigure(L),el('div',{class:'rlabchain'},rlabChain(L)));
     tbPhase.textContent=ph==='free'?'Frei':'Auftrag '+(ph==='plus'?1:ph==='minus'?2:3)+' von 3';
