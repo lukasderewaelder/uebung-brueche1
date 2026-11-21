@@ -557,8 +557,102 @@ const INTRO={
       calc:[[[1,8],'+',[5,8],'=',[6,8]],[[2,8],'+',[4,8],'=',[6,8]]]},
     {h:'So antwortest du',
       say:['Beim Fehler berichtigst du die Rechnung.','Dort stehen wieder **Ergebnis** und **gekürzt**.','Bei eigenen Aufgaben füllst du die Zähler aus.','Mit **+ Aufgabe** schreibst du weitere auf.']}
+  ]},
+  /* Block 2: ungleichnamige Brüche (Konzept Kap. 10–13). cross = Kreuzraster {b,a,d,c,stage,mode}, trick = Trick-17-Reihe, strip = Kreuzraster und Streifen, whole = zwei Ganze */
+  HLAB:{title:'Bruchlabor Gemeinsame Teilung',steps:[
+    {h:'Zwei Rechtecke',say:['Das erste Rechteck ist senkrecht geteilt.','Das zweite ist waagerecht geteilt.','Drehe an den Schrauben und schau zu.'],cross:{b:3,a:1,d:2,c:1,stage:1}},
+    {h:'Teilung übertragen',say:['Tippe **Teilung übertragen**.','Jedes Rechteck bekommt die Linien des anderen.','Jetzt sind alle Felder gleich groß.'],cross:{b:3,a:1,d:2,c:1,stage:2}}
+  ]},
+  HQ:{title:'Eingangstest',steps:[
+    {h:'Kurzfragen zu ungleichnamigen Brüchen',
+      say:[TASKS.HQ.size+' Fragen warten auf dich.','Du tippst eine Antwort an. Dann tippst du auf **Prüfen**.','Manchmal ist die Antwort ein Ja oder Nein.']},
+    {h:'Sofort eine Rückmeldung',
+      say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Es gibt keine Zeitmessung.']},
+    {h:'Danach siehst du, was fehlt',
+      say:['Am Ende siehst du, was du schon kannst.','Bekannte Stationen sind dann im Lernpfad markiert.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
+    {h:'Der Abschlusscheck',
+      say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat '+TASKS.HA.size+' Aufgaben: '+HA_TAP+' zum Antippen und '+HA_CALC.length+' zum Rechnen.','Ab '+needOf(TASKS.HA.size)+' richtigen Antworten gibt es die Urkunde.']}
+  ]},
+  H01:{title:'Warum geht das nicht?',steps:[
+    {h:'Verschieden eingeteilt',say:['{1|3} + {1|2} kann so nicht addiert werden.','Die Nenner sind verschieden.','Darum sind die Felder verschieden groß.'],cross:{b:3,a:1,d:2,c:1,stage:1}},
+    {h:'Einfach alles addieren?',say:['Malik rechnet einfach Zähler und Nenner zusammen.','Aber {2|5} ist kleiner als {1|2}.','Beim Zusammenfügen muss das Ergebnis größer werden.'],calc:[{wrong:true,t:[[1,3],'+',[1,2],'=',[2,5]]}]},
+    {h:'Erst schätzen',say:['Überlege vor dem Rechnen: Wie groß wird das Ergebnis?','Ist es größer als beide Brüche? Ist es größer als 1?']}
+  ]},
+  H02:{title:'Hauptnenner finden',steps:[
+    {h:'Ein Nenner für beide',say:['Gleichnamige Brüche kannst du sofort addieren.','Darum suchst du einen Nenner, der zu beiden passt.','Der kleinste heißt **Hauptnenner**.']},
+    {h:'Trick 17',say:['Kreise den größeren Nenner ein.','Prüfe: Passt der kleinere Nenner ohne Rest hinein?','Wenn nein, nimm das nächste Vielfache und prüfe erneut.'],trick:[8,10]},
+    {h:'Erweitern',say:['Erweitere beide Brüche auf den Hauptnenner.','{2|8} erweiterst du mit 5, {7|10} mit 4.'],calc:[[[2,8],'=',[2,8,'x',5],'=',[10,40]],[[7,10],'=',[7,10,'x',4],'=',[28,40]]]},
+    {h:'Und der Schmetterling?',say:['Der Schmetterling nimmt die Nenner mal.','Das ist auch ein gemeinsamer Nenner, aber oft zu groß.','Mit dem Hauptnenner 12 musst du weniger kürzen.'],calc:[[4,'·',6,'=',24]],strip:{b:4,d:6}}
+  ]},
+  H03:{title:'Addieren am Bild',steps:[
+    {h:'Ein Bild lesen',say:['Das erste Rechteck ist senkrecht in Drittel geteilt.','Das zweite ist waagerecht in Hälften geteilt.','Gefärbt sind {1|3} und {1|2}.'],cross:{b:3,a:1,d:2,c:1,stage:1}},
+    {h:'Teilung übertragen',say:['Zeichne die Linien des anderen Rechtecks dazu.','Jedes Drittel wird in 2 Stücke geteilt.','Jede Hälfte wird in 3 Stücke geteilt.','Jetzt haben beide Rechtecke 6 gleich große Felder.'],cross:{b:3,a:1,d:2,c:1,stage:2}},
+    {h:'Jetzt gleichnamig',say:['Aus {1|3} wird {2|6}, aus {1|2} wird {3|6}.','Jetzt addierst du nur die Zähler.'],calc:[[[1,3],'+',[1,2],'=',[2,6],'+',[3,6],'=',[5,6]]],cross:{b:3,a:1,d:2,c:1,stage:3}},
+    {h:'So antwortest du',say:['In Leicht trägst du zuerst den **Hauptnenner** ein.','Dann die neuen Zähler und den **Zwischenschritt**.','Das Feld **gekürzt** gibt es immer.']}
+  ]},
+  H04:{title:'Addieren und rechnen',steps:[
+    {h:'Drei Schritte',say:['1. Hauptnenner finden.','2. Beide Brüche erweitern.','3. Zähler addieren, der Nenner bleibt.','Am Ende kürzen, wenn es geht.'],calc:[[[1,4],'+',[2,3],'=',[3,12],'+',[8,12],'=',[11,12]]]},
+    {h:'Der Schmetterling geht auch',say:['Mit dem Schmetterling bekommst du das Produkt der Nenner.','Das ist auch richtig.','Dann musst du am Ende oft kürzen.'],calc:[[[1,4],'+',[1,6],'=',[6,24],'+',[4,24],'=',[10,24],'=',[5,12]]]},
+    {h:'Mehr als ein Ganzes',say:['Manchmal ist das Ergebnis größer als 1.','Du darfst es als Bruch oder als **gemischte Zahl** schreiben.'],calc:[[[3,4],'+',[2,3],'=',[9,12],'+',[8,12],'=',[17,12],'=',{m:[1,5,12]}]]},
+    {h:'Geschichten lesen',say:['Prüfe zuerst: Gehören beide Anteile zum selben Ganzen?','Wörter wie zusammen und dazu bedeuten plus.']}
+  ]},
+  H05:{title:'Subtrahieren am Bild',steps:[
+    {h:'Wegnehmen',say:['{3|4} sind gefärbt. Davon wird {1|3} weggenommen.','Erst teilst du beide Rechtecke gleich ein.','Dann kreuzt du die weggenommenen Felder durch.'],cross:{b:4,a:3,d:3,c:1,stage:3,mode:'minus'}},
+    {h:'Ergänzen',say:['Du kannst auch fragen: Wie viel fehlt von {1|3} bis {3|4}?','Zähle die Felder, die noch fehlen.','Das ist dieselbe Aufgabe wie {3|4} − {1|3}.'],calc:[[[3,4],'−',[1,3],'=',[9,12],'−',[4,12],'=',[5,12]],[[1,3],'+',[5,12],'=',[3,4]]]},
+    {h:'So antwortest du',say:['Trage zuerst den **Hauptnenner** ein.','Dann die neuen Zähler, den **Zwischenschritt** und das **Ergebnis**.']}
+  ]},
+  H06:{title:'Subtrahieren und rechnen',steps:[
+    {h:'Drei Schritte',say:['Hauptnenner finden, beide Brüche erweitern.','Dann die Zähler subtrahieren. Der Nenner bleibt.'],calc:[[[5,6],'−',[3,4],'=',[10,12],'−',[9,12],'=',[1,12]]]},
+    {h:'Erst kürzen?',say:['Manchmal lässt sich ein Bruch vorher kürzen.','{8|16} ist dasselbe wie {1|2}.','Dann wird der Hauptnenner kleiner.'],calc:[[[8,16],'−',[1,3],'=',[1,2],'−',[1,3],'=',[3,6],'−',[2,6],'=',[1,6]]]},
+    {h:'Was fehlt zum Ganzen?',say:['Ein Ganzes kannst du als {24|24} schreiben.','Ziehe alle Teile vom Ganzen ab.'],calc:[[[24,24],'−',[8,24],'−',[9,24],'=',[7,24]]]}
+  ]},
+  H07:{title:'Erweitern oder nicht?',steps:[
+    {h:'Erst hinschauen',say:['Sind die Nenner gleich? Dann rechnest du sofort.','Passt ein Nenner in den anderen? Dann erweiterst du nur einen Bruch.','Sonst erweiterst du beide.']},
+    {h:'Das gleiche Ganze',say:['Anteile darfst du nur zusammenzählen, wenn sie zum selben Ganzen gehören.','{1|4} Kuchen und {1|4} Pizza sind nicht {2|4} von etwas.'],whole:true},
+    {h:'Fehler finden',say:['Oft werden Zähler und Nenner einzeln addiert.','Oder nur ein Bruch wird erweitert.','Tippe die falsche Rechnung an.'],calc:[{wrong:true,t:[[1,4],'+',[1,3],'=',[2,7]]}]},
+    {h:'Die Rechenschlange',say:['Rechne Schritt für Schritt von links nach rechts.','Kürze jedes Zwischenergebnis.','Am Ende muss die Zahl im Kopf stehen.']}
+  ]},
+  H08:{title:'Zahlenrätsel',steps:[
+    {h:'Rückwärts rechnen',say:['Ich denke mir eine Zahl und ziehe {1|4} ab.','Heraus kommt {1|3}. Welche Zahl war es?','Rechne rückwärts: Die Umkehr von minus ist plus.'],calc:[[[1,3],'+',[1,4],'=',[4,12],'+',[3,12],'=',[7,12]]]},
+    {h:'Lücken füllen',say:['Bei einer Lücke fragst du: Was fehlt noch?','Mache die Probe: Setze deine Zahl ein.'],calc:[[['?',24],'+',[3,8],'=',[5,6]]]}
+  ]},
+  H09:{title:'Ergebniskarten',steps:[
+    {h:'Erst schätzen',say:['Jede Aufgabe hat genau eine Ergebniskarte.','Schätze zuerst: Ist das Ergebnis klein, groß oder über 1?']},
+    {h:'Dann prüfen',say:['Tippe eine Aufgabe an, dann ihre Karte.','Rechne nach, wenn du unsicher bist.','Mit **Prüfen** siehst du, welche Paare stimmen.']}
+  ]},
+  H10:{title:'Bis zum nächsten Ganzen',steps:[
+    {h:'Erst addieren',say:['Addiere die beiden Brüche mit dem Hauptnenner.','Schreibe das Ergebnis in das Feld **Summe**.'],calc:[[[2,3],'+',[4,9],'=',[6,9],'+',[4,9],'=',[10,9]]]},
+    {h:'Dann ergänzen',say:['Wie viel fehlt bis zum nächsten Ganzen?','Das nächste Ganze nach {10|9} ist 2.'],calc:[[[18,9],'−',[10,9],'=',[8,9]]]}
+  ]},
+  H11:{title:'Stammbruchmuster',steps:[
+    {h:'Stammbrüche',say:['Ein Stammbruch hat den Zähler 1.','Rechne drei Aufgaben und vergleiche die Ergebnisse.'],calc:[[[1,2],'−',[1,3],'=',[1,6]],[[1,3],'−',[1,4],'=',[1,12]]]},
+    {h:'Muster finden',say:['Schau dir die Nenner der Ergebnisse an.','Sage dann das nächste Ergebnis voraus, ohne lange zu rechnen.']}
+  ]},
+  H12:{title:'Magisches Quadrat',steps:[
+    {h:'Gleiche Summen',say:['In einem magischen Quadrat hat jede Zeile dieselbe Summe.','Das gilt auch für jede Spalte und beide Diagonalen.']},
+    {h:'Leere Felder füllen',say:['Suche eine Zeile, in der nur ein Feld fehlt.','Ziehe die bekannten Brüche von der Summe ab.'],calc:[[[5,4],'−',[1,6],'−',[7,12],'=',[1,2]]]}
+  ]},
+  H13:{title:'17 Kamele',steps:[
+    {h:'Ein altes Rätsel',say:['Ein Vater hinterlässt 17 Kamele.','Die Söhne bekommen {1|2}, {1|3} und {1|9} davon.'],calc:[[[1,2],'+',[1,3],'+',[1,9],'=',[9,18],'+',[6,18],'+',[2,18],'=',[17,18]]]},
+    {h:'Was fällt auf?',say:['Zusammen ergibt das weniger als ein Ganzes.','Darum bleibt ein geliehenes Kamel übrig.']}
+  ]},
+  HA:{title:'Abschlusscheck',steps:[
+    {h:'Wie viele Aufgaben?',
+      say:['Der Abschlusscheck hat '+TASKS.HA.size+' Aufgaben.',HA_TAP+' davon tippst du nur an.','Bei '+HA_CALC.length+' Aufgaben rechnest du selbst.']},
+    {h:'So geht es',
+      say:['Du rechnest wie in den Stationen.','Hauptnenner, Addieren und Subtrahieren kommen vor.','Tipps und die Lösung gibt es wie sonst.']},
+    {h:'Die Urkunde',
+      say:['Ab '+needOf(TASKS.HA.size)+' Punkten gibt es die Urkunde.','Aufgaben mit Tipp zählen nur halb.','Alle Pflicht-Stationen müssen vorher fertig sein.']}
   ]}
 };
+/* Kreuzraster und Streifen in einer Erklärkarte (H02): b · d Felder im Kreuzraster, der Hauptnenner reicht auch */
+function introStripNode(s){
+  const N=lcm(s.b,s.d),p1=N/s.b,p2=N/s.d;
+  const strip=drawCells('strip',N,null,new Set(Array.from({length:p1+p2},(_,i)=>i)),{maxW:300,label:N+' Felder als Streifen'});
+  strip.querySelectorAll('g.cell').forEach((g,i)=>{if(i>=p1&&i<p1+p2){g.classList.remove('on');g.classList.add('on2');}});
+  return el('div',{class:'introfigs hnstrip'},crossFigure({b:s.b,a:1,d:s.d,c:1,stage:3}),
+    el('div',{class:'fig addfig'},strip,el('small',{class:'acap'},N+' reicht auch')));
+}
 const hasIntro=(id)=>Object.prototype.hasOwnProperty.call(INTRO,id);
 const introSeen=(id)=>!!(S.intro&&S.intro[id]===true);
 /* Zu welcher Ansicht gehört eine Erklärung? Bruchlabor und jede Übung des Lernpfads – nicht die Spiele */
@@ -727,7 +821,7 @@ function introLineTry(spec){
 const introHasProbe=(id)=>!!(TASKS[id]&&!TASKS[id].quick&&!finalModOf(id)&&!isLab(id));
 const PROBE_STEP={h:'Probiere es aus',say:[],probe:true}; /* der Hinweis „Fehler sind erlaubt“ steht in der Schrittzeile */
 function buildProbe(id){
-  const st=newState(generateTask(id,1)),host=el('div',{class:'probetask'}),msg=el('div',{class:'dockmsg'});
+  const st=newState(generateTask(id,1,undefined,TASKS[id].probeCtx)),host=el('div',{class:'probetask'}),msg=el('div',{class:'dockmsg'});
   const P={st,host,msg,upd:null};
   const pad=makeKeypad(host,()=>P.check());
   P.pad=pad;P.dp=dockPanel(msg,pad,host);
@@ -806,6 +900,10 @@ function renderIntro(id){
       s.lab?el('div',{class:'introstage'},labFigure({mode:'strip',base:s.lab.base.slice(),cur:s.lab.cur.slice(),last:{op:s.lab.op,k:s.lab.k}})):null,
       s.fig?introFigNode(s.fig):null,
       s.add?introAddNode(s.add):null,
+      s.cross?el('div',{class:'introstage'},crossFigure(s.cross)):null,
+      s.trick?el('div',{class:'introstage'},trickRow(s.trick)):null,
+      s.strip?introStripNode(s.strip):null,
+      s.whole?el('div',{class:'introstage'},hnWholes()):null,
       s.nline?introLineNode(s.nline):null,
       s.nltry?introLineTry(s.nltry):null,
       s.calc?introCalcNode(s.calc):null,

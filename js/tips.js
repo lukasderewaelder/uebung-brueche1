@@ -519,5 +519,71 @@ PROOF.R04=PROOF.R02;
 PROOF.R05=(t)=>t.kind==='finde'||t.kind==='drei'?null:t.kind==='fehler'?addProof(addCalcTask(t.calcs[t.wrong])):addProof(t);
 function proofText(task){const f=PROOF[task.type];return f?f(task):null;}
 
+/* ---------- Ungleichnamige Brüche (H01–H13, Konzept Block 2): 1 Frage (nie das Ergebnis) · 2 erster Schritt vorgemacht · 3 Teillösung.
+   Tipps zum Kürzen verraten nie, ob es geht. ---------- */
+const tfx=(x)=>tf(x[0],x[1]);
+const hnT17=(...ds)=>{const s=trick17Steps(...ds);return 'Trick 17: '+s.map((x,i)=>x.v+(i===s.length-1?' passt':' nein')).join(', ')+'.';};
+/* Rechenaufgabe mit zwei oder drei Brüchen */
+function tipsCalc(t){
+  const N=hnSmallest(t.terms),dens=t.terms.map(x=>simplify(x[0],x[1])[1]),ex=t.terms.map(x=>tf(x[0],x[1])+' = '+tf(x[0]*N/x[1],N)).join(', ');
+  const verb=t.signs.every(s=>s==='+')?'Addiere':t.signs.every(s=>s==='−')?'Subtrahiere':'Rechne';
+  const first=t.kind==='kuerzbar'?'Kannst du einen Bruch vorher kürzen?':t.kind==='ergaenzenText'?'Ergänzen heißt: Ziel minus Start. Welcher Nenner passt zu beiden?'
+    :t.kind==='rest'?'Schreibe das Ganze als Bruch. Welcher Nenner passt zu allen?':`Welcher Nenner passt zu ${dens.join(' und ')}?`;
+  return [[first],[(dens.length===2?hnT17(...dens)+' ':'')+`Der Hauptnenner ist ${N}.`],[`${ex}. ${verb} jetzt die Zähler. Prüfe zuletzt das Feld **gekürzt**.`]];
+}
+function tipsStimmt(t){
+  const big=compareFrac(t.a,t.b,t.c,t.d)>=0?[t.a,t.b]:[t.c,t.d],X=t.claim,plus=t.signs[0]==='+',ref=plus?big:[t.a,t.b],M=lcm(X[1],ref[1]);
+  return [[plus?`Ist ${tfx(X)} größer als ${tfx(big)}?`:`Ist ${tfx(X)} kleiner als ${tf(t.a,t.b)}?`],
+    [`Auf den Nenner ${M}: ${tf(X[0]*M/X[1],M)} und ${tf(ref[0]*M/ref[1],M)}.`],
+    [`Rechne mit dem Hauptnenner ${t.N} nach. ${plus?'Zusammen muss es mehr werden.':'Beim Wegnehmen wird es weniger.'}`]];
+}
+TIPS.H01=(t)=>{
+  if(t.kind==='stimmt')return tipsStimmt(t);
+  if(t.kind==='bereich')return [['Vergleiche jeden Bruch mit {1|2}. Ist er größer oder kleiner?'],[`Der Hauptnenner ist ${t.N}.`],[`Das Ergebnis ist ${tf(t.res[0],t.N)}. Vergleiche ${t.res[0]} mit der Hälfte von ${t.N} und mit ${t.N}.`]];
+  return [['Wie viele waagerechte Streifen hat das andere Rechteck?'],[`Das andere Rechteck hat ${t.d} Streifen. ${denEach(t.b)} wird in ${t.d} Stücke geteilt.`],[`Beide Rechtecke haben dann ${t.N} gleich große Felder.`]];
+};
+TIPS.H02=(t)=>{
+  const dens=t.terms.map(x=>x[1]),g=Math.max(...dens),rest=dens.filter(x=>x!==g),N=hnOf(...dens),steps=trick17Steps(...dens).map(x=>x.v);
+  if(t.kind==='erweitern'||t.kind==='hnErw'){
+    const [a,b]=t.terms[0];
+    return [[t.kind==='hnErw'?'Finde zuerst den Hauptnenner mit Trick 17.':`Womit musst du ${b} malnehmen, um ${t.N} zu bekommen?`],[`${b} · ${N/b} = ${N}. Nimm den Zähler genauso mal.`],[`${tf(a,b)} = ${tf(a*N/b,N)}. Jetzt kommt der zweite Bruch.`]];
+  }
+  if(t.kind==='wer')return [['Passen beide Nenner ohne Rest in jede der zwei Zahlen?'],[`${t.b*t.d} und ${N} sind beide Vielfache von ${t.b} und ${t.d}.`],['Beide sind gemeinsame Nenner. Der kleinere ist der Hauptnenner.']];
+  return [['Welcher Nenner ist am größten? Mit dem fängst du an.'],[`Prüfe ${g}: Passt ${rest.join(' und ')} ohne Rest hinein? ${rest.every(x=>g%x===0)?'Ja.':'Nein.'}`],[`Die Reihe heißt ${steps.join(', ')}. Prüfe jede Zahl mit ${rest.join(' und ')}.`]];
+};
+const tipsBildH=(t)=>[['Wie viele Streifen hat das andere Rechteck?'],[`Das andere Rechteck hat ${t.d} Streifen. ${denEach(t.b)} wird in ${t.d} Stücke geteilt.`],[`Beide Rechtecke haben jetzt ${t.b*t.d} Felder. Der Hauptnenner ist ${t.N}.`]];
+TIPS.H03=(t)=>t.kind==='bild'?tipsBildH(t):tipsCalc(t);
+TIPS.H04=(t)=>{
+  if(t.kind==='stimmt')return tipsStimmt(t);
+  if(t.kind==='luecke')return [['Erweitere zuerst alle Brüche auf den Hauptnenner.'],[`Der Hauptnenner ist ${t.N}: ${tf(t.a,t.b)} = ${tf(t.a*t.N/t.b,t.N)}.`],[`Dann fehlen ${tf(t.c*t.N/t.d,t.N)}. Passe den Bruch an die Lücke an.`]];
+  return tipsCalc(t);
+};
+TIPS.H05=(t)=>{
+  if(t.kind==='bild')return tipsBildH(t);
+  if(t.erg)return [['Wie viele Felder hat das Ziel, wie viele hast du schon?'],[`Das Ziel ${tf(t.a,t.b)} sind ${t.a*t.d} Felder. Gefärbt sind ${t.c*t.b} Felder.`],[`Es fehlen ${t.a*t.d-t.c*t.b} Felder. Schreibe sie als ${denName(t.N)}.`]];
+  return tipsCalc(t);
+};
+TIPS.H06=(t)=>t.kind==='luecke'?TIPS.H04(t):tipsCalc(t);
+TIPS.H07=(t)=>{
+  if(t.kind==='wasTun'){const lo=Math.min(t.b,t.d),hi=Math.max(t.b,t.d);
+    return [['Vergleiche die Nenner. Sind sie gleich?'],[t.b===t.d?'Die Nenner sind gleich.':`Passt ${lo} ohne Rest in ${hi}?`],[t.answer==='A'?'Du rechnest sofort mit den Zählern.':t.answer==='B'?`${lo} passt in ${hi}. Du erweiterst nur einen Bruch.`:'Kein Nenner passt in den anderen. Du erweiterst beide.']];}
+  if(t.kind==='pm')return [['Lies genau: Kommt etwas dazu oder wird etwas weggenommen?'],['Wörter wie zusammen oder dazu gehören zu plus. Wörter wie übrig oder weg gehören zu minus.'],[`Hier ist es ${t.plus?'plus':'minus'}. Der Hauptnenner ist ${t.N}.`]];
+  if(t.kind==='hausaufgaben')return [['Rechne jede Rechnung mit dem Hauptnenner nach.'],[`Prüfe Rechnung ${'ABCD'[t.wrong]}.`],['Wurden Zähler und Nenner einzeln gerechnet? Wurden beide Brüche erweitert?']];
+  if(t.kind==='ganzes')return [['Worauf beziehen sich die beiden Anteile?'],['Der erste Anteil gehört zu einem Ganzen. Und der zweite?'],['Verschiedene Ganze kannst du nicht zusammenzählen. Auch die Größen müssen passen.']];
+  if(t.kind==='schlange'){const o=t.ops[0];return [['Rechne ein Kästchen nach dem anderen. Kürze jedes Ergebnis.'],[`Das erste Kästchen: ${tfx(t.start)} ${hnSign(o.plus)} ${tfx(o.f)}. Welcher Nenner passt?`],[`Das erste Kästchen ist ${tfx(t.vals[0])}.`]];}
+  return [['Lies die beiden Anteile am Bild ab.'],[`Die Anteile sind ${tf(t.a,t.b)} und ${tf(t.c,t.d)}.`],['Eine Plusaufgabe und zwei Minusaufgaben passen. Die Summe ist der Anfang der Minusaufgaben.']];
+};
+TIPS.H08=(t)=>[[t.mode==='minus'?'Gesucht ist, was weggenommen wird. Rechne Anfang minus Rest.':'Rechne rückwärts: Die Umkehr von plus ist minus, von minus ist plus.'],
+  [`Rechne ${tfx(t.terms[0])} ${t.signs[0]} ${tfx(t.terms[1])}.`],[`Der Hauptnenner ist ${hnSmallest(t.terms)}. Prüfe zuletzt das Feld **gekürzt**.`]];
+TIPS.H09=(t)=>[['Schätze zuerst: Welche Ergebnisse sind größer als {1|2}?'],['Rechne die Aufgaben nach, bei denen du unsicher bist.'],[`Die erste Aufgabe ergibt ${tfx(t.list[0].r)}.`]];
+TIPS.H10=(t)=>[['Addiere zuerst mit dem Hauptnenner.'],[`Der Hauptnenner ist ${t.N}. Die Summe ist ${tf(t.res[0],t.N)}.`],[`Das nächste Ganze ist ${t.W}. Das sind ${tf(t.W*t.N,t.N)}.`]];
+TIPS.H11=(t)=>[['Rechne die erste Aufgabe mit dem Hauptnenner.'],[`Die erste Aufgabe ergibt ${tfx(t.rows[0].v)}.`],[`Vergleiche den Nenner ${t.rows[0].v[1]} mit den Nennern ${t.n0} und ${t.n0+1}.`]];
+TIPS.H12=(t)=>[['Suche eine Zeile, Spalte oder Diagonale mit nur einem leeren Feld.'],[`Jede Summe ist ${tfx(t.sum)}. Ziehe die bekannten Brüche davon ab.`],[`Ein leeres Feld ist ${tfx(t.vals[t.blanks[0]])}.`]];
+TIPS.H13=(t)=>{
+  if(t.kind==='grund')return [['Rechne die drei Anteile zusammen.'],[`Zusammen sind es ${tf(t.n,t.n+1)}.`],['Fehlt etwas zum Ganzen?']];
+  if(t.kind==='anteil')return [['Wie viele Kamele sind es nach dem Leihen?'],[`Es sind ${t.n+1} Kamele.`],[`Teile ${t.n+1} durch ${t.s[t.son]}.`]];
+  return tipsCalc(t);
+};
+
 /* Anmelden: jede Aufgabe liefert ihre Tipps aus TIPS (die Schnelltests Q00 und ZQ zeigen keine Tipps, behalten aber ihre eigenen) */
 Object.keys(TIPS).forEach(id=>{if(TASKS[id]){TASKS[id].hints=function(t){return TIPS[id](t);};}});

@@ -355,7 +355,7 @@ function twoStage(view,host,o){
   const upd=()=>{
     const done=!!o.isDone(),open1=!done||d.edit1===true;
     box1.hidden=!open1;sum.hidden=open1;box2.hidden=open1;
-    if(!open1){sum.replaceChildren(icon('haken'),el('span',{class:'ets'},o.summary()),view.locked()?null:el('span',{class:'etc'},'ändern'));sum.disabled=view.locked();}
+    if(!open1){sum.replaceChildren(icon('haken'),el('span',{class:'ets'},o.summary()),view.locked()?'':el('span',{class:'etc'},'ändern'));sum.disabled=view.locked();}
     (view.changed&&view.changed());
   };
   sum.addEventListener('click',()=>{if(view.locked())return;d.edit1=true;view.save();upd();});

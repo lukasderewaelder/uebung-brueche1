@@ -8,7 +8,7 @@
    R04 Subtrahieren und rechnen              wie R02, aber minus (Geschichte Pizza: Anfang − Ende)
    R05 Plus oder minus?                      Rechenart aus der Geschichte erkennen, „Ein Bild, mehrere Aufgaben“ (offen, per Regel geprüft), „Hausaufgaben kontrollieren“ (Fehler finden), „Finde Brüche mit …“ (offen)
    Aufbau und Wörter wie an der Tafel: Fachwort „gleichnamig“, Rechenweg Aufgabe = (Zähler ± Zähler)/Nenner = Ergebnis = gekürzt, Bilder als Raster, bei minus durchgekreuzt.
-   Reihenfolge des Themas: gleichnamig, danach unterschiedlich benannt, danach gemischte Zahlen (kommen später). Plus und Minus laufen in R01 bis R04 getrennt, in R05 gemischt.
+   Reihenfolge: gleichnamig (dieses Thema), danach ungleichnamig (Thema addsub2, js/hauptnenner.js), danach gemischte Zahlen (kommt später). Plus und Minus laufen in R01 bis R04 getrennt, in R05 gemischt.
    Gleicher Vertrag wie in tasks.js: gen, prompt, render, validate, solution (Tipps: js/tips.js). Aufgabenfelder: a, c = Zähler, b = Nenner (derselbe für beide), plus = Rechenart, res = [Zähler, Nenner] des Ergebnisses.
    Rechenweg-Block: Zwischenschritt (nur Leicht), Felder „Ergebnis“ und „gekürzt“ immer (addResult, js/rechnen-widgets.js). Zahlenraum: Leicht Nenner bis 24, Knifflig bis 100.
    Bilder: Leicht sofort (bis Nenner 24), Knifflig und Rechnungen erst mit dem zweiten Tipp. Fehlercodes: nennerAddiert, zwischenNenner, vertauscht, zahl (Zwischenschritt), andereRechnung, zaehlerNenner, rechenfehler, wert (addDiagnose in math.js),

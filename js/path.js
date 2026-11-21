@@ -7,7 +7,7 @@
      Was der Eingangstest als „sitzt“ markiert, steht als Markierung in der Liste; die Erklärung bietet dann „Kenne ich schon“.
    · Die frühere „Meine Übersicht“ (und die Wahl „Wie möchtest du lernen?“) gibt es nicht mehr.
    ===================================================================== */
-const PATH_ACC={LAB:'mix',RLAB:'mix',Q00:'ok',ZQ:'ok',QA:'ok',ZA:'ok',WQ:'ok',WA:'ok',RQ:'ok',RA:'ok'};
+const PATH_ACC={LAB:'mix',RLAB:'mix',HLAB:'mix',Q00:'ok',ZQ:'ok',QA:'ok',ZA:'ok',WQ:'ok',WA:'ok',RQ:'ok',RA:'ok',HQ:'ok',HA:'ok'};
 /* Thema, zu dem ein Abschlusscheck (finalId) gehört */
 const finalModOf=(id)=>activeModules().find(m=>m.finalId===id)||null;
 /* Hinweis „Erst …“ (modules.js recommends): nur solange das empfohlene Thema nicht abgeschlossen ist, keine Sperre */
@@ -132,8 +132,10 @@ function onRoundEnd(id,lvl,round){
     /* Sehr wenige Treffer: kein Auswahlbildschirm, es geht direkt in den Pfad */
     if(ev.stufe==='start'&&!modusOf(qm))ensureModus(qm,'pfad');
     const sure=qc.skills.filter(sk=>ev.skills[sk].status==='sitzt');
-    const open=(sid)=>{if(!stationDone(sid)){S.checked[sid]=true;info.placed.push(sid);}};
-    sure.forEach(sk=>(qc.stations[sk]||[]).forEach(open));
+    const open=(sid)=>{if(!stationDone(sid)&&!info.placed.includes(sid)){S.checked[sid]=true;info.placed.push(sid);}};
+    /* Hängt eine Station an mehreren Fähigkeiten (z. B. H02: Hauptnenner und Erweitern), sitzt sie erst, wenn alle sitzen */
+    const allSit=(sid)=>qc.skills.filter(k=>(qc.stations[k]||[]).includes(sid)).every(k=>sure.includes(k));
+    sure.forEach(sk=>(qc.stations[sk]||[]).filter(allSit).forEach(open));
     if(sure.length===qc.skills.length)(qc.allSure||[]).forEach(open);
     /* Ergebnis des Eingangstests merken (Marken im Lernpfad); wenige Treffer mitten im Pfad überschreiben einen vorhandenen nicht */
     if(ev.trust||!qs.einstufung)qs.einstufung={at:Date.now(),right:ev.right,size:ev.size,stufe:ev.stufe,skills:ev.skills};
@@ -229,9 +231,9 @@ function checkMark(id){
   const mod=moduleOf(id),qc=mod&&mod.qid&&QCHK[mod.qid];
   const e=qc&&qstate(mod).einstufung;
   if(!e||!e.skills)return null;
-  const sk=qc.skills.find(k=>(qc.stations[k]||[]).includes(id));
-  const x=sk&&e.skills[sk];
-  if(x)return x.status;
+  /* mehrere Fähigkeiten an einer Station: die schwächste zählt (üben vor fast vor sitzt) */
+  const rank={ueben:0,fast:1,sitzt:2},sts=qc.skills.filter(k=>(qc.stations[k]||[]).includes(id)).map(k=>e.skills[k]).filter(Boolean).map(x=>x.status);
+  if(sts.length)return sts.reduce((a,b)=>rank[b]<rank[a]?b:a);
   return (qc.allSure||[]).includes(id)&&S.checked[id]?'sitzt':null;
 }
 function modNode(r,pos){

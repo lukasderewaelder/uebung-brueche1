@@ -6,9 +6,11 @@ const AREAS=['Grundlagen','Umkehraufgaben','Offene Aufgaben','Darstellungen umwa
 const GAMES={
   S01:{area:'Spiele',name:'Bruch-Memory',desc:'Finde Kartenpaare, die denselben Anteil zeigen.',notes:['M1','M2','M3']},
   S02:{area:'Spiele',name:'Bruch-Tresor',desc:'Der Code ist ein Bruch: Öffne die Schlösser, sammle die Ziffern und kürze den Code-Bruch.',notes:['M2','M3']},
-  S03:{area:'Spiele',name:'Bruch-Duell',desc:'Vergleiche zwei Brüche gegen den Computer oder lege Brüche der Größe nach in eine Reihe.',notes:['M11','M15','M16']}
+  S03:{area:'Spiele',name:'Bruch-Duell',desc:'Vergleiche zwei Brüche gegen den Computer oder lege Brüche der Größe nach in eine Reihe.',notes:['M11','M15','M16']},
+  S04:{area:'Spiele',name:'Rechenschlange',desc:'Rechne Schritt für Schritt mit ungleichnamigen Brüchen, bis die Schlange ihr Ziel frisst.',notes:['M19','M20']}
 };
-const ALL_IDS=PRACTICE_ORDER.concat(['S01','S02','S03']);
+const GAME_IDS=['S01','S02','S03','S04'];
+const ALL_IDS=PRACTICE_ORDER.concat(GAME_IDS);
 const infoOf=(id)=>TASKS[id]||GAMES[id];
 const isGame=(id)=>!!GAMES[id];
 
@@ -337,7 +339,8 @@ const openEntry=(id)=>{if(!isGame(id))S.last=id;go({kind:isGame(id)?'game':'prac
 function setLevel(id,l){S.levelByType[id]=l;persist();renderAll();}
 
 /* Symbole und Kennfarbe je Übung (erw = Erweitern/Orange, kue = Kürzen/Petrol) */
-const ICON={QA:'plakette',ZA:'plakette',RA:'plakette',RQ:'haken',ZQ:'haken',Z01:'lineal',Z02:'lupe',Z03:'lineal',Z04:'aus',Z05:'wechsel',Z06:'netz',Z07:'lineal',Z08:'wechsel',Q00:'haken',G01:'lineal',T01:'teiler',T02:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'wechsel',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor',W01:'balken',W02:'balken',W03:'wechsel',W04:'luecke',W05:'aus',W06:'lineal',W07:'frage',W08:'netz',W09:'lineal',W10:'lupe',WQ:'haken',WA:'plakette',S03:'wechsel',R01:'plus',R02:'plus',R03:'minus',R04:'minus',R05:'plusminus'};
+const ICON={QA:'plakette',ZA:'plakette',RA:'plakette',RQ:'haken',ZQ:'haken',Z01:'lineal',Z02:'lupe',Z03:'lineal',Z04:'aus',Z05:'wechsel',Z06:'netz',Z07:'lineal',Z08:'wechsel',Q00:'haken',G01:'lineal',T01:'teiler',T02:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'wechsel',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor',W01:'balken',W02:'balken',W03:'wechsel',W04:'luecke',W05:'aus',W06:'lineal',W07:'frage',W08:'netz',W09:'lineal',W10:'lupe',WQ:'haken',WA:'plakette',S03:'wechsel',R01:'plus',R02:'plus',R03:'minus',R04:'minus',R05:'plusminus',
+  HQ:'haken',HA:'plakette',H01:'frage',H02:'kreuzraster',H03:'plus',H04:'plus',H05:'minus',H06:'minus',H07:'plusminus',H08:'luecke',H09:'karten',H10:'lineal',H11:'netz',H12:'zirkel',H13:'frage',S04:'schlange'};
 const ACC={G02:'erw',O01:'erw',G03:'kue',G04:'kue',T01:'kue',T02:'kue',O02:'kue',G05:'mix'};
 function backTarget(){
   const v=S.view;
