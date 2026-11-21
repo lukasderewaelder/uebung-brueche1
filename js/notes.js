@@ -210,8 +210,7 @@ const NOTES={
       el('p',null,'1. Kreise den größeren Nenner ein.'),
       el('p',null,'2. Prüfe: Passt der kleinere Nenner ohne Rest hinein?'),
       el('p',null,'Wenn ja: Das ist der ',strong('Hauptnenner'),'. Wenn nein: Nimm das nächste Vielfache.'),
-      el('p',null,'3. Erweitere beide Brüche auf den Hauptnenner.'),
-      el('p',{class:'rule'},strong('Schmetterling:'),' Das Produkt der Nenner ist immer ein gemeinsamer Nenner. Oft ist er größer als nötig.')
+      el('p',null,'3. Erweitere beide Brüche auf den Hauptnenner.')
     ];}},
   M20:{title:'Ungleichnamige Brüche addieren und subtrahieren',build(){
     return [
@@ -224,6 +223,16 @@ const NOTES={
       el('p',null,'Den gemeinsamen Nenner nennt man ',strong('Hauptnenner'),'.'),
       el('p',null,strong('Merke: '),'Erst gleich einteilen, dann die Zähler rechnen. Der Nenner bleibt.'),
       el('p',null,strong('Probe: '),'Beim Addieren wird das Ergebnis größer als jeder der beiden Brüche.')
+    ];}},
+  M22:{title:'Schmetterlingstrick',build(){
+    return [
+      el('div',{class:'ex'},strong('Beispiel: '),eq(frac(2,3),'+',frac(3,5),'=',frac('10 + 9',15),'=',frac(19,15))),
+      falterFigure({a:2,b:3,c:3,d:5,sign:'+',l:10,r:9,n:15}),
+      el('p',null,'1. Nimm jeden Zähler mit dem anderen Nenner mal. Das steht oben.'),
+      el('p',null,'2. Nimm die beiden Nenner mal. Das ist der neue Nenner.'),
+      el('p',null,'3. Addiere oder subtrahiere die beiden Zahlen oben.'),
+      el('p',null,'4. Kürze, wenn es geht.'),
+      el('p',{class:'rule'},strong('Achtung: '),'Das Produkt der Nenner ist oft größer als der Hauptnenner.')
     ];}},
   M21:{title:'Das gleiche Ganze',build(){
     return [

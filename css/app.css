@@ -1284,7 +1284,7 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 @media (max-height:700px){.rlab .chip{min-height:max(44px,2.75rem);min-width:max(48px,3rem)}.rlabrow{gap:0.375rem}}
 @media (max-width:599px){.rlabchain .eq{font-size:1.15rem}} /* die Kette (bis zu fünf Brüche) bleibt am Handy in einer Zeile */
 
-/* ---------- Ungleichnamige Brüche (H01–H13, HLAB, S04): Kreuzraster, Trick 17, Rechenweg, Rechenschlange ----------
+/* ---------- Ungleichnamige Brüche (H02–H13, HLAB, S04): Kreuzraster, Trick 17, Rechenweg, Rechenschlange ----------
    Kreuzraster: erster Bruch Muster 1 (senkrecht geteilt), zweiter Muster 2 (waagerecht); übertragene Linien rot wie im Hefter (wachsen in 400 ms ein). */
 .hnrect{display:block;height:auto}
 .hnframe{fill:none;stroke:var(--cell-stroke);stroke-width:2.6}
@@ -1387,3 +1387,15 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 .hnpfeil{display:flex;align-items:center;gap:.5rem;margin:.5rem 0;font-size:1.3rem}
 .hnar{font:700 1.2rem var(--font-mono)}
 .hnstrip{display:flex;flex-direction:column;gap:.5rem}
+
+/* ---------- Schmetterling (H14, M22): zwei Flügel hinter den Brüchen, Produkte oben und unten ---------- */
+.falter{position:relative;display:inline-grid;grid-template-columns:auto auto auto;grid-template-areas:"l . r" "a o c" ". n .";align-items:center;justify-items:center;gap:.125rem 1.25rem;padding:.25rem .75rem;margin:.25rem 0;font-size:1.15em}
+.falter>.flbg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.falter>.flbg line{stroke-width:30;stroke-linecap:round;opacity:.3}
+.falter>.flbg .fw1{stroke:var(--erw)}
+.falter>.flbg .fw2{stroke:var(--amber)}
+.falter>span{position:relative}
+.falter .fl-l{grid-area:l}.falter .fl-r{grid-area:r}.falter .fl-a{grid-area:a}.falter .fl-o{grid-area:o;font-weight:700}.falter .fl-c{grid-area:c}.falter .fl-n{grid-area:n}
+.falter .fl{min-width:1.5rem;text-align:center;font-weight:700}
+.falter .fl input{width:3rem}
+.flrow{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem}

@@ -573,16 +573,10 @@ const INTRO={
     {h:'Der Abschlusscheck',
       say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat '+TASKS.HA.size+' Aufgaben: '+HA_TAP+' zum Antippen und '+HA_CALC.length+' zum Rechnen.','Ab '+needOf(TASKS.HA.size)+' richtigen Antworten gibt es die Urkunde.']}
   ]},
-  H01:{title:'Warum geht das nicht?',steps:[
-    {h:'Verschieden eingeteilt',say:['{1|3} + {1|2} kann so nicht addiert werden.','Die Nenner sind verschieden.','Darum sind die Felder verschieden groß.'],cross:{b:3,a:1,d:2,c:1,stage:1}},
-    {h:'Einfach alles addieren?',say:['Malik rechnet einfach Zähler und Nenner zusammen.','Aber {2|5} ist kleiner als {1|2}.','Beim Zusammenfügen muss das Ergebnis größer werden.'],calc:[{wrong:true,t:[[1,3],'+',[1,2],'=',[2,5]]}]},
-    {h:'Erst schätzen',say:['Überlege vor dem Rechnen: Wie groß wird das Ergebnis?','Ist es größer als beide Brüche? Ist es größer als 1?']}
-  ]},
   H02:{title:'Hauptnenner finden',steps:[
     {h:'Ein Nenner für beide',say:['Gleichnamige Brüche kannst du sofort addieren.','Darum suchst du einen Nenner, der zu beiden passt.','Der kleinste heißt **Hauptnenner**.']},
     {h:'Trick 17',say:['Kreise den größeren Nenner ein.','Prüfe: Passt der kleinere Nenner ohne Rest hinein?','Wenn nein, nimm das nächste Vielfache und prüfe erneut.'],trick:[8,10]},
-    {h:'Erweitern',say:['Erweitere beide Brüche auf den Hauptnenner.','{2|8} erweiterst du mit 5, {7|10} mit 4.'],calc:[[[2,8],'=',[2,8,'x',5],'=',[10,40]],[[7,10],'=',[7,10,'x',4],'=',[28,40]]]},
-    {h:'Und der Schmetterling?',say:['Der Schmetterling nimmt die Nenner mal.','Das ist auch ein gemeinsamer Nenner, aber oft zu groß.','Mit dem Hauptnenner 12 musst du weniger kürzen.'],calc:[[4,'·',6,'=',24]],strip:{b:4,d:6}}
+    {h:'Erweitern',say:['Erweitere beide Brüche auf den Hauptnenner.','{2|8} erweiterst du mit 5, {7|10} mit 4.'],calc:[[[2,8],'=',[2,8,'x',5],'=',[10,40]],[[7,10],'=',[7,10,'x',4],'=',[28,40]]]}
   ]},
   H03:{title:'Addieren am Bild',steps:[
     {h:'Ein Bild lesen',say:['Das erste Rechteck ist senkrecht in Drittel geteilt.','Das zweite ist waagerecht in Hälften geteilt.','Gefärbt sind {1|3} und {1|2}.'],cross:{b:3,a:1,d:2,c:1,stage:1}},
@@ -592,7 +586,6 @@ const INTRO={
   ]},
   H04:{title:'Addieren und rechnen',steps:[
     {h:'Drei Schritte',say:['1. Hauptnenner finden.','2. Beide Brüche erweitern.','3. Zähler addieren, der Nenner bleibt.','Am Ende kürzen, wenn es geht.'],calc:[[[1,4],'+',[2,3],'=',[3,12],'+',[8,12],'=',[11,12]]]},
-    {h:'Der Schmetterling geht auch',say:['Mit dem Schmetterling bekommst du das Produkt der Nenner.','Das ist auch richtig.','Dann musst du am Ende oft kürzen.'],calc:[[[1,4],'+',[1,6],'=',[6,24],'+',[4,24],'=',[10,24],'=',[5,12]]]},
     {h:'Mehr als ein Ganzes',say:['Manchmal ist das Ergebnis größer als 1.','Du darfst es als Bruch oder als **gemischte Zahl** schreiben.'],calc:[[[3,4],'+',[2,3],'=',[9,12],'+',[8,12],'=',[17,12],'=',{m:[1,5,12]}]]},
     {h:'Geschichten lesen',say:['Prüfe zuerst: Gehören beide Anteile zum selben Ganzen?','Wörter wie zusammen und dazu bedeuten plus.']}
   ]},
@@ -631,6 +624,13 @@ const INTRO={
   H12:{title:'Magisches Quadrat',steps:[
     {h:'Gleiche Summen',say:['In einem magischen Quadrat hat jede Zeile dieselbe Summe.','Das gilt auch für jede Spalte und beide Diagonalen.']},
     {h:'Leere Felder füllen',say:['Suche eine Zeile, in der nur ein Feld fehlt.','Ziehe die bekannten Brüche von der Summe ab.'],calc:[[[5,4],'−',[1,6],'−',[7,12],'=',[1,2]]]}
+  ]},
+  H14:{title:'Schmetterlingstrick',steps:[
+    {h:'Der Schmetterling',say:['Es gibt noch einen zweiten Weg zum gemeinsamen Nenner.','Zwei Flügel liegen über Kreuz.','Jeder Flügel verbindet einen Zähler mit dem anderen Nenner.'],falter:{a:2,b:3,c:3,d:5,sign:'+'}},
+    {h:'Über Kreuz malnehmen',say:['Nimm jeden Zähler mit dem anderen Nenner mal.','Die Ergebnisse stehen oben.','Unten steht das Produkt der Nenner.'],falter:{a:2,b:3,c:3,d:5,sign:'+',l:10,r:9,n:15},calc:[[2,'·',5,'=',10],[3,'·',3,'=',9],[3,'·',5,'=',15]]},
+    {h:'Zusammenrechnen',say:['Oben rechnest du plus oder minus.','Unten bleibt der neue Nenner stehen.'],calc:[[[2,3],'+',[3,5],'=',[19,15]],[[2,3],'−',[3,5],'=',[1,15]]]},
+    {h:'Schmetterling oder Hauptnenner?',say:['Der Schmetterling gibt immer einen gemeinsamen Nenner.','Oft ist er größer als der Hauptnenner.','Dann musst du am Ende kürzen.'],calc:[[[1,4],'+',[1,6],'=',[10,24],'=',[5,12]]]},
+    {h:'So antwortest du',say:['Trage zuerst die drei Produkte ein.','Tippe dann auf **Weiter**.','Danach folgen **Ergebnis** und **gekürzt**.']}
   ]},
   H13:{title:'17 Kamele',steps:[
     {h:'Ein altes Rätsel',say:['Ein Vater hinterlässt 17 Kamele.','Die Söhne bekommen {1|2}, {1|3} und {1|9} davon.'],calc:[[[1,2],'+',[1,3],'+',[1,9],'=',[9,18],'+',[6,18],'+',[2,18],'=',[17,18]]]},
@@ -901,6 +901,7 @@ function renderIntro(id){
       s.fig?introFigNode(s.fig):null,
       s.add?introAddNode(s.add):null,
       s.cross?el('div',{class:'introstage'},crossFigure(s.cross)):null,
+      s.falter?el('div',{class:'introstage'},falterFigure(s.falter)):null,
       s.trick?el('div',{class:'introstage'},trickRow(s.trick)):null,
       s.strip?introStripNode(s.strip):null,
       s.whole?el('div',{class:'introstage'},hnWholes()):null,

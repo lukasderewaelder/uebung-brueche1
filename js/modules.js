@@ -111,29 +111,29 @@ const MODULES=[
     finalText:'Du kannst ungleichnamige Brüche addieren und subtrahieren. Stark!',
     groups:{
       'Labor Teilung':{pat:'dots',icon:'lupe',text:'Labor: gemeinsame Teilung ausprobieren',ids:['HLAB']},
-      'Warum erweitern?':{pat:'dash',icon:'frage',text:'Verschieden eingeteilt, Größe schätzen',ids:['H01']},
-      'Hauptnenner':{pat:'hatch',icon:'kreuzraster',text:'Trick 17, Schmetterling und Erweitern',ids:['H02']},
+      'Hauptnenner':{pat:'hatch',icon:'kreuzraster',text:'Trick 17 und Erweitern',ids:['H02']},
       'Plus ungleichnamig':{pat:'dots',icon:'plus',text:'Teilung übertragen, Zähler addieren',ids:['H03','H04']},
       'Minus ungleichnamig':{pat:'dash',icon:'minus',text:'Wegnehmen und ergänzen',ids:['H05','H06']},
       'Erweitern oder nicht?':{pat:'hatch',icon:'plusminus',text:'Hinschauen, Fehler finden, das gleiche Ganze, Rechenschlange',ids:['H07']},
       'Knobeln mit Brüchen':{pat:'dots',icon:'zirkel',text:'Rätsel, Muster und das magische Quadrat',ids:['H08','H09','H10','H11','H12','H13']},
+      'Schmetterlingstrick':{pat:'hatch',icon:'schmetterling',text:'Zweiter Weg: über Kreuz malnehmen',ids:['H14']},
       'Check Ungleichnamig':{pat:'dash',icon:'plakette',text:'Eingangstest und Abschlusscheck',ids:['HQ','HA']}
     },
-    practice:['HQ','HA','H01','H02','H03','H04','H05','H06','H07','H08','H09','H10','H11','H12','H13'],
+    practice:['HQ','HA','H02','H03','H04','H05','H06','H07','H08','H09','H10','H11','H12','H13','H14'],
     path:[
       {id:'HLAB',grp:'Labor Teilung',title:'Bruchlabor Gemeinsame Teilung',desc:'Teilungen übertragen und Brüche zusammenfügen.'},
-      {id:'H01',grp:'Warum erweitern?',must:true},
       {id:'H02',grp:'Hauptnenner',must:true,note:'Dafür hilft Erweitern und Kürzen.'},
       {id:'H03',grp:'Plus ungleichnamig',must:true},{id:'H04',grp:'Plus ungleichnamig',must:true},
       {id:'H05',grp:'Minus ungleichnamig',must:true},{id:'H06',grp:'Minus ungleichnamig',must:true},
       {id:'H07',grp:'Erweitern oder nicht?',must:true},
       {id:'H08',grp:'Knobeln mit Brüchen'},{id:'H09',grp:'Knobeln mit Brüchen'},{id:'H10',grp:'Knobeln mit Brüchen'},
       {id:'H11',grp:'Knobeln mit Brüchen'},{id:'H12',grp:'Knobeln mit Brüchen'},{id:'H13',grp:'Knobeln mit Brüchen'},
+      {id:'H14',grp:'Schmetterlingstrick'},
       {id:'HA',grp:'Check Ungleichnamig',must:true,final:true,title:'Abschlusscheck',
         desc:TASKS.HA.size+' Aufgaben zeigen, was du kannst. Ab '+needOf(TASKS.HA.size)+' richtig gibt es die Urkunde.'}
     ],
-    pathGroups:{'Labor Teilung':'lupe','Warum erweitern?':'frage','Hauptnenner':'kreuzraster','Plus ungleichnamig':'plus',
-      'Minus ungleichnamig':'minus','Erweitern oder nicht?':'plusminus','Knobeln mit Brüchen':'zirkel','Check Ungleichnamig':'plakette'}
+    pathGroups:{'Labor Teilung':'lupe','Hauptnenner':'kreuzraster','Plus ungleichnamig':'plus',
+      'Minus ungleichnamig':'minus','Erweitern oder nicht?':'plusminus','Knobeln mit Brüchen':'zirkel','Schmetterlingstrick':'schmetterling','Check Ungleichnamig':'plakette'}
   },
   {id:'rechnen',name:'Brüche multiplizieren und dividieren',desc:'Malnehmen und teilen mit Brüchen.',icon:'winkel',status:'geplant'}
 ];

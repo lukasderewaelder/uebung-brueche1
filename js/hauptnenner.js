@@ -2,7 +2,7 @@
 /* =====================================================================
    Aufgaben des Themas „Ungleichnamige Brüche addieren und subtrahieren“ (Block 2, Thema addsub2, Kürzel H)
    Grundlage: Konzeptdatei vom 21.11.2026 (Hefter 6a LB 1, MSK-Förderbaustein B4, Lehrbuch Oberschule S. 33–39, Lehrbuch Gymnasium S. 20–25).
-   Pflicht: H01 Warum geht das nicht? · H02 Hauptnenner finden · H03 Addieren am Bild · H04 Addieren und rechnen · H05 Subtrahieren am Bild ·
+   Pflicht: H02 Hauptnenner finden · H03 Addieren am Bild · H04 Addieren und rechnen · H05 Subtrahieren am Bild ·
             H06 Subtrahieren und rechnen · H07 Erweitern oder nicht?
    Knobeln (freiwillig): H08 Zahlenrätsel · H09 Ergebniskarten · H10 Bis zum nächsten Ganzen · H11 Stammbruchmuster · H12 Magisches Quadrat · H13 17 Kamele
    Leitidee: Erst die Einteilung gleich machen (Bild: Kreuzeinteilung, Rechnung: Hauptnenner), dann die Zähler rechnen. Die Größenordnung prüft jedes Ergebnis.
@@ -98,10 +98,9 @@ function hnRestNums(R,level,o){
 
 /* ---------- Rundenpläne (Kap. 10/11) ----------
    Die Arten stehen in der Reihenfolge des Konzepts. Je Runde: Kürzen halb und halb (red), Paarart halb und halb in Leicht (typ: viel / beide),
-   bei Behauptungen mindestens eine richtige (truth). H04 Knifflig: eine Behauptung aus H01 wird eingestreut (nie als erste Aufgabe). */
+   bei Behauptungen mindestens eine richtige (truth). */
 const HN_PLAN={
-  H01:{1:['stimmt','stimmt','bereich','bereich','teilung'],2:['stimmt','stimmt','bereich','bereich','teilung']},
-  H02:{1:['reihe','reihe','hn','erweitern','wer'],2:['reihe','hn','hnErw','drei','wer']},
+  H02:{1:['reihe','reihe','hn','erweitern','hnErw'],2:['reihe','hn','hnErw','drei','hnErw']},
   H03:{1:['bild','bild','plus','plus','geschichte'],2:['bild','plus','plus','geschichte','plus']},
   H04:{1:['plus','plus','plus','geschichte','luecke'],2:['plus','ueber1','drei','kuerzbar','geschichte']},
   H05:{1:['bild','bild','ergaenzen','ergaenzen','geschichte'],2:['bild','ergaenzen','ergaenzen','geschichte','bild']},
@@ -112,12 +111,13 @@ const HN_PLAN={
   H10:{1:['bis','bis','bis','bis','bis'],2:['bis','bis','bis','bis','bis']},
   H11:{1:['muster','muster','muster'],2:['muster','muster','muster']},
   H12:{1:['quadrat','quadrat','quadrat'],2:['quadrat','quadrat','quadrat']},
-  H13:{1:['summe','grund','anteil','summe','anteil'],2:['summe','grund','anteil','summe','anteil']}
+  H13:{1:['summe','grund','anteil','summe','anteil'],2:['summe','grund','anteil','summe','anteil']},
+  H14:{1:['falter','falter','wann','falter','wer'],2:['falter','wann','falter','wer','falter']}
 };
 /* Arten mit einem Ergebnis zum Kürzen (für halb und halb) und Arten mit zwei Nennern (für viel / beide) */
 const HN_RES={H03:['bild','plus','geschichte'],H04:['plus','geschichte','ueber1','drei','kuerzbar'],H05:['bild','ergaenzen','geschichte'],
-  H06:['minus','geschichte','rest','ergaenzenText','ueber1','kuerzbar'],H07:['wasTun','pm'],H08:['raetsel','luecke'],H13:['summe']};
-const HN_TYPK=['stimmt','bereich','reihe','hn','erweitern','hnErw','wer','plus','minus','geschichte','luecke','ueber1','kuerzbar','ergaenzenText','pm','raetsel','bis'];
+  H06:['minus','geschichte','rest','ergaenzenText','ueber1','kuerzbar'],H07:['wasTun','pm'],H08:['raetsel','luecke'],H13:['summe'],H14:['falter']};
+const HN_TYPK=['reihe','hn','erweitern','hnErw','wer','plus','minus','geschichte','luecke','ueber1','kuerzbar','ergaenzenText','pm','raetsel','bis'];
 function hnRedPlan(kinds,res){
   const idx=kinds.map((k,i)=>res.includes(k)?i:-1).filter(i=>i>=0),n=idx.length;
   const yes=Math.floor(n/2)+(n%2&&RNG.chance(0.5)?1:0),vals=RNG.shuffle(idx.map((_,j)=>j<yes)),out=kinds.map(()=>null);
@@ -131,32 +131,23 @@ function hnTypPlan(kinds,level){
   idx.forEach((i,j)=>{out[i]=vals[j];});
   return out;
 }
-function hnTruthPlan(kinds){
-  const idx=kinds.map((k,i)=>k==='stimmt'?i:-1).filter(i=>i>=0),out=kinds.map(()=>null);
-  if(!idx.length)return out;
-  const yes=idx.length===1?(RNG.chance(0.5)?1:0):Math.max(1,Math.floor(idx.length/2));
-  RNG.shuffle(idx).forEach((i,j)=>{out[i]=j<yes;});
-  return out;
-}
 function hnCtx(id){
   return (round,level)=>{
     const size=TASKS[id].size,P=(HN_PLAN[id][level]||HN_PLAN[id][1]);
     if(!Array.isArray(round.hn)||round.hn.length!==size){
       const k=P.slice(0,size);
-      if(id==='H04'&&level===2)k[RNG.int(1,size-1)]='stimmt';
       round.hn=k;
     }
     const ks=round.hn;
     if(!Array.isArray(round.red)||round.red.length!==size)round.red=hnRedPlan(ks,HN_RES[id]||[]);
     if(!Array.isArray(round.typ)||round.typ.length!==size)round.typ=hnTypPlan(ks,level);
-    if(!Array.isArray(round.truth)||round.truth.length!==size)round.truth=hnTruthPlan(ks);
     const i=Math.min(round.results.length,size-1);
-    return {kind:ks[i],step:i,red:round.red[i],typ:round.typ[i],truth:round.truth[i]};
+    return {kind:ks[i],step:i,red:round.red[i],typ:round.typ[i]};
   };
 }
 const hnRedOf=(R,ctx)=>ctx&&typeof ctx.red==='boolean'?ctx.red:R.chance(0.5);
 const hnTypOf=(R,ctx,level)=>ctx&&ctx.typ?ctx.typ:(level===1?(R.chance(0.5)?'viel':'beide'):null);
-const hnKinds=(id,lvl)=>Array.from(new Set((HN_PLAN[id][lvl]||HN_PLAN[id][1]).concat(id==='H04'&&lvl===2?['stimmt']:[])));
+const hnKinds=(id,lvl)=>Array.from(new Set((HN_PLAN[id][lvl]||HN_PLAN[id][1])));
 /* gemeinsame Teile jeder Station */
 function hnStation(id,meta,impl){
   return Object.assign({area:'Rechnen',size:5,ctx:hnCtx(id),planKey:'hn',layoutKinds:(lvl)=>hnKinds(id,lvl)},meta,impl);
@@ -250,128 +241,7 @@ function hnYesNo(view,host,key,onPick){
 }
 
 /* =====================================================================
-   H01 Warum geht das nicht? (stimmt, bereich, teilung)
-   ===================================================================== */
-const HN_SMALL=[2,3,4,5,6];
-function hnStimmtGen(R,level,ctx,id){
-  const truth=ctx&&typeof ctx.truth==='boolean'?ctx.truth:R.chance(0.5),plus=level===1?true:R.chance(0.6);
-  for(let i=0;i<500;i++){
-    const t=hnNums(R,level,plus,{dens:level===1?HN_SMALL:null,step:hnStep(ctx),typ:hnTypOf(R,ctx,level)});
-    if(!plus&&!(t.b>t.d&&t.a>t.c))continue;
-    const res=simplify(t.res[0],t.res[1]),comp=plus?[t.a+t.c,t.b+t.d]:[t.a-t.c,t.b-t.d];
-    if(equivalent(comp[0],comp[1],res[0],res[1]))continue;
-    const X=truth?res:comp,big=compareFrac(t.a,t.b,t.c,t.d)>=0?[t.a,t.b]:[t.c,t.d];
-    const N=t.N,ex=[t.a*N/t.b,t.c*N/t.d],sg=hnSign(plus);
-    const items=truth?[
-      {id:'r1',txt:`Beide sind gleich eingeteilt in ${denName(N)}: ${ft(ex[0],N)} ${sg} ${ft(ex[1],N)} = ${ft(t.res[0],N)}.`},
-      {id:'r2',txt:plus?'Man rechnet Zähler plus Zähler und Nenner plus Nenner.':'Man rechnet Zähler minus Zähler und Nenner minus Nenner.'},
-      {id:'r3',txt:plus?`${hnFt(X)} ist kleiner als ${hnFt(big)}. Zusammen muss es mehr sein.`:`${hnFt(X)} ist größer als ${ft(t.a,t.b)}. Beim Wegnehmen muss es weniger werden.`}
-    ]:[
-      {id:'r1',txt:plus?`${hnFt(X)} ist kleiner als ${hnFt(big)}. Zusammen muss es mehr sein.`:`${hnFt(X)} ist größer als ${ft(t.a,t.b)}. Beim Wegnehmen muss es weniger werden.`},
-      {id:'r2',txt:`Stimmt: ${t.a} ${sg} ${t.c} = ${comp[0]} und ${t.b} ${sg} ${t.d} = ${comp[1]}.`},
-      {id:'r3',txt:plus?'Man darf nur Zähler addieren, die Nenner nicht.':'Man darf nur Zähler subtrahieren, die Nenner nicht.'}
-    ];
-    if(truth&&plus&&compareFrac(X[0],X[1],big[0],big[1])<=0)continue;
-    if(truth&&!plus&&compareFrac(X[0],X[1],t.a,t.b)>=0)continue;
-    if(!truth&&!plus&&compareFrac(X[0],X[1],t.a,t.b)<=0)continue;
-    return Object.assign(hnBase(id,level,'stimmt',t),{claim:X,truth,who:NAMES.a,reasons:R.shuffle(items),right:'r1'});
-  }
-  return Object.assign(hnBase(id,level,'stimmt',{a:1,b:3,c:1,d:2,plus:true,N:6,terms:[[1,3],[1,2]],signs:['+'],res:[5,6]}),{claim:[2,5],truth:false,who:NAMES.a,
-    reasons:[{id:'r1',txt:'2/5 ist kleiner als 1/2. Zusammen muss es mehr sein.'},{id:'r2',txt:'Stimmt: 1 + 1 = 2 und 3 + 2 = 5.'},{id:'r3',txt:'Man darf nur Zähler addieren, die Nenner nicht.'}],right:'r1'});
-}
-function hnStimmtPrompt(t,h){h.append(el('p',{class:'q qa'},`${t.who} rechnet ${hnFt(t.terms[0])} ${t.signs[0]} ${hnFt(t.terms[1])} = ${hnFt(t.claim)}. Stimmt das?`));}
-function hnStimmtRender(view,host){
-  const t=view.task,d=view.draft;
-  if(hnHasPic(t))addPicBox(view,host,()=>hnFigOf(t,1),t.level===1);
-  const stg=twoStage(view,host,{isDone:()=>d.j!=null,summary:()=>d.j==='ja'?'Stimmt: ja':'Stimmt: nein'});
-  stg.box1.append(el('p',null,strong('1. Stimmt die Rechnung?')));
-  hnYesNo(view,stg.box1,'j',()=>stg.advance());
-  stg.box2.append(el('p',null,strong('2. Warum?')));
-  hnChoice(view,stg.box2,'r',t.reasons.map(x=>({id:x.id,parts:[x.txt]})),'Begründung');
-  stg.upd();
-}
-function hnStimmtValidate(t,d){
-  if(d.j==null)return invalid('Tippe zuerst Ja oder Nein an.');
-  if((d.j==='ja')!==t.truth)return wrong('stimmtFalsch',t.truth?'Rechne mit dem Hauptnenner nach.':'Schau auf die Größe des Ergebnisses.',{['j'+d.j]:false});
-  if(!d.r)return invalid('Wähle auch eine Begründung.');
-  if(d.r!==t.right)return wrong('grundFalsch','Deine Entscheidung stimmt. Die Begründung passt noch nicht.',{['r'+d.r]:false});
-  return right('Richtig! '+t.reasons.find(x=>x.id===t.right).txt);
-}
-function hnStimmtSolution(t){
-  const out=[line(t.truth?'Die Rechnung stimmt.':'Die Rechnung stimmt nicht.'),line(t.reasons.find(x=>x.id===t.right).txt)];
-  if(hnHasPic(t))out.push(hnFigOf(t,3));
-  return out.concat(hnSolLines(t));
-}
-const HN_BEREICH=[{id:'lo',txt:'kleiner als 1/2'},{id:'mid',txt:'zwischen 1/2 und 1'},{id:'hi',txt:'größer als 1'}];
-const hnBereichOf=(r)=>compareFrac(r[0],r[1],1,2)<0?'lo':compareFrac(r[0],r[1],1,1)<0?'mid':'hi';
-function hnBereichGen(R,level,ctx,id){
-  for(let i=0;i<400;i++){
-    const plus=level===1?true:R.chance(0.6);
-    const t=hnNums(R,level,plus,{dens:level===1?HN_SMALL:null,step:hnStep(ctx),typ:hnTypOf(R,ctx,level),over:plus&&level===2&&R.chance(0.4)});
-    if(t.res[0]*2===t.res[1]||t.res[0]===t.res[1])continue;
-    return Object.assign(hnBase(id,level,'bereich',t),{answer:hnBereichOf(t.res)});
-  }
-  return Object.assign(hnBase(id,level,'bereich',{a:1,b:3,c:1,d:2,plus:true,N:6,terms:[[1,3],[1,2]],signs:['+'],res:[5,6]}),{answer:'mid'});
-}
-function hnTeilungGen(R,level,ctx,id){
-  for(let i=0;i<300;i++){
-    const [b,d]=hnPair(R,level,{pic:true,step:hnStep(ctx),dens:null});
-    if(level===1&&(b>6||d>6))continue;
-    const N=b*d,cands=[N,b+d,Math.max(b,d),Math.min(b,d)];
-    if(new Set(cands).size<4)continue;
-    const a=R.int(1,b-1),c=R.int(1,d-1);
-    if(gcd(a,b)!==1||gcd(c,d)!==1)continue;
-    const items=R.shuffle([{id:'N',v:N},{id:'sum',v:b+d},{id:'max',v:Math.max(b,d)},{id:'min',v:Math.min(b,d)}]);
-    return {type:id,level,kind:'teilung',a,b,c,d,plus:true,N,terms:[[a,b],[c,d]],signs:['+'],res:[a*d+c*b,N],opts:items,avoid:[redKey(a,b),redKey(c,d)]};
-  }
-  return {type:id,level,kind:'teilung',a:1,b:3,c:1,d:2,plus:true,N:6,terms:[[1,3],[1,2]],signs:['+'],res:[5,6],opts:[{id:'N',v:6},{id:'sum',v:5},{id:'max',v:3},{id:'min',v:2}],avoid:['1/3','1/2']};
-}
-TASKS.H01=hnStation('H01',{name:'Warum geht das nicht?',desc:'Verschieden eingeteilt: Größe schätzen und den typischen Fehler widerlegen.',notes:['M20','M14']},{
-  gen(level,R,ctx){
-    const kind=(ctx&&ctx.kind)||'stimmt';
-    if(kind==='bereich')return hnBereichGen(R,level,ctx,'H01');
-    if(kind==='teilung')return hnTeilungGen(R,level,ctx,'H01');
-    return hnStimmtGen(R,level,ctx,'H01');
-  },
-  prompt(t,h){
-    if(t.kind==='stimmt')return hnStimmtPrompt(t,h);
-    if(t.kind==='bereich'){h.append(el('p',{class:'q'},'Schätze ohne zu rechnen: Wo liegt das Ergebnis?'),hnEqOf(t.terms,t.signs));return;}
-    h.append(el('p',{class:'q'},'Die beiden Rechtecke sind verschieden eingeteilt. Welche Einteilung passt für beide?'));
-  },
-  render(view,host){
-    const t=view.task;
-    if(t.kind==='stimmt')return hnStimmtRender(view,host);
-    if(t.kind==='bereich'){
-      if(hnHasPic(t))addPicBox(view,host,()=>hnFigOf(t,1),t.level===1);
-      hnChoice(view,host,'b',HN_BEREICH.map(x=>({id:x.id,parts:[x.txt]})),'Wo liegt das Ergebnis?');
-      return;
-    }
-    host.append(hnFigOf(t,1));
-    hnChoice(view,host,'e',t.opts.map(o=>({id:o.id,parts:['In '+denName(o.v)]})),'Einteilung');
-  },
-  validate(t,d){
-    if(t.kind==='stimmt')return hnStimmtValidate(t,d);
-    if(t.kind==='bereich'){
-      if(!d.b)return invalid('Tippe eine Antwort an.');
-      if(d.b===t.answer)return right('Richtig! '+hnProof(t));
-      const big=compareFrac(t.a,t.b,t.c,t.d)>=0?[t.a,t.b]:[t.c,t.d];
-      return wrong('bereich',t.plus?`Zusammen ist es mehr als ${hnFt(big)}. Vergleiche jeden Bruch mit 1/2.`:`Es bleibt weniger als ${ft(t.a,t.b)}. Vergleiche mit 1/2 und mit 1.`,{['b'+d.b]:false});
-    }
-    if(!d.e)return invalid('Tippe eine Einteilung an.');
-    const o=t.opts.find(x=>x.id===d.e);
-    if(d.e==='N')return right(`Richtig! In ${denName(t.N)} passen beide: ${ft(t.a,t.b)} = ${ft(t.a*t.d,t.N)} und ${ft(t.c,t.d)} = ${ft(t.c*t.b,t.N)}.`);
-    if(d.e==='sum')return wrong('teilungSumme','Die Nenner werden nicht addiert. Übertrage die Linien des anderen Rechtecks.',{['e'+d.e]:false});
-    return wrong('teilungGroesser',`In ${denName(o.v)} passt nur ein Rechteck. Das andere braucht feinere Teile.`,{['e'+d.e]:false});
-  },
-  solution(t){
-    if(t.kind==='stimmt')return hnStimmtSolution(t);
-    if(t.kind==='bereich')return [line('Richtig ist: '+HN_BEREICH.find(x=>x.id===t.answer).txt+'.'),...(hnHasPic(t)?[hnFigOf(t,3)]:[]),...hnSolLines(t)];
-    return [line(`Übertrage die Linien: Jedes Rechteck hat dann ${t.N} gleich große Felder. Das sind ${denName(t.N)}.`),hnFigOf(t,2)];
-  }
-});
-
-/* =====================================================================
-   H02 Hauptnenner finden (reihe, hn, erweitern, hnErw, wer, drei) – hier zählt nur der kleinste gemeinsame Nenner
+   H02 Hauptnenner finden (reihe, hn, erweitern, hnErw, drei), nur mit Trick 17; der Schmetterling kommt in H14 – hier zählt nur der kleinste gemeinsame Nenner
    ===================================================================== */
 function hnFindNums(R,level,ctx){
   const typ=hnTypOf(R,ctx,level);
@@ -392,18 +262,14 @@ function hnDreiDens(R){
   }
   return [2,5,12];
 }
-TASKS.H02=hnStation('H02',{name:'Hauptnenner finden',desc:'Trick 17, Schmetterling und Erweitern auf den Hauptnenner.',notes:['M19','M2']},{
+TASKS.H02=hnStation('H02',{name:'Hauptnenner finden',desc:'Trick 17 und Erweitern auf den Hauptnenner.',notes:['M19','M2']},{
   gen(level,R,ctx){
     const kind=(ctx&&ctx.kind)||'reihe';
     if(kind==='drei'){
       const ds=hnDreiDens(R),terms=ds.map(q=>{let p;do{p=R.int(1,q-1);}while(gcd(p,q)!==1);return [p,q];});
       return {type:'H02',level,kind,terms,signs:['+','+'],N:hnOf(...ds),b:ds[0],d:ds[1],avoid:hnAvoid(terms)};
     }
-    let r=hnFindNums(R,level,ctx);
-    if(kind==='wer'){for(let i=0;i<80&&r.b*r.d===r.N;i++)r=hnFindNums(R,level,Object.assign({},ctx,{typ:R.chance(0.5)?'viel':'beide'}));if(r.b*r.d===r.N)r={a:1,b:4,c:1,d:6,N:12,plus:true,terms:[[1,4],[1,6]],signs:['+'],res:[5,12]};}
-    const t=hnBase('H02',level,kind,r);
-    if(kind==='wer')t.opts=R.shuffle([{id:'A',txt:`Beide. ${NAMES.b} hat den Hauptnenner.`},{id:'B',txt:`Nur ${NAMES.a}.`},{id:'C',txt:`Nur ${NAMES.b}.`},{id:'D',txt:'Keiner von beiden.'}]);
-    return t;
+    return hnBase('H02',level,kind,hnFindNums(R,level,ctx));
   },
   prompt(t,h){
     const f=t.terms.map(x=>frac(x[0],x[1]));
@@ -412,7 +278,6 @@ TASKS.H02=hnStation('H02',{name:'Hauptnenner finden',desc:'Trick 17, Schmetterli
       case 'hn':h.append(el('p',{class:'q'},'Welche Zahl ist der Hauptnenner von ',f[0],' und ',f[1],'?'));break;
       case 'erweitern':h.append(el('p',{class:'q'},'Erweitere beide Brüche auf den Hauptnenner ',strong(t.N),'.'));break;
       case 'hnErw':h.append(el('p',{class:'q'},'Finde den Hauptnenner. Erweitere dann beide Brüche.'));break;
-      case 'wer':h.append(el('p',{class:'q qa'},`Gesucht ist ein gemeinsamer Nenner für `,f[0],' und ',f[1],`. ${NAMES.a} nimmt ${t.b} · ${t.d} = ${t.b*t.d}. ${NAMES.b} nimmt ${t.N}. Wer hat recht?`));break;
       default:h.append(el('p',{class:'q'},'Drei Brüche: ',f[0],', ',f[1],' und ',f[2],'. Finde den Hauptnenner.'));
     }
   },
@@ -454,7 +319,6 @@ TASKS.H02=hnStation('H02',{name:'Hauptnenner finden',desc:'Trick 17, Schmetterli
       view.inputs.N.addEventListener('input',()=>row.refreshDens());
       return;
     }
-    if(t.kind==='wer'){hnChoice(view,host,'w',t.opts.map(o=>({id:o.id,parts:[o.txt]})),'Wer hat recht?');return;}
     const stg=twoStage(view,host,{isDone:()=>d.big!=null,summary:()=>'Großer Nenner: '+d.big});
     stg.box1.append(el('p',null,strong('1. Tippe den größten Nenner an.')));
     const row=el('div',{class:'yesno'});
@@ -495,14 +359,11 @@ TASKS.H02=hnStation('H02',{name:'Hauptnenner finden',desc:'Trick 17, Schmetterli
       if(!r.ok)return r;
       return right(`Richtig! ${t.terms.map(x=>ft(x[0],x[1])+' = '+ft(x[0]*hn/x[1],hn)).join(' und ')}.`);
     }
-    if(!d.w)return invalid('Tippe eine Antwort an.');
-    if(d.w==='A')return right(`Richtig! Beide Nenner sind gemeinsame Nenner. ${hn} ist der kleinste, das spart Kürzen.`);
-    return wrong('wer',d.w==='C'?`Auch ${t.b*t.d} ist ein gemeinsamer Nenner. Beide gehen.`:d.w==='B'?`Auch ${hn} ist ein gemeinsamer Nenner. Er ist sogar der kleinste.`:'Prüfe beide Zahlen: Passen beide Nenner ohne Rest hinein?',{['w'+d.w]:false});
+    return invalid('Unbekannte Aufgabe.');
   },
   solution(t){
     const dens=t.terms.map(x=>x[1]),hn=hnOf(...dens),out=[trickRow(t.terms),line(strong('Hauptnenner: '),String(hn)+'.')];
     if(t.kind==='erweitern'||t.kind==='hnErw')t.terms.forEach(x=>out.push(eq(frac(x[0],x[1]),'=',frac(x[0]+' · '+hn/x[1],x[1]+' · '+hn/x[1]),'=',frac(x[0]*hn/x[1],hn))));
-    if(t.kind==='wer')out.push(line(`${t.b*t.d} (Schmetterling) und ${hn} (Hauptnenner) sind beide gemeinsame Nenner.`));
     return out;
   }
 });
@@ -610,7 +471,7 @@ TASKS.H03=hnStation('H03',{name:'Addieren am Bild',desc:'Teilung übertragen, ve
 });
 
 /* =====================================================================
-   H04 Addieren und rechnen (plus, geschichte, luecke, ueber1, drei, kuerzbar; Knifflig eine Behauptung aus H01)
+   H04 Addieren und rechnen (plus, geschichte, luecke, ueber1, drei, kuerzbar)
    ===================================================================== */
 function hnLueckeGen(R,level,ctx,id,plus){
   for(let i=0;i<400;i++){
@@ -637,7 +498,6 @@ const hnLueckeSolution=(t)=>[line(t.blank==='num'?'Gesucht ist der Zähler. Rech
 /* Aufgaben mit Ergebnis für H04 (plus) und H06 (minus) */
 function hnRechnenGen(R,level,ctx,id,plus){
   const kind=(ctx&&ctx.kind)||(plus?'plus':'minus'),step=hnStep(ctx),red=hnRedOf(R,ctx),typ=hnTypOf(R,ctx,level);
-  if(kind==='stimmt')return hnStimmtGen(R,level,ctx,id);
   if(kind==='luecke')return hnLueckeGen(R,level,ctx,id,plus);
   if(kind==='drei')return hnBase(id,level,kind,hnNums3(R,level,{red}));
   if(kind==='rest'){const t=hnBase(id,level,kind,hnRestNums(R,level,{red,typ,step}));t.story=R.pick(['hausbau','erbe','gold']);return t;}
@@ -653,23 +513,19 @@ function hnRechnenGen(R,level,ctx,id,plus){
 TASKS.H04=hnStation('H04',{name:'Addieren und rechnen',desc:'Hauptnenner finden, erweitern, Zähler addieren – auch Geschichten und Ergebnisse über 1.',notes:['M20','M19','M3']},{
   gen(level,R,ctx){return hnRechnenGen(R,level,ctx,'H04',true);},
   prompt(t,h){
-    if(t.kind==='stimmt')return hnStimmtPrompt(t,h);
     if(t.kind==='luecke'){h.append(el('p',{class:'q'},'Welche Zahl fehlt in der Rechnung?'));return;}
     hnCalcPrompt(t,h,t.kind==='drei'?'Addiere die drei Brüche.':'Rechne aus.');
   },
   render(view,host){
     const t=view.task;
-    if(t.kind==='stimmt')return hnStimmtRender(view,host);
     if(t.kind==='luecke')return hnLueckeRender(view,host);
     hnCalcRender(view,host,t,false,3);
   },
   validate(t,d){
-    if(t.kind==='stimmt')return hnStimmtValidate(t,d);
     if(t.kind==='luecke')return hnLueckeValidate(t,d);
     return hnCalcValidate(t,d);
   },
   solution(t){
-    if(t.kind==='stimmt')return hnStimmtSolution(t);
     if(t.kind==='luecke')return hnLueckeSolution(t);
     return [...(hnHasPic(t)?[hnFigOf(t,3)]:[]),...hnSolLines(t)];
   }
@@ -1232,3 +1088,111 @@ TASKS.H13=hnStation('H13',{name:'17 Kamele',desc:'Ein altes Rätsel: Warum bleib
 });
 TASKS.H12.probeCtx={probe:true};
 TASKS.H13.probeCtx={kind:'anteil'}; /* Probe in der Erklärung: eine Zahl eintragen, passt mit der Kopfzeile auf das Handy */
+
+/* =====================================================================
+   H14 Schmetterlingstrick (falter, wann, wer): zweiter Weg zum gemeinsamen Nenner, freiwillig am Ende des Lernpfads.
+   Über Kreuz malnehmen (a · d, c · b), unten b · d, dann oben rechnen und kürzen. Danach: Wann ist b · d schon der Hauptnenner?
+   ===================================================================== */
+const HN_FALTER_DENS={1:[2,3,4,5,6,7,8,9,10],2:[2,3,4,5,6,7,8,9,10,12,15]};
+function hnFalterNums(R,level,ctx){
+  const step=hnStep(ctx),red=hnRedOf(R,ctx);
+  const plus=ctx&&typeof ctx.plus==='boolean'?ctx.plus:!ctx||ctx.step==null?true:level===1?step!==3:step===0?true:step===2?false:R.chance(0.5);
+  const L=level===1&&step<2?[2,3,4,5,6]:HN_FALTER_DENS[level],cap=level===1?60:150;
+  for(let i=0;i<900;i++){
+    const b=R.pick(L),d=R.pick(L);
+    if(b===d||b*d>cap)continue;
+    const a=R.int(1,b-1),c=R.int(1,d-1);
+    if(gcd(a,b)!==1||gcd(c,d)!==1||a*d===c*b)continue;
+    if(!plus&&a*d<c*b)continue;
+    const num=plus?a*d+c*b:a*d-c*b,bd=b*d;
+    if(num%bd===0||level===1&&num>bd)continue;
+    if(i<700&&(gcd(num,bd)>1)!==red)continue;
+    return {a,b,c,d,plus,N:hnOf(b,d),terms:[[a,b],[c,d]],signs:[hnSign(plus)],res:[num,bd]};
+  }
+  return {a:2,b:3,c:3,d:5,plus:true,N:15,terms:[[2,3],[3,5]],signs:['+'],res:[19,15]};
+}
+const hnFalterProof=(t)=>{
+  const s=simplify(t.res[0],t.res[1]);
+  return `${ft(t.a,t.b)} ${t.signs[0]} ${ft(t.c,t.d)} = ${ft(t.res[0],t.res[1])}`+(s[1]!==t.res[1]?` = ${ft(s[0],s[1])}`:'')+'.';
+};
+TASKS.H14=hnStation('H14',{name:'Schmetterlingstrick',desc:'Ein zweiter Weg: über Kreuz malnehmen. Wann ist der Hauptnenner besser?',notes:['M22','M19']},{
+  gen(level,R,ctx){
+    const kind=(ctx&&ctx.kind)||'falter';
+    if(kind==='wer'){
+      let r=hnFindNums(R,level,ctx);
+      for(let i=0;i<80&&r.b*r.d===r.N;i++)r=hnFindNums(R,level,Object.assign({},ctx,{typ:R.chance(0.5)?'viel':'beide'}));
+      if(r.b*r.d===r.N)r={a:1,b:4,c:1,d:6,N:12,plus:true,terms:[[1,4],[1,6]],signs:['+'],res:[5,12]};
+      const t=hnBase('H14',level,kind,r);
+      t.opts=R.shuffle([{id:'A',txt:`Beide. ${NAMES.b} hat den Hauptnenner.`},{id:'B',txt:`Nur ${NAMES.a}.`},{id:'C',txt:`Nur ${NAMES.b}.`},{id:'D',txt:'Keiner von beiden.'}]);
+      return t;
+    }
+    if(kind==='wann'){
+      const L=HN_FALTER_DENS[level],want=R.chance(0.5);
+      for(let i=0;i<400;i++){
+        const b=R.pick(L),d=R.pick(L);
+        if(b===d||(gcd(b,d)===1)!==want&&i<300)continue;
+        let a,c;do{a=R.int(1,b-1);}while(gcd(a,b)!==1);do{c=R.int(1,d-1);}while(gcd(c,d)!==1);
+        return hnBase('H14',level,kind,{a,b,c,d,N:hnOf(b,d),plus:true,terms:[[a,b],[c,d]],signs:['+']});
+      }
+      return hnBase('H14',level,kind,{a:1,b:4,c:1,d:6,N:12,plus:true,terms:[[1,4],[1,6]],signs:['+']});
+    }
+    return hnBase('H14',level,'falter',hnFalterNums(R,level,ctx));
+  },
+  prompt(t,h){
+    const f=t.terms.map(x=>frac(x[0],x[1]));
+    if(t.kind==='wer'){h.append(el('p',{class:'q qa'},`Gesucht ist ein gemeinsamer Nenner für `,f[0],' und ',f[1],`. ${NAMES.a} nimmt ${t.b} · ${t.d} = ${t.b*t.d}. ${NAMES.b} nimmt ${t.N}. Wer hat recht?`));return;}
+    if(t.kind==='wann'){h.append(el('p',{class:'q qa'},`Der Schmetterling gibt ${t.b} · ${t.d} = ${t.b*t.d}. Ist das schon der Hauptnenner von `,f[0],' und ',f[1],'?'));return;}
+    h.append(el('p',{class:'q'},t.plus?'Addiere mit dem Schmetterling.':'Subtrahiere mit dem Schmetterling.'));
+  },
+  render(view,host){
+    const t=view.task,d=view.draft;
+    if(t.kind==='wer'){hnChoice(view,host,'w',t.opts.map(o=>({id:o.id,parts:[o.txt]})),'Wer hat recht?');return;}
+    if(t.kind==='wann'){hnYesNo(view,host,'j');return;}
+    const keys=['fl','fr','fn'],filled=()=>keys.every(k=>d[k]!=null&&d[k]!=='');
+    const stg=twoStage(view,host,{isDone:()=>d.hw===true,summary:()=>`Oben ${d.fl||'?'} und ${d.fr||'?'}, unten ${d.fn||'?'}`});
+    const fig=falterFigure({a:t.a,b:t.b,c:t.c,d:t.d,sign:t.signs[0],
+      l:intInput(view,'fl',`${t.a} mal ${t.d}`),r:intInput(view,'fr',`${t.c} mal ${t.b}`),n:intInput(view,'fn',`${t.b} mal ${t.d}`)});
+    const go=el('button',{type:'button',class:'btn small','aria-label':'Weiter zum Ergebnis'},'Weiter');
+    const up=()=>{go.disabled=view.locked()||!filled();};
+    fig.addEventListener('input',up);
+    go.addEventListener('click',()=>{if(view.locked()||!filled())return;d.hw=true;view.save();stg.advance();});
+    stg.box1.append(el('div',{class:'flrow'},fig,go));
+    up();
+    addResult(view,stg.box2,{});
+    stg.upd();
+  },
+  validate(t,d){
+    if(t.kind==='wer'){
+      const hn=t.N;
+      if(!d.w)return invalid('Tippe eine Antwort an.');
+      if(d.w==='A')return right(`Richtig! Beide sind gemeinsame Nenner. ${hn} ist der kleinste, das spart Kürzen.`);
+      return wrong('wer',d.w==='C'?`Auch ${t.b*t.d} ist ein gemeinsamer Nenner. Beide gehen.`:d.w==='B'?`Auch ${hn} ist ein gemeinsamer Nenner. Er ist sogar der kleinste.`:'Prüfe beide Zahlen: Passen beide Nenner ohne Rest hinein?',{['w'+d.w]:false});
+    }
+    if(t.kind==='wann'){
+      if(d.j==null)return invalid('Tippe Ja oder Nein an.');
+      const yes=gcd(t.b,t.d)===1,bd=t.b*t.d;
+      if((d.j==='ja')===yes)return right(yes?`Richtig! Trick 17 findet keine kleinere Zahl. ${bd} ist der Hauptnenner.`:`Richtig! Der Hauptnenner ist ${t.N}. ${bd} ist größer als nötig.`);
+      return wrong('wann','Prüfe mit Trick 17: Passen beide Nenner in eine kleinere Zahl?',{['j'+d.j]:false});
+    }
+    const L=getInt(d,'fl'),Rr=getInt(d,'fr'),Nn=getInt(d,'fn');
+    if(L===null||Rr===null||Nn===null)return invalid('Trage die drei Produkte ein.');
+    if(L!==t.a*t.d)return L===t.a*t.b?wrong('schmetterlingFalsch','Jeder Zähler gehört zum anderen Nenner. Folge dem Flügel.',{fl:false}):wrong('produkt',`Rechne ${t.a} · ${t.d} noch einmal.`,{fl:false});
+    if(Rr!==t.c*t.b)return Rr===t.c*t.d?wrong('schmetterlingFalsch','Jeder Zähler gehört zum anderen Nenner. Folge dem Flügel.',{fr:false}):wrong('produkt',`Rechne ${t.c} · ${t.b} noch einmal.`,{fr:false});
+    if(Nn!==t.b*t.d)return Nn===t.b+t.d?wrong('nennerSumme','Die Nenner werden malgenommen, nicht addiert.',{fn:false}):wrong('produkt',`Rechne ${t.b} · ${t.d} noch einmal.`,{fn:false});
+    if(d.hw!==true)return invalid('Tippe auf „Weiter“.');
+    const r=hnResultCheck(t,d,{resultOnly:true});
+    if(!r.ok)return r;
+    return right('Richtig! '+hnFalterProof(t)+(t.N<t.b*t.d?` Mit dem Hauptnenner ${t.N} wäre es kürzer.`:''));
+  },
+  solution(t){
+    if(t.kind==='wer')return [trickRow(t.terms),line(`${t.b*t.d} (Schmetterling) und ${t.N} (Hauptnenner) sind beide gemeinsame Nenner.`)];
+    if(t.kind==='wann')return [trickRow(t.terms),line(gcd(t.b,t.d)===1?`${t.b*t.d} ist der Hauptnenner.`:`Der Hauptnenner ist ${t.N}, nicht ${t.b*t.d}.`)];
+    const sg=t.signs[0],l=t.a*t.d,r=t.c*t.b,bd=t.b*t.d,s=simplify(t.res[0],bd),out=[
+      falterFigure({a:t.a,b:t.b,c:t.c,d:t.d,sign:sg,l,r,n:bd}),
+      eq(frac(t.a,t.b),sg,frac(t.c,t.d),'=',frac(`${l} ${sg} ${r}`,bd),'=',frac(t.res[0],bd))];
+    if(s[1]!==bd){const g=bd/s[1];out.push(line('Kürzen: '),eq(frac(t.res[0],bd),'=',frac(t.res[0]+' : '+g,bd+' : '+g),'=',frac(s[0],s[1])));}
+    else out.push(line('Das Ergebnis lässt sich nicht kürzen.'));
+    if(t.N<bd)out.push(line(`Mit dem Hauptnenner ${t.N} musst du weniger kürzen.`));
+    return out;
+  }
+});

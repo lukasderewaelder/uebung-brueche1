@@ -4,12 +4,12 @@
    HQ: 15 Antipp-Fragen (A–D, Ja/Nein, „Weiß ich nicht“), 5 Fähigkeiten à 3, ohne Tipps und ohne Zeitdruck; jede Frage enthält eine typische Falle.
    3 von 3 richtig = „sitzt“. H02 hängt an zwei Fähigkeiten (Hauptnenner und Erweitern): Die Station sitzt erst, wenn beide sitzen (path.js).
    HA: 10 Antipp-Fragen (2 je Fähigkeit) + 5 Rechenaufgaben (Hauptnenner und erweitern, 2× addieren, 2× subtrahieren, einmal davon ergänzen).
-   Urkunde ab 12 Punkten und nach allen Pflichtstationen H01–H07. Zahlen wie Leicht (Hauptnenner bis 36), Knifflig bis 100; Ergebnisse immer gekürzt.
+   Urkunde ab 12 Punkten und nach allen Pflichtstationen H02–H07. Zahlen wie Leicht (Hauptnenner bis 36), Knifflig bis 100; Ergebnisse immer gekürzt.
    ===================================================================== */
 const HQ_SKILLS=['groesse','hn','erw','plus','minus'];
 const HQ_NAMES={groesse:'Größe schätzen',hn:'Hauptnenner finden',erw:'Erweitern',plus:'Addieren',minus:'Subtrahieren'};
 QCHK.HQ={skills:HQ_SKILLS,names:HQ_NAMES,
-  stations:{groesse:['H01'],hn:['H02'],erw:['H02'],plus:['H03','H04'],minus:['H05','H06']},allSure:['H07'],
+  stations:{groesse:[],hn:['H02'],erw:['H02'],plus:['H03','H04'],minus:['H05','H06']},allSure:['H07'],
   startText:'Im Lernpfad lernst du alles Schritt für Schritt. Das Bruchlabor hilft dir beim Start.'};
 const HQ_KINDS={groesse:['stimmtYN','bereich'],hn:['hnWahl','hnYN'],erw:['erwFehlt'],plus:['plusWahl'],minus:['minusWahl','minusYN']};
 const HQ_NOTES={stimmtYN:['M20'],bereich:['M20'],hnWahl:['M19'],hnYN:['M19'],erwFehlt:['M19','M2'],plusWahl:['M20'],minusWahl:['M20'],minusYN:['M20']};

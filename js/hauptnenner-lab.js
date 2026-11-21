@@ -5,7 +5,7 @@
    Bedienung: Stellschrauben (− und +) für Nenner 1 (2–6), Zähler 1, Nenner 2 (2–6), Zähler 2 und die Rechenart;
    Knöpfe „Teilung übertragen“ und „Zusammenschieben“. Die Rechnung mit Bruchstrich folgt sofort.
    Aufträge: 1 Passt das? (zusammenschieben ohne Übertragen) · 2 Gleich einteilen (plus) · 3 Wegnehmen (minus) ·
-             4 Wie viele Felder? (Frage zum Antippen: b · d, „Das ist der Schmetterling!“) · 5 Frei (bei nicht teilerfremden Nennern ein Satz zum Hauptnenner)
+             4 Wie viele Felder? (Frage zum Antippen: b · d, „Nenner mal Nenner!“) · 5 Frei (bei nicht teilerfremden Nennern ein Satz zum Hauptnenner)
    Zustand S.labH = {op, b, a, d, c, step (0 getrennt, 1 übertragen, 2 zusammen), hist, did:{schief, plus, minus}, skip, done}. Eintrag in LABS (js/lab.js).
    ===================================================================== */
 const HLAB_MIN=2,HLAB_MAX=6;
@@ -120,7 +120,7 @@ function renderHLab(){
     persist();sayText(hlabTell(L));draw();
   });
   function answer(o,b){
-    if(o.id==='prod'){L.done=true;L.skip=false;persist();sayText('Genau! Das gemeinsame Raster hat Nenner 1 mal Nenner 2 Felder. Das ist der Schmetterling!','ok');draw();award(15,'Entdeckt!');return;}
+    if(o.id==='prod'){L.done=true;L.skip=false;persist();sayText('Genau! Das gemeinsame Raster hat Nenner 1 mal Nenner 2 Felder.','ok');draw();award(15,'Entdeckt!');return;}
     b.disabled=true;b.classList.add('is-wrong');b.append(el('span',{class:'mk','aria-hidden':'true'},icon('kreuz')));
     sayText(o.id==='sum'?'Zähle die Felder: Jede Spalte hat so viele Felder, wie der andere Nenner sagt.':'Im gemeinsamen Raster sind die Felder feiner als in beiden Rechtecken.','bad');
   }

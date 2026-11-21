@@ -13,7 +13,7 @@
 <title>Bruchwerkstatt</title>
 <script>/* Darstellung vor dem ersten Zeichnen setzen: Wahl „Hell“ oder „Dunkel“ aus dem Speicher; sonst folgt die Seite dem Gerät */
 try{var u=JSON.parse(localStorage.getItem('bruchwerkstatt_v1')).ui;if(u&&(u.theme==='hell'||u.theme==='dunkel'))document.documentElement.setAttribute('data-theme',u.theme);}catch(e){}</script>
-<link rel="stylesheet" href="css/app.css?v=124">
+<link rel="stylesheet" href="css/app.css?v=129">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -84,47 +84,48 @@ try{var u=JSON.parse(localStorage.getItem('bruchwerkstatt_v1')).ui;if(u&&(u.them
 <symbol id="i-plusminus" viewBox="0 0 24 24"><path d="M12 3.5v9M7.5 8h9M7.5 18.5h9"/></symbol>
 <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H10"/></symbol>
 <symbol id="i-kreuzraster" viewBox="0 0 24 24"><path d="M3.5 5.5h17v13h-17z"/><path d="M12 5.5v13M3.5 12h17"/></symbol>
+<symbol id="i-schmetterling" viewBox="0 0 24 24"><path d="M12 7.5v11"/><path d="M12 10C10 5 4 3.5 3.5 7.5S7 13 12 12.5"/><path d="M12 10c2-5 8-6.5 8.5-2.5S17 13 12 12.5"/><path d="M12 13.5c-2 0-6 1-5.5 4s4.5.5 5.5-2M12 13.5c2 0 6 1 5.5 4s-4.5.5-5.5-2"/><path d="M12 7.5 10 4M12 7.5 14 4"/></symbol>
 <symbol id="i-schlange" viewBox="0 0 24 24"><path d="M3 19c2 0 3-2 4.5-2S10 19 12 19s3-2 4.5-2 2.5 2 4.5 2"/><path d="M16.5 17c0-3 3.5-4 3.5-7a3 3 0 0 0-6 0"/><circle cx="17" cy="7.5" r=".6"/><path d="M20 9.5l2 .8"/></symbol>
 </svg>
 <div id="app"></div>
 <div id="scrim" class="scrim"></div>
-<script src="js/math.js?v=124"></script>
-<script src="js/dom.js?v=124"></script>
-<script src="js/viz.js?v=124"></script>
-<script src="js/store.js?v=124"></script>
-<script src="js/names.js?v=124"></script>
-<script src="js/notes.js?v=124"></script>
-<script src="js/tasks.js?v=124"></script>
-<script src="js/quickcheck.js?v=124"></script>
-<script src="js/linewidget.js?v=124"></script>
-<script src="js/zahlenstrahl.js?v=124"></script>
-<script src="js/zahlenstrahl-check.js?v=124"></script>
-<script src="js/vergleichen-widgets.js?v=124"></script>
-<script src="js/vergleichen.js?v=124"></script>
-<script src="js/vergleichen-check.js?v=124"></script>
-<script src="js/rechnen-widgets.js?v=124"></script>
-<script src="js/rechnen.js?v=124"></script>
-<script src="js/rechnen-check.js?v=124"></script>
-<script src="js/hauptnenner-math.js?v=124"></script>
-<script src="js/hauptnenner-widgets.js?v=124"></script>
-<script src="js/hauptnenner.js?v=124"></script>
-<script src="js/hauptnenner-check.js?v=124"></script>
-<script src="js/mix.js?v=124"></script>
-<script src="js/tips.js?v=124"></script>
-<script src="js/modules.js?v=124"></script>
-<script src="js/lab.js?v=124"></script>
-<script src="js/rechnen-lab.js?v=124"></script>
-<script src="js/hauptnenner-lab.js?v=124"></script>
-<script src="js/path.js?v=124"></script>
-<script src="js/intro.js?v=124"></script>
-<script src="js/rank.js?v=124"></script>
-<script src="js/help.js?v=124"></script>
-<script src="js/exercise.js?v=124"></script>
-<script src="js/games.js?v=124"></script>
-<script src="js/vergleichen-spiel.js?v=124"></script>
-<script src="js/spiel-schlange.js?v=124"></script>
-<script src="js/home.js?v=124"></script>
-<script src="js/selftest.js?v=124"></script>
-<script src="js/app.js?v=124"></script>
+<script src="js/math.js?v=129"></script>
+<script src="js/dom.js?v=129"></script>
+<script src="js/viz.js?v=129"></script>
+<script src="js/store.js?v=129"></script>
+<script src="js/names.js?v=129"></script>
+<script src="js/notes.js?v=129"></script>
+<script src="js/tasks.js?v=129"></script>
+<script src="js/quickcheck.js?v=129"></script>
+<script src="js/linewidget.js?v=129"></script>
+<script src="js/zahlenstrahl.js?v=129"></script>
+<script src="js/zahlenstrahl-check.js?v=129"></script>
+<script src="js/vergleichen-widgets.js?v=129"></script>
+<script src="js/vergleichen.js?v=129"></script>
+<script src="js/vergleichen-check.js?v=129"></script>
+<script src="js/rechnen-widgets.js?v=129"></script>
+<script src="js/rechnen.js?v=129"></script>
+<script src="js/rechnen-check.js?v=129"></script>
+<script src="js/hauptnenner-math.js?v=129"></script>
+<script src="js/hauptnenner-widgets.js?v=129"></script>
+<script src="js/hauptnenner.js?v=129"></script>
+<script src="js/hauptnenner-check.js?v=129"></script>
+<script src="js/mix.js?v=129"></script>
+<script src="js/tips.js?v=129"></script>
+<script src="js/modules.js?v=129"></script>
+<script src="js/lab.js?v=129"></script>
+<script src="js/rechnen-lab.js?v=129"></script>
+<script src="js/hauptnenner-lab.js?v=129"></script>
+<script src="js/path.js?v=129"></script>
+<script src="js/intro.js?v=129"></script>
+<script src="js/rank.js?v=129"></script>
+<script src="js/help.js?v=129"></script>
+<script src="js/exercise.js?v=129"></script>
+<script src="js/games.js?v=129"></script>
+<script src="js/vergleichen-spiel.js?v=129"></script>
+<script src="js/spiel-schlange.js?v=129"></script>
+<script src="js/home.js?v=129"></script>
+<script src="js/selftest.js?v=129"></script>
+<script src="js/app.js?v=129"></script>
 </body>
 </html>

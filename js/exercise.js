@@ -340,7 +340,7 @@ function setLevel(id,l){S.levelByType[id]=l;persist();renderAll();}
 
 /* Symbole und Kennfarbe je Übung (erw = Erweitern/Orange, kue = Kürzen/Petrol) */
 const ICON={QA:'plakette',ZA:'plakette',RA:'plakette',RQ:'haken',ZQ:'haken',Z01:'lineal',Z02:'lupe',Z03:'lineal',Z04:'aus',Z05:'wechsel',Z06:'netz',Z07:'lineal',Z08:'wechsel',Q00:'haken',G01:'lineal',T01:'teiler',T02:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'wechsel',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor',W01:'balken',W02:'balken',W03:'wechsel',W04:'luecke',W05:'aus',W06:'lineal',W07:'frage',W08:'netz',W09:'lineal',W10:'lupe',WQ:'haken',WA:'plakette',S03:'wechsel',R01:'plus',R02:'plus',R03:'minus',R04:'minus',R05:'plusminus',
-  HQ:'haken',HA:'plakette',H01:'frage',H02:'kreuzraster',H03:'plus',H04:'plus',H05:'minus',H06:'minus',H07:'plusminus',H08:'luecke',H09:'karten',H10:'lineal',H11:'netz',H12:'zirkel',H13:'frage',S04:'schlange'};
+  HQ:'haken',HA:'plakette',H02:'kreuzraster',H03:'plus',H04:'plus',H05:'minus',H06:'minus',H07:'plusminus',H08:'luecke',H09:'karten',H10:'lineal',H11:'netz',H12:'zirkel',H13:'frage',H14:'schmetterling',S04:'schlange'};
 const ACC={G02:'erw',O01:'erw',G03:'kue',G04:'kue',T01:'kue',T02:'kue',O02:'kue',G05:'mix'};
 function backTarget(){
   const v=S.view;

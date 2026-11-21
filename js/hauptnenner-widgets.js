@@ -1,6 +1,6 @@
 'use strict';
 /* =====================================================================
-   Bausteine für „Ungleichnamige Brüche addieren und subtrahieren“ (Thema addsub2, Aufgaben H01–H13 in js/hauptnenner.js)
+   Bausteine für „Ungleichnamige Brüche addieren und subtrahieren“ (Thema addsub2, Aufgaben H02–H13 in js/hauptnenner.js)
    crossFigure   Kreuzraster wie im Hefter S. 4: Stufe 1 getrennt (erster Bruch senkrecht geteilt, zweiter waagerecht), Stufe 2 Teilung übertragen
                  (rote Linien wachsen ein), Stufe 3 zusammen (ein Raster, spaltenweise aufgefüllt; Minus: Weggenommenes durchgekreuzt).
                  mode 'erg' (Ergänzen): Start gefärbt, Ziel gestrichelt, fehlende Felder werden angetippt.
@@ -244,3 +244,18 @@ function hnChoice(view,host,key,items,label,onPick){
 }
 /* Text mit Brüchen: Teile sind Text oder [n,d] */
 const hnTxt=(...parts)=>parts.map(x=>Array.isArray(x)?frac(x[0],x[1]):x);
+
+/* ---------- Schmetterling (H14, M22, Erklärung): a/b ± c/d mit zwei Flügeln ----------
+   Oben links a · d, oben rechts c · b, unten b · d. o: {a,b,c,d,sign,l,r,n} – l, r, n sind Zahlen, Text oder Eingabefelder (leer: nichts). */
+function falterFigure(o){
+  const NS='http://www.w3.org/2000/svg',svg=document.createElementNS(NS,'svg');
+  svg.setAttribute('viewBox','0 0 100 100');svg.setAttribute('preserveAspectRatio','none');svg.setAttribute('aria-hidden','true');svg.setAttribute('class','flbg');
+  [[12,40,88,64,'fw1'],[12,64,88,40,'fw2']].forEach(([x1,y1,x2,y2,c])=>{
+    const ln=document.createElementNS(NS,'line');
+    [['x1',x1],['y1',y1],['x2',x2],['y2',y2],['class',c],['vector-effect','non-scaling-stroke']].forEach(([k,v])=>ln.setAttribute(k,v));
+    svg.append(ln);
+  });
+  const cell=(x,cls)=>el('span',{class:'fl '+cls},x==null?'':typeof x==='object'?x:String(x));
+  return el('div',{class:'falter',role:'group','aria-label':'Schmetterling: '+o.a+'/'+o.b+' '+o.sign+' '+o.c+'/'+o.d},
+    svg,cell(o.l,'fl-l'),cell(o.r,'fl-r'),el('span',{class:'fl-a'},frac(o.a,o.b)),el('span',{class:'fl-o'},o.sign),el('span',{class:'fl-c'},frac(o.c,o.d)),cell(o.n,'fl-n'));
+}

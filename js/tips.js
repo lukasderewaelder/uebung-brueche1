@@ -519,7 +519,7 @@ PROOF.R04=PROOF.R02;
 PROOF.R05=(t)=>t.kind==='finde'||t.kind==='drei'?null:t.kind==='fehler'?addProof(addCalcTask(t.calcs[t.wrong])):addProof(t);
 function proofText(task){const f=PROOF[task.type];return f?f(task):null;}
 
-/* ---------- Ungleichnamige Brüche (H01–H13, Konzept Block 2): 1 Frage (nie das Ergebnis) · 2 erster Schritt vorgemacht · 3 Teillösung.
+/* ---------- Ungleichnamige Brüche (H02–H13, Konzept Block 2): 1 Frage (nie das Ergebnis) · 2 erster Schritt vorgemacht · 3 Teillösung.
    Tipps zum Kürzen verraten nie, ob es geht. ---------- */
 const tfx=(x)=>tf(x[0],x[1]);
 const hnT17=(...ds)=>{const s=trick17Steps(...ds);return 'Trick 17: '+s.map((x,i)=>x.v+(i===s.length-1?' passt':' nein')).join(', ')+'.';};
@@ -531,30 +531,17 @@ function tipsCalc(t){
     :t.kind==='rest'?'Schreibe das Ganze als Bruch. Welcher Nenner passt zu allen?':`Welcher Nenner passt zu ${dens.join(' und ')}?`;
   return [[first],[(dens.length===2?hnT17(...dens)+' ':'')+`Der Hauptnenner ist ${N}.`],[`${ex}. ${verb} jetzt die Zähler. Prüfe zuletzt das Feld **gekürzt**.`]];
 }
-function tipsStimmt(t){
-  const big=compareFrac(t.a,t.b,t.c,t.d)>=0?[t.a,t.b]:[t.c,t.d],X=t.claim,plus=t.signs[0]==='+',ref=plus?big:[t.a,t.b],M=lcm(X[1],ref[1]);
-  return [[plus?`Ist ${tfx(X)} größer als ${tfx(big)}?`:`Ist ${tfx(X)} kleiner als ${tf(t.a,t.b)}?`],
-    [`Auf den Nenner ${M}: ${tf(X[0]*M/X[1],M)} und ${tf(ref[0]*M/ref[1],M)}.`],
-    [`Rechne mit dem Hauptnenner ${t.N} nach. ${plus?'Zusammen muss es mehr werden.':'Beim Wegnehmen wird es weniger.'}`]];
-}
-TIPS.H01=(t)=>{
-  if(t.kind==='stimmt')return tipsStimmt(t);
-  if(t.kind==='bereich')return [['Vergleiche jeden Bruch mit {1|2}. Ist er größer oder kleiner?'],[`Der Hauptnenner ist ${t.N}.`],[`Das Ergebnis ist ${tf(t.res[0],t.N)}. Vergleiche ${t.res[0]} mit der Hälfte von ${t.N} und mit ${t.N}.`]];
-  return [['Wie viele waagerechte Streifen hat das andere Rechteck?'],[`Das andere Rechteck hat ${t.d} Streifen. ${denEach(t.b)} wird in ${t.d} Stücke geteilt.`],[`Beide Rechtecke haben dann ${t.N} gleich große Felder.`]];
-};
 TIPS.H02=(t)=>{
   const dens=t.terms.map(x=>x[1]),g=Math.max(...dens),rest=dens.filter(x=>x!==g),N=hnOf(...dens),steps=trick17Steps(...dens).map(x=>x.v);
   if(t.kind==='erweitern'||t.kind==='hnErw'){
     const [a,b]=t.terms[0];
     return [[t.kind==='hnErw'?'Finde zuerst den Hauptnenner mit Trick 17.':`Womit musst du ${b} malnehmen, um ${t.N} zu bekommen?`],[`${b} · ${N/b} = ${N}. Nimm den Zähler genauso mal.`],[`${tf(a,b)} = ${tf(a*N/b,N)}. Jetzt kommt der zweite Bruch.`]];
   }
-  if(t.kind==='wer')return [['Passen beide Nenner ohne Rest in jede der zwei Zahlen?'],[`${t.b*t.d} und ${N} sind beide Vielfache von ${t.b} und ${t.d}.`],['Beide sind gemeinsame Nenner. Der kleinere ist der Hauptnenner.']];
   return [['Welcher Nenner ist am größten? Mit dem fängst du an.'],[`Prüfe ${g}: Passt ${rest.join(' und ')} ohne Rest hinein? ${rest.every(x=>g%x===0)?'Ja.':'Nein.'}`],[`Die Reihe heißt ${steps.join(', ')}. Prüfe jede Zahl mit ${rest.join(' und ')}.`]];
 };
 const tipsBildH=(t)=>[['Wie viele Streifen hat das andere Rechteck?'],[`Das andere Rechteck hat ${t.d} Streifen. ${denEach(t.b)} wird in ${t.d} Stücke geteilt.`],[`Beide Rechtecke haben jetzt ${t.b*t.d} Felder. Der Hauptnenner ist ${t.N}.`]];
 TIPS.H03=(t)=>t.kind==='bild'?tipsBildH(t):tipsCalc(t);
 TIPS.H04=(t)=>{
-  if(t.kind==='stimmt')return tipsStimmt(t);
   if(t.kind==='luecke')return [['Erweitere zuerst alle Brüche auf den Hauptnenner.'],[`Der Hauptnenner ist ${t.N}: ${tf(t.a,t.b)} = ${tf(t.a*t.N/t.b,t.N)}.`],[`Dann fehlen ${tf(t.c*t.N/t.d,t.N)}. Passe den Bruch an die Lücke an.`]];
   return tipsCalc(t);
 };
@@ -585,5 +572,12 @@ TIPS.H13=(t)=>{
   return tipsCalc(t);
 };
 
+TIPS.H14=(t)=>{
+  const dens=[t.b,t.d],g=Math.max(...dens),sm=Math.min(...dens),N=hnOf(t.b,t.d),bd=t.b*t.d;
+  if(t.kind==='wer')return [['Passen beide Nenner ohne Rest in jede der zwei Zahlen?'],[`${bd} und ${N} sind beide Vielfache von ${t.b} und ${t.d}.`],['Beide sind gemeinsame Nenner. Der kleinere ist der Hauptnenner.']];
+  if(t.kind==='wann')return [['Finde den Hauptnenner mit Trick 17.'],[`Fange mit ${g} an. Passt ${sm} ohne Rest hinein?`],[`Trick 17: ${trick17Steps(t.b,t.d).map(x=>x.v).join(', ')}. Vergleiche mit ${bd}.`]];
+  const l=t.a*t.d,r=t.c*t.b,sg=t.signs[0];
+  return [['Folge den Flügeln. Welcher Zähler gehört zu welchem Nenner?'],[`Links oben: ${t.a} · ${t.d}. Rechts oben: ${t.c} · ${t.b}. Unten: ${t.b} · ${t.d}.`],[`Oben stehen ${l} und ${r}, unten ${bd}. Rechne ${l} ${sg} ${r}. Prüfe zuletzt das Feld **gekürzt**.`]];
+};
 /* Anmelden: jede Aufgabe liefert ihre Tipps aus TIPS (die Schnelltests Q00 und ZQ zeigen keine Tipps, behalten aber ihre eigenen) */
 Object.keys(TIPS).forEach(id=>{if(TASKS[id]){TASKS[id].hints=function(t){return TIPS[id](t);};}});

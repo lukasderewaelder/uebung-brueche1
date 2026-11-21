@@ -1179,7 +1179,7 @@ function runSelfTests(){
       const f=nodes[0];if(f.classList.contains('ex')||/^Beispiel/.test(f.textContent))firstOK++;
       nodes.filter(n=>n.tagName==='P'||n.classList.contains('rule')).forEach(n=>n.textContent.split(/[.!?]\s+/).forEach(s=>{longest=Math.max(longest,words(s));}));
     });
-    t('Merkkästen: alle 21 (M1–M21) bauen sich, beginnen mit dem Beispiel, Sätze höchstens 14 Wörter (längster: '+longest+')',ids.length===21&&bad.length===0&&firstOK===21&&longest<=14);
+    t('Merkkästen: alle 22 (M1–M22) bauen sich, beginnen mit dem Beispiel, Sätze höchstens 14 Wörter (längster: '+longest+')',ids.length===22&&bad.length===0&&firstOK===22&&longest<=14);
     const txt=(id)=>NOTES[id].build([]).map(n=>n.textContent).join(' ');
     t('Merkkästen: Fachwörter kommen nach dem Beispiel mit Erklärung (Erweiterungszahl, Kürzungszahl, Quersumme, Dezimalbruch, gemischte Zahl, kgV)',txt('M2').includes('Erweiterungszahl. Sie ist mindestens 2')&&txt('M3').includes('Kürzungszahl. Sie ist mindestens 2')&&txt('M7').includes('Quersumme bekommst du, wenn du alle Ziffern addierst')&&txt('M4').includes('heißt Dezimalbruch')&&txt('M6').includes('Natürliche Zahlen sind 1, 2, 3')&&txt('M10').includes('kleinstes gemeinsames Vielfaches (kgV)'));
     /* Schrift: Menü und Rang-Chip mindestens 16 px */
@@ -2122,11 +2122,11 @@ function runSelfTests(){
         const hm=moduleById('addsub2'),hplan=[].concat(HQ_SKILLS,HQ_SKILLS,HQ_SKILLS),hr=(res)=>({results:res.slice(),size:res.length,sk:hplan});
         fresh();
         onRoundEnd('HQ',1,hr(hplan.map(()=>'f')));
-        t('Eingangstest HQ: 15 von 15 ⇒ H01 bis H06 und H07 (alles sitzt) als beherrscht gemerkt, Thema addsub2',['H01','H02','H03','H04','H05','H06','H07'].every(x=>S.checked[x]&&!stationDone(x))&&qstate(hm).placed&&!qstate(hm).final&&checkMark('H02')==='sitzt');
+        t('Eingangstest HQ: 15 von 15 ⇒ H02 bis H06 und H07 (alles sitzt) als beherrscht gemerkt, Thema addsub2',['H02','H03','H04','H05','H06','H07'].every(x=>S.checked[x]&&!stationDone(x))&&qstate(hm).placed&&!qstate(hm).final&&checkMark('H02')==='sitzt');
         fresh();
         const ie=hplan.indexOf('erw');
         onRoundEnd('HQ',1,hr(hplan.map((s,i)=>i===ie?'x':'f')));
-        t('Eingangstest HQ: Hauptnenner sitzt, Erweitern nur 2 von 3 ⇒ H02 nicht offen und „fast“; H01, H03 bis H06 sitzen, H07 nicht',!S.checked.H02&&checkMark('H02')==='fast'&&S.checked.H01&&S.checked.H03&&S.checked.H06&&!S.checked.H07);
+        t('Eingangstest HQ: Hauptnenner sitzt, Erweitern nur 2 von 3 ⇒ H02 nicht offen und „fast“; H03 bis H06 sitzen, H07 nicht',!S.checked.H02&&checkMark('H02')==='fast'&&S.checked.H03&&S.checked.H06&&!S.checked.H07);
         Object.assign(S,keep);
       }
       /* ---------- Block 2: ungleichnamige Brüche (Thema addsub2, Kürzel H) ---------- */
@@ -2167,9 +2167,6 @@ function runSelfTests(){
         const resOnly=(t)=>{const r=simplify(t.res[0],t.res[1]),d={'r.n':String(t.res[0]),'r.d':String(t.res[1])};if(r[1]!==t.res[1]){d['k.n']=String(r[0]);d['k.d']=String(r[1]);}else d.kn=true;return d;};
         const okDraft=(tk)=>{
           const L1=tk.level===1,k=tk.kind;
-          if(k==='stimmt')return {j:tk.truth?'ja':'nein',r:tk.right};
-          if(k==='bereich')return {b:tk.answer};
-          if(k==='teilung')return {e:'N'};
           if(tk.type==='H02'){
             const dens=tk.terms.map(x=>x[1]),g=Math.max(...dens),hn=hnOf(...dens),st=trick17Steps(...dens);
             if(k==='reihe')return {big:g,rm:'n'.repeat(st.length-1)+'y'};
@@ -2177,6 +2174,11 @@ function runSelfTests(){
             if(k==='drei')return {big:g,x:String(hn)};
             if(k==='wer')return {w:'A'};
             const d={};tk.terms.forEach((x,i)=>{d['e'+i]=String(x[0]*hn/x[1]);});if(k==='hnErw')d.N=String(hn);return d;
+          }
+          if(tk.type==='H14'){
+            if(k==='wer')return {w:'A'};
+            if(k==='wann')return {j:gcd(tk.b,tk.d)===1?'ja':'nein'};
+            return Object.assign({fl:String(tk.a*tk.d),fr:String(tk.c*tk.b),fn:String(tk.b*tk.d),hw:true},resOnly(tk));
           }
           if(k==='luecke'&&tk.type!=='H08')return {x:String(tk.blank==='num'?tk.c:tk.d)};
           if(k==='bild')return Object.assign({'u.n':String(tk.a),'u.d':String(tk.b),'v.n':String(tk.c),'v.d':String(tk.d),s1:true,t1:String(tk.d),t2:String(tk.b),s2:true},blk(tk,L1));
@@ -2200,10 +2202,10 @@ function runSelfTests(){
           if(k==='summe')return blk(tk,L1);
           return blk(tk,L1&&tk.kind!=='rest');
         };
-        const problems=[],hasPair=['plus','minus','geschichte','ueber1','kuerzbar','luecke','ergaenzenText','pm','bereich','stimmt'];
+        const problems=[],hasPair=['plus','minus','geschichte','ueber1','kuerzbar','luecke','ergaenzenText','pm'];
         let n=0,tipN=0,red={y:0,n:0};
         const words=(s)=>s.replace(/\*\*/g,'').replace(/\{\d+\|\d+\}/g,'x').split(/[.!?]\s+/).some(x=>x.split(/\s+/).filter(Boolean).length>14);
-        for(const id of ['H01','H02','H03','H04','H05','H06','H07','H08','H09','H10','H11','H12','H13'])for(const lvl of [1,2])for(const kind of TASKS[id].layoutKinds(lvl))for(let i=0;i<25;i++){
+        for(const id of ['H02','H03','H04','H05','H06','H07','H08','H09','H10','H11','H12','H13','H14'])for(const lvl of [1,2])for(const kind of TASKS[id].layoutKinds(lvl))for(let i=0;i<25;i++){
           const tk=TASKS[id].gen(lvl,RNG,{kind,step:i%5,red:i%2===0,typ:lvl===1?(i%2?'viel':'beide'):null,truth:i%2===0});n++;
           const tag=id+'-L'+lvl+' '+kind;
           if(tk.type!==id||tk.kind!==kind)problems.push(tag+' Art');
@@ -2216,7 +2218,7 @@ function runSelfTests(){
             if(tk.res&&(tk.res[0]<=0||tk.res[0]%tk.res[1]===0))problems.push(tag+' Ergebnis 0 oder ganz');
             if(lvl===1&&tk.res&&tk.res[0]>tk.res[1])problems.push(tag+' Leicht über 1');
           }
-          if((kind==='bild'||kind==='teilung'||tk.erg&&kind!=='ergaenzenText')&&gcd(tk.b,tk.d)!==1)problems.push(tag+' Bild nicht teilerfremd');
+          if((kind==='bild'||tk.erg&&kind!=='ergaenzenText')&&gcd(tk.b,tk.d)!==1)problems.push(tag+' Bild nicht teilerfremd');
           if(tk.res&&HN_RES[id]&&HN_RES[id].includes(kind)&&kind!=='drei'&&id!=='H08'){if(isFullyReduced(tk.res[0],tk.res[1]))red.n++;else red.y++;}
           let ok;
           try{ok=validateTask(tk,okDraft(tk));}catch(e){ok={feedback:'Fehler '+e.message};}
@@ -2229,7 +2231,7 @@ function runSelfTests(){
             try{const host=el('div');mountTask(host,newState(tk),{save(){},done(){}});const sol=buildWorkedSolution(tk);if(!sol.length||!host.querySelector('.stage'))problems.push(tag+' Ansicht leer');}catch(e){problems.push(tag+' Ansicht: '+e.message);}
           }
         }
-        t('Block 2 H01–H13: '+n+' Aufgaben aller Arten beider Niveaus: Zahlenraum (Leicht bis 36, Reihe bis 4 Schritte, Knifflig bis 100), Bilder teilerfremd, richtige Antwort angenommen, leere abgelehnt, Tipps (3 Stufen, kurz), Ansicht und Lösung',problems.length===0||(console.log(problems.slice(0,8)),false));
+        t('Block 2 H02–H14: '+n+' Aufgaben aller Arten beider Niveaus: Zahlenraum (Leicht bis 36, Reihe bis 4 Schritte, Knifflig bis 100), Bilder teilerfremd, richtige Antwort angenommen, leere abgelehnt, Tipps (3 Stufen, kurz), Ansicht und Lösung',problems.length===0||(console.log(problems.slice(0,8)),false));
         t('Block 2: kürzbare und nicht kürzbare Ergebnisse kommen beide vor ('+red.y+' kürzbar, '+red.n+' nicht)',red.y>20&&red.n>20);
         /* falsche Antworten im Rechenweg werden mit Diagnose benannt */
         let diagBad=0;
@@ -2240,18 +2242,25 @@ function runSelfTests(){
           if(r.correct||(r.errorCode!=='komponentenweise'&&!(r.invalid)))diagBad++;
         }
         t('Block 2: „Zähler und Nenner einzeln addiert“ wird im Rechenweg erkannt',diagBad===0);
+        {
+          const F=TASKS.H14,tk=Object.assign(F.gen(1,RNG,{kind:'falter',step:0,red:false}),{a:2,b:3,c:3,d:5,plus:true,terms:[[2,3],[3,5]],signs:['+'],res:[19,15],N:15});
+          const ok={fl:'10',fr:'9',fn:'15',hw:true,'r.n':'19','r.d':'15',kn:true},v=(x)=>validateTask(tk,Object.assign({},ok,x));
+          t('H14 Schmetterling: 2/3 + 3/5 mit 10, 9, 15 = 19/15 richtig; Zähler mit eigenem Nenner, Nenner addiert, ohne „Weiter“ erkannt; Hauptnenner nur mit Trick 17 in H02',
+            v({}).correct&&v({fl:'6'}).errorCode==='schmetterlingFalsch'&&v({fr:'15'}).errorCode==='schmetterlingFalsch'&&v({fn:'8'}).errorCode==='nennerSumme'&&!v({hw:false}).correct
+            &&!TASKS.H02.layoutKinds(1).concat(TASKS.H02.layoutKinds(2)).includes('wer')&&!INTRO.H02.steps.some(x=>/Schmetterling/.test(x.h+x.say.join(' ')))&&!INTRO.H04.steps.some(x=>/Schmetterling/.test(x.h+x.say.join(' ')))
+            &&moduleById('addsub2').path.slice(-2)[0].id==='H14'&&!moduleById('addsub2').path.find(p=>p.id==='H14').must);
+        }
         /* Rundenpläne */
         let planBad=0;
-        for(const id of ['H01','H02','H03','H04','H05','H06','H07'])for(const lvl of [1,2])for(let k=0;k<30;k++){
+        for(const id of ['H02','H03','H04','H05','H06','H07'])for(const lvl of [1,2])for(let k=0;k<30;k++){
           const r={results:[],cur:null},ks=[],reds=[];
           for(let j=0;j<5;j++){r.results=Array(j).fill('f');const c=TASKS[id].ctx(r,lvl);ks.push(c.kind);reds.push(c.red);}
-          if(ks.length!==5||ks[0]==='stimmt'&&id==='H04')planBad++;
-          if(id==='H04'&&lvl===2&&ks.filter(x=>x==='stimmt').length!==1)planBad++;
-          if(id==='H01'&&!ks.some((x,j)=>x==='stimmt'&&r.truth[j]===true))planBad++;
+          if(ks.length!==5||ks.includes('stimmt'))planBad++;
           const rs=reds.filter(x=>typeof x==='boolean');if(rs.length){const y=rs.filter(Boolean).length;if(y<Math.floor(rs.length/2)||y>Math.ceil(rs.length/2))planBad++;}
           if(lvl===1){const ty=r.typ.filter(Boolean);if(ty.length>1&&!(ty.includes('viel')&&ty.includes('beide')))planBad++;}
         }
-        t('Block 2: Rundenpläne mit 5 Arten; Kürzen halb und halb; Leicht beide Paararten; H01 mindestens eine richtige Behauptung; H04 Knifflig genau eine Behauptung, nie zuerst',planBad===0);
+        t('Block 2: Rundenpläne mit 5 Arten; Kürzen halb und halb; Leicht beide Paararten; keine Behauptungen mehr (H01 entfernt)',planBad===0);
+        t('H01 „Warum geht das nicht?“ ist entfernt: keine Aufgabe, kein Pfad-Eintrag, keine Erklärung, kein Tipp',!TASKS.H01&&!moduleById('addsub2').path.some(p=>p.id==='H01')&&!INTRO.H01&&!TIPS.H01&&!ICON.H01);
         /* Eingangstest HQ: jede Frage hat genau eine richtige Antwort */
         let hqBad=[],hqN=0;
         for(const lvl of [1,2])for(const sk of HQ_SKILLS)for(let occ=0;occ<3;occ++)for(let i=0;i<15;i++){
@@ -2271,9 +2280,9 @@ function runSelfTests(){
         const all=[];MODULES.forEach(m=>Object.keys(m.groups||{}).forEach(g=>all.push(g)));
         t('Registry (P1): Gruppennamen sind über alle Themen eindeutig',new Set(all).size===all.length);
         const m2=moduleById('addsub2');
-        t('Thema addsub2: hinter addsub, empfiehlt addsub, Eingangstest HQ, Abschlusscheck HA, Pflicht H01–H07, Knobeln H08–H13 ohne Pflicht, Labor vorn, kein Rang',MODULES.indexOf(m2)===MODULES.indexOf(moduleById('addsub'))+1&&m2.recommends==='addsub'&&m2.qid==='HQ'&&m2.finalId==='HA'&&m2.rank===false
-          &&m2.path.filter(p=>p.must&&!p.final).map(p=>p.id).join()==='H01,H02,H03,H04,H05,H06,H07'&&m2.path.filter(p=>/^H(0[89]|1)/.test(p.id)).every(p=>!p.must)&&m2.path[0].id==='HLAB'&&isLab('HLAB'));
-        t('Symbole: jede neue Kennung hat ein Symbol, kreuzraster und schlange stehen im Sprite',['HQ','HA','H01','H02','H03','H04','H05','H06','H07','H08','H09','H10','H11','H12','H13','S04'].every(x=>ICON[x]&&document.getElementById('i-'+ICON[x]))&&!!document.getElementById('i-kreuzraster')&&!!document.getElementById('i-schlange'));
+        t('Thema addsub2: hinter addsub, empfiehlt addsub, Eingangstest HQ, Abschlusscheck HA, Pflicht H02–H07, Knobeln H08–H13 ohne Pflicht, Labor vorn, kein Rang',MODULES.indexOf(m2)===MODULES.indexOf(moduleById('addsub'))+1&&m2.recommends==='addsub'&&m2.qid==='HQ'&&m2.finalId==='HA'&&m2.rank===false
+          &&m2.path.filter(p=>p.must&&!p.final).map(p=>p.id).join()==='H02,H03,H04,H05,H06,H07'&&m2.path.filter(p=>/^H(0[89]|1)/.test(p.id)).every(p=>!p.must)&&m2.path[0].id==='HLAB'&&isLab('HLAB'));
+        t('Symbole: jede neue Kennung hat ein Symbol, kreuzraster und schlange stehen im Sprite',['HQ','HA','H02','H03','H04','H05','H06','H07','H08','H09','H10','H11','H12','H13','H14','S04'].every(x=>ICON[x]&&document.getElementById('i-'+ICON[x]))&&!!document.getElementById('i-kreuzraster')&&!!document.getElementById('i-schlange'));
         const fig=crossFigure({b:3,a:1,d:2,c:1,stage:3}),fig2=crossFigure({b:3,a:2,d:2,c:1,stage:3,mode:'minus'}),ov=crossFigure({b:4,a:3,d:3,c:2,stage:3});
         const cnt=(n,q)=>n.querySelectorAll(q).length;
         t('Kreuzraster: Stufe 3 von 1/3 + 1/2 hat 6 Felder je Rechteck, 2 + 3 gefärbt; Minus kreuzt 1/2 von 2/3 durch; über 1 ein zweites Raster; rote Linien beim Übertragen',
@@ -2287,7 +2296,7 @@ function runSelfTests(){
         let snBad=0;for(let i=0;i<60;i++){const lv=1+i%2,s=hnSchlange(RNG,lv,lv===1?5:8);let v=s.start;s.ops.forEach((o,j)=>{const w=o.plus?addFrac(v[0],v[1],o.f[0],o.f[1]):subFrac(v[0],v[1],o.f[0],o.f[1]);v=simplify(w[0],w[1]);if(!equivalent(v[0],v[1],s.vals[j][0],s.vals[j][1])||v[0]<=0||compareFrac(v[0],v[1],lv===1?2:3,1)>=0)snBad++;});if(lv===1&&s.ops.some(o=>![2,4,8].includes(o.f[1])&&![3,6,12].includes(o.f[1])))snBad++;}
         t('Rechenschlange: Werte stimmen, bleiben über 0 und unter 2 (Leicht) bzw. 3 (Knifflig), Leicht in einer Nennerfamilie; Spiel S04 und 12 Sammelkarten',snBad===0&&GAMES.S04&&SNAKES.length===12&&GAME_IDS.includes('S04'));
         const nt=NOTES.M19.build([]).concat(NOTES.M20.build([]),NOTES.M21.build([]));
-        t('Merkkästen M19–M21: Trick 17 mit Schmetterling, Hefter-Wortlaut zum Hauptnenner, das gleiche Ganze; Knopf zum Labor Gemeinsame Teilung',nt.some(x=>/Schmetterling/.test(x.textContent))&&nt.some(x=>/Den gemeinsamen Nenner nennt man Hauptnenner/.test(x.textContent))&&nt.some(x=>/selben Ganzen/.test(x.textContent))&&noteFor('H04',null).some(x=>/Im Labor/.test(x.textContent)));
+        t('Merkkästen M19–M22: Trick 17 ohne Schmetterling, Hefter-Wortlaut zum Hauptnenner, das gleiche Ganze, Schmetterling nur in M22; Knopf zum Labor Gemeinsame Teilung',!nt.some(x=>/Schmetterling/.test(x.textContent))&&NOTES.M22.build([]).some(x=>/anderen Nenner/.test(x.textContent))&&nt.some(x=>/Den gemeinsamen Nenner nennt man Hauptnenner/.test(x.textContent))&&nt.some(x=>/selben Ganzen/.test(x.textContent))&&noteFor('H04',null).some(x=>/Im Labor/.test(x.textContent)));
       }
       /* Umstellung der Stände: alte Schlüssel R01–R05 werden einmal verworfen, andere bleiben */
       {
