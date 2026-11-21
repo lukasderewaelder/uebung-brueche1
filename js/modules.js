@@ -81,16 +81,16 @@ const MODULES=[
   },
   /* Addieren und Subtrahieren, Teil 1: gleiche Nenner (R01–R05: Addieren am Bild, Addieren und rechnen, Subtrahieren am Bild, Subtrahieren und rechnen, Plus oder minus?).
      Reihenfolge des Themas: gleichnamig, unterschiedlich benannt, gemischte Zahlen (kommen später, mit Abschlusschecks je Block). */
-  {id:'addsub',name:'Gleichnamige Brüche addieren und subtrahieren',desc:'Der Nenner bleibt, die Zähler werden addiert oder subtrahiert.',icon:'plusminus',status:'aktiv',rank:false,recommends:'veraendern',
+  {id:'addsub',name:'Gleichnamige Brüche addieren und subtrahieren',desc:'Der Nenner bleibt, die Zähler werden addiert oder subtrahiert.',icon:'plusminus',status:'aktiv',rank:false,quickcheck:true,qid:'RQ',recommends:'veraendern',
     finalId:'RA',finalText:'Du kannst gleichnamige Brüche addieren und subtrahieren. Stark!',
     groups:{
       'Ausprobieren':{pat:'dots',icon:'lupe',text:'Labor: Plus und Minus ausprobieren',ids:['RLAB']},
       'Addieren':{pat:'dots',icon:'plus',text:'Bild lesen, Zähler addieren, Nenner bleibt',ids:['R01','R02']},
       'Subtrahieren':{pat:'dash',icon:'minus',text:'Durchkreuzen, Zähler subtrahieren, Nenner bleibt',ids:['R03','R04']},
       'Plus oder minus?':{pat:'hatch',icon:'plusminus',text:'Rechenart erkennen, Fehler finden, eigene Aufgaben',ids:['R05']},
-      'Check Gleichnamig':{pat:'dots',icon:'plakette',text:'Abschlusscheck',ids:['RA']}
+      'Check Gleichnamig':{pat:'dots',icon:'plakette',text:'Eingangstest und Abschlusscheck',ids:['RQ','RA']}
     },
-    practice:['R01','R02','R03','R04','R05','RA'],
+    practice:['RQ','RA','R01','R02','R03','R04','R05'],
     /* Lernpfad: alle Bauteile sind Pflicht, in dieser Reihenfolge; am Ende der Abschlusscheck mit der Urkunde dieses Themas */
     path:[
       {id:'RLAB',grp:'Ausprobieren',title:'Bruchlabor Plus und Minus',desc:'Addieren und Subtrahieren ausprobieren.'},
