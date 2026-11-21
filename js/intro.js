@@ -338,6 +338,16 @@ const INTRO={
     {h:'Die Urkunde',
       say:['Ab '+needOf(TASKS.WA.size)+' richtigen Antworten gibt es die Urkunde.','Aufgaben mit Tipp zählen nur halb.','Alle Pflicht-Stationen müssen vorher fertig sein.']}
   ]},
+  RQ:{title:'Eingangstest',steps:[
+    {h:'Kurzfragen zum Rechnen',
+      say:[TASKS.RQ.size+' Fragen warten auf dich.','Du tippst eine Antwort an. Dann tippst du auf **Prüfen**.','Manchmal ist die Antwort ein Ja oder Nein.']},
+    {h:'Sofort eine Rückmeldung',
+      say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Es gibt keine Zeitmessung.']},
+    {h:'Danach siehst du, was fehlt',
+      say:['Am Ende siehst du, was du schon kannst.','Bekannte Stationen sind dann im Lernpfad markiert.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
+    {h:'Der Abschlusscheck',
+      say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat '+TASKS.RA.size+' Aufgaben zum Rechnen.','Ab '+needOf(TASKS.RA.size)+' richtigen Antworten gibt es die Urkunde.']}
+  ]},
   RA:{title:'Abschlusscheck',steps:[
     {h:'Wie viele Aufgaben?',
       say:['Der Abschlusscheck hat '+TASKS.RA.size+' Aufgaben.','Sie kommen aus allen fünf Stationen.','Die Reihenfolge ist gemischt.']},
