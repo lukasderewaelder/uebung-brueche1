@@ -64,10 +64,11 @@ function moduleCard(m,primary=true){
   const label=m.name+': '+doneN+' von '+must.length+' Stationen fertig, '+(fertig?'Urkunde geschafft':tag.toLowerCase()+(z!=='gate'&&go1?' bei '+stationTitle(go1.id):''))+(rec?'. Empfohlen: erst '+rec.name:'');
   return el('button',{type:'button',class:'ttile'+(primary&&!fertig?' focus':'')+(fertig?' done':''),title:m.desc,'aria-label':label,onclick:()=>go({kind:'home',tab:'pfad',thema:m.id})},
     el('span',{class:'ico','aria-hidden':'true'},icon(m.icon)),
-    el('b',{class:'tt-name'},m.name),
-    seg,
-    el('span',{class:'tt-row'},el('span',{class:'tt-n'},doneN+' von '+must.length),el('span',{class:'tt-tag'},fertig?icon('haken'):null,tag)),
-    rec?el('small',{class:'tt-rec'},'Empfohlen: erst '+rec.name+'.'):null);
+    el('b',{class:'tt-name'},m.short||m.name),
+    m.sub?el('small',{class:'tt-sub'},m.sub):null,
+    rec?el('small',{class:'tt-rec'},'Empfohlen: erst '+rec.name+'.'):null,
+    el('span',{class:'tt-foot'},seg,
+      el('span',{class:'tt-row'},el('span',{class:'tt-n'},doneN+' von '+must.length),el('span',{class:'tt-tag'},fertig?icon('haken'):null,tag))));
 }
 function lernenTab(home){
   const focus=activeModules().find(m=>lernenZustand(m)==='gate'||pfadInfo(m).go1); /* das Thema, bei dem es weitergeht */

@@ -1112,6 +1112,16 @@ function runSelfTests(){
       t('Ergebnis aus dem Lernpfad (nicht bestanden): Hauptknopf „Nochmal“, Textlinks „Zum Lernpfad“ und „Knifflig probieren“',lab(b)==='*Nochmal|Zum Lernpfad|Knifflig probieren'&&b.querySelectorAll('.btn').length===1);
       t('Ergebnis aus Üben: Hauptknopf „Neue Runde“, Textlinks Niveau, „Zur Liste“ und (bei einer Station des Lernpfads) „Zum Lernpfad“ – auch wenn die Aufgabe im Pfad vorkommt',lab(c)==='*Neue Runde ('+TASKS.G03.size+' Aufgaben)|Knifflig probieren|Zur Liste|Zum Lernpfad'&&lab(d)==='*Neue Runde ('+TASKS.U04.size+' Aufgaben)|Knifflig probieren|Zur Liste');
       t('Ergebnis: im Niveau Knifflig heißt der Textlink „Zurück zu Leicht“',/Zurück zu Leicht/.test(lab(e)));
+      {
+        /* „Weiter im Lernpfad“ öffnet gleich die nächste Station (nicht erst die Themenseite) */
+        const mod=moduleOf('R01'),nx=pathState(mod).find(r=>r.next);
+        const wa=sum('R05','pfad',1,okR,passI),lastK=S.last;
+        [...wa.querySelectorAll('.btn')].find(x=>/Weiter im Lernpfad/.test(x.textContent)).click();
+        const v1=S.view;S.last=lastK;
+        const direct=nx&&!nx.locked&&nx.id!=='R05'?((isLab(nx.id)?v1.kind==='lab':v1.kind==='practice')&&v1.id===nx.id&&v1.from==='pfad'):(v1.kind==='home'&&v1.tab==='pfad');
+        S.view={kind:'lab',id:'RLAB',from:'pfad'};const nb=labNextBtn('RLAB');S.view={kind:'lab',id:'RLAB'};const nb0=labNextBtn('RLAB');
+        t('„Weiter im Lernpfad“ startet direkt die nächste offene Station; fertiges Labor aus dem Lernpfad hat denselben Knopf',direct&&!!nb&&/Weiter im Lernpfad/.test(nb.textContent)&&nb0===null);
+      }
       t('Ergebnis: „Zur Liste“ führt in die Üben-Liste',(()=>{[...c.querySelectorAll('.linkbtn')].find(x=>x.textContent.trim()==='Zur Liste').click();const ok=S.view.kind==='home'&&S.view.tab==='ueben';return ok;})());
       const fm=el('div');renderFinalSummary(fm,'QA',1,'QA-L1',{results:Array(15).fill('f'),size:15,info:{passed:true,ready:true,final:true}});
       t('Ergebnis Abschlusscheck: Hauptknopf „Zum Lernpfad“, Textlink „Nochmal“',lab(fm)==='*Zum Lernpfad|Nochmal');
@@ -1909,10 +1919,42 @@ function runSelfTests(){
       const bt=mk({type:'R01',kind:'bild',scatter:false,seed:1}),bm=mk({type:'R03',kind:'bild',scatter:true,seed:5,plus:false,a:9,c:3,res:[6,12]});
       const rdP={'u.n':'8','u.d':'12','v.n':'3','v.d':'12',op:'+',s1:true},bf=(x)=>Object.assign({},rdP,full({z1:'8',z2:'3',zn:'12'}),x);
       const rdM=(x)=>Object.assign({'u.n':'9','u.d':'12','v.n':'3','v.d':'12',op:'−',s1:true},mfull({z1:'9',z2:'3',zn:'12'}),x);
-      t('Bild lesen (R01 bild): Brüche ablesen und Rechenzeichen wählen; bei plus ist die Reihenfolge egal, bei minus erst alles Gefärbte; falsches Zeichen, falscher Nenner und falsche Zähler werden benannt; ohne „Weiter“ oder leer gilt es nicht',
-        v(bt,bf()).correct&&v(bt,bf({'u.n':'3','v.n':'8'})).correct&&v(bt,bf({op:'−'})).errorCode==='andereRechnung'&&v(bt,bf({op:'−'})).marks.op===false
+      t('Bild lesen (R01 bild): Brüche ablesen, das Rechenzeichen steht fest; bei plus ist die Reihenfolge egal, bei minus erst alles Gefärbte; falscher Nenner und falsche Zähler werden benannt; ohne „Weiter“ oder leer gilt es nicht',
+        v(bt,bf()).correct&&v(bt,bf({'u.n':'3','v.n':'8'})).correct&&v(bt,bf({op:undefined})).correct
         &&v(bt,bf({'u.d':'11'})).errorCode==='nennerFelder'&&v(bt,bf({'u.d':'11'})).marks['u.d']===false&&v(bt,bf({'v.n':'4'})).errorCode==='zaehlerFelder'
-        &&v(bt,bf({s1:false})).invalid&&v(bt,{}).invalid&&v(bm,rdM()).correct&&v(bm,rdM({'u.n':'3','v.n':'9'})).errorCode==='zaehlerFelder'&&v(bm,rdM({'u.n':'6'})).errorCode==='zaehlerFelder'&&v(bm,rdM({op:'+'})).errorCode==='andereRechnung');
+        &&v(bt,bf({s1:false})).invalid&&v(bt,{}).invalid&&v(bm,rdM()).correct&&v(bm,rdM({'u.n':'3','v.n':'9'})).errorCode==='zaehlerFelder'&&v(bm,rdM({'u.n':'6'})).errorCode==='zaehlerFelder');
+      {
+        /* R01–R04 fragen das Rechenzeichen nicht: kein Knopf „?“, das Zeichen steht fest (nur R05 fragt nach plus oder minus) */
+        const rv=(task)=>{const vv={task,draft:{},inputs:{},st:{},save(){},changed(){},locked:()=>false};const h=el('div');TASKS[task.type].render(vv,h);return {h,vv};};
+        const a=rv(mk({type:'R01',kind:'bild',scatter:false,seed:1})),b=rv(mk({type:'R03',kind:'bild',scatter:false,seed:1,plus:false,a:9,c:3,res:[6,12]}));
+        const sign=(h)=>{const o=h.querySelector('.addread .op');return o?o.textContent.trim():'';};
+        t('Bild lesen in R01 und R03: kein „?“-Knopf für das Rechenzeichen, es steht fest (+ bzw. −)',
+          !a.h.querySelector('.opbtn')&&!b.h.querySelector('.opbtn')&&sign(a.h)==='+'&&sign(b.h)==='−'&&a.vv.draft.op==='+'&&b.vv.draft.op==='−');
+      }
+      {
+        /* Steigerung und Kürzen halb und halb: ganze Runden über ctx durchspielen */
+        const resOf=(tk)=>tk.kind==='fehler'?addCalcTask(tk.calcs[tk.wrong]).res:tk.res;
+        let planOk=true,redOk=true,smallOk=true,scatterOk=true,mixed={t:0,f:0};
+        ['R01','R02','R03','R04','R05','RA'].forEach(id=>[1,2].forEach(lvl=>{
+          for(let k=0;k<30;k++){
+            const round={results:[],size:TASKS[id].size};let yes=0,n=0;
+            for(let i=0;i<TASKS[id].size;i++){
+              const c=TASKS[id].ctx(round,lvl),tk=TASKS[id].gen(lvl,RNG,c),res=resOf(tk);
+              if(res){n++;const r=!isFullyReduced(res[0],res[1]);if(r)yes++;if(typeof c.red!=='boolean'||r!==c.red)redOk=false;}
+              else if(c.red!=null)planOk=false;
+              if(lvl===1&&addStage(c.step)===0&&tk.b&&tk.kind!=='finde'&&(tk.b>8||(!tk.calcs&&tk.a!=null&&tk.kind!=='drei'&&(tk.a>4||tk.c>4))))smallOk=false;
+              if(tk.kind==='bild'&&tk.scatter&&addStage(c.step)<2)scatterOk=false;
+              round.results.push('f');
+            }
+            if(n&&(yes<Math.floor(n/2)||yes>Math.ceil(n/2)))planOk=false;
+            if(n){mixed.t+=yes;mixed.f+=n-yes;}
+          }
+        }));
+        t('R01–R05 und RA: In jeder Runde lässt sich etwa die Hälfte der Ergebnisse kürzen (gemischt); Aufgaben ohne Ergebnis bekommen keine Vorgabe',planOk&&redOk&&mixed.t>0&&mixed.f>0);
+        t('R01–R05 und RA in Leicht: die ersten Aufgaben haben Nenner bis 8 und Zähler bis 4; verstreute Felder erst am Ende der Runde',smallOk&&scatterOk);
+        const rp=addRedPlan(['plus','luecke','geschichte','plus','plus']);
+        t('addRedPlan: Lücke ohne Vorgabe, bei 4 Ergebnissen genau 2 kürzbar',rp[1]===null&&rp.filter(x=>x===true).length===2&&rp.filter(x=>x===false).length===2);
+      }
       const cnt=(n,q)=>n.querySelectorAll(q).length;
       const g1=addFigure(12,8,3,{mode:'plus'}),g2=addFigure(12,6,3,{mode:'minus'}),g3=addFigure(5,2,1,{mode:'plus'}),g4=addFigure(15,5,5,{mode:'plus',scatter:true,seed:7}),g5=addFigure(30,9,6,{mode:'plus'}),g6=addFigure(12,10,5,{mode:'plus'});
       const first5=Array.from(g4.querySelectorAll('g.cell')).slice(0,5);

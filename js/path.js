@@ -186,6 +186,16 @@ function openStation(id){
   if(isLab(id))openLab(id,'pfad');
   else{S.last=id;go({kind:'practice',id,from:'pfad'});}
 }
+/* „Weiter im Lernpfad“: gleich die nächste Station des Themas öffnen, ohne Umweg über die Themenseite. Ist nichts mehr offen (oder ist es dieselbe Station), die Themenseite. */
+function continueInPath(id){
+  const mod=moduleOf(id),nx=mod&&pathState(mod).find(r=>r.next);
+  if(nx&&nx.id!==id&&!nx.locked)openStation(nx.id);else go(pfadView(id));
+}
+/* Hauptknopf „Weiter im Lernpfad“ für ein fertiges Labor, das aus dem Lernpfad geöffnet wurde (sonst null) */
+function labNextBtn(id){
+  if(!(S.view&&S.view.from==='pfad'))return null;
+  return el('button',{type:'button',class:'btn primary small',onclick:()=>continueInPath(id)},'Weiter im Lernpfad');
+}
 /* ---------- Bauteil zurücksetzen: angefangene Runden (Leicht und Knifflig) und Erklärung; Fertig, Sterne und Punkte bleiben ---------- */
 function stationResettable(id){
   const rounds=[1,2].some(l=>{const r=S.rounds[keyOf(id,l)];return !!r&&!!((r.results&&r.results.length)||r.cur);});

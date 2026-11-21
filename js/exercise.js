@@ -544,7 +544,7 @@ function renderSummary(main,id,lvl,key,round){
       msg='Du hast '+info.right+' von '+round.size+' richtig.'+(pts<info.right?' Aufgaben mit Tipp zählen nur halb.':'')+' Du brauchst '+fmt(info.need)+' Punkte, du hast '+fmt(pts)+'. Noch einmal?';
     }
   }
-  if(fromPfad&&passed){mainBtn=btn('Weiter im Lernpfad',toPfad,true);links=[linkBtn('Nochmal',again),lvlLink];}
+  if(fromPfad&&passed){mainBtn=btn('Weiter im Lernpfad',()=>continueInPath(id),true);links=[linkBtn('Nochmal',again),lvlLink];}
   else if(fromPfad&&inPath){mainBtn=btn('Nochmal',again,true);links=[linkBtn('Zum Lernpfad',toPfad),lvlLink];}
   else{mainBtn=btn(`Neue Runde (${TASKS[id].size} Aufgaben)`,again,true);links=[lvlLink,linkBtn('Zur Liste',toList)].concat(inPath?[linkBtn('Zum Lernpfad',toPfad)]:[]);}
   main.append(el('div',{class:'card summary'},el('div',{class:'stampbox'},passed?'Station fertig':'Runde fertig'),el('p',null),bigStars(stars),

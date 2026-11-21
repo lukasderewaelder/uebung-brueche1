@@ -6,6 +6,7 @@
    „Bald“ ohne Link, ohne Aufgaben (keine Platzhalterseiten).
    quickcheck: das Thema hat einen Eingangstest (Aufgabe qid; Fähigkeiten und Stationen in QCHK) vor dem Lernpfad (der Textlink „Ohne Test beginnen“ überspringt ihn);
    finalId: der eigene Abschlusscheck (letzte Station des Pfads, Urkunde, Text finalText). recommends: Thema, das man vorher machen sollte (nur ein Hinweis, keine Sperre).
+   short, sub (freiwillig): kürzerer Name und Zusatzzeile für die Kachel im Reiter „Lernen“ (sonst steht dort name).
    rank: Aufgaben und Lernpfad des Themas zählen für „alles perfekt“ (höchster Rang).
    Neues Thema: Eintrag hier, Aufgabentypen in eigener Datei vor modules.js, Symbole in ICON/ACC (exercise.js).
    ===================================================================== */
@@ -81,7 +82,7 @@ const MODULES=[
   },
   /* Addieren und Subtrahieren, Teil 1: gleiche Nenner (R01–R05: Addieren am Bild, Addieren und rechnen, Subtrahieren am Bild, Subtrahieren und rechnen, Plus oder minus?).
      Reihenfolge des Themas: gleichnamig, unterschiedlich benannt, gemischte Zahlen (kommen später, mit Abschlusschecks je Block). */
-  {id:'addsub',name:'Gleichnamige Brüche addieren und subtrahieren',desc:'Der Nenner bleibt, die Zähler werden addiert oder subtrahiert.',icon:'plusminus',status:'aktiv',rank:false,quickcheck:true,qid:'RQ',recommends:'veraendern',
+  {id:'addsub',name:'Gleichnamige Brüche addieren und subtrahieren',short:'Addieren und Subtrahieren',sub:'Gleichnamige Brüche',desc:'Der Nenner bleibt, die Zähler werden addiert oder subtrahiert.',icon:'plusminus',status:'aktiv',rank:false,quickcheck:true,qid:'RQ',recommends:'veraendern',
     finalId:'RA',finalText:'Du kannst gleichnamige Brüche addieren und subtrahieren. Stark!',
     groups:{
       'Ausprobieren':{pat:'dots',icon:'lupe',text:'Labor: Plus und Minus ausprobieren',ids:['RLAB']},

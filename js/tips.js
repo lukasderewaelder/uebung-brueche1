@@ -455,7 +455,7 @@ const tipsRechnen=(t)=>{
   }
   const mid=t.level===1?`Im Zwischenschritt stehen die Zähler ${t.a} und ${t.c} über dem Nenner ${t.b}. `:'';
   return [
-    ['Wird addiert oder subtrahiert? Der Nenner sagt, wie groß die Stücke sind.'],
+    [t.plus?'Die Brüche sind gleichnamig. Was passiert beim Addieren mit dem Nenner?':'Die Brüche sind gleichnamig. Was passiert beim Subtrahieren mit dem Nenner?'],
     [`${addHasPic(t)?'Jetzt siehst du ein Bild. ':''}${mid||`Rechne nur mit den Zählern ${t.a} und ${t.c}.`}`],
     [`${t.a} ${addSay(t.plus)} ${t.c} ergibt ${t.res[0]}. Der Nenner ${t.b} bleibt. Prüfe zuletzt das Feld **gekürzt**.`]];
 };

@@ -24,7 +24,8 @@ const ADD_SIGN=(plus)=>plus?'+':'−';
    Das Ergebnis ist nie 0 und nie genau ein Ganzes. Rückgabe {a,c,b,plus,res} */
 function addNums(R,level,plus,o){
   o=o||{};
-  const pool=o.pool||ADD_POOL[level];
+  const pool=o.pool||(o.step!=null?addStepPool(level,o.step):ADD_POOL[level]);
+  const maxN=o.over?0:(o.maxN||(level===1&&addStage(o.step)===0?4:0)); /* die ersten Aufgaben in Leicht: kleine Zähler (höchstens 4) */
   for(let i=0;i<600;i++){
     const b=R.pick(pool);
     if(b<4)continue;
@@ -37,6 +38,7 @@ function addNums(R,level,plus,o){
     const n=plus?a+c:a-c;
     if(n<1||n%b===0||a<1||c<1)continue;
     if(plus&&o.over!==true&&a+c>=b)continue;
+    if(maxN&&(a>maxN||c>maxN))continue;
     if(o.red!=null&&(!isFullyReduced(n,b))!==o.red)continue;
     return {a,c,b,plus,res:[n,b]};
   }
@@ -49,6 +51,28 @@ const addPicKinds=(id,lvl)=>Array.from(new Set(ADD_PLAN[id][lvl]));
 const addMidOpt=(t)=>t.level===1?{mid:ADD_SIGN(t.plus)}:{};
 const addMidArg=(t,ct)=>{ct=ct||t;return t.level===1?{a:ct.a,c:ct.c,b:ct.b,plus:ct.plus}:null;};
 
+/* ---------- Steigerung in der Runde ----------
+   step = Platz der Aufgabe in der Runde (0 = erste). Stufe 0 (Aufgabe 1 und 2): kleine Nenner, in Leicht auch kleine Zähler, Bilder mit wenigen Feldern in ein bis zwei Reihen.
+   Stufe 1 (Aufgabe 3 und 4): mittlere Nenner. Stufe 2 (ab Aufgabe 5): der ganze Zahlenraum, Felder auch verstreut.
+   Kürzen: In jeder Runde lässt sich etwa die Hälfte der Ergebnisse kürzen (addRedPlan), in gemischter Reihenfolge. */
+const addStage=(step)=>step==null?2:step<2?0:step<4?1:2;
+const ADD_STEP_POOL={1:[[4,5,6,8],[5,6,8,9,10,12],ADD_POOL[1]],2:[[10,12,15,16,18,20,24],[12,15,16,18,20,24,25,30,36,40],ADD_POOL[2]]};
+const ADD_STEP_PIC=[[4,5,6,8],[6,8,9,10,12],ADD_POOL_PIC];
+const addStepPool=(level,step)=>ADD_STEP_POOL[level][addStage(step)];
+const addPicPool=(step)=>ADD_STEP_PIC[addStage(step)];
+/* Arten ohne Ergebnis zum Kürzen (Lücke, offene Aufgaben) */
+const ADD_NORES=['luecke','drei','finde'];
+/* Für die Arten einer Runde: an jeder Stelle mit Ergebnis true (kürzbar) oder false, etwa halb und halb, gemischt; sonst null */
+function addRedPlan(kinds){
+  const idx=kinds.map((k,i)=>ADD_NORES.includes(k)?-1:i).filter(i=>i>=0),n=idx.length;
+  const yes=Math.floor(n/2)+(n%2&&RNG.chance(0.5)?1:0);
+  const vals=RNG.shuffle(idx.map((_,j)=>j<yes)),out=kinds.map(()=>null);
+  idx.forEach((i,j)=>{out[i]=vals[j];});
+  return out;
+}
+const addRed=(R,ctx)=>ctx&&typeof ctx.red==='boolean'?ctx.red:R.chance(0.5);
+const addStep=(ctx)=>ctx&&ctx.step!=null?ctx.step:null;
+
 /* ---------- Rundenplan ---------- */
 const ADD_PLAN={
   R01:{1:['bild','plus','geschichte','bild','plus'],2:['plus','geschichte','plus','geschichte','plus']},
@@ -60,7 +84,9 @@ const ADD_PLAN={
 function addCtx(id){
   return (round,level)=>{
     if(!Array.isArray(round.add)||round.add.length!==TASKS[id].size)round.add=RNG.shuffle(ADD_PLAN[id][level]);
-    return {kind:round.add[Math.min(round.results.length,round.add.length-1)]};
+    if(!Array.isArray(round.red)||round.red.length!==round.add.length)round.red=addRedPlan(round.add);
+    const i=Math.min(round.results.length,round.add.length-1);
+    return {kind:round.add[i],step:i,red:round.red[i]};
   };
 }
 
@@ -101,7 +127,7 @@ function addStoryTask(R,level,type,kind,o){
   o=o||{};
   const ids=Object.keys(ADD_STORIES).filter(k=>(o.op==null||ADD_STORIES[k].plus===(o.op==='plus'))&&(!o.pic||ADD_STORIES[k].pic!==false)),fav=ids.filter(k=>k==='kuchen'||k==='pizzaEnde');
   const id=fav.length&&R.chance(0.5)?R.pick(fav):R.pick(ids),S=ADD_STORIES[id];
-  const r=addNums(R,level,S.plus,{over:S.big&&level===2&&R.chance(S.plus?0.35:0.25),red:R.chance(0.5)});
+  const r=addNums(R,level,S.plus,{over:S.big&&level===2&&R.chance(S.plus?0.35:0.25),red:o.red!=null?o.red:R.chance(0.5),step:o.step,pool:o.pic&&level===1?addPicPool(o.step):null});
   return Object.assign({type,level,kind,story:id,who:addWho(R)},r,{avoid:addAvoid(r)});
 }
 /* Geschichte zu einer Aufgabe wählen (oder null): die Geschichte muss zur Rechenart und zur Größe passen */
@@ -139,9 +165,9 @@ const addPlusOf=(id)=>id==='R01'||id==='R02';
 const addRightText=(t)=>t.plus?'Richtig! Du hast beide Anteile addiert. Der Nenner bleibt gleich.':'Richtig! Du hast den zweiten Anteil subtrahiert. Der Nenner bleibt gleich.';
 
 /* Ein Bild mit zwei Anteilen p1, p2 (Nenner b): Leicht Summe unter einem Ganzen, Knifflig auch darüber (R05 „Ein Bild, mehrere Aufgaben“) */
-function addDrei(R,level){
+function addDrei(R,level,step){
   for(let i=0;i<300;i++){
-    const b=R.pick(level===1?ADD_POOL_PIC:[12,15,16,20,24,40,50,60,100]);
+    const b=R.pick(level===1?(step!=null?addPicPool(step):ADD_POOL_PIC):[12,15,16,20,24,40,50,60,100]);
     const over=level===2&&R.chance(0.3);
     const p1=R.int(1,b-1),p2=over?R.int(b-p1+1,b-1):R.int(1,Math.max(1,b-1-p1));
     if(p1===p2||p2<1||p2>b-1)continue;
@@ -177,9 +203,8 @@ function addDreiJudge(t,d,i){
 }
 /* Stufe 1 von „bild“: die Brüche am Bild ablesen. plus: Muster 1 und Muster 2 (Reihenfolge egal), minus: erst alles Gefärbte, dann das Durchgekreuzte */
 function addReadCheck(t,d){
-  const u=getFrac(d,'u'),v=getFrac(d,'v'),op=d.op,fix=d.s1===true?' Tippe oben auf „ändern“.':'';
-  if(!u||!v||(op!=='+'&&op!=='−'))return invalid('Trage beide Brüche ein und wähle plus oder minus.');
-  if((op==='+')!==t.plus)return wrong('andereRechnung',(t.plus?'Hier werden zwei Anteile zusammengefügt. Das ist plus.':'Hier werden Felder durchgekreuzt, also weggenommen. Das ist minus.')+fix,{op:false});
+  const u=getFrac(d,'u'),v=getFrac(d,'v'),fix=d.s1===true?' Tippe oben auf „ändern“.':''; /* das Rechenzeichen ist fest (Station plus oder minus) */
+  if(!u||!v)return invalid('Trage beide Brüche ein.');
   if(u.d!==t.b||v.d!==t.b){
     const m={};
     if(u.d!==t.b)m['u.d']=false;
@@ -197,14 +222,14 @@ function addBildTask(id,meta){
   const plusSt=addPlusOf(id);
   return Object.assign({area:'Rechnen',size:5,ctx:addCtx(id),planKey:'add',layoutKinds:(lvl)=>addPicKinds(id,lvl)},meta,{
     gen(level,R,ctx){
-      const kind=(ctx&&ctx.kind)||'bild';
-      if(kind==='geschichte')return addStoryTask(R,level,id,kind,{op:plusSt?'plus':'minus',pic:true});
+      const kind=(ctx&&ctx.kind)||'bild',step=addStep(ctx),red=addRed(R,ctx);
+      if(kind==='geschichte')return addStoryTask(R,level,id,kind,{op:plusSt?'plus':'minus',pic:true,step,red});
       if(kind==='bild'){
-        /* wie LB S. 33 Nr. 5: ein Raster mit zwei Anteilen (oder einem Anteil mit Kreuzen), die Felder liegen manchmal verstreut */
-        const r=addNums(R,1,plusSt,{pool:ADD_POOL_PIC,red:R.chance(0.5)});
-        return Object.assign({type:id,level,kind},r,{scatter:R.chance(0.4),seed:R.int(1,9999),avoid:addAvoid(r)});
+        /* wie LB S. 33 Nr. 5: ein Raster mit zwei Anteilen (oder einem Anteil mit Kreuzen); verstreute Felder erst am Ende der Runde */
+        const r=addNums(R,1,plusSt,{pool:addPicPool(step),red,step});
+        return Object.assign({type:id,level,kind},r,{scatter:addStage(step)===2&&R.chance(0.5),seed:R.int(1,9999),avoid:addAvoid(r)});
       }
-      const r=addNums(R,level,plusSt,{over:level===2&&R.chance(plusSt?0.35:0.25),red:R.chance(0.5)});
+      const r=addNums(R,level,plusSt,{over:level===2&&R.chance(plusSt?0.35:0.25),red,step,pool:level===1?addPicPool(step):null});
       return Object.assign({type:id,level,kind},r,{avoid:addAvoid(r)});
     },
     prompt(t,h){
@@ -218,7 +243,7 @@ function addBildTask(id,meta){
         addPicBox(view,host,()=>addTaskFigure(t),true);
         const stg=twoStage(view,host,{isDone:()=>d.s1===true,summary:()=>addReadText(d)});
         stg.box1.append(el('p',null,strong('1. Lies die Aufgabe am Bild ab.')));
-        addReadStage(view,stg.box1,()=>stg.advance());
+        addReadStage(view,stg.box1,()=>stg.advance(),ADD_SIGN(t.plus));
         stg.box2.append(el('p',null,strong('2. Rechne aus.')));
         addResult(view,stg.box2,addMidOpt(t));
         stg.upd();
@@ -247,9 +272,9 @@ function addBildTask(id,meta){
 /* ---------- Familie „rechnen“: R02 Addieren und rechnen, R04 Subtrahieren und rechnen ----------
    Arten: plus oder minus, geschichte (Kuchen, Pizza), ueber1 (Ergebnis über 1 beziehungsweise Anfang über 1), luecke (eine Zahl fehlt) */
 /* Lücke: p1 ± p2 = p3 (Zähler, Nenner b für alle drei), eine Stelle fehlt: blank 0 (erster Zähler) oder 1 (zweiter Zähler); plus: Rechenart fest (true/false) oder null = zufällig */
-function addLuecke(R,level,plusFix){
+function addLuecke(R,level,plusFix,step){
   for(let i=0;i<400;i++){
-    const b=R.pick(level===1?ADD_POOL[1].filter(x=>x<=16):ADD_POOL[2]);
+    const b=R.pick(step!=null?addStepPool(level,step).filter(x=>level===2||x<=16):level===1?ADD_POOL[1].filter(x=>x<=16):ADD_POOL[2]);
     const plus=plusFix==null?R.chance(0.5):plusFix,blank=R.int(0,1);
     let p1,p2,p3;
     if(plus){p1=R.int(1,b-2);p2=R.int(1,b-1-p1);p3=p1+p2;}
@@ -263,13 +288,13 @@ function addRechnenTask(id,meta){
   const plusSt=addPlusOf(id);
   return Object.assign({area:'Rechnen',size:5,ctx:addCtx(id),planKey:'add',layoutKinds:(lvl)=>addPicKinds(id,lvl)},meta,{
     gen(level,R,ctx){
-      const kind=(ctx&&ctx.kind)||(plusSt?'plus':'minus');
+      const kind=(ctx&&ctx.kind)||(plusSt?'plus':'minus'),step=addStep(ctx),red=addRed(R,ctx);
       if(kind==='luecke'){
-        const r=addLuecke(R,level,plusSt);
+        const r=addLuecke(R,level,plusSt,step);
         return {type:id,level,kind,b:r.b,plus:r.plus,blank:r.blank,p:r.p,x:r.x,avoid:[redKey(r.p[0],r.b),redKey(r.p[1],r.b)]};
       }
-      if(kind==='geschichte')return addStoryTask(R,level,id,kind,{op:plusSt?'plus':'minus'});
-      const r=addNums(R,level,plusSt,{over:kind==='ueber1',red:R.chance(0.5)});
+      if(kind==='geschichte')return addStoryTask(R,level,id,kind,{op:plusSt?'plus':'minus',step,red});
+      const r=addNums(R,level,plusSt,{over:kind==='ueber1',red,step});
       const t=Object.assign({type:id,level,kind},r,{avoid:addAvoid(r)});
       t.who=addWho(R);
       t.story=addPickStory(R,t,level===1?0.4:0.45);
@@ -322,12 +347,13 @@ function addRechnenTask(id,meta){
 const ADD_ERR=['nennerAddiert','andereRechnung','rechenfehler'];
 const ADD_ERR_TEXT={nennerAddiert:'Der Nenner wurde mitgerechnet.',andereRechnung:'Plus und minus wurden verwechselt.',rechenfehler:'Der Zähler wurde falsch gerechnet.'};
 /* Vier Hausaufgaben, eine ist falsch: Zeile {a,c,b,plus,x,y}; richtig ist x/y = Ergebnis mit dem Nenner b */
-function addFehler(R,level){
+/* step: Platz in der Runde (kleinere Zahlen am Anfang) · red: Lässt sich das richtige Ergebnis der falschen Rechnung kürzen? (Kind rechnet es neu) */
+function addFehler(R,level,step,red){
   for(let tries=0;tries<200;tries++){
     const errType=R.pick(ADD_ERR),w=R.int(0,3),calcs=[],seen=new Set();
     let ok=true;
     for(let i=0;i<4;i++){
-      const plus=R.chance(0.5),r=addNums(R,level,plus,{red:i===w?null:R.chance(0.4)});
+      const plus=R.chance(0.5),r=addNums(R,level,plus,{red:i===w?(typeof red==='boolean'?red:null):R.chance(0.4),step});
       const key=r.a+'/'+r.c+'/'+r.b;
       if(seen.has(key)){ok=false;break;}
       seen.add(key);
@@ -368,10 +394,10 @@ function addCalcTiles(view,host,calcs,onPick){
   return grid;
 }
 /* „Finde Brüche mit …“: summe  ▢/b + ▢/b = T/b · differenz  ▢/b − ▢/b = D/b (beide Brüche kleiner als 1) */
-function addFinde(R,level){
+function addFinde(R,level,step){
   const need=level===1?2:3;
   for(let i=0;i<400;i++){
-    const b=R.pick(level===1?ADD_POOL[1].filter(x=>x>=8&&x<=24):ADD_POOL[2]),mode=R.chance(0.5)?'summe':'differenz';
+    const b=R.pick(level===1?ADD_POOL[1].filter(x=>x>=8&&x<=(addStage(step)===0?12:24)):ADD_POOL[2]),mode=R.chance(0.5)?'summe':'differenz';
     let T;
     if(mode==='summe'){
       const lo=level===1?5:7,hi=Math.min(b,level===1?12:40);
@@ -406,14 +432,14 @@ function addFindeJudge(t,d,i){
 TASKS.R05={area:'Rechnen',name:'Plus oder minus?',desc:'Erkenne die Rechenart, finde Fehler und erfinde eigene Aufgaben.',notes:['M17','M18'],size:5,
   ctx:addCtx('R05'),planKey:'add',layoutKinds:(lvl)=>addPicKinds('R05',lvl),
   gen(level,R,ctx){
-    const kind=(ctx&&ctx.kind)||'fehler';
-    if(kind==='art')return addStoryTask(R,level,'R05',kind,{});
+    const kind=(ctx&&ctx.kind)||'fehler',step=addStep(ctx),red=addRed(R,ctx);
+    if(kind==='art')return addStoryTask(R,level,'R05',kind,{step,red});
     if(kind==='drei'){
-      const r=addDrei(R,level);
+      const r=addDrei(R,level,step);
       return {type:'R05',level,kind,b:r.b,p1:r.p1,p2:r.p2,need:ADD_NEED[level],avoid:[redKey(r.p1,r.b),redKey(r.p2,r.b)]};
     }
-    if(kind==='finde'){const r=addFinde(R,level);return {type:'R05',level,kind,b:r.b,mode:r.mode,T:r.T,need:r.need,avoid:[redKey(r.T,r.b)]};}
-    const r=addFehler(R,level),w=r.calcs[r.wrong];
+    if(kind==='finde'){const r=addFinde(R,level,step);return {type:'R05',level,kind,b:r.b,mode:r.mode,T:r.T,need:r.need,avoid:[redKey(r.T,r.b)]};}
+    const r=addFehler(R,level,step,red),w=r.calcs[r.wrong];
     return {type:'R05',level,kind,calcs:r.calcs,wrong:r.wrong,errType:r.errType,b:w.b,avoid:[redKey(w.a,w.b),redKey(w.c,w.b)]};
   },
   prompt(t,h){
@@ -552,12 +578,15 @@ const RA_SLOTS={
 };
 TASKS.RA=proxyOf({area:'Rechnen',name:'Abschlusscheck',desc:RA_SLOTS[1].length+' Aufgaben aus allen Stationen zeigen, was du kannst – am Ende des Lernpfads.',notes:['M17','M18'],size:RA_SLOTS[1].length,
   finalTap:0,finalLabel:'Aufgaben richtig',
-  ctx(round){
+  ctx(round,level){
+    const slots=RA_SLOTS[level]||RA_SLOTS[1];
     if(!Array.isArray(round.plan)||round.plan.length!==RA_SLOTS[1].length)round.plan=RNG.shuffle([...RA_SLOTS[1].keys()]);
-    return {slot:round.plan[Math.min(round.results.length,round.plan.length-1)]};
+    if(!Array.isArray(round.red)||round.red.length!==round.plan.length)round.red=addRedPlan(round.plan.map(i=>slots[i][1]));
+    const j=Math.min(round.results.length,round.plan.length-1);
+    return {slot:round.plan[j],step:j<3?0:j<7?2:4,red:round.red[j]}; /* 10 Aufgaben: 1–3 kleine Zahlen, 4–7 mittlere, 8–10 der ganze Zahlenraum */
   },
   gen(level,R,ctx){
     const slots=RA_SLOTS[level]||RA_SLOTS[1],i=ctx&&ctx.slot!=null?ctx.slot:0,[id,kind]=slots[i];
-    return TASKS[id].gen(level,R,{kind});
+    return TASKS[id].gen(level,R,{kind,step:ctx&&ctx.step!=null?ctx.step:null,red:ctx?ctx.red:null});
   }
 });
