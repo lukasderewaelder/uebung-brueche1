@@ -9,7 +9,7 @@ const TEAM={
   Malik:{role:'rechnet schnell und macht typische Fehler',shirt:'var(--erw)',hair:'short'},
   Juna:{role:'findet Regeln und Abkürzungen',shirt:'var(--kue)',hair:'long'},
   Ida:{role:'denkt in Bildern und schätzt',shirt:'var(--ok)',hair:'bun'},
-  Theo:{role:'prüft und kontrolliert',shirt:'var(--amber-fill)',hair:'curl'}
+  Paul:{role:'prüft und kontrolliert',shirt:'var(--amber-fill)',hair:'curl'}
 };
 /* Figur als Bild (img/team/<name>-<pose>.webp, freigestellt). Posen: wave, think, cheer. size = Breite des Rahmens, die Figur ist höher als breit. */
 function teamAvatar(name,size,pose){
@@ -63,7 +63,7 @@ function checkBadges(){
   return fresh;
 }
 function badgeCard(b){
-  const fig=['Ida','Juna','Theo','Malik'][BADGE_GROUPS.indexOf(b.grp)%4];
+  const fig=['Ida','Juna','Paul','Malik'][BADGE_GROUPS.indexOf(b.grp)%4];
   const m=modal([el('div',{class:'badgebig'+(animOn()?' pop':'')},badgeNode(b)),el('h2',null,'Neues Abzeichen'),el('p',{class:'rankname'},b.label),
     speechBubble(fig,b.plus?'Stark geknobelt!':'Diese Gruppe hast du geschafft!','cheer'),
     el('button',{type:'button',class:'btn primary',onclick:()=>m.remove()},'Weiter')]);
