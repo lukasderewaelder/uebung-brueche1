@@ -1517,3 +1517,10 @@ button.gloss:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 .mapgo{margin-bottom:.75rem}
 @media (min-width:1000px){.lmap{max-width:56rem;margin:0 auto}}
 .etnode .segn{display:none}
+/* P22 Rechenweg verdichtet: flachere Felder, „Kürzen geht nicht“ in der Zeile */
+.hnline{gap:.25rem .375rem;margin:.25rem 0}
+.hnline .frac.inp input,.hnline input.intin{height:2.125rem}
+.hnline .btn.kn{min-height:2.5rem;padding:0 .625rem;font-size:max(14px,.85rem)}
+.hnline .hnmixed input{width:2.25rem;height:2.125rem}
+@media (max-width:420px){.hnline .frac.inp input,.hnline input.intin{width:2.5rem}.hnline.hn3 .frac.inp input{width:2.125rem}}
+.introh .introsub{font-weight:400;font-size:.8em;color:var(--chalk-dim)}

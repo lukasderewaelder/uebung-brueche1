@@ -695,7 +695,7 @@ function introFigNode(spec){
   const box=el('div',{class:'introfigs'+(circ?' circ':'')});
   f.rows.forEach(r=>{
     const rest=r.rest?Array.from({length:r.d-r.n},(_,i)=>r.n+i):null;
-    const svg=drawMode(f.mode,r.n,r.d,{maxW:circ?130:460,fill:r.fill,rest,half:r.half,label:r.n+' von '+r.d+' Teilen gefärbt'});
+    const svg=drawMode(f.mode,r.n,r.d,{maxW:circ?130:f.mode==='grid'?150:460,fill:r.fill,rest,half:r.half,label:r.n+' von '+r.d+' Teilen gefärbt'});
     box.append(el('div',{class:'fig'+(r.acc?' '+r.acc:'')},...(circ?[svg,frac(r.n,r.d)]:[frac(r.n,r.d),svg])));
   });
   return box;
@@ -859,13 +859,12 @@ function renderIntro(id){
     drawBar();
     const ruler=el('div',{class:'ruler introruler','aria-hidden':'true'});
     for(let k=0;k<total;k++)ruler.append(el('i',{class:'tk'+(k<i?' f':k===i?' cur':'')}));
-    const h=el('h2',{class:'introh',tabindex:'-1'},s.h);
+    const h=el('h2',{class:'introh',tabindex:'-1'},s.h,s.sub?el('span',{class:'introsub'},' · '+s.sub):null); /* Unterzeile in derselben Zeile: spart Höhe */
     card.replaceChildren(...[ruler,
       el('p',{class:'introstep'},'Karte '+(i+1)+' von '+total),
       s.probe&&typeof speechBubble==='function'?speechBubble('Ida','Fehler sind erlaubt!'):null, /* P21: Sprechblase statt Kleingedrucktem */
       known?el('p',{class:'introknown'},icon('haken'),'Das konntest du schon im Eingangstest.'):null,
       h,
-      s.sub?el('p',{class:'introsub'},s.sub):null,
       el('div',{class:'introtxt'},s.say.map(t=>el('p',null,introRich(t)))),
       s.lab?el('div',{class:'introstage'},labFigure({mode:'strip',base:s.lab.base.slice(),cur:s.lab.cur.slice(),last:{op:s.lab.op,k:s.lab.k}})):null,
       s.fig?introFigNode(s.fig):null,

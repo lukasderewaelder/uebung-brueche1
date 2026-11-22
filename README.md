@@ -1,5 +1,21 @@
 # Bruchwerkstatt
 
+## Umbau November 2026 (Umbaukonzept P1–P26)
+
+Dieser Abschnitt gilt vor den Einzelheiten weiter unten; wo unten noch „Thema“, „Üben“, „Merkkasten“, 15 Fragen im Eingangstest oder „Legende“ steht, ist der Stand davor beschrieben.
+
+- **Etappen und zwei Stränge**: F Brüche verstehen → E Erweitern und Kürzen → Strang Ordnen (Z Zahlenstrahl → W Vergleichen) oder Strang Rechnen (R gleiche Nenner → H verschiedene Nenner). Geplant: Dezimalzahlen (D01–D03), gemischte Zahlen, Multiplizieren und Dividieren. Empfehlung statt Sperre (`recommends` als Liste).
+- **Ein Takt für alle Etappen** (`etappe()` und `TAKT` in `js/modules.js`): Entdecken · Verstehen · Üben · Anwenden · Knobeln · Abschlusscheck (15 Aufgaben). **Ebenen** `lvl`: Kern (zählt für die Urkunde, weiche Sperre mit „Trotzdem starten“), Plus (immer offen), Basis/Grundlagen (nach dem Eingangstest bei „üben“ oder über „Ich möchte wiederholen“, auch Verweise in andere Etappen).
+- **Etappe F** (`js/verstehen.js`, `js/verstehen-extra.js`): Anteile-Labor FLAB, F01–F06 Kern, F07–F08 Plus, Eingangstest FQ, Abschlusscheck FA, Merkzettel M23–M25. Leitdarstellung Rechteck → Streifen → Zahlenstrahl; Kreise erst in Knifflig (`FIG_ORDER`).
+- **Bestehen durch Ansammeln** (`accAdd` in `js/path.js`): Station geschafft nach 5 richtigen Aufgaben über beliebig viele Runden, davon 2 ohne Tipp; Kästchenreihe zeigt den Stand. Abschlusschecks wie bisher (12 von 15).
+- **Eingangstests** 10 Fragen (5 Fähigkeiten à 2, erste Hälfte Leicht), nur „Weiter“, keine Rückmeldung je Frage, Auswertung am Ende mit „Das kannst du schon / Fast sicher / Hier übst du“ und aufklappbaren Lösungen.
+- **Ungleichnamig (H)**: H03 Am Bild (plus, minus, ergänzen; einfache Brüche, Raster höchstens 12 Felder) vor H02 Hauptnenner; H05 aufgelöst. Rechenweg als **eine Gleichungszeile** ohne zweiten „Weiter“-Knopf (`addResultH`).
+- **Bedienung**: unten immer Tipp | Überspringen | Hauptknopf, Merkzettel oben; ausgewählte Antworten blau, „Weiß ich nicht“ grau; Hinweise in normaler Schrift ab 14 px; Kürzel wie E3 oder H4 überall; Reiter **Lernen · Wiederholen · Spiele · Ich**.
+- **Erklärungen**: höchstens 2 Karten („So geht’s“, „Darauf achten“), dazwischen die Probe; die ausführliche Fassung steht im Merkzettel unter „Ausführlich nachlesen“ (`INTRO_LONG`). Antipp-Lexikon für Fachwörter, Wörterliste je Etappe (höchstens 3).
+- **Wiederholen**: „Deine Wiederholung heute“ mit 5 Aufgaben aus geschafften Stationen (`js/wiederholen.js`).
+- **Motivation** (`js/werkstatt.js`): Werkstatt-Team (Malik, Juna, Ida, Theo) mit Sprechblasen, Stufen Bronze bis Kristall, Abzeichen je Gruppe und Plus-Abzeichen, Wochenziel „3 von 5 Schultagen“, Kennfarbe je Etappe, abschaltbare Animationen, Lernlandkarte als Startseite.
+- Prüfen: `runSelfTests()`, `await runFracScan(1)`, `await runWordScan(1)` (verbotene Oberflächenwörter), `await runLayoutTests(w,h)`.
+
 Interaktive Übungsumgebung ohne Build: `index.html` im Browser öffnen (kein Server, keine Bibliotheken, kein Internet nötig; auch per GitHub Pages). Gedacht für Schülerinnen und Schüler ab Klasse 6, vor allem am Handy.
 
 - 52 Übungen (16 zu Erweitern und Kürzen, 8 zu Brüche am Zahlenstrahl, 10 zu Brüche vergleichen, 5 zu gleichnamigen und 13 zu ungleichnamigen Brüchen addieren und subtrahieren), drei Bruchlabore und 4 Spiele (Bruch-Memory, Bruch-Tresor, Bruch-Duell, Rechenschlange), je Niveau „Leicht“ und „Knifflig“

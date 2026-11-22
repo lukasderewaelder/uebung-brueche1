@@ -195,8 +195,9 @@ function addResultH(view,host,t,o){
   view.inputs.kn=kn;
   rf.setAttribute('aria-label','Ergebnis');kf.setAttribute('aria-label','gekürzt');
   line.append(grp(op('='),rf),grp(op('='),el('span',{class:'hnk'},kf,el('small',{class:'hnlab'},'gekürzt'))));
-  host.append(line,el('div',{class:'hnknrow'},kn));
-  if(o.mixed)host.append(hnMixRow(view));
+  if(o.mixed)line.append(grp(op('='),el('span',{class:'hnk'},hnMixedInput(view),el('small',{class:'hnlab'},'gemischt (freiwillig)'))));
+  line.append(grp(kn));
+  host.append(line);
   return host;
 }
 const hnMixRow=(view)=>el('div',{class:'arow hnmixrow'},el('span',{class:'alab'},'gemischte Zahl (freiwillig)'),hnMixedInput(view));

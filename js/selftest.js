@@ -2513,7 +2513,7 @@ async function runFracScan(samples=3,ids,opts={}){
   const cw=f.contentWindow;
   cw.eval(`persist=function(){};
     window.__hits=new Map();window.__words=${opts.words?'true':'false'};
-    window.__scan=(tag)=>{const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode())){const p=n.parentElement;if(!p||p.closest('script,style'))continue;const t=n.nodeValue,m=window.__words?/\\b(Merkzettel|Merkzettel|Bauteile?n?|Bausteine?n?|Thema|Themen|Kurzfragen|Check)\\b/.exec(t):/\\d\\s*\\/\\s*\\d/.exec(t);if(m){const fr='…'+t.slice(Math.max(0,m.index-24),m.index+18).replace(/\\s+/g,' ')+'…';if(!window.__hits.has(fr))window.__hits.set(fr,tag);}}};
+    window.__scan=(tag)=>{const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode())){const p=n.parentElement;if(!p||p.closest('script,style'))continue;const t=n.nodeValue,m=window.__words?/\\b(Merk[k]asten|Merk[k]ästen|Bauteile?n?|Bausteine?n?|Thema|Themen|Kurzfragen|Check)\\b/.exec(t):/\\d\\s*\\/\\s*\\d/.exec(t);if(m){const fr='…'+t.slice(Math.max(0,m.index-24),m.index+18).replace(/\\s+/g,' ')+'…';if(!window.__hits.has(fr))window.__hits.set(fr,tag);}}};
     window.__btn=(t)=>[...document.querySelectorAll('.actionbar button, .card button, .modal button')].find(b=>b.textContent.trim().startsWith(t)&&!b.disabled);
     S.modus={veraendern:'frei',zahlenstrahl:'frei',vergleichen:'frei',addsub:'frei'};S.unlocked={veraendern:true,zahlenstrahl:true,vergleichen:true,addsub:true};Object.keys(INTRO).forEach(k=>S.intro[k]=true);`);
   const errs=[];
