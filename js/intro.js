@@ -862,7 +862,7 @@ function renderIntro(id){
     const h=el('h2',{class:'introh',tabindex:'-1'},s.h,s.sub?el('span',{class:'introsub'},' · '+s.sub):null); /* Unterzeile in derselben Zeile: spart Höhe */
     card.replaceChildren(...[ruler,
       el('p',{class:'introstep'},'Karte '+(i+1)+' von '+total),
-      s.probe&&typeof speechBubble==='function'?speechBubble('Ida','Fehler sind erlaubt!'):null, /* P21: Sprechblase statt Kleingedrucktem */
+      s.probe&&typeof speechBubble==='function'?speechBubble('Ida','Fehler sind erlaubt!','think'):null, /* P21: Sprechblase statt Kleingedrucktem */
       known?el('p',{class:'introknown'},icon('haken'),'Das konntest du schon im Eingangstest.'):null,
       h,
       el('div',{class:'introtxt'},s.say.map(t=>el('p',null,introRich(t)))),

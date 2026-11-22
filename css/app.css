@@ -1474,7 +1474,7 @@ button.gloss:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 [data-et="F"]{--et:var(--et-F)}[data-et="E"]{--et:var(--et-E)}[data-et="Z"]{--et:var(--et-Z)}[data-et="W"]{--et:var(--et-W)}[data-et="R"]{--et:var(--et-R)}[data-et="H"]{--et:var(--et-H)}
 .home[data-et] h1{border-bottom:4px solid var(--et);padding-bottom:.25rem}
 .home[data-et] .pfadline .segn i.on{background:var(--et)}
-.avatar{color:var(--ink);flex:none}
+.avatar{color:var(--ink);flex:none;display:block;object-fit:contain;height:auto}
 .bubble{display:flex;align-items:flex-start;gap:.5rem;margin:.375rem 0;padding:.5rem .625rem;background:var(--paper);color:var(--ink);border:2px solid var(--ink);border-radius:14px;position:relative}
 .bubble .bav{flex:none}
 .bubble .btx{margin:0;font-size:max(14px,.95rem);flex:1}

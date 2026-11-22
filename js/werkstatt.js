@@ -11,23 +11,16 @@ const TEAM={
   Ida:{role:'denkt in Bildern und schätzt',shirt:'var(--ok)',hair:'bun'},
   Theo:{role:'prüft und kontrolliert',shirt:'var(--amber-fill)',hair:'curl'}
 };
-/* kleine Figur als SVG: Kopf, Haare, Pulli in der Farbe der Figur */
-function teamAvatar(name,size){
-  const T=TEAM[name]||TEAM.Ida,s=size||44;
-  const svg=S_('svg',{viewBox:'0 0 48 48',class:'avatar',width:s,height:s,role:'img','aria-label':name});
-  svg.append(S_('path',{d:'M8 47c1-10 7-15 16-15s15 5 16 15z',fill:T.shirt,stroke:'currentColor','stroke-width':'2'}));
-  svg.append(S_('circle',{cx:24,cy:19,r:11,fill:'var(--paper)',stroke:'currentColor','stroke-width':'2'}));
-  const hair={short:'M13 17c1-7 6-10 11-10s10 3 11 10c-4-3-8-4-11-4s-7 1-11 4z',long:'M12 21c-1-9 5-14 12-14s13 5 12 14c-2-5-6-8-12-8s-10 3-12 8zM12 21v10M36 21v10',
-    bun:'M13 17c1-7 6-10 11-10s10 3 11 10c-4-3-8-4-11-4s-7 1-11 4zM24 2a4 4 0 1 1 0 8a4 4 0 1 1 0-8',curl:'M13 16c0-5 5-9 11-9s11 4 11 9c-2-1-3-3-5-2c-1-2-3-2-4-1c-1-2-3-2-4 0c-2-2-4-1-5 1c-2-1-3 0-4 2z'}[T.hair];
-  svg.append(S_('path',{d:hair,fill:'currentColor',stroke:'currentColor','stroke-width':'1.5'}));
-  svg.append(S_('circle',{cx:20,cy:20,r:1.4,fill:'currentColor'}),S_('circle',{cx:28,cy:20,r:1.4,fill:'currentColor'}));
-  svg.append(S_('path',{d:'M20 25q4 3 8 0',fill:'none',stroke:'currentColor','stroke-width':'1.6','stroke-linecap':'round'}));
-  return svg;
+/* Figur als Bild (img/team/<name>-<pose>.webp, freigestellt). Posen: wave, think, cheer. size = Breite des Rahmens, die Figur ist höher als breit. */
+function teamAvatar(name,size,pose){
+  const T=TEAM[name]?name:'Ida',s=size||44,p=['wave','think','cheer'].includes(pose)?pose:'wave';
+  return el('img',{class:'avatar',src:'img/team/'+T.toLowerCase()+'-'+p+'.webp',alt:'',width:Math.round(s*1.3),height:Math.round(s*1.3*184/139),loading:'lazy',decoding:'async','data-name':name});
 }
+
 /* P21 Sprechblase einer Figur: höchstens eine gleichzeitig, wegklickbar */
-function speechBubble(name,text){
+function speechBubble(name,text,pose){
   document.querySelectorAll('.bubble').forEach(b=>b.remove());
-  const b=el('div',{class:'bubble',role:'note'},el('span',{class:'bav','aria-hidden':'true'},teamAvatar(name,40)),
+  const b=el('div',{class:'bubble',role:'note'},el('span',{class:'bav','aria-hidden':'true'},teamAvatar(name,30,pose)),
     el('p',{class:'btx'},el('b',null,name+': '),text),
     el('button',{type:'button',class:'bclose','aria-label':'Sprechblase schließen',onclick:()=>b.remove()},'×'));
   return b;
@@ -72,7 +65,7 @@ function checkBadges(){
 function badgeCard(b){
   const fig=['Ida','Juna','Theo','Malik'][BADGE_GROUPS.indexOf(b.grp)%4];
   const m=modal([el('div',{class:'badgebig'+(animOn()?' pop':'')},badgeNode(b)),el('h2',null,'Neues Abzeichen'),el('p',{class:'rankname'},b.label),
-    speechBubble(fig,b.plus?'Stark geknobelt!':'Diese Gruppe hast du geschafft!'),
+    speechBubble(fig,b.plus?'Stark geknobelt!':'Diese Gruppe hast du geschafft!','cheer'),
     el('button',{type:'button',class:'btn primary',onclick:()=>m.remove()},'Weiter')]);
 }
 
@@ -115,7 +108,7 @@ function mapNode(m,focus){
   card.prepend(el('span',{class:'etl','aria-hidden':'true'},m.letter||''));
   card.append(stationDots(m),el('span',{class:'badgerow'},...badgesOf(m).filter(b=>b.have).map(b=>badgeNode(b,true))));
   const wrap=el('div',{class:'etwrap'+(m===focus?' here':'')},card);
-  if(m===focus)wrap.append(el('span',{class:'standort','aria-hidden':'true'},teamAvatar('Ida',38),el('small',null,'Du bist hier')));
+  if(m===focus)wrap.append(el('span',{class:'standort','aria-hidden':'true'},teamAvatar('Ida',30,'wave'),el('small',null,'Du bist hier')));
   return wrap;
 }
 function lernenTab(home){

@@ -201,7 +201,7 @@ function roundAward(info){
 function finalCard(modId){
   const mod=moduleById(modId)||activeModules()[0];
   const m=modal([icon('plakette','big'),el('h2',null,'Urkunde'),el('p',{class:'rankname'},'Etappe '+(mod.letter||'')+' geschafft'),el('div',{class:'stampbox'},'Geprüft'),
-    el('p',null,mod.finalText||'Stark!'),typeof speechBubble==='function'?speechBubble('Theo','Geprüft und für gut befunden!'):null,
+    el('p',null,mod.finalText||'Stark!'),typeof speechBubble==='function'?speechBubble('Theo','Geprüft und für gut befunden!','cheer'):null,
     el('button',{type:'button',class:'btn',onclick:()=>{m.remove();go({kind:'home',tab:'pfad',thema:mod.id});}},'Zum Lernpfad')]);
 }
 /* Schema 4: Lernpfad-Felder; Bestandsnutzer behalten ihren Stand (mind. 4 Treffer beim 1. Versuch ⇒ bestanden) */
