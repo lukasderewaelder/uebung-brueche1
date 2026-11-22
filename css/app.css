@@ -1498,9 +1498,19 @@ button.gloss:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 .lmap{display:flex!important;flex-direction:column;gap:.25rem;position:relative}
 .mapstep,.mapfork{position:relative}
 .mapstep::after{content:"";display:block;width:4px;height:1rem;margin:0 auto;background:repeating-linear-gradient(var(--chalk-dim) 0 6px,transparent 6px 10px)}
-.mapfork{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
-.strand{display:flex;flex-direction:column;gap:.5rem;padding:.375rem;border:2px dashed var(--grid-2);border-radius:12px}
-.strandname{margin:0;font-size:14px;color:var(--chalk-dim);text-align:center}
+.mapfork{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;padding-top:1.25rem}
+/* Gabelung: Strich vom Stamm, waagerecht über beide Wege, zwei Stummel nach unten */
+.forkline{position:absolute;left:25%;right:25%;top:0;height:1.25rem;border:4px dotted var(--chalk-dim);border-bottom:0;border-radius:14px 14px 0 0;pointer-events:none}
+.forkline::before{content:"";position:absolute;left:50%;top:-1rem;height:1rem;margin-left:-2px;border-left:4px dotted var(--chalk-dim)}
+.strand{display:flex;flex-direction:column;gap:.75rem;padding:.375rem;border:2px solid color-mix(in srgb,var(--et) 55%,transparent);border-radius:14px;background:color-mix(in srgb,var(--et) 9%,transparent)}
+.strandhead{display:flex;align-items:center;gap:.5rem;padding:.375rem .25rem .125rem}
+.strandico{flex:none;display:grid;place-items:center;width:2.25rem;height:2.25rem;border-radius:50%;background:var(--et);color:#fff}
+.strandico .ic{width:1.35rem;height:1.35rem}
+.strandtx{display:flex;flex-direction:column;min-width:0;line-height:1.2}
+.strandtx b{font-size:max(15px,1rem);color:var(--chalk)}
+.strandtx small{font-size:14px;color:var(--chalk-dim)}
+.strand .etwrap+.etwrap{position:relative}
+.strand .etwrap+.etwrap::before{content:"";position:absolute;left:50%;top:-.75rem;height:.75rem;margin-left:-2px;border-left:4px dotted var(--chalk-dim)}
 .etwrap{position:relative}
 .etnode{width:100%;border-left:8px solid var(--et,var(--chalk))!important;aspect-ratio:auto!important}
 .etnode .etl{position:absolute;top:.375rem;right:.5rem;font:700 1rem var(--font-mono);color:var(--et)}

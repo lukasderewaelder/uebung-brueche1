@@ -89,7 +89,7 @@ function weekCard(){
 
 /* ---------- P2 Lernlandkarte (Reiter „Lernen“) ---------- */
 /* Reihenfolge und Verzweigung: F → E → zwei Stränge (Ordnen: Z → W, Rechnen: R → H) */
-const MAP_LAYOUT={trunk:['verstehen','veraendern'],strands:[{name:'Strang Ordnen',ids:['zahlenstrahl','vergleichen']},{name:'Strang Rechnen',ids:['addsub','addsub2']}]};
+const MAP_LAYOUT={trunk:['verstehen','veraendern'],strands:[{name:'Brüche ordnen',sub:'Zahlenstrahl und Vergleichen',icon:'lineal',et:'Z',ids:['zahlenstrahl','vergleichen']},{name:'Brüche rechnen',sub:'Plus und Minus',icon:'plusminus',et:'R',ids:['addsub','addsub2']}]}; /* zwei Wege nach Etappe E */
 /* die Etappe, bei der es weitergeht: zuerst der Stamm, dann der Strang mit dem meisten Fortschritt */
 function focusModule(){
   const act=activeModules(),open=(m)=>m&&(lernenZustand(m)==='gate'||pfadInfo(m).go1);
@@ -122,9 +122,9 @@ function lernenTab(home){
   }
   const map=el('div',{class:'tgrid lmap',role:'list','aria-label':'Lernlandkarte'});
   MAP_LAYOUT.trunk.forEach(id=>{const m=moduleById(id);if(m&&m.status==='aktiv')map.append(el('div',{class:'mapstep',role:'listitem'},mapNode(m,focus)));});
-  const fork=el('div',{class:'mapfork',role:'listitem'});
+  const fork=el('div',{class:'mapfork',role:'listitem'},el('span',{class:'forkline','aria-hidden':'true'}));
   MAP_LAYOUT.strands.forEach(s=>{
-    const col=el('div',{class:'strand'},el('p',{class:'strandname'},s.name));
+    const col=el('div',{class:'strand',role:'group','aria-label':s.name,'data-et':s.et},el('div',{class:'strandhead'},el('span',{class:'strandico','aria-hidden':'true'},icon(s.icon)),el('span',{class:'strandtx'},el('b',null,s.name),el('small',null,s.sub))));
     s.ids.forEach(id=>{const m=moduleById(id);if(m&&m.status==='aktiv')col.append(mapNode(m,focus));});
     fork.append(col);
   });

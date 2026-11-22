@@ -4,7 +4,7 @@
 
 Dieser Abschnitt gilt vor den Einzelheiten weiter unten; wo unten noch „Thema“, „Üben“, „Merkkasten“, 15 Fragen im Eingangstest oder „Legende“ steht, ist der Stand davor beschrieben.
 
-- **Etappen und zwei Stränge**: F Brüche verstehen → E Erweitern und Kürzen → Strang Ordnen (Z Zahlenstrahl → W Vergleichen) oder Strang Rechnen (R gleiche Nenner → H verschiedene Nenner). Geplant: Dezimalzahlen (D01–D03), gemischte Zahlen, Multiplizieren und Dividieren. Empfehlung statt Sperre (`recommends` als Liste).
+- **Etappen und zwei Wege**: F Brüche verstehen → E Erweitern und Kürzen → Weg „Brüche ordnen“ (Z Zahlenstrahl → W Vergleichen) oder Weg „Brüche rechnen“ (R gleiche Nenner → H verschiedene Nenner). Geplant: Dezimalzahlen (D01–D03), gemischte Zahlen, Multiplizieren und Dividieren. Empfehlung statt Sperre (`recommends` als Liste).
 - **Ein Takt für alle Etappen** (`etappe()` und `TAKT` in `js/modules.js`): Entdecken · Verstehen · Üben · Anwenden · Knobeln · Abschlusscheck (15 Aufgaben). **Ebenen** `lvl`: Kern (zählt für die Urkunde, weiche Sperre mit „Trotzdem starten“), Plus (immer offen), Basis/Grundlagen (nach dem Eingangstest bei „üben“ oder über „Ich möchte wiederholen“, auch Verweise in andere Etappen).
 - **Etappe F** (`js/verstehen.js`, `js/verstehen-extra.js`): Anteile-Labor FLAB, F01–F06 Kern, F07–F08 Plus, Eingangstest FQ, Abschlusscheck FA, Merkzettel M23–M25. Leitdarstellung Rechteck → Streifen → Zahlenstrahl; Kreise erst in Knifflig (`FIG_ORDER`).
 - **Bestehen durch Ansammeln** (`accAdd` in `js/path.js`): Station geschafft nach 5 richtigen Aufgaben über beliebig viele Runden, davon 2 ohne Tipp; Kästchenreihe zeigt den Stand. Abschlusschecks wie bisher (12 von 15).
