@@ -117,11 +117,14 @@ function drawMode(mode,n,d,opts){
 function gridOK(d){const g=gridDims(d);return !!g&&Math.max(g[0],g[1])<=9;}
 /* Darstellung nach Nenner: Streifen und Kreis nur mit kleinen Nennern (bis 12),
    große Nenner nur als Rechteckeinteilung */
-function pickMode(d,R,max){
-  const m=[],lim=max||36;
+/* P5 Leitdarstellung: Rechteck → Streifen → Zahlenstrahl; Kreise nur in Knifflig (level 2) und Plus. Ohne level: wie Knifflig. */
+const FIG_ORDER={1:['grid','strip'],2:['grid','strip','circle']};
+function pickMode(d,R,max,level){
+  const m=[],lim=max||36,ok=FIG_ORDER[level||2];
   if(d<=12){m.push('strip');if(d>=2)m.push('circle');}
   if(d>=4&&d<=lim&&gridOK(d))m.push('grid');
-  return m.length?R.pick(m):null;
+  const f=m.filter(x=>ok.includes(x));
+  return f.length?R.pick(f):null;
 }
 
 

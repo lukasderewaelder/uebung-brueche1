@@ -41,12 +41,9 @@ const INTRO={
       fig:[{n:2,d:3},{n:2,d:6}]},
     {h:'Das Gefärbte kann überall liegen',
       say:['Die gefärbten Teile müssen nicht beieinander liegen.','Auch der Anfang ist egal.','Zähle und vergleiche den Anteil.'],
-      fig:{mode:'circle',rows:[{n:1,d:3,fill:[1]},{n:2,d:6,fill:[1,4]}]}},
+      fig:{mode:'grid',rows:[{n:2,d:4,fill:[1,3]},{n:4,d:8,fill:[0,3,5,6]}]}},
     {h:'So antwortest du',
-      say:['Tippe alle Karten an, die denselben Anteil zeigen.','Oft gibt es mehr als eine richtige Karte.','Dann tippe auf **Prüfen**.']},
-    {h:'Mehr als ein Ganzes',
-      say:['Manchmal ist der Zähler größer als der Nenner.','Bei {4|3} sind das mehr als 3 Drittel.','Drei Drittel sind ein Ganzes, dazu kommt noch ein Drittel.'],
-      fig:[{n:3,d:3},{n:1,d:3}]}
+      say:['Tippe alle Karten an, die denselben Anteil zeigen.','Oft gibt es mehr als eine richtige Karte.','Dann tippe auf **Prüfen**.']}
   ]},
   B01:{title:'Bruchbilder verändern',steps:[
     {h:'Das Vorgabebild',
@@ -661,13 +658,14 @@ function migrateIntro(st){
 /* Text mit **fett** und {n|d} (Bruch) → Textstücke und Elemente (nur eigene Texte, kein HTML) */
 function introRich(s){
   const out=[];
+  s=String(s).replace(/\[\[([^\]]+)\]\]/g,'**$1**'); /* [[Hauptnenner]] = Lexikon-Wort */
   s.split('**').forEach((seg,i)=>{
     const kids=[];
     seg.split(/(\{\d+\|\d+\})/).forEach(t=>{
       const m=/^\{(\d+)\|(\d+)\}$/.exec(t);
       if(m)kids.push(frac(+m[1],+m[2]));else if(t)kids.push(t);
     });
-    if(i%2)out.push(el('strong',null,...kids));else out.push(...kids);
+    if(i%2)out.push(typeof glossTerm==='function'&&glossKey(seg)?glossTerm(seg,el('strong',null,...kids)):el('strong',null,...kids));else out.push(...kids);
   });
   return out;
 }

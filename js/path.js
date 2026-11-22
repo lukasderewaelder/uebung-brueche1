@@ -7,7 +7,7 @@
      Was der Eingangstest als „sitzt“ markiert, steht als Markierung in der Liste; die Erklärung bietet dann „Kenne ich schon“.
    · Die frühere „Meine Übersicht“ (und die Wahl „Wie möchtest du lernen?“) gibt es nicht mehr.
    ===================================================================== */
-const PATH_ACC={LAB:'mix',RLAB:'mix',HLAB:'mix',Q00:'ok',ZQ:'ok',QA:'ok',ZA:'ok',WQ:'ok',WA:'ok',RQ:'ok',RA:'ok',HQ:'ok',HA:'ok'};
+const PATH_ACC={FLAB:'mix',FQ:'ok',FA:'ok',LAB:'mix',RLAB:'mix',HLAB:'mix',Q00:'ok',ZQ:'ok',QA:'ok',ZA:'ok',WQ:'ok',WA:'ok',RQ:'ok',RA:'ok',HQ:'ok',HA:'ok'};
 /* Thema, zu dem ein Abschlusscheck (finalId) gehört */
 const finalModOf=(id)=>activeModules().find(m=>m.finalId===id)||null;
 /* Hinweis „Erst …“ (modules.js recommends, P10 Liste der Vorgänger): die erste empfohlene Etappe, die noch nicht abgeschlossen ist – keine Sperre */
@@ -358,6 +358,7 @@ function gateCard(mod){
 function pfadTab(home,mod){
   const z=lernenZustand(mod),info=pfadInfo(mod),rec=recommendNote(mod);
   home.append(el('h1',null,mod.name),pfadLine(info.doneN,info.must.length));
+  if(typeof wordsRow==='function'){const w=wordsRow(mod);if(w)home.append(w);} /* P24: neue Fachwörter der Etappe, antippbar */
   if(z==='gate')home.append(gateCard(mod));
   else{
     if(rec)home.append(el('p',{class:'modushint'},'Empfohlen: erst '+rec.name+'. Du kannst aber auch gleich anfangen.'));

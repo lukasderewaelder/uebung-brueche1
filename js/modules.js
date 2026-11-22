@@ -44,7 +44,11 @@ function etappe(o){
 }
 
 const MODULES=[
-  etappe({id:'veraendern',letter:'E',name:'Erweitern und Kürzen',desc:'Gleiche Anteile erkennen, erweitern und kürzen.',icon:'aus',rank:true,qid:'Q00',finalId:'QA',
+  etappe({id:'verstehen',letter:'F',name:'Brüche verstehen',desc:'Anteile erkennen, das Ganze, mehrere Ganze, Brüche größer 1.',icon:'bild',qid:'FQ',finalId:'FA',
+    finalText:'Du verstehst, was ein Bruch ist. Stark!',
+    st:{Entdecken:[{id:'FLAB',title:'Anteile-Labor',desc:'Teilen, färben und denselben Bruch in drei Bildern sehen.'}],Verstehen:['F01','F02','F03'],Üben:['F04','F05'],Anwenden:['F06'],Knobeln:['F07','F08']},
+    texts:{Entdecken:'Labor: teilen und färben',Verstehen:'Anteile, das Ganze, mehrere Ganze',Üben:'Anteile von Größen, Brüche größer 1',Anwenden:'Bild, Bruch, Satz und Geschichte',Knobeln:'Das Ganze finden, Bruchrätsel',Abschlusscheck:'Eingangstest und Abschlusscheck'}}),
+  etappe({id:'veraendern',letter:'E',name:'Erweitern und Kürzen',desc:'Gleiche Anteile erkennen, erweitern und kürzen.',icon:'aus',rank:true,qid:'Q00',finalId:'QA',recommends:['verstehen'],
     finalText:'Du kannst Erweitern und Kürzen. Stark!',
     st:{Entdecken:[{id:'LAB',title:'Bruchlabor',desc:'Erweitern und Kürzen ausprobieren.'}],Verstehen:['G01','B01'],Üben:['G02','G04'],Anwenden:['G05'],
       Knobeln:['U01','U02','U03','O01','O02'],Grundlagen:['T01','T02','G03']},
@@ -54,7 +58,7 @@ const MODULES=[
   etappe({id:'zahlenstrahl',letter:'Z',name:'Brüche am Zahlenstrahl',desc:'Brüche ablesen, eintragen und passend einteilen.',icon:'lineal',qid:'ZQ',finalId:'ZA',recommends:['veraendern'],
     finalText:'Du kannst Brüche am Zahlenstrahl ablesen und eintragen. Stark!',
     st:{Verstehen:['Z01','Z02'],Üben:['Z03',{id:'Z04',note:'Dafür hilft Erweitern und Kürzen.'},{id:'Z05',note:'Dafür hilft Erweitern und Kürzen.'}],Knobeln:['Z06','Z07','Z08']},
-    basisRefs:[],
+    basisRefs:['F05'],
     texts:{Verstehen:'Einteilung erkennen, Brüche ablesen',Üben:'Eintragen und Einteilung anpassen',Knobeln:'Mehrere Brüche, das Ganze, über 1',Abschlusscheck:'Eingangstest und Abschlusscheck'}}),
   etappe({id:'vergleichen',letter:'W',name:'Brüche vergleichen',desc:'Brüche vergleichen und ordnen.',icon:'balken',qid:'WQ',finalId:'WA',recommends:['zahlenstrahl','veraendern'],
     finalText:'Du kannst Brüche vergleichen und ordnen. Stark!',
@@ -64,7 +68,7 @@ const MODULES=[
   etappe({id:'addsub',letter:'R',name:'Plus und Minus mit gleichen Nennern',desc:'Der Nenner bleibt, die Zähler werden addiert oder subtrahiert.',icon:'plusminus',qid:'RQ',finalId:'RA',recommends:['veraendern'],
     finalText:'Du kannst Brüche mit gleichen Nennern addieren und subtrahieren. Stark!',
     st:{Entdecken:[{id:'RLAB',title:'Bruchlabor Plus und Minus',desc:'Addieren und Subtrahieren ausprobieren.'}],Verstehen:['R01','R03'],Üben:['R02','R04'],Anwenden:['R05']},
-    basisRefs:[],
+    basisRefs:['F01'],
     texts:{Entdecken:'Labor: Plus und Minus ausprobieren',Verstehen:'Addieren und subtrahieren am Bild',Üben:'Addieren und subtrahieren mit Rechenweg',Anwenden:'Plus oder minus? Fehler, eigene Aufgaben',Abschlusscheck:'Eingangstest und Abschlusscheck'}}),
   etappe({id:'addsub2',letter:'H',name:'Plus und Minus mit verschiedenen Nennern',desc:'Erst gleich einteilen, dann die Zähler addieren oder subtrahieren.',icon:'kreuzraster',qid:'HQ',finalId:'HA',recommends:['addsub'],
     finalText:'Du kannst Brüche mit verschiedenen Nennern addieren und subtrahieren. Stark!',

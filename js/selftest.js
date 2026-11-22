@@ -404,7 +404,7 @@ function runSelfTests(){
     t('Reiter Lernen: die Kacheln liegen in einem Raster mit zwei Spalten; nur die erste Kachel, bei der es weitergeht, ist hervorgehoben (gelbe Marke)',!!lt.querySelector('.tgrid')&&lt.querySelectorAll('.ttile').length===activeModules().length&&lt.querySelectorAll('.ttile.focus').length===1&&lt.querySelector('.ttile.focus')===lt.querySelectorAll('.ttile')[0]&&lt.querySelectorAll('.btn').length===0&&lt.querySelector('.ttile:not(.focus) .tt-tag')!==null);
     mod.path.filter(m=>m.must&&!m.final).forEach(m=>{S.passed[m.id+'-L1']=true;});S.placed=true;S.final=true;
     const lt2=el('div');lernenTab(lt2);
-    t('Reiter Lernen: ist das erste Thema fertig (Urkunde), wird die nächste Kachel hervorgehoben',lt2.querySelectorAll('.ttile.focus').length===1&&lt2.querySelectorAll('.ttile')[0].classList.contains('done')&&!lt2.querySelectorAll('.ttile')[0].classList.contains('focus')&&lt2.querySelectorAll('.ttile')[1].classList.contains('focus'));
+    t('Reiter Lernen: ist das erste Thema fertig (Urkunde), wird die nächste Kachel hervorgehoben',lt2.querySelectorAll('.ttile.focus').length===1&&lt2.querySelectorAll('.ttile')[activeModules().indexOf(mod)].classList.contains('done')&&!lt2.querySelectorAll('.ttile')[activeModules().indexOf(mod)].classList.contains('focus'));
     freshP();
   }
   /* Bruch-Tresor: Code-Bruch, Schlösser, Tür */
@@ -458,7 +458,7 @@ function runSelfTests(){
     ids.forEach(id=>{const I=INTRO[id];if(!I)return;texts.push(I.title);I.steps.forEach(s=>{steps.push(s);texts.push(s.h,...(s.say||[]));});});
     const longest=Math.max(...[].concat(...texts.map(sentences)).map(words));
     /* Knobelstationen H08–H13 und das Labor HLAB haben laut Konzept (Block 2) zwei kurze Karten */
-    const twoOk=(id)=>/^H(0[89]|1[0-3]|LAB)$/.test(id);
+    const twoOk=(id)=>/^H(0[89]|1[0-3]|LAB)$/.test(id)||/^F(\d\d|LAB|A)$/.test(id); /* Etappe F: zwei Karten (P12) */
     t('Erklärungen: jedes der '+ids.length+' Lernpfad-Bauteile hat eine mit 3–5 Schritten (Knobeln und Labor Block 2: 2), Überschrift und 2–5 Sätzen',ids.every(id=>INTRO[id]&&INTRO[id].title&&INTRO[id].steps.length>=(twoOk(id)?2:3)&&INTRO[id].steps.length<=5&&INTRO[id].steps.every(s=>s.h&&Array.isArray(s.say)&&s.say.length>=2&&s.say.length<=5))&&Object.keys(INTRO).length===ids.length+Object.keys(QCHK).length);
     t('Erklärungen: kurze Sätze, höchstens 14 Wörter (längster: '+longest+')',longest<=14);
     t('Erklärungen: keine Rechnung im Text (Zahlen, Rechenzeichen, Brüche stehen als Daten), kein Emoji, kein ✓/★/✗',texts.every(x=>!/\d\s*[·×÷+−=]\s*\d|\d\s*:\s*\d|[☀-➿\u{1F000}-\u{1FFFF}]/u.test(x)));
@@ -522,7 +522,7 @@ function runSelfTests(){
       if([s.fig,s.add,s.lab,s.tryit,s.nline,s.nltry].filter(Boolean).length>1)return false;
       if(s.add&&!(Number.isInteger(s.add.d)&&s.add.d>=2&&s.add.p1>=1&&s.add.p2>=1&&s.add.p1+s.add.p2<=s.add.d&&['plus','minus'].includes(s.add.mode)))return false;
       const f=s.fig&&(Array.isArray(s.fig)?{mode:'strip',rows:s.fig}:s.fig);
-      return !f||(['strip','circle'].includes(f.mode)&&f.rows.length>=1&&f.rows.length<=3&&f.rows.every(r=>r.n>=1&&r.d>=r.n&&(!r.fill||validFill(r.fill,r.n,r.d))&&[undefined,'erw','kue'].includes(r.acc)));
+      return !f||(['strip','circle','grid'].includes(f.mode)&&f.rows.length>=1&&f.rows.length<=3&&f.rows.every(r=>r.n>=1&&r.d>=r.n&&(!r.fill||validFill(r.fill,r.n,r.d))&&[undefined,'erw','kue'].includes(r.acc)));
     }));
     t('Erklärungen: Ausprobieren und Labor-Bild gültig; ein Schritt geht, bei Kürzen zeigt ein anderer die Absage',steps.every(s=>{
       const ty=s.tryit,lb=s.lab;
@@ -827,7 +827,7 @@ function runSelfTests(){
   {
     const keepV=S.view;
     const bt=(v)=>{S.view=v;return backTarget();};
-    t('Navigation: pfadView findet das Thema zu Bauteil, Labor und unbekannter ID',pfadView('G02').thema==='veraendern'&&pfadView('LAB').thema==='veraendern'&&pfadView().thema==='veraendern');
+    t('Navigation: pfadView findet das Thema zu Bauteil, Labor und unbekannter ID',pfadView('G02').thema==='veraendern'&&pfadView('LAB').thema==='veraendern'&&pfadView().thema===activeModules()[0].id);
     t('Navigation: Zurück aus dem Lernpfad führt zur Themenübersicht, aus der Übersicht nirgends hin',JSON.stringify(bt({kind:'home',tab:'pfad',thema:'veraendern'}))==='{"kind":"home","tab":"pfad"}'&&bt({kind:'home',tab:'pfad'})===null);
     t('Navigation: Zurück aus einem Bauteil des Lernpfads führt in den Lernpfad dieses Themas',bt({kind:'practice',id:'G02',from:'pfad'}).thema==='veraendern'&&bt({kind:'lab',from:'pfad'}).thema==='veraendern');
     t('Navigation: Zurück aus Üben (Aufgabe, Labor) führt in die Üben-Liste; es gibt keine Gruppenseite mehr',bt({kind:'practice',id:'G02'}).tab==='ueben'&&!bt({kind:'practice',id:'G02'}).group&&bt({kind:'lab'}).tab==='ueben'&&!bt({kind:'lab'}).group&&bt({kind:'home',tab:'ueben'})===null);
@@ -891,7 +891,7 @@ function runSelfTests(){
     t('Gemeinsame Teiler (T02): 800 Aufgaben – 6 Zahlen, 1–3 passen zu beiden, Fallen teilen nur eine Zahl, Zähler und Nenner bis 60 bzw. 100, richtig/falsch/„fast“/leer werden unterschieden',t02bad.length===0||(console.log(t02bad.slice(0,5)),false));
     const ids7=PATH.map(m=>m.id);
     t('T02 steht als Basis-Station direkt nach T01 (Grundlagen), mit Erklärung; der Eingangstest schaltet T02 mit T01 frei',ids7.indexOf('T02')===ids7.indexOf('T01')+1&&PATH.find(m=>m.id==='T02').lvl==='basis'&&vm7.groups.Grundlagen.ids.includes('T02')&&vm7.practice.includes('T02')&&!!INTRO.T02&&QCHK.Q00.stations.teilbar.join()==='T01,T02');
-    t('Erklärkarte „Mehr als ein Ganzes“ (G01): Zähler größer als Nenner, zwei Streifen; „Kürzen in Schritten“ (G04): erst die kleinste Zahl, dann noch einmal prüfen',INTRO.G01.steps.some(s=>s.h==='Mehr als ein Ganzes'&&s.say.join(' ').includes('Zähler größer als der Nenner')&&Array.isArray(s.fig)&&s.fig.length===2)&&INTRO.G04.steps[0].h==='Kürzen in Schritten'&&INTRO.G04.steps[0].say.join(' ').includes('kleinste Zahl, die passt'));
+    t('P6: Karte „Mehr als ein Ganzes“ steht nicht mehr in G01 (Brüche größer 1 kommen in F05); „Kürzen in Schritten“ (G04): erst die kleinste Zahl, dann noch einmal prüfen',!INTRO.G01.steps.some(s=>s.h==='Mehr als ein Ganzes')&&INTRO.F05.steps[0].say.join(' ').includes('Ganzes')&&INTRO.G04.steps[0].h==='Kürzen in Schritten'&&INTRO.G04.steps[0].say.join(' ').includes('kleinste Zahl, die passt'));
     /* große Zahlen (bis 100) in Leicht: immer echte Brüche */
     const bigBad=[];let bigN=0;
     const Rbig={...RNG,chance:(p)=>p===BIG_SHARE?true:RNG.chance(p)}; /* erzwingt den kleinen Anteil großer Zahlen */
@@ -1186,7 +1186,7 @@ function runSelfTests(){
       const f=nodes[0];if(f.classList.contains('ex')||/^Beispiel/.test(f.textContent))firstOK++;
       nodes.filter(n=>n.tagName==='P'||n.classList.contains('rule')).forEach(n=>n.textContent.split(/[.!?]\s+/).forEach(s=>{longest=Math.max(longest,words(s));}));
     });
-    t('Merkzettel: alle 22 (M1–M22) bauen sich, beginnen mit dem Beispiel, Sätze höchstens 14 Wörter (längster: '+longest+')',ids.length===22&&bad.length===0&&firstOK===22&&longest<=14);
+    t('Merkzettel: alle 25 (M1–M25) bauen sich, beginnen mit dem Beispiel, Sätze höchstens 14 Wörter (längster: '+longest+')',ids.length===25&&bad.length===0&&firstOK===25&&longest<=14);
     const txt=(id)=>NOTES[id].build([]).map(n=>n.textContent).join(' ');
     t('Merkzettel: Fachwörter kommen nach dem Beispiel mit Erklärung (Erweiterungszahl, Kürzungszahl, Quersumme, Dezimalbruch, gemischte Zahl, kgV)',txt('M2').includes('Erweiterungszahl. Sie ist mindestens 2')&&txt('M3').includes('Kürzungszahl. Sie ist mindestens 2')&&txt('M7').includes('Quersumme bekommst du, wenn du alle Ziffern addierst')&&txt('M4').includes('heißt Dezimalbruch')&&txt('M6').includes('Natürliche Zahlen sind 1, 2, 3')&&txt('M10').includes('kleinstes gemeinsames Vielfaches (kgV)'));
     /* Schrift: Menü und Rang-Chip mindestens 16 px */
@@ -2314,6 +2314,42 @@ function runSelfTests(){
           &&JSON.stringify(migrateState(JSON.parse(JSON.stringify(Object.assign({},old,{addsubV:2,progress:{'R01-L1':{first:1}}})))).progress)==='{"R01-L1":{"first":1}}');
       }
     }
+  }
+  /* Umbau P4: Etappe F „Brüche verstehen“ – jede Art beider Niveaus ist lösbar, Fehler werden erkannt, Ansicht, Lösung und Tipps bauen sich */
+  {
+    const okF=(t)=>{
+      const k=t.kind;
+      if(t.type==='F01')return k==='ablesen'?{'r.n':String(t.p),'r.d':String(t.q)}:k==='faerben'?{f:Array.from({length:t.p},(_,i)=>i)}:k==='gleich'?{j:t.answer}:{w:t.opts.find(o=>o.f[0]===t.p&&o.f[1]===t.q).id};
+      if(t.type==='F02')return k==='ganzes'?{x:String(t.q)}:k==='gleichViel'?{j:t.answer}:{w:t.answer};
+      if(t.type==='F03')return k==='zusammen'?{j:t.answer}:k==='verteilen'?{'r.n':String(t.n),'r.d':String(t.k)}:{'r.n':String(t.p),'r.d':String(t.one?t.q:2*t.q)};
+      if(t.type==='F04')return {x:String(t.ans)};
+      if(t.type==='F05')return k==='ganze'?{x:String(t.w)}:k==='umwandeln'?{'g.w':String(t.w),'g.n':String(t.r),'g.d':String(t.q)}:{'r.n':String(t.p),'r.d':String(t.q)};
+      if(t.type==='F06')return k==='passt'?{j:t.answer}:{c:t.cards.findIndex(c=>c.ok)};
+      if(t.type==='F07')return {x:String(t.kind==='teile'?t.q:Math.abs(t.q-t.p))};
+      if(t.type==='F08')return {'r.n':String(t.res[0]),'r.d':String(t.res[1])};
+      return {ans:t.answer};
+    };
+    const fBad=[];let fN=0;
+    ['F01','F02','F03','F04','F05','F06','F07','F08'].forEach(id=>[1,2].forEach(lvl=>TASKS[id].layoutKinds(lvl).forEach(kind=>{for(let i=0;i<20;i++){
+      const tk=TASKS[id].gen(lvl,RNG,{kind,step:i%5});fN++;const tag=id+'-L'+lvl+' '+kind;
+      try{
+        if(!validateTask(tk,okF(tk)).correct)fBad.push(tag+' richtig abgelehnt '+JSON.stringify(okF(tk)));
+        if(validateTask(tk,{}).correct)fBad.push(tag+' leer angenommen');
+        if(i<3){const h=TASKS[id].hints(tk);if(h.length!==3||/undefined|NaN/.test(h.flat().join(' ')))fBad.push(tag+' Tipps');
+          const host=el('div');mountTask(host,newState(tk),{save(){},done(){}});if(!host.querySelector('.stage')||!buildWorkedSolution(tk).length)fBad.push(tag+' Ansicht');}
+        if(tk.type==='F04'&&!Number.isInteger(tk.ans))fBad.push(tag+' keine ganze Zahl');
+        if(tk.type==='F05'&&!(tk.p>tk.q))fBad.push(tag+' nicht größer 1');
+      }catch(e){fBad.push(tag+' '+e.message);}
+    }})));
+    t('Etappe F: '+fN+' Aufgaben F01–F08 beider Niveaus – richtige Antwort angenommen, leere abgelehnt, Tipps (3 Stufen), Ansicht und Lösung; F04 ganze Zahlen, F05 größer 1',fBad.length===0||(console.log(fBad.slice(0,8)),false));
+    const fq=[];for(let i=0;i<60;i++){const tk=TASKS.FQ.gen(1+(i%2),RNG,{skill:FQ_SKILLS[i%5]});fq.push(validateTask(tk,{ans:tk.answer}).correct&&!validateTask(tk,{ans:tk.answer==='ja'?'nein':tk.answer==='nein'?'ja':(tk.opts.find(o=>o.id!==tk.answer)||{}).id}).correct);}
+    const fm=moduleById('verstehen');
+    t('Etappe F: Eingangstest FQ (10 Fragen, jede Antwort eindeutig), Abschlusscheck FA (15), Etappe vorn mit Labor FLAB, Kern F01–F06, Plus F07 F08, E empfiehlt F, Merkzettel M23–M25',
+      fq.every(Boolean)&&TASKS.FQ.size===10&&TASKS.FA.size===15&&activeModules()[0].id==='verstehen'&&isLab('FLAB')&&fm.path.filter(p=>p.must&&!p.final).map(p=>p.id).join()==='F01,F02,F03,F04,F05,F06'
+      &&fm.path.filter(p=>p.lvl==='plus').map(p=>p.id).join()==='F07,F08'&&moduleById('veraendern').recommends.includes('verstehen')&&['M23','M24','M25'].every(n=>NOTES[n]&&NOTES[n].build([]).length>2));
+    t('P24 Wörterliste: je Etappe höchstens 3 neue Fachwörter, jedes im Lexikon mit Alltagswort; fette Fachwörter in Erklärungen sind antippbar; P5: Leicht ohne Kreise, G01 beginnt mit Rechtecken',
+      activeModules().every(m=>(WORDS[m.letter]||[]).length<=3)&&Object.values(WORDS).flat().every(k=>GLOSSAR[k]&&ALLTAG[k])&&introRich('Der **Hauptnenner** ist klein.').some(n=>n.classList&&n.classList.contains('gloss'))&&introRich('Feld **gekürzt**').every(n=>!(n.classList&&n.classList.contains('gloss')))
+      &&Array.from({length:60},()=>pickMode(RNG.int(2,12),RNG,null,1)).every(m=>m!=='circle')&&Array.from({length:30},()=>TASKS.G01.gen(1,RNG)).every(t=>t.target.mode!=='circle'&&t.cards.every(c=>c.mode!=='circle')));
   }
   const bad=res.filter(r=>!r.ok);
   console.log(`Selbsttest: ${res.length-bad.length}/${res.length} bestanden`);
