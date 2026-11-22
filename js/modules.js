@@ -13,7 +13,7 @@
 const needOf=(size)=>Math.ceil(size*4/5); /* 80 % */
 
 const MODULES=[
-  {id:'veraendern',name:'Erweitern und Kürzen',desc:'Gleiche Anteile erkennen, erweitern und kürzen.',icon:'aus',status:'aktiv',rank:true,quickcheck:true,qid:'Q00',finalId:'QA',finalText:'Du kannst Erweitern und Kürzen. Stark!',
+  {id:'veraendern',letter:'E',name:'Erweitern und Kürzen',desc:'Gleiche Anteile erkennen, erweitern und kürzen.',icon:'aus',status:'aktiv',rank:true,quickcheck:true,qid:'Q00',finalId:'QA',finalText:'Du kannst Erweitern und Kürzen. Stark!',
     /* Übungsgruppen (Reiter „Üben“): Name → Symbol, Muster, Text, Aufgaben */
     groups:{
       'Entdecken':{pat:'dots',icon:'lupe',text:'Labor, gleiche Anteile und Bruchbilder',ids:['LAB','G01','B01']},
@@ -42,7 +42,7 @@ const MODULES=[
     ],
     pathGroups:{Entdecken:'lupe',Erweitern:'aus','Kürzen':'ein',Mischen:'wechsel',Knobeln:'zirkel',Umwandeln:'wechsel',Abschluss:'plakette'}
   },
-  {id:'zahlenstrahl',name:'Brüche am Zahlenstrahl',desc:'Brüche ablesen, eintragen und passend einteilen.',icon:'lineal',status:'aktiv',rank:false,quickcheck:true,qid:'ZQ',finalId:'ZA',recommends:'veraendern',finalText:'Du kannst Brüche am Zahlenstrahl ablesen und eintragen. Stark!',
+  {id:'zahlenstrahl',letter:'Z',name:'Brüche am Zahlenstrahl',desc:'Brüche ablesen, eintragen und passend einteilen.',icon:'lineal',status:'aktiv',rank:false,quickcheck:true,qid:'ZQ',finalId:'ZA',recommends:'veraendern',finalText:'Du kannst Brüche am Zahlenstrahl ablesen und eintragen. Stark!',
     groups:{
       'Einteilung':{pat:'dots',icon:'lupe',text:'Abschnitte und Einteilungen erkennen',ids:['Z01']},
       'Eintragen':{pat:'dash',icon:'lineal',text:'Brüche ablesen und eintragen',ids:['Z02','Z03']},
@@ -61,7 +61,7 @@ const MODULES=[
     ],
     pathGroups:{Einteilung:'lupe',Eintragen:'lineal','Zwei Wege':'wechsel',Weiter:'aus',Abschlusscheck:'plakette'}
   },
-  {id:'vergleichen',name:'Brüche vergleichen',desc:'Brüche vergleichen und ordnen.',icon:'wechsel',status:'aktiv',rank:false,quickcheck:true,qid:'WQ',finalId:'WA',recommends:'veraendern',finalText:'Du kannst Brüche vergleichen und ordnen. Stark!',
+  {id:'vergleichen',letter:'W',name:'Brüche vergleichen',desc:'Brüche vergleichen und ordnen.',icon:'wechsel',status:'aktiv',rank:false,quickcheck:true,qid:'WQ',finalId:'WA',recommends:'veraendern',finalText:'Du kannst Brüche vergleichen und ordnen. Stark!',
     groups:{
       'Zwei Regeln':{pat:'dots',icon:'balken',text:'Nenner gleich, Zähler gleich und beides im Vergleich',ids:['W01','W02','W03']},
       'Fehlt zum Ganzen':{pat:'dash',icon:'luecke',text:'Gleich viele Teile fehlen zum Ganzen',ids:['W04']},
@@ -82,7 +82,7 @@ const MODULES=[
   },
   /* Addieren und Subtrahieren, Teil 1: gleiche Nenner (R01–R05: Addieren am Bild, Addieren und rechnen, Subtrahieren am Bild, Subtrahieren und rechnen, Plus oder minus?).
      Reihenfolge: gleichnamig (addsub), ungleichnamig (addsub2, Block 2), gemischte Zahlen (Block 3, kommt später). Jeder Block ist ein eigenes Thema mit eigenem Check. */
-  {id:'addsub',name:'Gleichnamige Brüche addieren und subtrahieren',short:'Addieren und Subtrahieren',sub:'Gleichnamige Brüche',desc:'Der Nenner bleibt, die Zähler werden addiert oder subtrahiert.',icon:'plusminus',status:'aktiv',rank:false,quickcheck:true,qid:'RQ',recommends:'veraendern',
+  {id:'addsub',letter:'R',name:'Plus und Minus mit gleichen Nennern',desc:'Der Nenner bleibt, die Zähler werden addiert oder subtrahiert.',icon:'plusminus',status:'aktiv',rank:false,quickcheck:true,qid:'RQ',recommends:'veraendern',
     finalId:'RA',finalText:'Du kannst gleichnamige Brüche addieren und subtrahieren. Stark!',
     groups:{
       'Ausprobieren':{pat:'dots',icon:'lupe',text:'Labor: Plus und Minus ausprobieren',ids:['RLAB']},
@@ -104,7 +104,7 @@ const MODULES=[
   },
   /* Addieren und Subtrahieren, Teil 2: ungleichnamige Brüche (Kürzel H, Konzeptdatei vom 21.11.2026). Gruppennamen sind über alle Themen eindeutig
      (GROUPS und PATH_GROUPS werden nach Namen gemischt). Die Knobelstationen H08–H13 stehen ohne must im Pfad: sofort offen, zählen nicht für die Urkunde. */
-  {id:'addsub2',name:'Ungleichnamige Brüche addieren und subtrahieren',short:'Addieren und Subtrahieren',sub:'Ungleichnamige Brüche',
+  {id:'addsub2',letter:'H',name:'Plus und Minus mit verschiedenen Nennern',
     desc:'Erst den Hauptnenner finden, dann die Zähler addieren oder subtrahieren.',
     icon:'kreuzraster',status:'aktiv',rank:false,recommends:'addsub',
     quickcheck:true,qid:'HQ',finalId:'HA',
@@ -142,6 +142,13 @@ const MODULES=[
 const activeModules=()=>MODULES.filter(m=>m.status==='aktiv');
 const plannedModules=()=>MODULES.filter(m=>m.status==='geplant');
 const moduleById=(id)=>MODULES.find(m=>m.id===id)||null;
+/* P23 Kürzel: Etappenbuchstabe + Nummer im Pfad (Labore und Abschlusscheck ohne Nummer), z. B. E3, H4 – gleich in Lernpfad, Aufgabe und Rückmeldung */
+function stationCode(id){
+  const m=MODULES.find(x=>(x.path||[]).some(p=>p.id===id));
+  if(!m||!m.letter)return '';
+  const list=m.path.filter(p=>!p.final&&!(typeof isLab==='function'&&isLab(p.id))).map(p=>p.id),i=list.indexOf(id);
+  return i<0?'':m.letter+(i+1);
+}
 const flat=(key)=>activeModules().reduce((a,m)=>a.concat(m[key]||[]),[]);
 const merged=(key)=>activeModules().reduce((o,m)=>Object.assign(o,m[key]||{}),{});
 

@@ -16,6 +16,7 @@
   --erw:#ff9248;--kue:#45e0d4;
   --ok:#8be3a9;--bad:#ff8c8c;
   --paper:#eef5fb;--ink:#0b2a4a;--ink-dim:#3d5a78;--mark:#ffe58a;
+  --sel-bg:#1f68b3;--sel-ink:#ffffff;--sel-line:#9fd0ff;--sel-tile:#cfe5ff;  /* Umbau P22: ausgewählte Antwort blau */
   --amber-fill:#ffc53d;                         /* Fläche von Hauptknöpfen; --amber ist die Schriftfarbe (im hellen Modus dunkler) */
   --track:rgba(184,212,238,.22);--tick:rgba(184,212,238,.35);  /* leere Balken, Strichmarken */
   --nl-sec:rgba(173,216,255,.1);--nl-on:rgba(120,190,255,.55); /* Zahlenstrahl: Abschnitt, gefärbter Abschnitt */
@@ -36,7 +37,7 @@
   --bp:#ffffff;--bp-2:#edf4fb;--bp-3:#d9e8f6;
   --chalk:#0d3b66;--chalk-dim:#3f6a94;
   --grid:rgba(13,59,102,.07);--grid-2:rgba(13,59,102,.16);
-  --amber:#8a5a00;--on-amber:#0b2a4a;
+  --amber:#8a5a00;--on-amber:#0b2a4a;--sel-line:#0d3b66;
   --erw:#b34700;--kue:#00706a;
   --ok:#17703c;--bad:#b3261e;
   --paper:#e3eef9;--ink:#0b2a4a;--ink-dim:#3d5a78;--mark:#ffe58a;
@@ -50,7 +51,7 @@
     --bp:#ffffff;--bp-2:#edf4fb;--bp-3:#d9e8f6;
     --chalk:#0d3b66;--chalk-dim:#3f6a94;
     --grid:rgba(13,59,102,.07);--grid-2:rgba(13,59,102,.16);
-    --amber:#8a5a00;--on-amber:#0b2a4a;
+    --amber:#8a5a00;--on-amber:#0b2a4a;--sel-line:#0d3b66;
     --erw:#b34700;--kue:#00706a;
     --ok:#17703c;--bad:#b3261e;
     --paper:#e3eef9;--ink:#0b2a4a;--ink-dim:#3d5a78;--mark:#ffe58a;
@@ -1423,3 +1424,27 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 .qsols{text-align:left;padding-left:1.25rem}
 .qsols li{margin:.75rem 0}
 .qsols .qm{float:right}
+
+/* ---------- Umbau P22: Rechenweg in einer Zeile, feste Farben ---------- */
+.hnline{display:flex;flex-wrap:wrap;align-items:center;gap:.375rem .375rem;margin:.375rem 0}
+.hnq{display:inline-flex;align-items:center;gap:.25rem;white-space:nowrap}
+.hnline .frac.inp input,.hnline input.intin{width:2.75rem;height:2.5rem;padding:0 .125rem}
+.hnline .frac.inp.mid input{width:2.5rem}
+.hnline .frac.inp>.num{padding-bottom:.125rem}.hnline .frac.inp>.den{padding-top:.125rem}
+.hnline.hn3 .frac.inp input{width:2.375rem}
+.hnlab{font-size:14px;color:var(--chalk-dim);margin-right:.25rem}
+.hnk{display:inline-flex;flex-direction:column;align-items:center;gap:0}
+.hnk .hnlab{margin:0;line-height:1.1}
+.hnknrow{margin:.125rem 0 .25rem}
+/* Gelb nur für den Hauptknopf; ausgewählte Antworten blau; „Weiß ich nicht“ ausgewählt grau */
+.btn.yn[aria-pressed="true"],.btn.none[aria-pressed="true"],.btn.kn[aria-pressed="true"]{background:var(--sel-bg);color:var(--sel-ink);border-color:var(--sel-line)}
+.tile[aria-pressed="true"]{background:var(--sel-tile);box-shadow:inset 0 0 0 3px var(--sel-bg)}
+.btn.unsure[aria-pressed="true"]{background:var(--track);color:var(--chalk);border-color:var(--chalk-dim);border-style:solid}
+.topbar .notebtn{margin-left:auto;margin-right:.5rem;gap:.375rem}
+@media (max-width:420px){.topbar .notebtn .nbt{display:none}.topbar .notebtn{padding:0 .625rem}}
+/* ---------- Umbau P21: Hinweise in normaler Schrift, mindestens 14 px, Groß- und Kleinschreibung; feste Zeichenbreite nur für Zahlen ---------- */
+.lblm,.titleblock,.stepper .lab,.prompt::before,.hint b.lab,.solbox h4,.modalcard h2,.helphead h2,.note h3,.statsbox summary,.settings summary,.cap,.dimcap,.machhead,.labcap,.labchips .lbl,.bomrow .labstat,.introstep,.introcalc .ict,.rail>li.pgrp,.mtag,.area,.bomhead,.fold>summary,.nlbox .nlcap,.introtry .nlcap,.soon li em,.mchk,.grp,.etsum .etc,.hint .hl,.ordcaps,.cmpword,.alab,.rlabrow .lbl,.hnhead small,.s4head small,.memstats,.lvlbadge,.lock .lk-n,.tt-tag{
+  font-family:var(--font-body);text-transform:none;letter-spacing:normal;font-size:max(14px,.875rem)}
+.home h1{font-family:var(--font-body);text-transform:none;letter-spacing:normal;font-size:1.3rem}
+.modalcard h2,.helphead h2{font-size:max(16px,1rem)}
+.navb,.gname{font-family:var(--font-body);text-transform:none;letter-spacing:normal}

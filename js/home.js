@@ -74,7 +74,7 @@ function lernenTab(home){
   const focus=activeModules().find(m=>lernenZustand(m)==='gate'||pfadInfo(m).go1); /* das Thema, bei dem es weitergeht */
   home.append(el('h1',null,'Lernen'),el('div',{class:'tgrid'},...activeModules().map(m=>moduleCard(m,m===focus))));
   const soon=plannedModules();
-  if(soon.length)home.append(el('section',{class:'soon','aria-label':'Geplante Themen'},el('h2',{class:'area'},'Bald'),
+  if(soon.length)home.append(el('section',{class:'soon','aria-label':'Geplante Etappen'},el('h2',{class:'area'},'Bald'),
     el('ul',null,...soon.map(m=>el('li',null,icon(m.icon),el('span',null,el('b',null,m.name),el('small',null,m.desc)),el('em',null,'geplant'))))));
 }
 /* Einklappbarer Abschnitt: hält lange Listen aus dem ersten Blick heraus (open: gleich aufgeklappt) */
@@ -104,7 +104,7 @@ function renderHome(){
     /* Üben: frei wählen. Ein Umschalter für alle, je Thema eine aufklappbare Liste (das Thema der letzten Aufgabe ist offen) */
     const last=S.last&&TASKS[S.last]&&!isCheck(S.last)?S.last:null,lastMod=last?moduleOf(last):null,mods=activeModules();
     if(last)home.append(bigBtn('play',()=>openEntry(last),'Weiter üben',TASKS[last].name,LEVEL_LABEL[levelOf(last)],'go'));
-    home.append(el('h1',null,'Üben'),listLevel(PRACTICE_ORDER.filter(id=>!isCheck(id))));
+    home.append(el('h1',null,'Wiederholen'),listLevel(PRACTICE_ORDER.filter(id=>!isCheck(id))));
     mods.forEach(m=>home.append(fold(m.name,uebenBody(m),lastMod?lastMod.id===m.id:m===mods[0])));
   }
   root.append(home,bottomNav());app.append(root);

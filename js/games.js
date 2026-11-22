@@ -79,7 +79,7 @@ function renderMemory(id){
   card.append(el('p',null,'Decke zwei Karten auf. Ein Paar zeigt denselben Anteil – auch wenn die Karten verschieden aussehen. '+MEMORY_RULE[lvl]),stats,msg,grid,hints);
   main.append(card);
   const hintBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('hinweis')),'Tipp');
-  const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkkasten');
+  const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkzettel');
   const again=el('button',{type:'button',class:'btn primary'},'Neu mischen');
   main.append(el('div',{class:'actionbar'},el('div',{class:'primaryrow'},hintBtn,noteBtn,again)));
   const renderHints=()=>{
@@ -224,7 +224,7 @@ function renderVault(id){
   main.append(top,puzzle,live);
 
   const hintBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('hinweis')),'Tipp');
-  const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkkasten');
+  const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkzettel');
   const primary=el('button',{type:'button',class:'btn primary'},'Prüfen');
   const solBtn=el('button',{type:'button',class:'linkbtn'},icon('auge'),'Lösung ansehen');
   const links=el('div',{class:'linkrow hidden'},solBtn);

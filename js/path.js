@@ -13,6 +13,7 @@ const finalModOf=(id)=>activeModules().find(m=>m.finalId===id)||null;
 /* Hinweis „Erst …“ (modules.js recommends): nur solange das empfohlene Thema nicht abgeschlossen ist, keine Sperre */
 function recommendNote(mod){const r=mod&&mod.recommends&&moduleById(mod.recommends);return r&&!qstate(r).final?r:null;}
 const stationTitle=(id)=>{const m=PATH.find(x=>x.id===id);return (m&&m.title)||(TASKS[id]&&TASKS[id].name)||id;};
+const stationLabel=(id)=>{const c=stationCode(id);return (c?c+' ':'')+stationTitle(id);}; /* P23: mit Kürzel */
 
 /* ---------- Zustand ---------- */
 const stationPassed=(id)=>!!(S.passed[id+'-L1']||S.passed[id+'-L2']);
@@ -244,7 +245,7 @@ function resetSheet(id){
 }
 /* P16: keine Sperre mehr, nur eine Empfehlung mit Rückfrage */
 function lockSheet(row){
-  const b=row.blocker,name=stationTitle(b);
+  const b=row.blocker,name=stationLabel(b);
   const m=modal([icon('pfad','big'),el('h2',null,'Empfohlen: erst '+name),
     el('p',null,'Diese Station baut darauf auf. Trotzdem starten?'),
     el('div',{class:'modalbtns'},
@@ -274,9 +275,9 @@ function modNode(r,pos){
   const li=el('li',{class:'mod '+state+(r.must?'':' frei'),'data-acc':ACC[id]||PATH_ACC[id]||null});
   li.append(el('span',{class:'lamp','aria-hidden':'true'},r.done?icon('haken'):null),
     el('button',{type:'button',class:'modbtn','aria-label':title+': '+tag.toLowerCase()+(chk?', Eingangstest: '+CHECK_TEXT[chk]:'')+(r.must||tag==='Freiwillig'?'':', freiwillig'),onclick:()=>r.locked?lockSheet(r):openStation(id)},
-      el('span',{class:'mpos'},String(pos+1).padStart(2,'0')),
+      el('span',{class:'mpos'},stationCode(id)||(isLab(id)?'Lab':'✓')),
       el('span',{class:'mnm'},el('b',null,title),el('small',null,desc+(m.note&&recommendNote(moduleOf(id))?' '+m.note:''))),
-      el('span',{class:'mside'},!r.done&&isPathStation(id)&&accOf(id,levelOf(id)).r>0?accRow(id,levelOf(id)):null,chk?el('span',{class:'mchk '+chk},'Check: '+CHECK_TEXT[chk]):null,el('span',{class:'mtag'},tag),stars)));
+      el('span',{class:'mside'},!r.done&&isPathStation(id)&&accOf(id,levelOf(id)).r>0?accRow(id,levelOf(id)):null,chk?el('span',{class:'mchk '+chk},'Test: '+CHECK_TEXT[chk]):null,el('span',{class:'mtag'},tag),stars)));
   if(stationResettable(id))li.append(el('button',{type:'button',class:'modreset','aria-label':title+' zurücksetzen',title:'Zurücksetzen',onclick:()=>resetSheet(id)},icon('neu')));
   return li;
 }
@@ -335,8 +336,8 @@ function pfadTab(home,mod){
   else{
     if(rec)home.append(el('p',{class:'modushint'},'Empfohlen: erst '+rec.name+'. Du kannst aber auch gleich anfangen.'));
     const go1=info.go1;
-    if(go1)home.append(bigBtn('play',()=>openStation(go1.id),startWord(info.rows,go1)+': '+stationTitle(go1.id),go1.m.final||isLab(go1.id)?null:LEVEL_LABEL[levelOf(go1.id)],null,'go'));
-    else home.append(el('div',{class:'msg ok'},'Alle Pflicht-Stationen sind fertig – stark! '+(info.rows.some(r=>!r.must)?'Probiere die freiwilligen Stationen oder ein Spiel.':'Probiere ein Spiel oder ein anderes Thema.')));
+    if(go1)home.append(bigBtn('play',()=>openStation(go1.id),startWord(info.rows,go1)+': '+stationLabel(go1.id),go1.m.final||isLab(go1.id)?null:LEVEL_LABEL[levelOf(go1.id)],null,'go'));
+    else home.append(el('div',{class:'msg ok'},'Alle Pflicht-Stationen sind fertig – stark! '+(info.rows.some(r=>!r.must)?'Probiere die freiwilligen Stationen oder ein Spiel.':'Probiere ein Spiel oder eine andere Etappe.')));
   }
   home.append(fold('Alle Stationen',pfadMap(info.rows)));
   if(mod.quickcheck&&z!=='gate')home.append(el('p',{class:'retake'},linkBtn(qstate(mod).placed?'Eingangstest wiederholen':'Eingangstest machen',()=>startEingang(mod,qstate(mod).placed))));

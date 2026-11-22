@@ -41,7 +41,7 @@ function renderSchlange(id){
   card.append(body,live);main.append(card);
   const host=el('div');
   const hintBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('hinweis')),'Tipp');
-  const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkkasten');
+  const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkzettel');
   const primary=el('button',{type:'button',class:'btn primary'},'Prüfen');
   const pad=makeKeypad(host,()=>onPrimary());
   const msg=el('div',{class:'dockmsg'});

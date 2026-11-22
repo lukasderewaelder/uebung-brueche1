@@ -210,7 +210,7 @@ function hnSolLines(t){
   return out;
 }
 /* Rechenweg-Optionen je Aufgabe: Leicht mit Hauptnenner-Feld und Zwischenschritt, Knifflig mit erweiterten Brüchen; gemischte Zahl bei Ergebnissen über 1 möglich */
-const hnBlockOpt=(t,extra)=>Object.assign({leicht:hnLeicht(t),staged:true,mixed:t.level===2&&['ueber1','drei','rest'].includes(t.kind)},t.F&&hnLeicht(t)?{givenN:t.F}:{},extra||{}); /* t.F: Bild-Aufgabe (H03), gerechnet mit den Feldern */
+const hnBlockOpt=(t,extra)=>Object.assign({leicht:hnLeicht(t),staged:false,mixed:t.level===2&&['ueber1','drei','rest'].includes(t.kind)},t.F&&hnLeicht(t)?{givenN:t.F}:{},extra||{}); /* t.F: Bild-Aufgabe (H03), gerechnet mit den Feldern */
 /* eine Rechenaufgabe (Ausdruck oder Geschichte), mit Bild sofort (always) oder mit dem zweiten Tipp */
 function hnCalcRender(view,host,t,picAlways,stage){
   if(hnHasPic(t))addPicBox(view,host,()=>hnFigOf(t,stage||3),picAlways);

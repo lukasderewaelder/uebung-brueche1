@@ -92,7 +92,7 @@ const isLab=(id)=>Object.prototype.hasOwnProperty.call(LABS,id);
 /* Labor öffnen (ohne Kennung: das Labor zu Erweitern und Kürzen) */
 const openLab=(id,from)=>go(Object.assign({kind:'lab',id:id||'LAB'},from?{from}:{}));
 
-/* Knopf „Im Labor ausprobieren“ für die Merkkästen */
+/* Knopf „Im Labor ausprobieren“ für die Merkzettel */
 function labLink(id){
   return el('button',{type:'button',class:'btn labbtn',onclick:()=>openLab(id)},icon('kolben'),'Im Labor ausprobieren');
 }
@@ -103,7 +103,7 @@ function renderLab(){
   const shell=el('div',{class:'shell'}),help=helpPanel('LAB'),main=el('main',{class:'work lab'});
   shell.append(main,help.el);root.append(shell);app.append(root);
   main.dataset.acc='mix';
-  help.setNotes(['M1','M2','M3'].map(n=>el('section',{class:'note','aria-label':'Merkkasten '+n},el('h3',null,n+' · '+NOTES[n].title),...NOTES[n].build([]))));
+  help.setNotes(['M1','M2','M3'].map(n=>el('section',{class:'note','aria-label':'Merkzettel '+n},el('h3',null,n+' · '+NOTES[n].title),...NOTES[n].build([]))));
   help.setStats(el('div',null,el('h3',null,'Dein Labor'),el('p',null,L.done?'Der Entdeckerauftrag ist geschafft.':'Der Entdeckerauftrag ist noch offen.')));
 
   const segBtn=(mode,label)=>{
@@ -123,7 +123,7 @@ function renderLab(){
   const ctl=el('div',{class:'labctl'});
   const undoBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('undo')),'Rückgängig');
   const newBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('neu')),'Neuer Bruch');
-  const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkkasten');
+  const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkzettel');
   main.append(el('div',{class:'actionbar'},ctl,el('div',{class:'primaryrow'},undoBtn,newBtn,noteBtn)));
 
   const sayText=(text,kind)=>{

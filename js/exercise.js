@@ -356,18 +356,19 @@ function backTarget(){
   if(v.kind==='lab')return {kind:'home',tab:'ueben'};
   return null;
 }
-function topbar(title){
+function topbar(title,extra){
   const bt=backTarget();
   return el('header',{class:'topbar'},
     bt?el('button',{type:'button',class:'btn small backbtn',onclick:()=>go(bt)},icon('zurueck'),'Zurück'):el('span',{class:'brand'},el('span',{class:'bt'},'Bruchwerkstatt')), /* nur die Wortmarke: ein Zahnrad sähe wie der Knopf „Einstellungen“ aus */
     el('span',{class:'title'},title||''),
+    extra||null,
     chipNode());
 }
 const homeTab=()=>{const t=S.view.tab;return t==='ueben'||t==='spiele'||t==='rang'?t:'pfad';};
 function bottomNav(){
   const tab=homeTab();
   const b=(key,ic,label)=>el('button',{type:'button',class:'navb','aria-current':String(tab===key),onclick:()=>go({kind:'home',tab:key})},icon(ic),el('span',null,label));
-  return el('nav',{class:'bottomnav','aria-label':'Hauptmenü'},b('pfad','pfad','Lernen'),b('ueben','heft','Üben'),b('spiele','karten','Spiele'),b('rang','plakette','Ich'));
+  return el('nav',{class:'bottomnav','aria-label':'Hauptmenü'},b('pfad','pfad','Lernen'),b('ueben','heft','Wiederholen'),b('spiele','karten','Spiele'),b('rang','plakette','Ich'));
 }
 const LEVEL_LABEL={1:'Leicht',2:'Knifflig'};
 function levelControl(id){
@@ -378,14 +379,14 @@ function levelControl(id){
 /* Hilfespalte: rechts auf dem Desktop, Schublade (Tablet), Bottom-Sheet (Smartphone) */
 function helpPanel(introId){
   const body=el('div',{class:'helpbody'}),stats=el('div');
-  const aside=el('aside',{class:'help','aria-label':'Merkkasten und Fortschritt'});
+  const aside=el('aside',{class:'help','aria-label':'Merkzettel und Fortschritt'});
   const det=el('details',{class:'statsbox'},el('summary',null,icon('balken'),' Dein Fortschritt'),stats);
   /* Knopf „Erklärung“: die Anleitung des Bauteils noch einmal ansehen (nur Bauteile mit Erklärung) */
   const intro=introId&&hasIntro(introId)?el('p',{class:'helpintro'},el('button',{type:'button',class:'btn small helpintrobtn',onclick:openIntro},icon('gluehbirne'),'Erklärung')):null;
-  aside.append(el('div',{class:'helphead'},el('h2',null,'Merkkasten'),el('button',{type:'button',class:'btn small helpclose',onclick:()=>setHelp(false)},'Schließen')),intro,body,det);
+  aside.append(el('div',{class:'helphead'},el('h2',null,'Merkzettel'),el('button',{type:'button',class:'btn small helpclose',onclick:()=>setHelp(false)},'Schließen')),intro,body,det);
   if(helpOpen)aside.classList.add('open');
   return {el:aside,setNotes(nodes){
-    const n=nodes.filter(x=>x&&x.classList&&x.classList.contains('note')).length; /* mehrere Merkkästen stehen im Pop-up nebeneinander */
+    const n=nodes.filter(x=>x&&x.classList&&x.classList.contains('note')).length; /* mehrere Merkzettel stehen im Pop-up nebeneinander */
     body.classList.toggle('multi',n>1);body.style.setProperty('--nn',String(Math.min(3,Math.max(1,n))));
     body.replaceChildren(...nodes);
   },setStats(n){stats.replaceChildren(n);}};
@@ -410,7 +411,9 @@ function renderPractice(id){
   const T=TASKS[id],lvl=levelOf(id),key=keyOf(id,lvl);
   const round=S.rounds[key]||(S.rounds[key]={results:[],cur:null,size:T.size});
   const root=el('div',{class:'page'});
-  root.append(topbar('')); /* der Name steht im Schriftfeld der Karte */
+  /* P22: der Merkzettel sitzt oben (fest), unten links Tipp, Mitte Überspringen, rechts der Hauptknopf */
+  const noteBtn=el('button',{type:'button',class:'btn small notebtn','aria-label':'Merkzettel öffnen'},icon('heft'),el('span',{class:'nbt'},'Merkzettel'));
+  root.append(topbar('',noteBtn)); /* der Name steht im Schriftfeld der Karte */
   const shell=el('div',{class:'shell'});
   const help=helpPanel(id);
   const main=el('main',{class:'work'});
@@ -433,7 +436,7 @@ function renderPractice(id){
   main.dataset.acc=ACC[id]||'';
   const ruler=el('div',{class:'ruler',role:'img'});
   const tbBlatt=el('span',{class:'tb-c'});
-  const titleblock=el('div',{class:'titleblock'},el('span',{class:'tb-id'},icon(ICON[id]),el('span',{class:'tb-name'},T.name)),tbBlatt,el('span',{class:'tb-c'},LEVEL_LABEL[lvl]));
+  const titleblock=el('div',{class:'titleblock'},el('span',{class:'tb-id'},icon(ICON[id]),el('span',{class:'tb-name'},(stationCode(id)?stationCode(id)+' ':'')+T.name)),tbBlatt,el('span',{class:'tb-c'},LEVEL_LABEL[lvl]));
   const updProgress=()=>{
     const ticks=[];
     for(let i=0;i<round.size;i++){
@@ -453,14 +456,13 @@ function renderPractice(id){
   main.append(card);
 
   const hintBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('hinweis')),'Tipp');
-  const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkkasten');
   const primary=el('button',{type:'button',class:'btn primary'},'Prüfen');
   const solBtn=el('button',{type:'button',class:'linkbtn'},icon('auge'),'Lösung ansehen');
-  const skipBtn=el('button',{type:'button',class:'linkbtn'},icon('skip'),'Überspringen');
+  const skipBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('skip')),'Überspringen');
   const pad=makeKeypad(host,()=>onPrimary());
-  const links=el('div',{class:'linkrow hidden'},solBtn,skipBtn); /* liegt in der Meldung unten, nach einem Fehlversuch */
+  const links=el('div',{class:'linkrow hidden'},solBtn); /* liegt in der Meldung unten, nach einem Fehlversuch */
   const msg=el('div',{class:'dockmsg'});
-  const bar=buildDock(main,{hintBtn,noteBtn,primary,pad,msg,host});
+  const bar=buildDock(main,{hintBtn,noteBtn:skipBtn,primary,pad,msg,host});
 
   const P=prog(key);
   const roundBonus=()=>{
@@ -495,17 +497,17 @@ function renderPractice(id){
     const open=st.status==='open';
     const last=round.results.length>=round.size;
     primary.classList.toggle('ready',!open); /* beantwortet: „Weiter“ leuchtet auf */
-    if(entry){primary.textContent=last||round.results.length===round.size-1?'Auswertung':'Weiter';primary.disabled=false;hintBtn.classList.add('hidden');noteBtn.classList.add('hidden');links.classList.add('hidden');pad.refresh();fitPage();return;}
+    if(entry){primary.textContent=last||round.results.length===round.size-1?'Auswertung':'Weiter';primary.disabled=false;hintBtn.classList.add('hidden');noteBtn.classList.add('hidden');skipBtn.classList.add('hidden');links.classList.add('hidden');pad.refresh();fitPage();return;}
     if(quick){ /* Antwort antippen, mit „Prüfen“ werten; danach „Weiter“ */
       primary.textContent=open?'Prüfen':(last?'Ergebnis':'Weiter');primary.disabled=false;
-      hintBtn.classList.add('hidden');links.classList.add('hidden');pad.refresh();fitPage();return;
+      hintBtn.classList.add('hidden');skipBtn.classList.add('hidden');links.classList.add('hidden');pad.refresh();fitPage();return;
     }
     primary.textContent=open?'Prüfen':(last?'Runde abschließen':'Weiter');
     links.classList.toggle('hidden',!(open&&st.attempts>0));
     /* links: Hilfe. Sind alle Tipps gezeigt, wird aus „Tipp“ der Weg zur Lösung */
     const all=ctrl.hintCount(),tipsDone=st.hint>=all;
     hintBtn.dataset.mode=tipsDone?'sol':'';
-    hintBtn.disabled=!open;
+    hintBtn.disabled=!open;skipBtn.disabled=!open;
     if(tipsDone)hintBtn.replaceChildren(el('span',{class:'emo'},icon('auge')),'Lösung');
     else setHintLabel(hintBtn,st.hint?`Tipp ${st.hint+1}`:'Tipp');
     pad.refresh();bar.reserve(!quick);fitPage();
@@ -553,7 +555,7 @@ function renderSummary(main,id,lvl,key,round){
   if(inPath){
     const nx=pathState(moduleOf(id)).find(r=>r.next);
     if(passed){
-      msg=info.firstPass?'Station fertig!'+(nx?' Als Nächstes: '+stationTitle(nx.id)+'.':''):'Wieder geschafft – stark!';
+      msg=info.firstPass?'Station fertig!'+(nx?' Als Nächstes: '+stationLabel(nx.id)+'.':''):'Wieder geschafft – stark!';
     }else msg='Weiter so! Dein Stand bleibt gespeichert. Die nächste Runde macht dort weiter.'; /* P11: nichts geht verloren */
   }
   if(fromPfad&&passed){mainBtn=btn('Weiter im Lernpfad',()=>continueInPath(id),true);links=[linkBtn('Nochmal',again),lvlLink];}
@@ -582,7 +584,7 @@ function renderFinalSummary(main,id,lvl,key,round){
   if(info.final)lines.push('Urkunde! Du hast den Lernpfad geschafft.');
   else if(sc.passed&&info.ready===false)lines.push('Bestanden! Für die Urkunde fehlen noch Pflicht-Stationen.');
   else if(!sc.passed)lines.push('Du brauchst '+fmt(sc.need)+' Punkte, du hast '+fmt(sc.points)+'.'+(sc.points<sc.right?' Aufgaben mit Tipp zählen nur halb.':'')+' Noch einmal?');
-  main.append(el('div',{class:'card summary'},el('div',{class:'stampbox'},info.final?'Urkunde':sc.passed?'Bestanden':'Check fertig'),el('p',null),bigStars(sc.passed?3:sc.points>=sc.need*0.6?2:1),
+  main.append(el('div',{class:'card summary'},el('div',{class:'stampbox'},info.final?'Urkunde':sc.passed?'Bestanden':'Abschlusscheck'),el('p',null),bigStars(sc.passed?3:sc.points>=sc.need*0.6?2:1),
     el('p',null,`${sc.right} von ${round.size} richtig · ${LEVEL_LABEL[lvl]}`),
     el('table',null,
       tap.length?el('tr',null,el('td',null,'Zum Antippen richtig'),el('td',null,el('b',null,good(tap)+' von '+tap.length))):null,

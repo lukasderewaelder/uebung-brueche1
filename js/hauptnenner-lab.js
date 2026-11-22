@@ -68,7 +68,7 @@ function renderHLab(){
   const shell=el('div',{class:'shell'}),help=helpPanel('HLAB'),main=el('main',{class:'work lab rlab hlab'});
   shell.append(main,help.el);root.append(shell);app.append(root);
   main.dataset.acc='mix';
-  help.setNotes(['M20','M19'].map(n=>el('section',{class:'note','aria-label':'Merkkasten '+n},el('h3',null,n+' · '+NOTES[n].title),...NOTES[n].build([]))));
+  help.setNotes(['M20','M19'].map(n=>el('section',{class:'note','aria-label':'Merkzettel '+n},el('h3',null,n+' · '+NOTES[n].title),...NOTES[n].build([]))));
   help.setStats(el('div',null,el('h3',null,'Dein Labor'),el('p',null,L.done?'Der Entdeckerauftrag ist geschafft.':'Der Entdeckerauftrag ist noch offen.')));
   const segBtn=(op,label)=>{
     const b=el('button',{type:'button','aria-pressed':String(L.op===op)},label);
@@ -99,7 +99,7 @@ function renderHLab(){
   const quizBox=el('div',{class:'labquiz'});
   const ctl=el('div',{class:'labctl'},stepsBox,el('div',{class:'rowbtns'},trBtn,pushBtn),quizBox);
   const undoBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('undo')),'Rückgängig');
-  const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkkasten');
+  const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkzettel');
   main.append(el('div',{class:'actionbar'},ctl,el('div',{class:'primaryrow'},undoBtn,noteBtn)));
   const sayText=(text,kind)=>{say.replaceChildren(text?(kind?el('div',{class:'msg '+kind},...introRich(text)):el('div',{class:'labtext'},...introRich(text))):'');};
   const push=()=>{L.hist.push({op:L.op,b:L.b,a:L.a,d:L.d,c:L.c,step:L.step});if(L.hist.length>40)L.hist.shift();};

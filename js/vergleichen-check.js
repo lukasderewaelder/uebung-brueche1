@@ -193,7 +193,7 @@ function wqGen(level,R,ctx){
   const skill=(ctx&&ctx.skill)||R.pick(WQ_SKILLS),kinds=WQ_KINDS[skill],kind=(ctx&&ctx.occ!=null)?kinds[ctx.occ%kinds.length]:R.pick(kinds);
   return Object.assign({type:'WQ',level,avoid:[]},WQ_GEN[kind](level,R));
 }
-TASKS.WQ=Object.assign({area:'Vergleichen',name:'Eingangstest',desc:WQ_SKILLS.length*Q_PER_SKILL+' Kurzfragen zum Antippen – ohne Zeitdruck.',size:WQ_SKILLS.length*Q_PER_SKILL,
+TASKS.WQ=Object.assign({area:'Vergleichen',name:'Eingangstest',desc:WQ_SKILLS.length*Q_PER_SKILL+' Fragen zum Antippen – ohne Zeitdruck.',size:WQ_SKILLS.length*Q_PER_SKILL,
   gen:wqGen,
   ctx(round){
     if(!round.plan)round.plan=qPlan(null,WQ_SKILLS,Q_PER_SKILL);

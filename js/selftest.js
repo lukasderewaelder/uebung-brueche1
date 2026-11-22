@@ -203,12 +203,12 @@ function runSelfTests(){
     t('Bruchlabor Plus und Minus: Ansicht (Raster, Rechnung, drei Stellschrauben, Plus/Minus), Bedienung, Auftragswechsel, Ablehnung über ein Ganzes, Minus mit Kreuzen und neuen Beschriftungen',
       hasUi&&afterPlus.join()==='4,3,true,true,4'&&refused[0]===5&&refused[1]&&refused[2]&&asMinus[0]==='minus'&&/Anfang/.test(asMinus[1])&&/Wegnehmen/.test(asMinus[1])&&asMinus[2]);
     t('Bruchlabor Plus und Minus: Frage nach den zwei Aufträgen, falsche Antwort wird benannt, richtige schließt ab (Labor geschafft), Rückgängig geht',afterMinus.every(Boolean)&&wrongOk&&doneOk&&S.labR.hist.length>0);
-    /* Einbindung: Tabelle, Pfad, Navigation, Erklärung, Merkkasten-Knopf, Üben-Zeile */
+    /* Einbindung: Tabelle, Pfad, Navigation, Erklärung, Merkzettel-Knopf, Üben-Zeile */
     S.view={kind:'lab',id:'RLAB',from:'pfad'};const bk=backTarget();
     S.view={kind:'lab',id:'RLAB'};const bk2=backTarget();
     const labRow=bomList(['RLAB'],{head:false});
     const nf=noteFor('R01',null).filter(n=>n.classList.contains('labnote')),nf5=noteFor('R05',null).filter(n=>n.classList.contains('labnote')),nf2=noteFor('G01',null).filter(n=>n.classList&&n.classList.contains('labnote'));
-    t('Bruchlabor Plus und Minus: eingebunden (Tabelle LABS, Pfad ohne Pflicht vor R01, Zurück zum Thema, Erklärung mit 3 Karten, Knopf im Merkkasten der Addieren-Stationen, Zeile in Üben)',
+    t('Bruchlabor Plus und Minus: eingebunden (Tabelle LABS, Pfad ohne Pflicht vor R01, Zurück zum Thema, Erklärung mit 3 Karten, Knopf im Merkzettel der Addieren-Stationen, Zeile in Üben)',
       isLab('LAB')&&isLab('RLAB')&&!isLab('R01')&&pfadView('RLAB').thema==='addsub'&&bk.thema==='addsub'&&bk2.tab==='ueben'&&introIdOf({kind:'lab',id:'RLAB'})==='RLAB'&&introIdOf({kind:'lab'})==='LAB'&&INTRO.RLAB.steps.length===3
       &&nf.length===1&&nf5.length===1&&nf2.length===1&&labRow.textContent.includes('Bruchlabor Plus und Minus')&&stationTitle('RLAB')==='Bruchlabor Plus und Minus'&&LABS.RLAB.started()===true);
     S.labR=keepR;S.view=keepV;S.intro=keepI;persist();
@@ -382,9 +382,9 @@ function runSelfTests(){
     t('Fortschritt: G01 fertig, im Pfad ist Erweitern dran',pathState(mod).find(r=>r.id==='G01').done&&pathState(mod).find(r=>r.next).id==='G02');
     beispiel();
     const pv=view();
-    t('Themenseite im Pfad: Name, Fortschrittszeile, genau ein Hauptknopf „Start: Gleiche Anteile erkennen“, Liste eingeklappt, Check-Marken, Textlink „Eingangstest wiederholen“, kein Umschalter',pv.querySelector('h1').textContent===mod.name&&!!pv.querySelector('.pfadline')&&/^Start: Gleiche Anteile erkennen/.test(pv.querySelector('.bigbtn').textContent)&&pv.querySelectorAll('.bigbtn,.btn.primary').length===1&&!pv.querySelector('.seg')&&!!pv.querySelector('details.fold:not([open]) .rail')&&pv.querySelectorAll('.mchk.sitzt').length===2&&pv.querySelectorAll('.mchk.fast').length===2&&/Als Nächstes/.test(pv.textContent)&&!/Weiter geht/.test(pv.textContent)&&/Eingangstest wiederholen/.test((pv.querySelector('.retake .linkbtn')||{}).textContent||''));
+    t('Themenseite im Pfad: Name, Fortschrittszeile, genau ein Hauptknopf „Start: Gleiche Anteile erkennen“, Liste eingeklappt, Check-Marken, Textlink „Eingangstest wiederholen“, kein Umschalter',pv.querySelector('h1').textContent===mod.name&&!!pv.querySelector('.pfadline')&&/^Start: (E\d+ )?Gleiche Anteile erkennen/.test(pv.querySelector('.bigbtn').textContent)&&pv.querySelectorAll('.bigbtn,.btn.primary').length===1&&!pv.querySelector('.seg')&&!!pv.querySelector('details.fold:not([open]) .rail')&&pv.querySelectorAll('.mchk.sitzt').length===2&&pv.querySelectorAll('.mchk.fast').length===2&&/Als Nächstes/.test(pv.textContent)&&!/Weiter geht/.test(pv.textContent)&&/Eingangstest wiederholen/.test((pv.querySelector('.retake .linkbtn')||{}).textContent||''));
     S.passed['G01-L1']=true;
-    t('Themenseite: nach der ersten bestandenen Station heißt der Knopf „Weiter“',/^Weiter: Gleiche Anteile erkennen|^Weiter: Erweitern/.test(view().querySelector('.bigbtn').textContent));
+    t('Themenseite: nach der ersten bestandenen Station heißt der Knopf „Weiter“',/^Weiter: (E\d+ )?(Gleiche Anteile erkennen|Erweitern)/.test(view().querySelector('.bigbtn').textContent));
     t('Tagesziel und Serie stehen im Reiter Ich (dayCard), nicht mehr im Lernpfad',/Tagesziel/.test(dayCard().textContent)&&!/Tagesziel/.test(view().textContent));
     /* Themenkarte im Reiter Lernen: immer Kopf-Zeile, Fortschritt und höchstens ein Hauptknopf */
     freshP();
@@ -532,7 +532,7 @@ function runSelfTests(){
         &&ty.ks.some(k=>labCan(ty.base,ty.op,k))&&(ty.op==='x'||ty.ks.some(k=>!labCan(ty.base,ty.op,k)));
     })&&steps.filter(s=>s.tryit).length===4);
     t('Erklärungen: Schnellcheck nennt die Zahlen aus den Einstellungen (Fragen, Urkunden-Hürde)',(()=>{const x=INTRO.Q00.steps.map(s=>s.say.join(' ')).join(' ');return x.includes(TASKS.Q00.size+' Fragen')&&x.includes('keine Note')&&INTRO.Q00.steps.length===1&&['ZQ','WQ','RQ','HQ'].every(q=>INTRO[q].steps.length===1);})());
-    t('Erklärungen: Wörter und Knöpfe stimmen mit den Namen auf dem Bildschirm überein',[['G02','Erweiterungszahl'],['G03','Kürzungszahl'],['G04','Geht nicht mehr'],['G04','Sind beide Zahlen gerade'],['G01','Prüfen'],['LAB','Rückgängig'],['O02','Weg neu starten'],['T01','Merkkasten']].every(([id,w])=>INTRO[id].steps.some(s=>s.say.some(x=>x.includes('**'+w)))));
+    t('Erklärungen: Wörter und Knöpfe stimmen mit den Namen auf dem Bildschirm überein',[['G02','Erweiterungszahl'],['G03','Kürzungszahl'],['G04','Geht nicht mehr'],['G04','Sind beide Zahlen gerade'],['G01','Prüfen'],['LAB','Rückgängig'],['O02','Weg neu starten'],['T01','Merkzettel']].every(([id,w])=>INTRO[id].steps.some(s=>s.say.some(x=>x.includes('**'+w)))));
     let built=true;
     try{steps.forEach(s=>{introRich(s.h);s.say.forEach(introRich);if(s.fig)introFigNode(s.fig);if(s.add)introAddNode(s.add);if(s.calc)introCalcNode(s.calc);if(s.tryit)introTry(s.tryit);if(s.lab)labFigure({mode:'strip',base:s.lab.base,cur:s.lab.cur,last:{op:s.lab.op,k:s.lab.k}});});}catch(e){built=false;}
     t('Erklärungen: alle Schritte lassen sich aufbauen',built);
@@ -542,7 +542,7 @@ function runSelfTests(){
     t('Gate: Bruchlabor und Übungen des Lernpfads zeigen die Erklärung, solange sie ungesehen ist',introWanted({kind:'lab'})==='LAB'&&introWanted({kind:'practice',id:'G02'})==='G02'&&introWanted({kind:'practice',id:'Q00'})==='Q00');
     t('Gate: nie bei Spielen, auf der Startseite und bei unbekannten Kennungen',!introWanted({kind:'practice',id:'O01'})&&!introWanted({kind:'game',id:'S01'})&&!introWanted({kind:'home'})&&!introWanted({kind:'practice',id:'ZZ'})&&!introWanted({kind:'practice',id:'constructor'})&&!introWanted(null));
     S.intro={G02:true,LAB:true};
-    t('Gate: Gesehenes kommt nicht wieder – außer per Knopf im Merkkasten (view.intro)',!introWanted({kind:'practice',id:'G02'})&&!introWanted({kind:'lab'})&&introWanted({kind:'practice',id:'G02',intro:true})==='G02'&&introWanted({kind:'lab',intro:true})==='LAB'&&introWanted({kind:'practice',id:'G03'})==='G03');
+    t('Gate: Gesehenes kommt nicht wieder – außer per Knopf im Merkzettel (view.intro)',!introWanted({kind:'practice',id:'G02'})&&!introWanted({kind:'lab'})&&introWanted({kind:'practice',id:'G02',intro:true})==='G02'&&introWanted({kind:'lab',intro:true})==='LAB'&&introWanted({kind:'practice',id:'G03'})==='G03');
     S.intro=keepI;
     const mi=(o)=>{migrateIntro(o);return o.intro;};
     const m1=mi({progress:{'G02-L1':{done:3,first:1,later:2,skipped:0,shown:0},'U01-L2':{done:0,first:0,later:0,skipped:1,shown:0}},passed:{'G03-L2':true},rounds:{'T01-L1':{results:['f'],cur:null,size:8}},lab:{did:{x:true,d:false},done:false},placed:true});
@@ -908,7 +908,7 @@ function runSelfTests(){
       S.view={kind:'practice',id:'G02'};renderAll();
       const barBtns=()=>[...app.querySelectorAll('.actionbar .primaryrow .btn')],btns=barBtns().map(b=>b.textContent.trim());
       const dockMsg=()=>(app.querySelector('.actionbar .dockmsg')||{textContent:''}).textContent;
-      t('Erklärung: erste Karte „Probiere es aus“ ist ein Bildschirm wie eine Übung: Aufgabe in der Karte, ein Bedienpult unten (Tipp | Kenne ich schon | Prüfen), ein gelber Hauptknopf; 5 Schritte (4 + Probe)',/Probiere es aus/.test(app.querySelector('.introh').textContent)&&!!app.querySelector('.introprobe input')&&/Schritt 1 von 5/.test(app.textContent)&&btns.join('|')==='Tipp|Kenne ich schon|Prüfen'&&app.querySelectorAll('.actionbar .btn.primary').length===1&&app.querySelectorAll('.card button').length===0&&!app.querySelector('.linkrow'));
+      t('Erklärung: erste Karte „Probiere es aus“ ist ein Bildschirm wie eine Übung: Aufgabe in der Karte, ein Bedienpult unten (Tipp | Kenne ich schon | Prüfen), ein gelber Hauptknopf; 5 Schritte (4 + Probe)',/Probiere es aus/.test(app.querySelector('.introh').textContent)&&!!app.querySelector('.introprobe input')&&/Karte 1 von 5/.test(app.textContent)&&btns.join('|')==='Tipp|Kenne ich schon|Prüfen'&&app.querySelectorAll('.actionbar .btn.primary').length===1&&app.querySelectorAll('.card button').length===0&&!app.querySelector('.linkrow'));
       const box=app.querySelector('.introprobe'),fr=box.querySelector('.frac'),ka=+box.querySelector('strong').textContent,a7=+fr.querySelector('.num').textContent,b7=+fr.querySelector('.den').textContent;
       const ins=[...box.querySelectorAll('input[type=text]')],setI=(i,v)=>{i.value=String(v);i.dispatchEvent(new Event('input',{bubbles:true}));};
       const pruefen=()=>barBtns().find(b=>b.textContent.trim()==='Prüfen').click();
@@ -920,15 +920,15 @@ function runSelfTests(){
       t('Probeaufgabe: richtige Antwort zeigt die Rechnung, der Hauptknopf heißt dann „Weiter“; keine Punkte, keine Serie, kein Fortschritt (zählt nicht für Sterne)',/Richtig: /.test(dockMsg())&&barBtns()[2].textContent.trim()==='Weiter'&&S.xp===40&&S.streak===3&&Object.keys(S.progress).length===0&&Object.keys(S.rounds).length===0);
       barBtns()[2].click();
       const bs=barBtns();
-      t('Erklärung: „Weiter“ führt zur ersten Erklärkarte der Station; ab Karte 2 stehen unten ‹ | Kenne ich schon | Weiter (nur Pfeil links, ein gelber Hauptknopf)',/Schritt 2 von 5/.test(app.textContent)&&/Erweitern heißt: feiner teilen/.test(app.querySelector('.introh').textContent)&&bs.map(b=>b.textContent.trim()).join('|')==='|Kenne ich schon|Weiter'&&bs[0].getAttribute('aria-label')==='Zurück zum vorigen Schritt'&&app.querySelectorAll('.actionbar .btn.primary').length===1);
+      t('Erklärung: „Weiter“ führt zur ersten Erklärkarte der Station; ab Karte 2 stehen unten ‹ | Kenne ich schon | Weiter (nur Pfeil links, ein gelber Hauptknopf)',/Karte 2 von 5/.test(app.textContent)&&/Erweitern heißt: feiner teilen/.test(app.querySelector('.introh').textContent)&&bs.map(b=>b.textContent.trim()).join('|')==='|Kenne ich schon|Weiter'&&bs[0].getAttribute('aria-label')==='Zurück zum vorigen Schritt'&&app.querySelectorAll('.actionbar .btn.primary').length===1);
       barBtns()[1].click();
       t('„Kenne ich schon“: Erklärung gilt als gesehen, die Übung öffnet sich',S.intro.G02===true&&!app.querySelector('.introwork'));
       S.intro={};S.view={kind:'lab'};renderAll();
-      t('Bruchlabor: keine Probeaufgabe, vier Schritte; „Kenne ich schon“ auch dort',!app.querySelector('.introprobe')&&/Schritt 1 von 4/.test(app.textContent)&&[...app.querySelectorAll('.actionbar .primaryrow .btn')][1].textContent.trim()==='Kenne ich schon');
+      t('Bruchlabor: keine Probeaufgabe, vier Schritte; „Kenne ich schon“ auch dort',!app.querySelector('.introprobe')&&/Karte 1 von 4/.test(app.textContent)&&[...app.querySelectorAll('.actionbar .primaryrow .btn')][1].textContent.trim()==='Kenne ich schon');
       S.intro={};S.view={kind:'practice',id:'QA'};renderAll();
-      t('Abschlusscheck: keine Probeaufgabe vor der Erklärung',!app.querySelector('.introprobe')&&/Schritt 1 von 3/.test(app.textContent));
+      t('Abschlusscheck: keine Probeaufgabe vor der Erklärung',!app.querySelector('.introprobe')&&/Karte 1 von 3/.test(app.textContent));
       S.intro={G03:true};S.view={kind:'practice',id:'G03',intro:true};renderAll();
-      t('Erklärung aus dem Merkkasten (again): Knopf heißt „Schließen“',[...app.querySelectorAll('.actionbar .primaryrow .btn')][1].textContent.trim()==='Schließen');
+      t('Erklärung aus dem Merkzettel (again): Knopf heißt „Schließen“',[...app.querySelectorAll('.actionbar .primaryrow .btn')][1].textContent.trim()==='Schließen');
     }finally{Object.assign(S,keep7);persist();renderAll();}
   }
   /* Paket 6: Abschlusschecks QA und ZA, gemischte Runden, „Stimmt das?“, Transfer, Hinweis „Erst Erweitern und Kürzen“ */
@@ -1103,7 +1103,7 @@ function runSelfTests(){
       S.levelByType.W05=1;app.querySelectorAll('.levelrow .seg button')[1].click();
       t('Üben: der Schwierigkeits-Umschalter gilt für alle Aufgaben der Seite',levelOf('W05')===2&&levelOf('G01')===2&&levelOf('Z03')===2);
       S.view={kind:'home',tab:'ueben',group:'Erweitern'};renderAll();
-      t('Üben: ein alter Verlaufseintrag mit Gruppe zeigt die Üben-Liste',!!app.querySelector('.uebenbody')&&/Üben/.test(app.querySelector('h1').textContent));
+      t('Üben: ein alter Verlaufseintrag mit Gruppe zeigt die Üben-Liste',!!app.querySelector('.uebenbody')&&/Wiederholen/.test(app.querySelector('h1').textContent));
       app.querySelectorAll('.bomrow')[1].click(); /* die erste Zeile ist das Bruchlabor */
       t('Üben: ein Antippen öffnet die Aufgabe, Zurück führt in die Üben-Liste',S.view.kind==='practice'&&S.last===S.view.id&&backTarget().tab==='ueben');
       /* Leitregeln: ein gelber Hauptknopf je Bildschirm, „Lernpfad“ nie als Knopf oder Überschrift */
@@ -1146,7 +1146,7 @@ function runSelfTests(){
       t('Ergebnis Eingangstest („von vorn“): Hauptknopf „Zum Lernpfad“, Textlink „Nochmal“',lab(qs)==='*Zum Lernpfad|Nochmal');
     }finally{S.view=keepR.view;persist();renderAll();}
   }
-  /* Paket 4: Sprache für Kinder, Rechenprobe im Lob, Merkkästen, Schriftgröße */
+  /* Paket 4: Sprache für Kinder, Rechenprobe im Lob, Merkzettel, Schriftgröße */
   {
     const jargon=/Bauteil|Bauplan|Baupläne|Blatt \d|Blitz|Maßgenau|Millimeter|Legende: alles perfekt|\bPos\b/;
     t('Lob: keine Floskeln mit Technikwörtern (Maßgenau, Millimeter, Bauteil in Ordnung)',PRAISE.length>=5&&PRAISE.every(p=>!jargon.test(p)));
@@ -1178,7 +1178,7 @@ function runSelfTests(){
     t('Lob mit Rechnung: „Richtig: 2 · 3 = 6 und 5 · 3 = 15.“ (Erweitern), 12 : 3 = 4 und 18 : 3 = 6 (Kürzen mit Zahl), 84 : 42 = 2 und 126 : 42 = 3 (so weit wie möglich), 2 · 3 + 1 = 7 (gemischte Zahl)',
       f1.includes('Richtig: 2 · 3 = 6 und 5 · 3 = 15.')&&f2.includes('Richtig: 12 : 3 = 4 und 18 : 3 = 6.')&&f3.includes('84 : 42 = 2 und 126 : 42 = 3')&&f4.includes('2 · 3 + 1 = 7'));
     t('Lob mit Rechnung: Aufgaben ohne kurze Rechnung (Bruchfamilie, Schnelltest) behalten Lob und Begründung',proofText({type:'O01',p:2,q:3})===null&&proofText({type:'Q00'})===null&&proofText({type:'G05',mode:'denom',a:6,b:9,N:3})==='9 : 3 = 3 und 6 : 3 = 2.'&&proofText({type:'U02',mode:'expand',from:[2,3],to:[6,9],k:3})==='2 · 3 = 6 und 3 · 3 = 9.');
-    /* Merkkästen: Beispiel zuerst, kurze Sätze, Fachwörter erklärt */
+    /* Merkzettel: Beispiel zuerst, kurze Sätze, Fachwörter erklärt */
     const ids=Object.keys(NOTES),words=(s)=>s.split(/\s+/).filter(Boolean).length;
     let longest=0,firstOK=0,bad=[];
     ids.forEach(id=>{
@@ -1186,9 +1186,9 @@ function runSelfTests(){
       const f=nodes[0];if(f.classList.contains('ex')||/^Beispiel/.test(f.textContent))firstOK++;
       nodes.filter(n=>n.tagName==='P'||n.classList.contains('rule')).forEach(n=>n.textContent.split(/[.!?]\s+/).forEach(s=>{longest=Math.max(longest,words(s));}));
     });
-    t('Merkkästen: alle 22 (M1–M22) bauen sich, beginnen mit dem Beispiel, Sätze höchstens 14 Wörter (längster: '+longest+')',ids.length===22&&bad.length===0&&firstOK===22&&longest<=14);
+    t('Merkzettel: alle 22 (M1–M22) bauen sich, beginnen mit dem Beispiel, Sätze höchstens 14 Wörter (längster: '+longest+')',ids.length===22&&bad.length===0&&firstOK===22&&longest<=14);
     const txt=(id)=>NOTES[id].build([]).map(n=>n.textContent).join(' ');
-    t('Merkkästen: Fachwörter kommen nach dem Beispiel mit Erklärung (Erweiterungszahl, Kürzungszahl, Quersumme, Dezimalbruch, gemischte Zahl, kgV)',txt('M2').includes('Erweiterungszahl. Sie ist mindestens 2')&&txt('M3').includes('Kürzungszahl. Sie ist mindestens 2')&&txt('M7').includes('Quersumme bekommst du, wenn du alle Ziffern addierst')&&txt('M4').includes('heißt Dezimalbruch')&&txt('M6').includes('Natürliche Zahlen sind 1, 2, 3')&&txt('M10').includes('kleinstes gemeinsames Vielfaches (kgV)'));
+    t('Merkzettel: Fachwörter kommen nach dem Beispiel mit Erklärung (Erweiterungszahl, Kürzungszahl, Quersumme, Dezimalbruch, gemischte Zahl, kgV)',txt('M2').includes('Erweiterungszahl. Sie ist mindestens 2')&&txt('M3').includes('Kürzungszahl. Sie ist mindestens 2')&&txt('M7').includes('Quersumme bekommst du, wenn du alle Ziffern addierst')&&txt('M4').includes('heißt Dezimalbruch')&&txt('M6').includes('Natürliche Zahlen sind 1, 2, 3')&&txt('M10').includes('kleinstes gemeinsames Vielfaches (kgV)'));
     /* Schrift: Menü und Rang-Chip mindestens 16 px */
     const px=(cls)=>{const x=el('span',{class:cls});document.body.append(x);const v=parseFloat(getComputedStyle(x).fontSize);x.remove();return v;};
     t('Schrift: Menü, Rangname, XP und Serie sind mindestens 16 px groß (navb '+px('navb')+', gname '+px('gname')+', gxp '+px('gxp')+')',['navb','gname','gxp','gstreak'].every(c=>px(c)>=16));
@@ -1314,9 +1314,9 @@ function runSelfTests(){
     t('Teilbarkeit durch 4: zweistellig gezeigt („00“, „04“), 00 ist durch 4 teilbar',divExplain(400,4)[0]==='Letzte zwei Ziffern: 00.'&&divExplain(400,4)[1]==='00 ist durch 4 teilbar.'&&divExplain(504,4)[0]==='Letzte zwei Ziffern: 04.'&&divExplain(504,4)[1].startsWith('04 : 4')&&divExplain(512,4)[0]==='Letzte zwei Ziffern: 12.');
     t('Labor: Meldung zum Zähler ist ein vollständiger Satz',LAB_WRONG.zaehler.includes('mit der Zahl multipliziert oder durch sie geteilt'));
     const noteText=Object.keys(NOTES).map(k=>NOTES[k].title+' '+NOTES[k].build([]).map(n=>n.textContent).join(' ')).join(' ');
-    t('Begriffe: „gemischte Zahl“ und „Bruch“, nie „gemeiner Bruch“ oder „gemischte Schreibweise“ (Merkkästen, Aufgaben, Erklärungen)',!/gemeine[rn]? Bruch|[Gg]emischte Schreibweise/.test(noteText+JSON.stringify(INTRO)+Object.values(TASKS).map(x=>x.name+' '+x.desc).join(' '))&&TASKS.D03.name==='Gemischte Zahl → Bruch'&&NOTES.M6.title==='Gemischte Zahl als Bruch');
-    t('Merkkästen: Erweiterungszahl und Kürzungszahl „mindestens 2“; M5 ohne „führende Nullen“, mit „Zähle alle Stellen“',noteText.includes('Erweiterungszahl. Sie ist mindestens 2')&&noteText.includes('Kürzungszahl. Sie ist mindestens 2')&&noteText.includes('Zähle alle Stellen hinter dem Komma')&&!/Führende Nullen|unbemerkt/.test(noteText));
-    t('Merkkasten M9: Weg 1 (Einteilung anpassen) vor Weg 2 (Bruch anpassen), kein Weg A/B',noteText.indexOf('Weg 1: Einteilung anpassen')>=0&&noteText.indexOf('Weg 1: Einteilung anpassen')<noteText.indexOf('Weg 2: Bruch anpassen')&&!/Weg [AB]\b/.test(noteText));
+    t('Begriffe: „gemischte Zahl“ und „Bruch“, nie „gemeiner Bruch“ oder „gemischte Schreibweise“ (Merkzettel, Aufgaben, Erklärungen)',!/gemeine[rn]? Bruch|[Gg]emischte Schreibweise/.test(noteText+JSON.stringify(INTRO)+Object.values(TASKS).map(x=>x.name+' '+x.desc).join(' '))&&TASKS.D03.name==='Gemischte Zahl → Bruch'&&NOTES.M6.title==='Gemischte Zahl als Bruch');
+    t('Merkzettel: Erweiterungszahl und Kürzungszahl „mindestens 2“; M5 ohne „führende Nullen“, mit „Zähle alle Stellen“',noteText.includes('Erweiterungszahl. Sie ist mindestens 2')&&noteText.includes('Kürzungszahl. Sie ist mindestens 2')&&noteText.includes('Zähle alle Stellen hinter dem Komma')&&!/Führende Nullen|unbemerkt/.test(noteText));
+    t('Merkzettel M9: Weg 1 (Einteilung anpassen) vor Weg 2 (Bruch anpassen), kein Weg A/B',noteText.indexOf('Weg 1: Einteilung anpassen')>=0&&noteText.indexOf('Weg 1: Einteilung anpassen')<noteText.indexOf('Weg 2: Bruch anpassen')&&!/Weg [AB]\b/.test(noteText));
     t('Kleinstes gemeinsames Vielfaches: nur als Randnotiz (Z06-Erklärung nennt zuerst „die kleinste Zahl, in die alle Nenner passen“)',INTRO.Z06.steps.some(s=>s.say[1]&&s.say[1].includes('kleinste Zahl, in die alle Nenner passen')&&s.say.some(x=>x.includes('Fachwort'))));
     t('Z08-Erklärung: gemischte Zahl mit Rechnung 7/4 = 1 + 3/4 = 1 ¾, Überschrift „Brüche, die natürliche Zahlen sind“',INTRO.Z08.steps.some(s=>(s.calc||[]).some(l=>l.some(x=>x&&x.m&&x.m.join()==='1,3,4')))&&INTRO.Z08.steps.some(s=>s.h==='Brüche, die natürliche Zahlen sind'&&s.say[0].includes('1, 2 oder 3')));
     t('Memory: Regel je Niveau, verschieden und nicht leer',MEMORY_RULE[1]&&MEMORY_RULE[2]&&MEMORY_RULE[1]!==MEMORY_RULE[2]);
@@ -1363,7 +1363,7 @@ function runSelfTests(){
     const sol15=buildWorkedSolution(t15).map(n=>n.textContent).join(' ');
     t('Kürzen-Maschine: Musterlösung für 15/60 zeigt die beiden Reihenfolgen ÷3 › ÷5 und ÷5 › ÷3',sol15.includes('÷3 › ÷5')&&sol15.includes('÷5 › ÷3'));
     const m9=NOTES.M9.build([]).map(n=>n.textContent).join(' ');
-    t('Merkkasten M9: „Weg 1: Einteilung anpassen“ und „Weg 2: Bruch anpassen“ stehen je genau einmal',(m9.match(/Weg 1: Einteilung anpassen/g)||[]).length===1&&(m9.match(/Weg 2: Bruch anpassen/g)||[]).length===1);
+    t('Merkzettel M9: „Weg 1: Einteilung anpassen“ und „Weg 2: Bruch anpassen“ stehen je genau einmal',(m9.match(/Weg 1: Einteilung anpassen/g)||[]).length===1&&(m9.match(/Weg 2: Bruch anpassen/g)||[]).length===1);
   }
   /* Paket B: „natürliche Zahl“ mit Beispiel in der Frage, Erklärung nach „sitzt“ im Eingangstest */
   {
@@ -1382,7 +1382,7 @@ function runSelfTests(){
       S.einstufung={at:1,right:10,size:15,skills:{erweitern:{status:'fast'}}};S.checked={};second();
       const fastNo=!app.querySelector('.introknown');
       S.einstufung={at:1,right:15,size:15,skills:{erweitern:{status:'sitzt'}}};S.checked={G02:true};S.view={kind:'practice',id:'G02',intro:true};second();
-      t('Erklärung: bei „fast“ und beim Aufruf aus dem Merkkasten kein Hinweis, „Weiter“ bleibt der Hauptknopf',fastNo&&!app.querySelector('.introknown')&&app.querySelector('.intronext').classList.contains('primary'));
+      t('Erklärung: bei „fast“ und beim Aufruf aus dem Merkzettel kein Hinweis, „Weiter“ bleibt der Hauptknopf',fastNo&&!app.querySelector('.introknown')&&app.querySelector('.intronext').classList.contains('primary'));
       S.view={kind:'practice',id:'G02'};renderAll();
       app.querySelector('.introskip').click();
       t('Erklärung nach „sitzt“: „Kenne ich schon“ öffnet die Übung',S.intro.G02===true&&!app.querySelector('.introwork'));
@@ -1475,7 +1475,7 @@ function runSelfTests(){
     try{
       S.modus={veraendern:'frei',zahlenstrahl:'frei',vergleichen:'frei',addsub:'frei'};S.unlocked={veraendern:true,zahlenstrahl:true,vergleichen:true,addsub:true};Object.keys(INTRO).forEach(k=>S.intro[k]=true);
       S.levelByType.G02=1;S.rounds={};S.view={kind:'practice',id:'G02'};renderAll();
-      t('Bedienpult: Tipp | Merkkasten | Prüfen, ein gelber Hauptknopf rechts; „Lösung ansehen“ und „Überspringen“ liegen in der Meldung, nicht unter der Karte',bar().map(b=>b.textContent.trim()).join('|')==='Tipp|Merkkasten|Prüfen'&&bar()[2].classList.contains('primary')&&app.querySelectorAll('.actionbar .btn.primary').length===1&&!app.querySelector('.work > .linkrow')&&!!app.querySelector('.dockmsg .linkrow'));
+      t('Bedienpult: Tipp | Merkzettel | Prüfen, ein gelber Hauptknopf rechts; „Lösung ansehen“ und „Überspringen“ liegen in der Meldung, nicht unter der Karte',bar().map(b=>b.textContent.trim()).join('|')==='Tipp|Überspringen|Prüfen'&&bar()[2].classList.contains('primary')&&app.querySelectorAll('.actionbar .btn.primary').length===1&&!app.querySelector('.work > .linkrow')&&!!app.querySelector('.dockmsg .linkrow'));
       btn('Prüfen').click();
       const inMsg=panel().classList.contains('msgmode');
       const inp=app.querySelector('.card input[type=text]');inp.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));
@@ -2011,10 +2011,10 @@ function runSelfTests(){
         !!seen.kuchen&&!!seen.pizzaEnde&&seen.kuchen.plus===true&&seen.pizzaEnde.plus===false&&addHasPic(seen.kuchen)&&!addHasPic(seen.pizzaEnde)&&/gleich groß/.test(sayOf(seen.kuchen))&&/gegessen/.test(sayOf(seen.pizzaEnde))
         &&!/undefined|NaN/.test(sayOf(seen.kuchen)+sayOf(seen.pizzaEnde))&&['kuchen','pizzaEnde'].every(id=>v(seen[id],okDraft(seen[id])).correct)&&seen.pizzaEnde.res[0]===seen.pizzaEnde.a-seen.pizzaEnde.c);
       const note=NOTES.M17.build([]),note18=NOTES.M18.build([]),noteTxt=note.map(n=>n.textContent).join(' '),noteTxt18=note18.map(n=>n.textContent).join(' ');
-      t('Wortlaut wie an der Tafel: zwei Merkkästen, M17 Addieren und M18 Subtrahieren, sagen „gleichnamig“, „Zähler“ und „Der Nenner bleibt dabei gleich“; das erste Beispiel ist (5 + 1)/12 mit dem gekürzten 1/2, das zweite (5 − 1)/12 mit 1/3',
+      t('Wortlaut wie an der Tafel: zwei Merkzettel, M17 Addieren und M18 Subtrahieren, sagen „gleichnamig“, „Zähler“ und „Der Nenner bleibt dabei gleich“; das erste Beispiel ist (5 + 1)/12 mit dem gekürzten 1/2, das zweite (5 − 1)/12 mit 1/3',
         /Gleichnamig/.test(noteTxt)&&/Zähler addiert/.test(noteTxt)&&!/subtrahier/.test(noteTxt)&&/Der Nenner bleibt dabei gleich/.test(noteTxt)&&/Zähler subtrahiert/.test(noteTxt18)&&/Der Nenner bleibt dabei gleich/.test(noteTxt18)
         &&note[0].classList.contains('ex')&&/5 \+ 1/.test(note[0].textContent)&&/5 − 1/.test(note18[0].textContent)&&cnt(note[0],'.frac')===5&&cnt(note18[0],'.frac')===5&&cnt(note18[1],'.xmark')===2&&/gleichnamig/.test(JSON.stringify(INTRO.R01)));
-      t('Merkkästen je Baustein: R01 und R02 zeigen nur M17 (R02 dazu M3), R03 und R04 nur M18, R05 beide',
+      t('Merkzettel je Baustein: R01 und R02 zeigen nur M17 (R02 dazu M3), R03 und R04 nur M18, R05 beide',
         TASKS.R01.notes.join()==='M17'&&TASKS.R02.notes.join()==='M17,M3'&&TASKS.R03.notes.join()==='M18'&&TASKS.R04.notes.join()==='M18,M3'&&TASKS.R05.notes.join()==='M17,M18'&&noteFor('R05',null).filter(n=>n.classList.contains('note')).length===2);
     }
     /* Offene Aufgaben: mehrere Lösungen, per Regel geprüft; Doppelte zählen nicht */
@@ -2283,7 +2283,7 @@ function runSelfTests(){
         const ha={results:[],cur:null},haK=[];
         for(let j=0;j<15;j++){ha.results=Array(j).fill('f');const c=TASKS.HA.ctx(ha,1),tk=TASKS.HA.gen(1,RNG,c);haK.push(tk.type);}
         t('Abschlusscheck HA: 10 Antippfragen und 5 Rechenaufgaben (H02, H04, H04, H06, H06), Urkunde ab 12',TASKS.HA.size===15&&needOf(15)===12&&haK.slice(0,10).every(x=>x==='HQ')&&haK.slice(10).join()==='H02,H04,H04,H06,H06'&&finalModOf('HA').id==='addsub2');
-        /* Thema, Gruppen, Merkkästen, Labor, Spiel */
+        /* Thema, Gruppen, Merkzettel, Labor, Spiel */
         const all=[];MODULES.forEach(m=>Object.keys(m.groups||{}).forEach(g=>all.push(g)));
         t('Registry (P1): Gruppennamen sind über alle Themen eindeutig',new Set(all).size===all.length);
         const m2=moduleById('addsub2');
@@ -2303,7 +2303,7 @@ function runSelfTests(){
         let snBad=0;for(let i=0;i<60;i++){const lv=1+i%2,s=hnSchlange(RNG,lv,lv===1?5:8);let v=s.start;s.ops.forEach((o,j)=>{const w=o.plus?addFrac(v[0],v[1],o.f[0],o.f[1]):subFrac(v[0],v[1],o.f[0],o.f[1]);v=simplify(w[0],w[1]);if(!equivalent(v[0],v[1],s.vals[j][0],s.vals[j][1])||v[0]<=0||compareFrac(v[0],v[1],lv===1?2:3,1)>=0)snBad++;});if(lv===1&&s.ops.some(o=>![2,4,8].includes(o.f[1])&&![3,6,12].includes(o.f[1])))snBad++;}
         t('Rechenschlange: Werte stimmen, bleiben über 0 und unter 2 (Leicht) bzw. 3 (Knifflig), Leicht in einer Nennerfamilie; Spiel S04 und 12 Sammelkarten',snBad===0&&GAMES.S04&&SNAKES.length===12&&GAME_IDS.includes('S04'));
         const nt=NOTES.M19.build([]).concat(NOTES.M20.build([]),NOTES.M21.build([]));
-        t('Merkkästen M19–M22: Trick 17 ohne Schmetterling, Hefter-Wortlaut zum Hauptnenner, das gleiche Ganze, Schmetterling nur in M22; Knopf zum Labor Gemeinsame Teilung',!nt.some(x=>/Schmetterling/.test(x.textContent))&&NOTES.M22.build([]).some(x=>/anderen Nenner/.test(x.textContent))&&nt.some(x=>/Den gemeinsamen Nenner nennt man Hauptnenner/.test(x.textContent))&&nt.some(x=>/selben Ganzen/.test(x.textContent))&&noteFor('H04',null).some(x=>/Im Labor/.test(x.textContent)));
+        t('Merkzettel M19–M22: Trick 17 ohne Schmetterling, Hefter-Wortlaut zum Hauptnenner, das gleiche Ganze, Schmetterling nur in M22; Knopf zum Labor Gemeinsame Teilung',!nt.some(x=>/Schmetterling/.test(x.textContent))&&NOTES.M22.build([]).some(x=>/anderen Nenner/.test(x.textContent))&&nt.some(x=>/Den gemeinsamen Nenner nennt man Hauptnenner/.test(x.textContent))&&nt.some(x=>/selben Ganzen/.test(x.textContent))&&noteFor('H04',null).some(x=>/Im Labor/.test(x.textContent)));
       }
       /* Umstellung der Stände: alte Schlüssel R01–R05 werden einmal verworfen, andere bleiben */
       {
@@ -2423,8 +2423,8 @@ async function runLayoutTests(w=375,h=600,samples=3,ids,intro=true,opts={}){
     const dlg=(open,close)=>`S.view={kind:'home',tab:'rang'};renderAll();${open};const W=innerWidth,o=[];document.querySelectorAll('.modal *').forEach(e=>{const r=e.getBoundingClientRect();if(r.width>0&&r.right>W+1)o.push(e.tagName.toLowerCase()+'.'+String(e.className).split(' ')[0]+'@'+Math.round(r.right));});${close};return {breit:o.length?Math.max(1,__ovx()):__ovx(),wo:[...new Set(o)].slice(0,3).join(' ')};`;
     wide('Fenster Einstellungen',dlg('openOptions()','closeOptions()'));
     wide('Fenster Hilfe bei Problemen',dlg('openProblemHelp()','closeProblemHelp()'));
-    /* Merkkasten geöffnet (Schublade oder Bottom-Sheet) */
-    ['G01','W07','WQ'].forEach(id=>wide('Merkkasten '+id,`S.levelByType['${id}']=1;S.rounds={};S.view={kind:'practice',id:'${id}'};renderAll();setHelp(true);const x=__ovx();const o=__off();setHelp(false);return {breit:x,wo:o};`));
+    /* Merkzettel geöffnet (Schublade oder Bottom-Sheet) */
+    ['G01','W07','WQ'].forEach(id=>wide('Merkzettel '+id,`S.levelByType['${id}']=1;S.rounds={};S.view={kind:'practice',id:'${id}'};renderAll();setHelp(true);const x=__ovx();const o=__off();setHelp(false);return {breit:x,wo:o};`));
     /* Zusammenfassungen: bestanden, nicht bestanden, Eingangstest, Abschlusscheck */
     const summary=(id,ok)=>{const T=TASKS[id],qc=QCHK[id];const sk=qc?`Array(${T.size}).fill(0).map((_,i)=>QCHK['${id}'].skills[i%QCHK['${id}'].skills.length])`:'[]';
       return `const key=keyOf('${id}',1);S.levelByType['${id}']=1;S.rounds={[key]:{results:Array(${T.size}).fill('${ok?'f':'x'}'),sk:${sk},cur:null,size:${T.size},bonus:true,info:${ok?`{passed:true,firstPass:true,right:${T.size},need:${T.size},points:${T.size}}`:`{passed:false,right:0,need:${T.size},points:0}`}}};S.view={kind:'practice',id:'${id}'};renderAll();window.scrollTo(0,0);const x=__ovx();return {breit:x,wo:x?__off():''};`;};
@@ -2447,9 +2447,11 @@ async function runLayoutTests(w=375,h=600,samples=3,ids,intro=true,opts={}){
 
 /* =====================================================================
    Bruchstrich überall: sichtbarer Text darf keinen Bruch als „a/b“ enthalten (Brüche stehen immer mit Bruchstrich).
-   Läuft in einem unsichtbaren Rahmen: jede Übung, beide Niveaus, Tipps, Prüfen, Lösung, Merkkasten, Erklärkarten und Seiten.
+   Läuft in einem unsichtbaren Rahmen: jede Übung, beide Niveaus, Tipps, Prüfen, Lösung, Merkzettel, Erklärkarten und Seiten.
    runFracScan(samples, ids) → {hits:[…]}; leer = in Ordnung.
    ===================================================================== */
+/* P20 Wortliste: dieselbe Prüfung für verbotene Oberflächenwörter (Bauteil, Baustein, Thema, Merkzettel, Kurzfragen, Check) */
+const runWordScan=(samples=1,ids)=>runFracScan(samples,ids,{words:true});
 async function runFracScan(samples=3,ids,opts={}){
   ids=ids||Object.keys(TASKS);
   const f=document.createElement('iframe');
@@ -2459,8 +2461,8 @@ async function runFracScan(samples=3,ids,opts={}){
   await new Promise(r=>{f.onload=r;});
   const cw=f.contentWindow;
   cw.eval(`persist=function(){};
-    window.__hits=new Map();
-    window.__scan=(tag)=>{const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode())){const p=n.parentElement;if(!p||p.closest('script,style'))continue;const t=n.nodeValue,m=/\\d\\s*\\/\\s*\\d/.exec(t);if(m){const fr='…'+t.slice(Math.max(0,m.index-24),m.index+18).replace(/\\s+/g,' ')+'…';if(!window.__hits.has(fr))window.__hits.set(fr,tag);}}};
+    window.__hits=new Map();window.__words=${opts.words?'true':'false'};
+    window.__scan=(tag)=>{const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode())){const p=n.parentElement;if(!p||p.closest('script,style'))continue;const t=n.nodeValue,m=window.__words?/\\b(Merkzettel|Merkzettel|Bauteile?n?|Bausteine?n?|Thema|Themen|Kurzfragen|Check)\\b/.exec(t):/\\d\\s*\\/\\s*\\d/.exec(t);if(m){const fr='…'+t.slice(Math.max(0,m.index-24),m.index+18).replace(/\\s+/g,' ')+'…';if(!window.__hits.has(fr))window.__hits.set(fr,tag);}}};
     window.__btn=(t)=>[...document.querySelectorAll('.actionbar button, .card button, .modal button')].find(b=>b.textContent.trim().startsWith(t)&&!b.disabled);
     S.modus={veraendern:'frei',zahlenstrahl:'frei',vergleichen:'frei',addsub:'frei'};S.unlocked={veraendern:true,zahlenstrahl:true,vergleichen:true,addsub:true};Object.keys(INTRO).forEach(k=>S.intro[k]=true);`);
   const errs=[];
@@ -2475,7 +2477,7 @@ async function runFracScan(samples=3,ids,opts={}){
             const tg='${id}-L${lvl}${kind?' '+kind:''}';
             __scan(tg+' Aufgabe');
             for(let k=0;k<5;k++){const t=__btn('Tipp');if(t){t.click();__scan(tg+' Tipp '+(k+1));}}
-            setHelp(true);__scan(tg+' Merkkasten');setHelp(false);
+            setHelp(true);__scan(tg+' Merkzettel');setHelp(false);
             const b=__btn('Prüfen');if(b){b.click();__scan(tg+' Prüfen');}
             const s=__btn('Lösung');if(s){s.click();__scan(tg+' Lösung');}
             document.querySelectorAll('.modal .btn, .modal button').forEach(x=>{});

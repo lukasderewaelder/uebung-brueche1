@@ -1,6 +1,6 @@
 'use strict';
 /* =====================================================================
-   5 Merkkästen M1–M6 und Hilfetexte
+   5 Merkzettel M1–M6 und Hilfetexte
    ===================================================================== */
 
 function figStrip(n,d){return el('div',{class:'fig'},frac(n,d),drawFractionStrip(n,d,{maxW:300}));}
@@ -248,12 +248,12 @@ function noteExAdd(avoid){
   const L=NOTE_EX.M17;
   return L.map(x=>[Math.max(x[0],x[1]),Math.min(x[0],x[1]),x[2]]).find(x=>!avoid.includes(redKey(x[0],x[2]))&&!avoid.includes(redKey(x[1],x[2])))||[5,1,12];
 }
-/* noteFor(task): Merkkästen zur Aufgabe, ohne die Aufgabe zu lösen */
+/* noteFor(task): Merkzettel zur Aufgabe, ohne die Aufgabe zu lösen */
 function noteFor(typeId,task){
   const avoid=(task&&task.avoid)||[],T=TASKS[typeId],ids=T.notesFor?T.notesFor(task):T.notes;
   const out=ids.map(id=>{
     const n=NOTES[id];
-    return el('section',{class:'note','aria-label':'Merkkasten '+id},el('h3',null,id+' · '+n.title),...n.build(avoid));
+    return el('section',{class:'note','aria-label':'Merkzettel '+id},el('h3',null,id+' · '+n.title),...n.build(avoid));
   });
   if(ids.some(id=>id==='M1'||id==='M2'||id==='M3'))out.push(el('p',{class:'labnote'},labLink('LAB')));
   if(ids.some(id=>id==='M17'||id==='M18'))out.push(el('p',{class:'labnote'},labLink('RLAB')));

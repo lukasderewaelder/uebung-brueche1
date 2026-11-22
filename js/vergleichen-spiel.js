@@ -44,7 +44,7 @@ function renderDuell(id){
   card.append(body,msg,hints);
   main.append(modes,card);
   const hintBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('hinweis')),'Tipp');
-  const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkkasten');
+  const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkzettel');
   const primary=el('button',{type:'button',class:'btn primary'},'Weiter');
   main.append(el('div',{class:'actionbar'},el('div',{class:'primaryrow'},hintBtn,noteBtn,primary)));
   noteBtn.addEventListener('click',()=>setHelp(!helpOpen));

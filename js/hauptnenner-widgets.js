@@ -148,58 +148,58 @@ function hnMixedInput(view){
 function addResultH(view,host,t,o){
   o=o||{};
   const d=view.draft,terms=t.terms,signs=t.signs,mid=o.mid!=null?o.mid:!!o.leicht;
-  const rows=el('div',{class:'hnrows'+(terms.length>2?' hn3':'')}); /* hn3: drei Brüche, Felder schmaler, damit die Zeile auf das Handy passt */
-  if(!o.resultOnly){
-    const sg=(i)=>op(signs[i-1]);
-    if(o.leicht){
-      const getN=()=>{const N=o.givenN||getInt(d,'N');return hnFits(N,terms)?N:null;};
-      const nums=[];
-      if(!o.givenN){
-        rows.append(el('div',{class:'arow hnNrow'},el('span',{class:'alab'},'Hauptnenner'),intInput(view,'N','Hauptnenner')));
-        view.inputs.N.addEventListener('input',()=>nums.forEach(f=>f.refreshDen()));
-      }
-      const exp=terms.map((_,i)=>hnNumOver(view,'e'+i,getN,'erweiterter Zähler '+(i+1)));
-      nums.push(...exp);
-      const left=[];terms.forEach((x,i)=>{if(i)left.push(sg(i));left.push(frac(x[0],x[1]));});
-      const right=[];exp.forEach((f,i)=>{if(i)right.push(sg(i));right.push(f);});
-      rows.append(el('div',{class:'arow'},el('span',{class:'alab'},'Erweitern'),el('div',{class:'addrow'},...left,op('='),...right)));
-      if(mid){
-        const den=el('span',{class:'den hnN'},'');
-        const z=[];terms.forEach((_,i)=>{if(i)z.push(el('span',{class:'zop','aria-hidden':'true'},signs[i-1]));z.push(intInput(view,'z'+i,'Zähler '+(i+1)+' im Zwischenschritt'));});
-        const midF=el('span',{class:'frac inp mid',role:'group','aria-label':'Zwischenschritt: erweiterte Zähler über dem Hauptnenner'},el('span',{class:'num'},...z),den);
-        midF.refreshDen=()=>{const N=getN();den.textContent=N?String(N):'▢';den.classList.toggle('empty',!N);};
-        midF.refreshDen();nums.push(midF);
-        rows.append(el('div',{class:'arow amid'},el('span',{class:'alab'},'Zwischenschritt'),el('div',{class:'addrow'},midF)));
-      }
-    }else{
-      const left=[];terms.forEach((x,i)=>{if(i)left.push(sg(i));left.push(frac(x[0],x[1]));});
-      const right=[];terms.forEach((_,i)=>{if(i)right.push(sg(i));right.push(el('span',{class:'frac inp',role:'group','aria-label':'erweiterter Bruch '+(i+1)},
-        el('span',{class:'num'},intInput(view,'e'+i,'Zähler '+(i+1))),el('span',{class:'den'},intInput(view,'e'+i+'d','Nenner '+(i+1)))));});
-      rows.append(el('div',{class:'arow'},el('span',{class:'alab'},'Erweitern'),el('div',{class:'addrow'},...left,op('='),...right)));
+  /* P22: Rechenweg in einer Zeile (wie im Hefter), kein zweiter „Weiter“-Knopf: a/b + c/d = □/N + □/N = (□ + □)/N = □/□ = □/□.
+     Die Zeile bricht nur zwischen den Gleichheitszeichen um (Handy hoch: zwei Zeilen, Tablet und PC: eine). */
+  if(o.resultOnly){addResult(view,host,{});if(o.mixed)host.append(hnMixRow(view));return host;}
+  const grp=(...xs)=>el('span',{class:'hnq'},...xs);
+  const sg=(i)=>op(signs[i-1]);
+  const line=el('div',{class:'hnline'+(terms.length>2?' hn3':''),role:'group','aria-label':'Rechenweg'});
+  const left=[];terms.forEach((x,i)=>{if(i)left.push(sg(i));left.push(frac(x[0],x[1]));});
+  const nums=[];
+  let getN=()=>null;
+  if(o.leicht){
+    getN=()=>{const N=o.givenN||getInt(d,'N');return hnFits(N,terms)?N:null;};
+    if(!o.givenN){
+      line.append(grp(el('span',{class:'hnlab'},'Hauptnenner'),intInput(view,'N','Hauptnenner')));
+      view.inputs.N.addEventListener('input',()=>nums.forEach(f=>f.refreshDen()));
     }
+    const exp=terms.map((_,i)=>hnNumOver(view,'e'+i,getN,'erweiterter Zähler '+(i+1)));
+    nums.push(...exp);
+    const right=[];exp.forEach((f,i)=>{if(i)right.push(sg(i));right.push(f);});
+    line.append(grp(...left),grp(op('='),...right));
+    if(mid){
+      const den=el('span',{class:'den hnN'},'');
+      const z=[];terms.forEach((_,i)=>{if(i)z.push(el('span',{class:'zop','aria-hidden':'true'},signs[i-1]));z.push(intInput(view,'z'+i,'Zähler '+(i+1)+' im Zwischenschritt'));});
+      const midF=el('span',{class:'frac inp mid',role:'group','aria-label':'Zwischenschritt: erweiterte Zähler über dem gemeinsamen Nenner'},el('span',{class:'num'},...z),den);
+      midF.refreshDen=()=>{const N=getN();den.textContent=N?String(N):'▢';den.classList.toggle('empty',!N);};
+      midF.refreshDen();nums.push(midF);
+      line.append(grp(op('='),midF));
+    }
+  }else{
+    const right=[];terms.forEach((_,i)=>{if(i)right.push(sg(i));right.push(el('span',{class:'frac inp',role:'group','aria-label':'erweiterter Bruch '+(i+1)},
+      el('span',{class:'num'},intInput(view,'e'+i,'Zähler '+(i+1))),el('span',{class:'den'},intInput(view,'e'+i+'d','Nenner '+(i+1)))));});
+    line.append(grp(...left),grp(op('='),...right));
   }
-  /* zwei Etappen (o.staged): erst Hauptnenner und Erweitern, dann Ergebnis und Kürzen – so passt die Aufgabe ohne Scrollen auf das Handy */
-  if(o.staged&&!o.resultOnly){
-    const keys=Object.keys(view.inputs).filter(k=>/^(N|e\d+d?|z\d+)$/.test(k));
-    const filled=()=>keys.every(k=>d[k]!=null&&d[k]!=='');
-    const stg=twoStage(view,host,{isDone:()=>d.hw===true,summary:()=>hnStageSummary(t,d,o)});
-    const go=el('button',{type:'button',class:'btn small','aria-label':'Weiter zum Ergebnis'},'Weiter');
-    const up=()=>{go.disabled=view.locked()||!filled();};
-    rows.addEventListener('input',up);
-    go.addEventListener('click',()=>{if(view.locked()||!filled())return;d.hw=true;view.save();stg.advance();});
-    const midRow=rows.querySelector('.amid .addrow'); /* Leicht: Knopf rechts neben dem Zwischenschritt, spart eine Zeile */
-    if(midRow){go.classList.add('hngo');midRow.append(go);stg.box1.append(rows);}else stg.box1.append(rows,go);
-    up();
-    addResult(view,stg.box2,{});
-    if(o.mixed)stg.box2.append(el('div',{class:'arow hnmixrow'},el('span',{class:'alab'},'gemischte Zahl (freiwillig)'),hnMixedInput(view)));
-    stg.upd();
-    return stg.box2;
-  }
-  host.append(rows);
-  addResult(view,host,{});
-  if(o.mixed)host.append(el('div',{class:'arow hnmixrow'},el('span',{class:'alab'},'gemischte Zahl (freiwillig)'),hnMixedInput(view)));
+  /* Ergebnis und gekürzt in derselben Zeile; „Kürzen geht nicht“ darunter (verrät nichts, steht immer da) */
+  const kn=el('button',{type:'button',class:'btn small kn','aria-pressed':String(d.kn===true)},'Kürzen geht nicht');
+  kn.disabled=view.locked();
+  const rf=fracInput(view,'r'),kf=fracInput(view,'k');
+  const sync=()=>kn.setAttribute('aria-pressed',String(d.kn===true));
+  kn.addEventListener('click',()=>{
+    if(view.locked())return;
+    d.kn=d.kn!==true;
+    if(d.kn)['k.n','k.d'].forEach(k=>{delete d[k];if(view.inputs[k]){view.inputs[k].value='';view.inputs[k].classList.remove('bad','good');}});
+    kn.classList.remove('bad','good');view.save();sync();
+  });
+  ['k.n','k.d'].forEach(k=>view.inputs[k].addEventListener('input',()=>{if(d.kn){d.kn=false;view.save();sync();}}));
+  view.inputs.kn=kn;
+  rf.setAttribute('aria-label','Ergebnis');kf.setAttribute('aria-label','gekürzt');
+  line.append(grp(op('='),rf),grp(op('='),el('span',{class:'hnk'},kf,el('small',{class:'hnlab'},'gekürzt'))));
+  host.append(line,el('div',{class:'hnknrow'},kn));
+  if(o.mixed)host.append(hnMixRow(view));
   return host;
 }
+const hnMixRow=(view)=>el('div',{class:'arow hnmixrow'},el('span',{class:'alab'},'gemischte Zahl (freiwillig)'),hnMixedInput(view));
 /* Zeile der zugeklappten ersten Etappe: die erweiterten Brüche */
 function hnStageSummary(t,d,o){
   const N=o.leicht?(o.givenN||d.N):d.e0d;

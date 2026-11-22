@@ -6,7 +6,7 @@
    Rechnungen stehen als Daten in calc, nie im Text: [n,d] = Bruch, [n,d,'x',k] bzw. [n,d,'d',k] = Bruch mit „· k“
    bzw. „: k“ in Zähler und Nenner, {m:[w,n,d]} = gemischte Zahl, Zahl = Zahl, anderer Text = Rechenzeichen oder Wort, {wrong:true,t:[…]} = falsche Rechnung.
    Schritt: h (Überschrift), say (Sätze), dazu höchstens eins von fig (Streifen/Kreise), lab (Ausgang/Jetzt), tryit (Ausprobieren), calc.
-   Gate in renderAll: ungesehen oder per Knopf „Erklärung“ im Merkkasten (view.intro). Altbestand: migrateIntro.
+   Gate in renderAll: ungesehen oder per Knopf „Erklärung“ im Merkzettel (view.intro). Altbestand: migrateIntro.
    ===================================================================== */
 const INTRO={
   LAB:{title:'Bruchlabor',steps:[
@@ -85,14 +85,14 @@ const INTRO={
       say:['Für **3** und **9** brauchst du die Quersumme.','Addiere dazu alle Ziffern.','Ist die Summe durch 3 teilbar, ist es auch die Zahl.','Bei der 9 ist es genauso.'],
       calc:[[252,'→',2,'+',5,'+',2,'=',9]]},
     {h:'Vier und sechs',
-      say:['**4**: Die letzten zwei Ziffern sind durch 4 teilbar.','**6**: Die Zahl ist durch 2 und durch 3 teilbar.','Alle Regeln findest du im **Merkkasten**.']}
+      say:['**4**: Die letzten zwei Ziffern sind durch 4 teilbar.','**6**: Die Zahl ist durch 2 und durch 3 teilbar.','Alle Regeln findest du im **Merkzettel**.']}
   ]},
   T02:{title:'Gemeinsame Teiler',steps:[
     {h:'Zwei Zahlen, ein Teiler',
       say:['Eine Zahl teilt eine andere, wenn kein Rest bleibt.','Gesucht sind Zahlen, die zwei Zahlen zugleich teilen.','Beide Zahlen müssen passen.'],
       calc:[[12,':',6,'=',2],[18,':',6,'=',3]]},
     {h:'Prüfe jede Zahl',
-      say:['Probiere eine Zahl nach der anderen.','Eine Zahl, die nur eine von beiden teilt, zählt nicht.','Die Regeln dazu stehen im **Merkkasten**.']},
+      say:['Probiere eine Zahl nach der anderen.','Eine Zahl, die nur eine von beiden teilt, zählt nicht.','Die Regeln dazu stehen im **Merkzettel**.']},
     {h:'So antwortest du',
       say:['Tippe alle Zahlen an, die beide Zahlen teilen.','Oft passt mehr als eine Zahl.','Dann tippe auf **Prüfen**.']}
   ]},
@@ -107,7 +107,7 @@ const INTRO={
       say:['Tippe auf **÷ 2**.','Tippe dann auf **÷ 3**. Was passiert?'],
       tryit:{base:[4,6],op:'d',ks:[2,3]}},
     {h:'Nur, wenn beide passen',
-      say:['Du kannst nur durch eine Zahl kürzen, die in beide Zahlen passt.','Prüfe vorher: Bleibt oben und unten kein Rest?','Die Regeln dazu stehen im **Merkkasten**.']}
+      say:['Du kannst nur durch eine Zahl kürzen, die in beide Zahlen passt.','Prüfe vorher: Bleibt oben und unten kein Rest?','Die Regeln dazu stehen im **Merkzettel**.']}
   ]},
   G04:{title:'Kürzen so weit wie möglich',steps:[
     {h:'Kürzen in Schritten',
@@ -821,7 +821,7 @@ function renderIntro(id){
   const row=el('div',{class:'primaryrow introrow'}),bar=el('div',{class:'actionbar'},row);
   main.append(card,bar);
   /* „Los geht’s“ und „Kenne ich schon“: Erklärung gilt als gesehen, es geht zur eigentlichen Ansicht.
-     Ausdrücklich geöffnet (Merkkasten): das Kennzeichen view.intro verschwindet, der Verlaufseintrag wird ersetzt. */
+     Ausdrücklich geöffnet (Merkzettel): das Kennzeichen view.intro verschwindet, der Verlaufseintrag wird ersetzt. */
   const finish=()=>{
     S.intro=S.intro||{};S.intro[id]=true;
     if(S.view&&S.view.intro){
@@ -857,7 +857,7 @@ function renderIntro(id){
     for(let k=0;k<total;k++)ruler.append(el('i',{class:'tk'+(k<i?' f':k===i?' cur':'')}));
     const h=el('h2',{class:'introh',tabindex:'-1'},s.h);
     card.replaceChildren(...[ruler,
-      el('p',{class:'introstep'},'Schritt '+(i+1)+' von '+total+(s.probe?' · Fehler sind erlaubt':'')),
+      el('p',{class:'introstep'},'Karte '+(i+1)+' von '+total+(s.probe?' · Fehler sind erlaubt':'')),
       known?el('p',{class:'introknown'},icon('haken'),'Das konntest du schon im Eingangstest.'):null,
       h,
       el('div',{class:'introtxt'},s.say.map(t=>el('p',null,introRich(t)))),
@@ -887,6 +887,6 @@ function renderIntro(id){
   checkB.addEventListener('click',()=>{if(!P)return;if(P.st.status==='open')P.check();else goNext();});
   draw(false);
 }
-/* Knopf „Erklärung“ im Merkkasten: dieselbe Ansicht noch einmal, mit Erklärung davor */
+/* Knopf „Erklärung“ im Merkzettel: dieselbe Ansicht noch einmal, mit Erklärung davor */
 function openIntro(){go(Object.assign({},S.view,{intro:true}));}
 
