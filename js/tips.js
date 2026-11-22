@@ -177,7 +177,7 @@ TIPS.U04=(t)=>{
   }
   return [
     [`Wurde oben und unten dasselbe gemacht? Vergleiche ${t.a} mit ${t.c} und ${t.b} mit ${t.d}.`],
-    [qCross(t.a,t.b,t.c,t.d)+' Sind beide Ergebnisse gleich?'],
+    ['Kürze beide Brüche so weit wie möglich. Kommt derselbe Bruch heraus?'],
     [t.truth?'Die Brüche sind gleich. Suche die Begründung, die erklärt, warum.':'Die Brüche sind nicht gleich. Suche die Begründung, die den Fehler nennt.']];
 };
 TIPS.U05=(t)=>[
@@ -539,15 +539,14 @@ TIPS.H02=(t)=>{
   }
   return [['Welcher Nenner ist am größten? Mit dem fängst du an.'],[`Prüfe ${g}: Passt ${rest.join(' und ')} ohne Rest hinein? ${rest.every(x=>g%x===0)?'Ja.':'Nein.'}`],[`Die Reihe heißt ${steps.join(', ')}. Prüfe jede Zahl mit ${rest.join(' und ')}.`]];
 };
-const tipsBildH=(t)=>[['Wie viele Streifen hat das andere Rechteck?'],[`Das andere Rechteck hat ${t.d} Streifen. ${denEach(t.b)} wird in ${t.d} Stücke geteilt.`],[`Beide Rechtecke haben jetzt ${t.b*t.d} Felder. Der Hauptnenner ist ${t.N}.`]];
-TIPS.H03=(t)=>t.kind==='bild'?tipsBildH(t):tipsCalc(t);
+const tipsBildH=(t)=>[['Wie viele Streifen hat das andere Rechteck?'],[`Das andere Rechteck hat ${t.d} Streifen. ${denEach(t.b)} wird in ${t.d} Stücke geteilt.`],[`Beide Rechtecke haben jetzt ${t.b*t.d} gleich große Felder. Zähle die gefärbten Felder.`]];
+TIPS.H03=(t)=>{
+  if(t.erg)return [['Wie viele Felder hat das Ziel, wie viele hast du schon?'],[`Das Ziel ${tf(t.a,t.b)} sind ${t.a*t.d} Felder. Gefärbt sind ${t.c*t.b} Felder.`],[`Es fehlen ${t.a*t.d-t.c*t.b} Felder von ${t.F}.`]];
+  if(t.kind==='geschichte')return [['Teile beide Rechtecke gleich ein. Dann sind alle Felder gleich groß.'],[`Es gibt ${t.F} Felder. ${tf(t.a,t.b)} sind ${t.a*t.d} Felder, ${tf(t.c,t.d)} sind ${t.c*t.b} Felder.`],[t.plus?'Zähle die Felder zusammen.':'Nimm die Felder weg.']];
+  return tipsBildH(t);
+};
 TIPS.H04=(t)=>{
   if(t.kind==='luecke')return [['Erweitere zuerst alle Brüche auf den Hauptnenner.'],[`Der Hauptnenner ist ${t.N}: ${tf(t.a,t.b)} = ${tf(t.a*t.N/t.b,t.N)}.`],[`Dann fehlen ${tf(t.c*t.N/t.d,t.N)}. Passe den Bruch an die Lücke an.`]];
-  return tipsCalc(t);
-};
-TIPS.H05=(t)=>{
-  if(t.kind==='bild')return tipsBildH(t);
-  if(t.erg)return [['Wie viele Felder hat das Ziel, wie viele hast du schon?'],[`Das Ziel ${tf(t.a,t.b)} sind ${t.a*t.d} Felder. Gefärbt sind ${t.c*t.b} Felder.`],[`Es fehlen ${t.a*t.d-t.c*t.b} Felder. Schreibe sie als ${denName(t.N)}.`]];
   return tipsCalc(t);
 };
 TIPS.H06=(t)=>t.kind==='luecke'?TIPS.H04(t):tipsCalc(t);

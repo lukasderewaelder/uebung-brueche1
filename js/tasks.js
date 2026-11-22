@@ -156,7 +156,7 @@ TASKS.G01={area:'Grundlagen',name:'Gleiche Anteile erkennen',desc:'Finde die Bil
 function relationText(a,b,c,d){
   if(c%a===0&&d%b===0&&c/a===d/b&&c/a>1)return `erweitert mit ${c/a}`;
   if(a%c===0&&b%d===0&&a/c===b/d&&a/c>1)return `gekürzt mit ${a/c}`;
-  return `Kreuzprobe: ${a} · ${d} = ${a*d} und ${c} · ${b} = ${c*b}`;
+  return qSame(a,b,c,d).replace(/.$/,''); /* P8: statt Kreuzprobe auf denselben Bruch bringen */
 }
 
 /* ---------- G02 Erweitern ---------- */

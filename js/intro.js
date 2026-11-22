@@ -174,15 +174,9 @@ const INTRO={
       say:['Du brauchst zwei Wege mit verschiedenen Zahlen.','Weg 1 kann ein großer Schritt sein.','Weg 2 besteht aus kleinen Schritten.','Mit **Weg neu starten** beginnst du noch einmal.'],
       calc:[[[12,18],'=',[12,18,'d',6],'=',[2,3]],[[12,18],'=',[6,9],'=',[2,3]]]}
   ]},
-  Q00:{title:'Eingangstest',steps:[
-    {h:'Kurzfragen',
-      say:[TASKS.Q00.size+' Fragen warten auf dich.','Du tippst eine Antwort an. Dann tippst du auf **Prüfen**.','Es gibt keine Zeitmessung.']},
-    {h:'Sofort eine Rückmeldung',
-      say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Dann geht es mit der nächsten Frage weiter.']},
-    {h:'Danach siehst du, was fehlt',
-      say:['Am Ende siehst du, was du schon kannst.','Bekannte Stationen sind dann im Lernpfad markiert.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
-    {h:'Der Abschlusscheck',
-      say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat '+TASKS.QA.size+' Aufgaben: '+QA_TAP+' zum Antippen und '+QA_CALC.length+' zum Rechnen.','Ab '+needOf(TASKS.Q00.size)+' richtigen Antworten gibt es die Urkunde.']}
+  Q00:{title:'Eingangstest',steps:[ /* P15: eine Karte, danach nur „Weiter“ */
+    {h:'Kurz testen',
+      say:[TASKS.Q00.size+' Fragen, keine Note, keine Zeit.','Tippe eine Antwort an. Dann tippe auf **Weiter**.','Am Ende siehst du, was du schon kannst.']}
   ]},
   QA:{title:'Abschlusscheck',steps:[
     {h:'Wie viele Aufgaben?',
@@ -192,16 +186,9 @@ const INTRO={
     {h:'Die Urkunde',
       say:['Ab '+needOf(TASKS.QA.size)+' richtigen Antworten gibt es die Urkunde.','Aufgaben mit Tipp zählen nur halb.','Alle Pflicht-Stationen müssen vorher fertig sein.']}
   ]},
-  ZQ:{title:'Eingangstest',steps:[
-    {h:'Kurzfragen zum Zahlenstrahl',
-      say:[TASKS.ZQ.size+' Fragen warten auf dich.','Du tippst eine Antwort an. Dann tippst du auf **Prüfen**.','Manchmal siehst du einen Zahlenstrahl.'],
-      nline:{from:0,to:1,parts:5,marks:[{n:3,d:5,text:'A'}],labels:'wholes'}},
-    {h:'Sofort eine Rückmeldung',
-      say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Es gibt keine Zeitmessung.']},
-    {h:'Danach siehst du, was fehlt',
-      say:['Am Ende siehst du, was du schon kannst.','Bekannte Stationen sind dann im Lernpfad markiert.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
-    {h:'Der Abschlusscheck',
-      say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat '+TASKS.ZA.size+' Aufgaben: '+ZA_TAP+' zum Antippen und '+ZA_LINE.length+' am Zahlenstrahl.','Ab '+needOf(TASKS.ZQ.size)+' richtigen Antworten gibt es die Urkunde.']}
+  ZQ:{title:'Eingangstest',steps:[ /* P15: eine Karte, danach nur „Weiter“ */
+    {h:'Kurz testen',
+      say:[TASKS.ZQ.size+' Fragen, keine Note, keine Zeit.','Tippe eine Antwort an. Dann tippe auf **Weiter**.','Am Ende siehst du, was du schon kannst.']}
   ]},
   /* Zahlenstrahl: nline = ein Strahl oder eine Liste von Strahlen {from,to,parts,marks,labels,strip,secs}; nltry = Einteilung ausprobieren {to,ks,mark} */
   Z01:{title:'Einteilung erkennen',steps:[
@@ -320,15 +307,9 @@ const INTRO={
       say:['Manche Brüche sind natürliche Zahlen, wie 1, 2 oder 3.','Bei {8|4} geht der Zähler ohne Rest durch den Nenner.','Es sind genau 2 Ganze.'],
       calc:[[8,':',4,'=',2]]}
   ]},
-  WQ:{title:'Eingangstest',steps:[
-    {h:'Kurzfragen zum Vergleichen',
-      say:[TASKS.WQ.size+' Fragen warten auf dich.','Du tippst eine Antwort an. Dann tippst du auf **Prüfen**.','Manchmal siehst du Brüche in einer Reihe.']},
-    {h:'Sofort eine Rückmeldung',
-      say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Es gibt keine Zeitmessung.']},
-    {h:'Danach siehst du, was fehlt',
-      say:['Am Ende siehst du, was du schon kannst.','Bekannte Stationen sind dann im Lernpfad markiert.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
-    {h:'Der Abschlusscheck',
-      say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat '+TASKS.WA.size+' Aufgaben: '+WA_TAP+' zum Antippen und '+WA_LINE.length+' zum Lösen.','Ab '+needOf(TASKS.WQ.size)+' richtigen Antworten gibt es die Urkunde.']}
+  WQ:{title:'Eingangstest',steps:[ /* P15: eine Karte, danach nur „Weiter“ */
+    {h:'Kurz testen',
+      say:[TASKS.WQ.size+' Fragen, keine Note, keine Zeit.','Tippe eine Antwort an. Dann tippe auf **Weiter**.','Am Ende siehst du, was du schon kannst.']}
   ]},
   WA:{title:'Abschlusscheck',steps:[
     {h:'Wie viele Aufgaben?',
@@ -338,15 +319,9 @@ const INTRO={
     {h:'Die Urkunde',
       say:['Ab '+needOf(TASKS.WA.size)+' richtigen Antworten gibt es die Urkunde.','Aufgaben mit Tipp zählen nur halb.','Alle Pflicht-Stationen müssen vorher fertig sein.']}
   ]},
-  RQ:{title:'Eingangstest',steps:[
-    {h:'Kurzfragen zum Rechnen',
-      say:[TASKS.RQ.size+' Fragen warten auf dich.','Du tippst eine Antwort an. Dann tippst du auf **Prüfen**.','Manchmal ist die Antwort ein Ja oder Nein.']},
-    {h:'Sofort eine Rückmeldung',
-      say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Es gibt keine Zeitmessung.']},
-    {h:'Danach siehst du, was fehlt',
-      say:['Am Ende siehst du, was du schon kannst.','Bekannte Stationen sind dann im Lernpfad markiert.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
-    {h:'Der Abschlusscheck',
-      say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat '+TASKS.RA.size+' Aufgaben zum Rechnen.','Ab '+needOf(TASKS.RA.size)+' richtigen Antworten gibt es die Urkunde.']}
+  RQ:{title:'Eingangstest',steps:[ /* P15: eine Karte, danach nur „Weiter“ */
+    {h:'Kurz testen',
+      say:[TASKS.RQ.size+' Fragen, keine Note, keine Zeit.','Tippe eine Antwort an. Dann tippe auf **Weiter**.','Am Ende siehst du, was du schon kannst.']}
   ]},
   RA:{title:'Abschlusscheck',steps:[
     {h:'Wie viele Aufgaben?',
@@ -563,36 +538,25 @@ const INTRO={
     {h:'Zwei Rechtecke',say:['Das erste Rechteck ist senkrecht geteilt.','Das zweite ist waagerecht geteilt.','Drehe an den Schrauben und schau zu.'],cross:{b:3,a:1,d:2,c:1,stage:1}},
     {h:'Teilung übertragen',say:['Tippe **Teilung übertragen**.','Jedes Rechteck bekommt die Linien des anderen.','Jetzt sind alle Felder gleich groß.'],cross:{b:3,a:1,d:2,c:1,stage:2}}
   ]},
-  HQ:{title:'Eingangstest',steps:[
-    {h:'Kurzfragen zu ungleichnamigen Brüchen',
-      say:[TASKS.HQ.size+' Fragen warten auf dich.','Du tippst eine Antwort an. Dann tippst du auf **Prüfen**.','Manchmal ist die Antwort ein Ja oder Nein.']},
-    {h:'Sofort eine Rückmeldung',
-      say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Es gibt keine Zeitmessung.']},
-    {h:'Danach siehst du, was fehlt',
-      say:['Am Ende siehst du, was du schon kannst.','Bekannte Stationen sind dann im Lernpfad markiert.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
-    {h:'Der Abschlusscheck',
-      say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat '+TASKS.HA.size+' Aufgaben: '+HA_TAP+' zum Antippen und '+HA_CALC.length+' zum Rechnen.','Ab '+needOf(TASKS.HA.size)+' richtigen Antworten gibt es die Urkunde.']}
+  HQ:{title:'Eingangstest',steps:[ /* P15: eine Karte, danach nur „Weiter“ */
+    {h:'Kurz testen',
+      say:[TASKS.HQ.size+' Fragen, keine Note, keine Zeit.','Tippe eine Antwort an. Dann tippe auf **Weiter**.','Am Ende siehst du, was du schon kannst.']}
   ]},
   H02:{title:'Hauptnenner finden',steps:[
     {h:'Ein Nenner für beide',say:['Gleichnamige Brüche kannst du sofort addieren.','Darum suchst du einen Nenner, der zu beiden passt.','Der kleinste heißt **Hauptnenner**.']},
     {h:'Trick 17',say:['Kreise den größeren Nenner ein.','Prüfe: Passt der kleinere Nenner ohne Rest hinein?','Wenn nein, nimm das nächste Vielfache und prüfe erneut.'],trick:[8,10]},
     {h:'Erweitern',say:['Erweitere beide Brüche auf den Hauptnenner.','{2|8} erweiterst du mit 5, {7|10} mit 4.'],calc:[[[2,8],'=',[2,8,'x',5],'=',[10,40]],[[7,10],'=',[7,10,'x',4],'=',[28,40]]]}
   ]},
-  H03:{title:'Addieren am Bild',steps:[
+  H03:{title:'Am Bild: zusammenfügen, wegnehmen, ergänzen',steps:[
     {h:'Ein Bild lesen',say:['Das erste Rechteck ist senkrecht in Drittel geteilt.','Das zweite ist waagerecht in Hälften geteilt.','Gefärbt sind {1|3} und {1|2}.'],cross:{b:3,a:1,d:2,c:1,stage:1}},
     {h:'Teilung übertragen',say:['Zeichne die Linien des anderen Rechtecks dazu.','Jedes Drittel wird in 2 Stücke geteilt.','Jede Hälfte wird in 3 Stücke geteilt.','Jetzt haben beide Rechtecke 6 gleich große Felder.'],cross:{b:3,a:1,d:2,c:1,stage:2}},
-    {h:'Jetzt gleichnamig',say:['Aus {1|3} wird {2|6}, aus {1|2} wird {3|6}.','Jetzt addierst du nur die Zähler.'],calc:[[[1,3],'+',[1,2],'=',[2,6],'+',[3,6],'=',[5,6]]],cross:{b:3,a:1,d:2,c:1,stage:3}},
-    {h:'So antwortest du',say:['In Leicht trägst du zuerst den **Hauptnenner** ein.','Dann die neuen Zähler und den **Zwischenschritt**.','Das Feld **gekürzt** gibt es immer.']}
+    {h:'Jetzt gleich eingeteilt',say:['Aus {1|3} wird {2|6}, aus {1|2} wird {3|6}.','Jetzt zählst du nur die Felder zusammen.','Beim Minus kreuzt du Felder durch.'],calc:[[[1,3],'+',[1,2],'=',[2,6],'+',[3,6],'=',[5,6]]],cross:{b:3,a:1,d:2,c:1,stage:3}},
+    {h:'Wozu eine Regel?',say:['Bei {5|12} und {7|18} wird das Bild winzig.','Darum brauchst du eine Regel.','Die Regel macht dasselbe wie das Bild: gleich einteilen.']}
   ]},
   H04:{title:'Addieren und rechnen',steps:[
     {h:'Drei Schritte',say:['1. Hauptnenner finden.','2. Beide Brüche erweitern.','3. Zähler addieren, der Nenner bleibt.','Am Ende kürzen, wenn es geht.'],calc:[[[1,4],'+',[2,3],'=',[3,12],'+',[8,12],'=',[11,12]]]},
     {h:'Mehr als ein Ganzes',say:['Manchmal ist das Ergebnis größer als 1.','Du darfst es als Bruch oder als **gemischte Zahl** schreiben.'],calc:[[[3,4],'+',[2,3],'=',[9,12],'+',[8,12],'=',[17,12],'=',{m:[1,5,12]}]]},
     {h:'Geschichten lesen',say:['Prüfe zuerst: Gehören beide Anteile zum selben Ganzen?','Wörter wie zusammen und dazu bedeuten plus.']}
-  ]},
-  H05:{title:'Subtrahieren am Bild',steps:[
-    {h:'Wegnehmen',say:['{3|4} sind gefärbt. Davon wird {1|3} weggenommen.','Erst teilst du beide Rechtecke gleich ein.','Dann kreuzt du die weggenommenen Felder durch.'],cross:{b:4,a:3,d:3,c:1,stage:3,mode:'minus'}},
-    {h:'Ergänzen',say:['Du kannst auch fragen: Wie viel fehlt von {1|3} bis {3|4}?','Zähle die Felder, die noch fehlen.','Das ist dieselbe Aufgabe wie {3|4} − {1|3}.'],calc:[[[3,4],'−',[1,3],'=',[9,12],'−',[4,12],'=',[5,12]],[[1,3],'+',[5,12],'=',[3,4]]]},
-    {h:'So antwortest du',say:['Trage zuerst den **Hauptnenner** ein.','Dann die neuen Zähler, den **Zwischenschritt** und das **Ergebnis**.']}
   ]},
   H06:{title:'Subtrahieren und rechnen',steps:[
     {h:'Drei Schritte',say:['Hauptnenner finden, beide Brüche erweitern.','Dann die Zähler subtrahieren. Der Nenner bleibt.'],calc:[[[5,6],'−',[3,4],'=',[10,12],'−',[9,12],'=',[1,12]]]},

@@ -2,8 +2,8 @@
 /* =====================================================================
    Aufgaben des Themas „Ungleichnamige Brüche addieren und subtrahieren“ (Block 2, Thema addsub2, Kürzel H)
    Grundlage: Konzeptdatei vom 21.11.2026 (Hefter 6a LB 1, MSK-Förderbaustein B4, Lehrbuch Oberschule S. 33–39, Lehrbuch Gymnasium S. 20–25).
-   Pflicht: H02 Hauptnenner finden · H03 Addieren am Bild · H04 Addieren und rechnen · H05 Subtrahieren am Bild ·
-            H06 Subtrahieren und rechnen · H07 Erweitern oder nicht?
+   Kern (Umbau P7, Bild vor Verfahren): H03 Am Bild (plus, minus, ergänzen) · H02 Hauptnenner finden · H04 Plus rechnen ·
+            H06 Minus rechnen · H07 Erweitern oder nicht?
    Knobeln (freiwillig): H08 Zahlenrätsel · H09 Ergebniskarten · H10 Bis zum nächsten Ganzen · H11 Stammbruchmuster · H12 Magisches Quadrat · H13 17 Kamele
    Leitidee: Erst die Einteilung gleich machen (Bild: Kreuzeinteilung, Rechnung: Hauptnenner), dann die Zähler rechnen. Die Größenordnung prüft jedes Ergebnis.
    Zahlenraum: Leicht Nenner 2–12, Hauptnenner bis 36, Trick-17-Reihe höchstens 4 Schritte, halb „ein Nenner ist Vielfaches“, halb „beide erweitern“;
@@ -101,9 +101,8 @@ function hnRestNums(R,level,o){
    bei Behauptungen mindestens eine richtige (truth). */
 const HN_PLAN={
   H02:{1:['reihe','reihe','hn','erweitern','hnErw'],2:['reihe','hn','hnErw','drei','hnErw']},
-  H03:{1:['bild','bild','plus','plus','geschichte'],2:['bild','plus','plus','geschichte','plus']},
+  H03:{1:['bild','bild','bildMinus','ergaenzen','geschichte'],2:['bild','bildMinus','ergaenzen','bildMinus','geschichte']}, /* P7: H03 und H05 zusammen, nur am Bild */
   H04:{1:['plus','plus','plus','geschichte','luecke'],2:['plus','ueber1','drei','kuerzbar','geschichte']},
-  H05:{1:['bild','bild','ergaenzen','ergaenzen','geschichte'],2:['bild','ergaenzen','ergaenzen','geschichte','bild']},
   H06:{1:['minus','minus','minus','geschichte','luecke'],2:['minus','rest','ergaenzenText','kuerzbar','ueber1']},
   H07:{1:['wasTun','pm','hausaufgaben','ganzes','schlange'],2:['einBild','pm','hausaufgaben','ganzes','schlange']},
   H08:{1:['raetsel','luecke','raetsel','luecke','raetsel'],2:['raetsel','luecke','raetsel','luecke','raetsel']},
@@ -115,7 +114,7 @@ const HN_PLAN={
   H14:{1:['falter','falter','wann','falter','wer'],2:['falter','wann','falter','wer','falter']}
 };
 /* Arten mit einem Ergebnis zum Kürzen (für halb und halb) und Arten mit zwei Nennern (für viel / beide) */
-const HN_RES={H03:['bild','plus','geschichte'],H04:['plus','geschichte','ueber1','drei','kuerzbar'],H05:['bild','ergaenzen','geschichte'],
+const HN_RES={H03:['bild','bildMinus','ergaenzen','geschichte'],H04:['plus','geschichte','ueber1','drei','kuerzbar'],
   H06:['minus','geschichte','rest','ergaenzenText','ueber1','kuerzbar'],H07:['wasTun','pm'],H08:['raetsel','luecke'],H13:['summe'],H14:['falter']};
 const HN_TYPK=['reihe','hn','erweitern','hnErw','wer','plus','minus','geschichte','luecke','ueber1','kuerzbar','ergaenzenText','pm','raetsel','bis'];
 function hnRedPlan(kinds,res){
@@ -188,20 +187,20 @@ function hnFigOf(t,stage){
 }
 /* Rechenprobe nach „richtig“ (Kap. 8.3): Rechnung mit dem Hauptnenner, bei plus gelegentlich die Größenordnung */
 function hnProof(t){
-  const N=hnSmallest(t.terms),parts=t.terms.map(x=>ft(x[0]*N/x[1],N)),r=hnValue(t.terms,t.signs),g=simplify(r[0],r[1]);
+  const N=t.F||hnSmallest(t.terms),parts=t.terms.map(x=>ft(x[0]*N/x[1],N)),r=hnValue(t.terms,t.signs),g=simplify(r[0],r[1]);
   let s=t.terms.map(hnFt).map((x,i)=>(i?t.signs[i-1]+' ':'')+x).join(' ')+' = '+parts.map((x,i)=>(i?t.signs[i-1]+' ':'')+x).join(' ')+' = '+ft(r[0]*N/r[1],N);
   if(g[1]!==N)s+=' = '+ft(g[0],g[1]);
   s+='.';
   if(t.terms.length===2&&t.plus&&t.level===1){const big=compareFrac(t.a,t.b,t.c,t.d)>=0?[t.a,t.b]:[t.c,t.d];s+=` ${ft(g[0],g[1])} ist größer als ${hnFt(big)}. Passt.`;}
   return s;
 }
-const hnOk=(t,r,extra)=>right('Richtig! '+(extra?extra+' ':'')+hnProof(t)+(r&&r.note?' '+r.note:''));
+const hnOk=(t,r,extra)=>right('Richtig! '+(extra?extra+' ':'')+hnProof(t)+(r&&r.note&&!t.F?' '+r.note:''));
 /* Lösung: Hauptnenner, erweitern, rechnen, kürzen (und gemischte Zahl) */
 function hnSolLines(t){
-  const N=hnSmallest(t.terms),r=hnValue(t.terms,t.signs),n=r[0]*N/r[1],g=gcd(n,N),out=[];
+  const N=t.F||hnSmallest(t.terms),r=hnValue(t.terms,t.signs),n=r[0]*N/r[1],g=gcd(n,N),out=[];
   const dens=t.terms.map(x=>simplify(x[0],x[1])[1]);
   if(t.terms.some(x=>!isFullyReduced(x[0],x[1])))out.push(line('Erst kürzen: ',...t.terms.filter(x=>!isFullyReduced(x[0],x[1])).map(x=>eq(frac(x[0],x[1]),'=',frac(...simplify(x[0],x[1]))))));
-  out.push(line(strong('Hauptnenner: '),N+' (Trick 17 mit '+Math.max(...dens)+').'));
+  out.push(t.F?line(strong('Gleich eingeteilt: '),N+' gleich große Felder.'):line(strong('Hauptnenner: '),N+' (Trick 17 mit '+Math.max(...dens)+').'));
   const left=[],mid=[];t.terms.forEach((x,i)=>{if(i){left.push(t.signs[i-1]);mid.push(t.signs[i-1]);}left.push(frac(x[0],x[1]));mid.push(frac(x[0]*N/x[1],N));});
   out.push(eq(...left,'=',...mid,'=',frac(n,N)));
   if(g>1)out.push(line('Kürzen: '),eq(frac(n,N),'=',frac(n+' : '+g,N+' : '+g),'=',frac(n/g,N/g)));
@@ -211,7 +210,7 @@ function hnSolLines(t){
   return out;
 }
 /* Rechenweg-Optionen je Aufgabe: Leicht mit Hauptnenner-Feld und Zwischenschritt, Knifflig mit erweiterten Brüchen; gemischte Zahl bei Ergebnissen über 1 möglich */
-const hnBlockOpt=(t,extra)=>Object.assign({leicht:hnLeicht(t),staged:true,mixed:t.level===2&&['ueber1','drei','rest'].includes(t.kind)},extra||{});
+const hnBlockOpt=(t,extra)=>Object.assign({leicht:hnLeicht(t),staged:true,mixed:t.level===2&&['ueber1','drei','rest'].includes(t.kind)},t.F&&hnLeicht(t)?{givenN:t.F}:{},extra||{}); /* t.F: Bild-Aufgabe (H03), gerechnet mit den Feldern */
 /* eine Rechenaufgabe (Ausdruck oder Geschichte), mit Bild sofort (always) oder mit dem zweiten Tipp */
 function hnCalcRender(view,host,t,picAlways,stage){
   if(hnHasPic(t))addPicBox(view,host,()=>hnFigOf(t,stage||3),picAlways);
@@ -378,16 +377,25 @@ function hnExpandRow(view,t,givenN){
 }
 
 /* =====================================================================
-   Bild-Stationen H03 (plus) und H05 (minus): Brüche ablesen → Teilung übertragen → Rechenweg; H05 dazu Ergänzen
+   Bild-Station H03 (plus, minus, ergänzen): Brüche ablesen → Teilung übertragen → Felder rechnen (P7: vor dem Hauptnenner)
    ===================================================================== */
+/* P7: am Bild nur einfache Brüche – Nenner höchstens 6, gemeinsames Raster höchstens 12 Felder. Ein Nenner Vielfaches des anderen (½ und ¼, ½ und ⅙)
+   oder Kreuzeinteilung (½ und ⅓, ⅓ und ¼, ½ und ⅕). Gerechnet wird mit den Feldern des Rasters (F = b · d), nicht mit dem Hauptnenner:
+   der kommt erst in H02. res = [Zähler, F]. */
+const HN_PIC_SIMPLE=[[2,4],[2,6],[2,3],[3,4],[2,5]];
 function hnBildNums(R,level,plus,ctx,o){
   o=o||{};
+  const red=hnRedOf(R,ctx);
   for(let i=0;i<600;i++){
-    const t=hnNums(R,level,plus,{pic:true,step:hnStep(ctx),red:hnRedOf(R,ctx),over:o.over});
-    if(!plus&&compareFrac(t.a,t.b,t.c,t.d)<=0)continue;
-    return t;
+    let [b,d]=R.pick(HN_PIC_SIMPLE);if(R.chance(0.5))[b,d]=[d,b];
+    const a=R.int(1,b-1),c=R.int(1,d-1);
+    if(gcd(a,b)!==1||gcd(c,d)!==1)continue;
+    const F=b*d,n=plus?a*d+c*b:a*d-c*b;
+    if(n<1||n>=F)continue;
+    if(i<400&&(!isFullyReduced(n,F))!==red)continue;
+    return {a,b,c,d,plus,N:lcm(b,d),F,terms:[[a,b],[c,d]],signs:[hnSign(plus)],res:[n,F]};
   }
-  return plus?hnNums(R,1,true,{pic:true}):{a:3,b:4,c:1,d:3,plus:false,N:12,terms:[[3,4],[1,3]],signs:['−'],res:[5,12]};
+  return plus?{a:1,b:2,c:1,d:3,plus,N:6,F:6,terms:[[1,2],[1,3]],signs:['+'],res:[5,6]}:{a:3,b:4,c:1,d:3,plus:false,N:12,F:12,terms:[[3,4],[1,3]],signs:['−'],res:[5,12]};
 }
 /* Stufe „Brüche ablesen“ und „Teilung übertragen“ prüfen */
 function hnReadCheck(t,d){
@@ -449,26 +457,44 @@ function hnBildValidate(t,d){
 }
 const hnBildSolution=(t)=>[hnFigOf(t,3),line(`${denEach(t.b)} wird in ${t.d} Stücke geteilt, ${denEach(t.d).toLowerCase()} in ${t.b}. Jetzt gibt es ${t.N} gleich große Felder.`),...hnSolLines(t)];
 
-TASKS.H03=hnStation('H03',{name:'Addieren am Bild',desc:'Teilung übertragen, verfeinerte Anteile zusammenfügen, Rechenweg notieren.',notes:['M20']},{
+TASKS.H03=hnStation('H03',{name:'Am Bild: zusammenfügen, wegnehmen, ergänzen',desc:'Beide Rechtecke gleich einteilen, dann Felder zählen: plus, minus und was fehlt.',notes:['M20']},{
   gen(level,R,ctx){
-    const kind=(ctx&&ctx.kind)||'bild',over=level===2&&kind==='plus'&&R.chance(0.35);
-    const t=hnBase('H03',level,kind,hnBildNums(R,level,true,ctx,{over}));
-    if(kind==='geschichte')t.story='kuchen';
-    return t;
+    const kind=(ctx&&ctx.kind)||'bild';
+    if(kind==='geschichte'){
+      const story=R.pick(['kuchen','blechWeg','pizzaErg']),plus=story==='kuchen';
+      const t=hnBase('H03',level,kind,story==='pizzaErg'?hnErgNums(R,level,ctx):hnBildNums(R,level,plus,ctx));
+      t.story=story;if(story==='pizzaErg')t.erg=true;return t;
+    }
+    if(kind==='ergaenzen'){const t=hnBase('H03',level,kind,hnErgNums(R,level,ctx));t.erg=true;return t;}
+    return hnBase('H03',level,kind,hnBildNums(R,level,kind!=='bildMinus',ctx));
   },
   prompt(t,h){
-    if(t.kind==='bild'){h.append(el('p',{class:'q'},'Welche Additionsaufgabe gehört zum Bild? Übertrage die Teilung und rechne aus.'));return;}
-    hnCalcPrompt(t,h,'Addiere. Das Bild hilft dir.');
+    if(t.kind==='bild'||t.kind==='bildMinus'){h.append(el('p',{class:'q'},(t.plus?'Welche Plusaufgabe':'Welche Minusaufgabe')+' gehört zum Bild? Teile gleich ein und rechne aus.'));return;}
+    if(t.kind==='ergaenzen'){h.append(el('p',{class:'q qa'},`Von ${ft(t.c,t.d)} bis ${ft(t.a,t.b)}: Wie viel fehlt?`));return;}
+    hnCalcPrompt(t,h);
   },
   render(view,host){
     const t=view.task;
-    if(t.kind==='bild')return hnBildRender(view,host);
-    if(t.kind==='geschichte'){host.append(hnFigOf(t,2));addResultH(view,host,t,hnBlockOpt(t));return;}
-    hnCalcRender(view,host,t,t.level===1,3);
+    if(t.kind==='bild'||t.kind==='bildMinus')return hnBildRender(view,host);
+    if(t.erg)return hnErgRender(view,host);
+    host.append(hnFigOf(t,t.plus?2:3));addResultH(view,host,t,hnBlockOpt(t));
   },
-  validate(t,d){return t.kind==='bild'?hnBildValidate(t,d):hnCalcValidate(t,d);},
-  solution(t){return t.kind==='bild'?hnBildSolution(t):[hnFigOf(t,3),...hnSolLines(t)];}
+  validate(t,d){
+    if(t.kind==='bild'||t.kind==='bildMinus')return hnBildValidate(t,d);
+    if(t.erg)return hnErgValidate(t,d);
+    return hnCalcValidate(t,d);
+  },
+  solution(t){
+    if(t.kind==='bild'||t.kind==='bildMinus')return hnBildSolution(t);
+    if(t.erg)return hnErgSolution(t);
+    return [hnFigOf(t,3),...hnSolLines(t)];
+  }
 });
+/* Ergänzen am Bild: Start c/d, Ziel a/b (a/b > c/d), gleiche einfache Paare wie hnBildNums; res = Ziel − Start in Feldern */
+function hnErgNums(R,level,ctx){
+  for(let i=0;i<200;i++){const t=hnBildNums(R,level,false,ctx);if(t.res[0]>=1)return t;}
+  return {a:3,b:4,c:1,d:3,plus:false,N:12,F:12,terms:[[3,4],[1,3]],signs:['−'],res:[5,12]};
+}
 
 /* =====================================================================
    H04 Addieren und rechnen (plus, geschichte, luecke, ueber1, drei, kuerzbar)
@@ -532,7 +558,7 @@ TASKS.H04=hnStation('H04',{name:'Addieren und rechnen',desc:'Hauptnenner finden,
 });
 
 /* =====================================================================
-   H05 Subtrahieren am Bild (bild, ergaenzen, geschichte): Wegnehmen mit Kreuzen und Ergänzen („Wie viel fehlt?“)
+   Ergänzen am Bild (Teil von H03): „Wie viel fehlt?“
    ===================================================================== */
 /* Ergänzen: c/d ist der Start, a/b das Ziel (a/b > c/d). Etappe 1: Teilung übertragen und fehlende Felder antippen, Etappe 2: Rechnung und Lücke */
 function hnErgRender(view,host){
@@ -577,37 +603,6 @@ function hnErgValidate(t,d){
 const hnErgSolution=(t)=>[crossFigure({b:t.b,a:t.a,d:t.d,c:t.c,stage:2,mode:'erg',tapped:new Set(Array.from({length:t.a*t.d-t.c*t.b},(_,i)=>t.c*t.b+i))}),
   line(`Das Ziel ${ft(t.a,t.b)} sind ${t.a*t.d} Felder. Der Start ${ft(t.c,t.d)} sind ${t.c*t.b} Felder.`),...hnSolLines(t),
   eq(frac(t.c,t.d),'+',frac(...simplify(t.res[0],t.res[1])),'=',frac(t.a,t.b))];
-TASKS.H05=hnStation('H05',{name:'Subtrahieren am Bild',desc:'Wegnehmen mit Kreuzen und ergänzen: Wie viel fehlt bis zum Ziel?',notes:['M20']},{
-  gen(level,R,ctx){
-    const kind=(ctx&&ctx.kind)||'bild',over=level===2&&kind==='bild'&&hnStep(ctx)>=4;
-    const t=hnBase('H05',level,kind,hnBildNums(R,level,false,ctx,{over}));
-    if(kind==='ergaenzen')t.erg=true;
-    if(kind==='geschichte'){t.story=R.pick(['blechWeg','pizzaErg']);if(t.story==='pizzaErg')t.erg=true;}
-    return t;
-  },
-  prompt(t,h){
-    if(t.kind==='bild'){h.append(el('p',{class:'q'},'Welche Subtraktionsaufgabe gehört zum Bild? Übertrage die Teilung und rechne aus.'));return;}
-    if(t.kind==='ergaenzen'){h.append(el('p',{class:'q qa'},`Von ${ft(t.c,t.d)} bis ${ft(t.a,t.b)}: Wie viel fehlt?`));return;}
-    hnCalcPrompt(t,h);
-  },
-  render(view,host){
-    const t=view.task;
-    if(t.kind==='bild')return hnBildRender(view,host);
-    if(t.erg)return hnErgRender(view,host);
-    host.append(hnFigOf(t,3));addResultH(view,host,t,hnBlockOpt(t));
-  },
-  validate(t,d){
-    if(t.kind==='bild')return hnBildValidate(t,d);
-    if(t.erg)return hnErgValidate(t,d);
-    return hnCalcValidate(t,d);
-  },
-  solution(t){
-    if(t.kind==='bild')return hnBildSolution(t);
-    if(t.erg)return hnErgSolution(t);
-    return [hnFigOf(t,3),...hnSolLines(t)];
-  }
-});
-
 /* =====================================================================
    H06 Subtrahieren und rechnen (minus, geschichte, luecke, rest, ergaenzenText, ueber1, kuerzbar)
    ===================================================================== */

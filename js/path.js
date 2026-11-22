@@ -41,7 +41,9 @@ function pathState(mod){
   um.path.forEach(m=>{
     const done=stationDone(m.id),checked=stationChecked(m.id);
     const open=allOpen||!blocker; /* S.unlocked (nur noch für Tests und alte Speicherstände): alles offen, die Urkunde gibt es trotzdem nur nach allen Pflicht-Stationen */
-    rows.push({m,id:m.id,must:!!m.must,done,checked,open,locked:!done&&!open,blocker:open?null:blocker,next:false});
+    /* P16 weiche Sperre: nur Kern-Stationen (must) nach der empfohlenen sind „später“ (antippbar mit Rückfrage), Plus und Basis immer offen */
+    const later=!done&&!open&&!!m.must;
+    rows.push({m,id:m.id,must:!!m.must,done,checked,open:open||!m.must,locked:later,later,blocker:later?blocker:null,next:false});
     if(m.must&&!done&&!blocker)blocker=m.id;
   });
   const nx=rows.find(r=>r.must&&!r.done);if(nx)nx.next=true;
@@ -108,7 +110,7 @@ function qEvaluate(results,sk,size,hadProgress,skillList){
   const skills={};
   (skillList||Q_SKILLS).forEach(s=>{
     const x=per[s]||{ok:0,n:0,u:0};
-    skills[s]={ok:x.ok,n:x.n,status:x.u?'ueben':trust&&x.n>=2&&x.ok===x.n?'sitzt':trust&&x.n>=3&&x.ok===x.n-1?'fast':'ueben'};
+    skills[s]={ok:x.ok,n:x.n,status:x.u&&x.ok===0?'ueben':trust&&x.n>=2&&x.ok===x.n?'sitzt':trust&&x.n>=2&&x.ok>=x.n-1&&x.ok>0?'fast':'ueben'}; /* P15: 2 von 2 sitzt, 1 von 2 fast, 0 von 2 üben */
   });
   return {right,unsure,size,trust,skills,stufe:!trust?(hadProgress?'plan':'start'):right>=needOf(size)?'fit':'plan'};
 }
@@ -118,9 +120,30 @@ function roundScore(results,size){
   const points=f+l/2;
   return {right:f+l,f,l,points,need,passed:points>=need&&f>=Math.min(3,need)};
 }
+/* P11 Ansammeln statt Runde: je Station und Niveau zählen richtige Aufgaben (r) und davon ohne Tipp beim 1. Versuch (f).
+   Geschafft, sobald r ≥ ACC_NEED und f ≥ ACC_FREE – über beliebig viele Runden, nichts geht verloren. */
+const ACC_NEED=5,ACC_FREE=2;
+const accOf=(id,lvl)=>{S.acc=S.acc&&typeof S.acc==='object'?S.acc:{};return S.acc[keyOf(id,lvl)]||{r:0,f:0};};
+const accReached=(a)=>a.r>=ACC_NEED&&a.f>=ACC_FREE;
+/* eine richtige Aufgabe einer Lernpfad-Station zählen; true, wenn die Station (dieses Niveau) dadurch gerade geschafft ist */
+function accAdd(id,lvl,first){
+  const k=keyOf(id,lvl),a=accOf(id,lvl);
+  a.r++;if(first)a.f++;S.acc[k]=a;
+  if(accReached(a)&&!S.passed[k]){const was=stationDone(id);S.passed[k]=true;return !was;}
+  return false;
+}
+const isPathStation=(id)=>PATH.some(m=>m.id===id)&&!isLab(id)&&!finalModOf(id)&&!QCHK[id];
+/* Kästchenreihe „4 von 5 geschafft · 1 davon ohne Tipp“ */
+function accRow(id,lvl,withText){
+  const a=accOf(id,lvl),r=Math.min(a.r,ACC_NEED),f=Math.min(a.f,ACC_FREE),txt=r+' von '+ACC_NEED+' geschafft · '+Math.min(a.f,r)+' davon ohne Tipp';
+  const row=el('span',{class:'accrow',role:'img','aria-label':txt});
+  for(let i=0;i<ACC_NEED;i++)row.append(el('i',{class:i<f?'f':i<r?'on':''}));
+  return withText?el('span',{class:'accline'},row,el('small',null,txt+(a.f<ACC_FREE&&a.r>=ACC_NEED?' (noch '+(ACC_FREE-a.f)+' ohne Tipp)':''))):row;
+}
 function onRoundEnd(id,lvl,round){
   const sc=roundScore(round.results,round.size),right=sc.right,need=sc.need;
   const info={right,points:sc.points,need,passed:sc.passed,firstPass:false,placed:[],final:false,daily:false,quiz:null};
+  if(isPathStation(id)){info.passed=!!S.passed[keyOf(id,lvl)];info.firstPass=!!round.newPass;info.acc=true;}
   if(QCHK[id]){
     /* Einstufung: nur „sitzt“ (alle Fragen einer Fähigkeit richtig) schaltet die Bauteile der Fähigkeit per Check frei – und nur,
        wenn nicht fast alles falsch war */
@@ -145,9 +168,6 @@ function onRoundEnd(id,lvl,round){
     info.qmod=fm.id;
     info.ready=pathState(fm).filter(r=>r.must&&!r.m.final).every(r=>r.done);
     if(info.ready&&info.passed&&!qs.final){qs.final=true;info.final=true;}
-  }else if(info.passed&&PATH.some(m=>m.id===id)){
-    info.firstPass=!stationDone(id);
-    S.passed[keyOf(id,lvl)]=true;
   }
   /* perfekte Runde: jede Aufgabe beim 1. Versuch ohne Tipp richtig (zählt für „alles perfekt“) */
   if(round.results.length&&round.results.every(r=>r==='f')){(S.perfect=S.perfect||{})[keyOf(id,lvl)]=true;info.perfect=true;}
@@ -183,6 +203,13 @@ function migrate6(st){
   [1,2].forEach(l=>{const k=keyOf('Q00',l),r=st.rounds&&st.rounds[k];if(r&&r.size!==TASKS.Q00.size)delete st.rounds[k];});
 }
 
+/* Schema 9 (Umbau 2026-11): Runden, deren Größe nicht mehr passt (Eingangstests 15 → 10, Abschlusschecks auf 15), werden verworfen.
+   Bestandene Stationen bleiben geschafft; die neuen Zähler (S.acc) beginnen bei 0; Ergebnisse der Eingangstests bleiben gültig. */
+function migrate9(st){
+  st.acc=st.acc&&typeof st.acc==='object'?st.acc:{};
+  Object.keys(st.rounds||{}).forEach(k=>{const id=k.replace(/-L\d$/,''),r=st.rounds[k];if(TASKS[id]&&r&&r.size!==TASKS[id].size)delete st.rounds[k];});
+}
+
 /* ---------- Wege zu den Bauteilen ---------- */
 function openStation(id){
   if(isLab(id))openLab(id,'pfad');
@@ -215,13 +242,14 @@ function resetSheet(id){
       el('button',{type:'button',class:'btn danger',onclick:()=>{m.remove();clearStation(id);persist();renderAll();toast('Zurückgesetzt: '+title);}},'Zurücksetzen'),
       el('button',{type:'button',class:'btn alt',onclick:()=>m.remove()},'Abbrechen'))]);
 }
+/* P16: keine Sperre mehr, nur eine Empfehlung mit Rückfrage */
 function lockSheet(row){
   const b=row.blocker,name=stationTitle(b);
-  const m=modal([icon('schloss','big'),el('h2',null,'Noch gesperrt'),
-    el('p',null,'Erst dran: ',el('b',null,name),'.'),
+  const m=modal([icon('pfad','big'),el('h2',null,'Empfohlen: erst '+name),
+    el('p',null,'Diese Station baut darauf auf. Trotzdem starten?'),
     el('div',{class:'modalbtns'},
-      el('button',{type:'button',class:'btn',onclick:()=>{m.remove();openStation(b);}},'Zu: '+name),
-      el('button',{type:'button',class:'btn alt',onclick:()=>m.remove()},'Schließen'))]);
+      el('button',{type:'button',class:'btn primary',onclick:()=>{m.remove();openStation(b);}},'Zu: '+name),
+      el('button',{type:'button',class:'btn alt',onclick:()=>{m.remove();openStation(row.id);}},'Trotzdem starten'))]);
 }
 
 /* ---------- Ansicht: Themenseite mit Eingangstest-Block, nächster Station und Stationenliste ---------- */
@@ -240,15 +268,15 @@ function modNode(r,pos){
   const id=r.id,m=r.m,title=stationTitle(id),desc=m.desc||(TASKS[id]&&TASKS[id].desc)||'';
   const next=r.next;
   const state=r.done?'done':next?'next':r.locked?'locked':'open';
-  const tag=r.done?'Fertig':next?'Als Nächstes':r.locked?'Gesperrt':r.must?'Offen':'Freiwillig';
+  const tag=r.done?'Fertig':next?'Als Nächstes':r.locked?'Später':r.must?'Offen':'Freiwillig';
   const chk=checkMark(id);
   const stars=(isLab(id)||m.final)?null:starNodes((S.passed[id+'-L1']?1:0)+(S.passed[id+'-L2']?1:0),2);
   const li=el('li',{class:'mod '+state+(r.must?'':' frei'),'data-acc':ACC[id]||PATH_ACC[id]||null});
-  li.append(el('span',{class:'lamp','aria-hidden':'true'},r.done?icon('haken'):r.locked?icon('schloss'):null),
+  li.append(el('span',{class:'lamp','aria-hidden':'true'},r.done?icon('haken'):null),
     el('button',{type:'button',class:'modbtn','aria-label':title+': '+tag.toLowerCase()+(chk?', Eingangstest: '+CHECK_TEXT[chk]:'')+(r.must||tag==='Freiwillig'?'':', freiwillig'),onclick:()=>r.locked?lockSheet(r):openStation(id)},
       el('span',{class:'mpos'},String(pos+1).padStart(2,'0')),
       el('span',{class:'mnm'},el('b',null,title),el('small',null,desc+(m.note&&recommendNote(moduleOf(id))?' '+m.note:''))),
-      el('span',{class:'mside'},chk?el('span',{class:'mchk '+chk},'Check: '+CHECK_TEXT[chk]):null,el('span',{class:'mtag'},tag),stars)));
+      el('span',{class:'mside'},!r.done&&isPathStation(id)&&accOf(id,levelOf(id)).r>0?accRow(id,levelOf(id)):null,chk?el('span',{class:'mchk '+chk},'Check: '+CHECK_TEXT[chk]):null,el('span',{class:'mtag'},tag),stars)));
   if(stationResettable(id))li.append(el('button',{type:'button',class:'modreset','aria-label':title+' zurücksetzen',title:'Zurücksetzen',onclick:()=>resetSheet(id)},icon('neu')));
   return li;
 }

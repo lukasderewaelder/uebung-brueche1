@@ -17,10 +17,10 @@ const Q_HINT={
   div:[]
 };
 const Q_SKILL_NAME={gleich:'Gleiche Brüche erkennen',teilbar:'Teilbarkeit',erweitern:'Erweitern',kuerzen:'Kürzen',vollstaendig:'Vollständig kürzen'};
-const Q_PER_SKILL=3;                        /* Fragen je Fähigkeit im Schnellcheck */
-const Q_COUNT=Q_SKILLS.length*Q_PER_SKILL;  /* 15 */
-const Q_START_SHARE=0.3;                    /* höchstens dieser Anteil richtig = „fast alles falsch“ (bei 15 Fragen: 4) */
-const Q_UNSURE_START=0.5;                   /* mindestens dieser Anteil „Weiß ich nicht“ = ebenfalls direkt in den Pfad (bei 15 Fragen: 8) */
+const Q_PER_SKILL=2;                        /* Fragen je Fähigkeit im Eingangstest (P15: 5 Fähigkeiten à 2 = 10) */
+const Q_COUNT=Q_SKILLS.length*Q_PER_SKILL;  /* 10 */
+const Q_START_SHARE=0.3;                    /* höchstens dieser Anteil richtig = „fast alles falsch“ (bei 10 Fragen: 3) */
+const Q_UNSURE_START=0.5;                   /* mindestens dieser Anteil „Weiß ich nicht“ = ebenfalls direkt in den Pfad (bei 10 Fragen: 5) */
 /* Eingangstests je Thema (Schlüssel = Aufgaben-ID des Tests, steht im Thema als qid):
    skills: Fähigkeiten (je 3 Fragen), names: Anzeigenamen, stations: zu welchen Lernpfad-Bauteilen eine Fähigkeit gehört
    (3 von 3 richtig ⇒ diese Bauteile stehen im Lernpfad mit „Check: sitzt“), allSure: Bauteile, die erst aufgehen, wenn alles sitzt,
@@ -61,7 +61,13 @@ function qNumOptions(R,ans,cand,lim){
   const opts=nums.map((n,i)=>({id:Q_LETTERS[i],txt:String(n)}));
   return {opts,answer:opts[nums.indexOf(ans)].id,optNums:nums};
 }
-const qCross=(a,b,c,d)=>'Kreuzprobe: '+a+' · '+d+' = '+(a*d)+' und '+c+' · '+b+' = '+(c*b)+'.';
+/* P8: statt Kreuzprobe beide Brüche auf denselben Bruch bringen (vollständig kürzen; bei ungleichem Wert auf den gemeinsamen Nenner erweitern) */
+function qSame(a,b,c,d){
+  const x=simplify(a,b),y=simplify(c,d);
+  if(x[0]===y[0]&&x[1]===y[1])return ft(a,b)+' = '+ft(x[0],x[1])+' und '+ft(c,d)+' = '+ft(y[0],y[1])+'.';
+  const N=lcm(x[1],y[1]);
+  return 'Auf den Nenner '+N+' gebracht: '+ft(a,b)+' = '+ft(x[0]*N/x[1],N)+' und '+ft(c,d)+' = '+ft(y[0]*N/y[1],N)+'.';
+}
 
 function qEq(level,R){
   const L=qLim(level);
@@ -76,7 +82,7 @@ function qEq(level,R){
       if(ks.length<2)continue;
       let k2;do{k2=R.pick(ks);}while(k2===k1);
       c=p*k2;d=q*k2;eq=true;
-      why=qCross(a,b,c,d)+' Beide Brüche sind gleich viel.';
+      why=qSame(a,b,c,d)+' Beide sind gleich viel.';
     }else{
       const trap=R.pick(['sameDen','additive','numOnly','denOnly','off1']);
       if(trap==='sameDen'){c=a+R.pick([-1,1,2]);d=b;why='Gleicher Nenner, aber anderer Zähler: nicht gleich viel.';}
@@ -84,7 +90,7 @@ function qEq(level,R){
       else if(trap==='numOnly'){c=a*R.pick([2,3]);d=b;why='Beim Erweitern müssen Zähler und Nenner verändert werden.';}
       else if(trap==='denOnly'){c=a;d=b*R.pick([2,3]);why='Beim Erweitern müssen Zähler und Nenner verändert werden.';}
       else{const k2=R.pick(ks);c=p*k2;d=q*k2+R.pick([-1,1]);why='Schon ein kleiner Unterschied im Nenner ändert den Wert.';}
-      eq=false;why=qCross(a,b,c,d)+' '+why;
+      eq=false;why=qSame(a,b,c,d)+' '+why;
     }
     if(c<1||d<2||Math.max(a,b,c,d)>L)continue;
     if(equivalent(a,b,c,d)!==eq||(a===c&&b===d))continue;

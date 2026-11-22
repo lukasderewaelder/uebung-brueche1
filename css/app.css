@@ -1399,3 +1399,27 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 .falter .fl{min-width:1.5rem;text-align:center;font-weight:700}
 .falter .fl input{width:3rem}
 .flrow{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem}
+
+/* ---------- Umbau 2026-11: P11 Ansammeln (Kästchenreihe) ---------- */
+.accrow{display:inline-flex;gap:3px;vertical-align:middle}
+.accrow i{width:.8em;height:.8em;border:2px solid var(--chalk-dim);border-radius:2px;display:block}
+.accrow i.on{background:var(--amber-fill);border-color:var(--amber-fill)}
+.accrow i.f{background:var(--ok);border-color:var(--ok)}
+.accline{display:inline-flex;flex-wrap:wrap;align-items:center;gap:.5em}
+.accline small{font-size:max(14px,.9em)}
+.accsum{margin:.5em 0}
+/* P15 Auswertung des Eingangstests */
+.qskills{list-style:none;margin:.75rem 0;padding:0;display:grid;gap:.5rem}
+.qskill{display:flex;align-items:center;gap:.75rem;padding:.5rem .75rem;border:2px solid var(--grid-2);border-radius:8px}
+.qskill .qs-ic{display:grid;place-items:center;width:2.25rem;height:2.25rem;border-radius:50%;border:2px solid currentColor;flex:none}
+.qskill.sitzt{border-color:var(--ok)}.qskill.sitzt .qs-ic{color:var(--ok)}
+.qskill.fast{border-color:var(--amber)}.qskill.fast .qs-ic{color:var(--amber)}
+.qskill.ueben .qs-ic{color:var(--chalk-dim)}
+.qs-tx{display:flex;flex-direction:column;flex:1;text-align:left}
+.qs-tx small{font-size:max(14px,.9em);color:var(--chalk-dim)}
+.qs-dots{display:flex;gap:4px}
+.qs-dots i{width:.75em;height:.75em;border-radius:50%;border:2px solid var(--chalk-dim)}
+.qs-dots i.ok{background:var(--ok);border-color:var(--ok)}
+.qsols{text-align:left;padding-left:1.25rem}
+.qsols li{margin:.75rem 0}
+.qsols .qm{float:right}

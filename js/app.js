@@ -8,6 +8,7 @@
   if((S.schema||1)<6){migrate6(S);S.schema=6;persist();}
   if((S.schema||1)<7){migrateIntro(S);S.schema=7;persist();}
   if((S.schema||1)<8){S.schema=8;persist();}
+  if((S.schema||1)<9){migrate9(S);S.schema=9;persist();}
   if(!S.modus||typeof S.modus!=='object'||Array.isArray(S.modus))S.modus={};
   if(!S.perfect)S.perfect={};
   if(!S.intro||typeof S.intro!=='object'||Array.isArray(S.intro))S.intro={};
