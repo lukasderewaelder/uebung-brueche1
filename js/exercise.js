@@ -78,7 +78,7 @@ function modal(content){
   document.body.append(m);return m;
 }
 function rankUpCard(i){
-  const r=RANKS[i],m=modal([icon(r[2],'big'),el('h2',null,'Neuer Rang'),el('p',{class:'rankname'},r[1]),el('div',{class:'stampbox'},'Geprüft'),
+  const r=RANKS[i],m=modal([medalIcon(r,'big'),el('h2',null,'Neue Stufe'),el('p',{class:'rankname'},r[1]),el('div',{class:'stampbox'},'Geprüft'),
     el('p',null,'Rang '+(i+1)+' von '+RANKS.length+(i===RANK_TOP?' – alles perfekt!':'')),el('button',{type:'button',class:'btn primary',onclick:()=>m.remove()},'Weiter')]);
 }
 function award(xp,label){

@@ -14,7 +14,7 @@
    Bilder: Leicht sofort (bis Nenner 24), Knifflig und Rechnungen erst mit dem zweiten Tipp. Fehlercodes: nennerAddiert, zwischenNenner, vertauscht, zahl (Zwischenschritt), andereRechnung, zaehlerNenner, rechenfehler, wert (addDiagnose in math.js),
    dazu nennerFelder, zaehlerFelder (Ablesen), luecke, sel, err (Fehler finden), zeile (offene Zeilen).
    ===================================================================== */
-const ADD_NAMES=['Lena','Ben','Mia','Tom','Ida','Paul','Nora','Jan'];
+const ADD_NAMES=NAME_LIST; /* P18 */
 const ADD_POOL={1:[4,5,6,7,8,9,10,11,12,15,16,20,24],2:[10,12,15,16,18,20,24,25,30,36,40,50,60,75,80,100]};
 const ADD_POOL_PIC=[4,5,6,8,9,10,12,15,16]; /* Bilder zum Abzählen: höchstens 16 Felder (Tafel: 12, 5, 10, 9, 15) */
 const ADD_SIGN=(plus)=>plus?'+':'−';

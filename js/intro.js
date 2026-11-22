@@ -861,7 +861,8 @@ function renderIntro(id){
     for(let k=0;k<total;k++)ruler.append(el('i',{class:'tk'+(k<i?' f':k===i?' cur':'')}));
     const h=el('h2',{class:'introh',tabindex:'-1'},s.h);
     card.replaceChildren(...[ruler,
-      el('p',{class:'introstep'},'Karte '+(i+1)+' von '+total+(s.probe?' · Fehler sind erlaubt':'')),
+      el('p',{class:'introstep'},'Karte '+(i+1)+' von '+total),
+      s.probe&&typeof speechBubble==='function'?speechBubble('Ida','Fehler sind erlaubt!'):null, /* P21: Sprechblase statt Kleingedrucktem */
       known?el('p',{class:'introknown'},icon('haken'),'Das konntest du schon im Eingangstest.'):null,
       h,
       s.sub?el('p',{class:'introsub'},s.sub):null,

@@ -17,6 +17,8 @@
   --ok:#8be3a9;--bad:#ff8c8c;
   --paper:#eef5fb;--ink:#0b2a4a;--ink-dim:#3d5a78;--mark:#ffe58a;
   --sel-bg:#1f68b3;--sel-ink:#ffffff;--sel-line:#9fd0ff;--sel-tile:#cfe5ff;  /* Umbau P22: ausgewählte Antwort blau */
+  --et-F:#3fae6a;--et-E:#e8833a;--et-Z:#22aab8;--et-W:#8a6fd1;--et-R:#3f7fd6;--et-H:#d6585a;  /* Umbau P25: Kennfarbe je Etappe */
+  --medal-bronze:#c0773a;--medal-silber:#a9b6c3;--medal-gold:#e0b12b;--medal-platin:#7fc9c4;--medal-diamant:#6fc3ff;--medal-kristall:#b79cff;  /* P17 */
   --amber-fill:#ffc53d;                         /* Fläche von Hauptknöpfen; --amber ist die Schriftfarbe (im hellen Modus dunkler) */
   --track:rgba(184,212,238,.22);--tick:rgba(184,212,238,.35);  /* leere Balken, Strichmarken */
   --nl-sec:rgba(173,216,255,.1);--nl-on:rgba(120,190,255,.55); /* Zahlenstrahl: Abschnitt, gefärbter Abschnitt */
@@ -1468,3 +1470,50 @@ button.gloss:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 .wordsrow .chipword{font-weight:700;min-height:var(--tap);display:inline-flex;align-items:center}
 .glalltag{color:var(--chalk-dim)}
 .introsub{margin:-.25rem 0 .375rem;font-size:max(14px,.9rem);color:var(--chalk-dim)}
+/* ---------- Umbau Phase 6: Team, Sprechblase, Medaillen, Abzeichen, Wochenziel, Kennfarben, Lernlandkarte ---------- */
+[data-et="F"]{--et:var(--et-F)}[data-et="E"]{--et:var(--et-E)}[data-et="Z"]{--et:var(--et-Z)}[data-et="W"]{--et:var(--et-W)}[data-et="R"]{--et:var(--et-R)}[data-et="H"]{--et:var(--et-H)}
+.home[data-et] h1{border-bottom:4px solid var(--et);padding-bottom:.25rem}
+.home[data-et] .pfadline .segn i.on{background:var(--et)}
+.avatar{color:var(--ink);flex:none}
+.bubble{display:flex;align-items:flex-start;gap:.5rem;margin:.375rem 0;padding:.5rem .625rem;background:var(--paper);color:var(--ink);border:2px solid var(--ink);border-radius:14px;position:relative}
+.bubble .bav{flex:none}
+.bubble .btx{margin:0;font-size:max(14px,.95rem);flex:1}
+.bubble .bclose{all:unset;cursor:pointer;font-size:1.25rem;line-height:1;padding:.125rem .375rem;min-width:28px;text-align:center}
+.medal{display:inline-grid;place-items:center;width:1.75em;height:1.75em;border-radius:50%;background:var(--medal-bronze);color:#1b1b1b}
+.medal.big{width:3.5rem;height:3.5rem}
+.medal.tier-silber{background:var(--medal-silber)}.medal.tier-gold{background:var(--medal-gold)}.medal.tier-platin{background:var(--medal-platin)}.medal.tier-diamant{background:var(--medal-diamant)}.medal.tier-kristall{background:var(--medal-kristall)}
+.badge{display:inline-flex;flex-direction:column;align-items:center;gap:.125rem;padding:.375rem;border:2px dashed var(--chalk-dim);border-radius:12px;color:var(--chalk-dim);min-width:4.5rem;text-align:center}
+.badge.have{border-style:solid;border-color:var(--et,var(--amber));color:var(--chalk);background:color-mix(in srgb,var(--et,var(--amber)) 18%,transparent)}
+.badge small{font-size:14px}
+.badge.sm{min-width:0;padding:.125rem;border-radius:50%}
+.badgelist{display:flex;flex-wrap:wrap;gap:.5rem;padding:.5rem 0}
+.badgebig{display:flex;justify-content:center;margin:.5rem 0}
+.badgebig.pop{animation:pop .5s ease-out}
+@keyframes pop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.12);opacity:1}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.badgebig.pop{animation:none}}
+.wdots{display:inline-flex;gap:4px;margin-left:auto}
+.wdots i{width:.8rem;height:.8rem;border-radius:50%;border:2px solid var(--chalk-dim)}
+.wdots i.on{background:var(--ok);border-color:var(--ok)}
+/* Lernlandkarte */
+.lmap{display:flex!important;flex-direction:column;gap:.25rem;position:relative}
+.mapstep,.mapfork{position:relative}
+.mapstep::after{content:"";display:block;width:4px;height:1rem;margin:0 auto;background:repeating-linear-gradient(var(--chalk-dim) 0 6px,transparent 6px 10px)}
+.mapfork{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.strand{display:flex;flex-direction:column;gap:.5rem;padding:.375rem;border:2px dashed var(--grid-2);border-radius:12px}
+.strandname{margin:0;font-size:14px;color:var(--chalk-dim);text-align:center}
+.etwrap{position:relative}
+.etnode{width:100%;border-left:8px solid var(--et,var(--chalk))!important;aspect-ratio:auto!important}
+.etnode .etl{position:absolute;top:.375rem;right:.5rem;font:700 1rem var(--font-mono);color:var(--et)}
+.sdots{display:flex;flex-wrap:wrap;gap:4px;margin-top:.25rem}
+.sdots i{width:.7rem;height:.7rem;border-radius:50%;border:2px solid var(--et,var(--chalk-dim))}
+.sdots i.p{width:.5rem;height:.5rem;opacity:.75}
+.sdots i.on{background:var(--et,var(--ok))}
+.sdots i.cur{box-shadow:0 0 0 3px var(--amber)}
+.sdots i.fin{border-radius:2px}
+.badgerow{display:flex;gap:4px;flex-wrap:wrap}
+.standort{position:absolute;left:-.25rem;top:-1.25rem;display:flex;align-items:center;gap:.25rem;pointer-events:none}
+.standort small{font-size:12px;background:var(--amber-fill);color:var(--on-amber);padding:0 .375rem;border-radius:8px}
+.etwrap.here{margin-top:1.25rem}
+.mapgo{margin-bottom:.75rem}
+@media (min-width:1000px){.lmap{max-width:56rem;margin:0 auto}}
+.etnode .segn{display:none}

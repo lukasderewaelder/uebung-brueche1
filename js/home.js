@@ -96,7 +96,8 @@ function renderHome(){
   }else if(tab==='rang'){
     const total=Object.values(S.progress).reduce((a,p)=>a+p.done,0);
     home.append(el('div',{class:'ichhead'},el('h1',null,'Ich'),linkBtn('Einstellungen',openOptions,'zahnrad')),
-      rankCard(),dayCard(),
+      rankCard(),typeof weekCard==='function'?weekCard():dayCard(),
+      typeof allBadges==='function'?fold('Abzeichen ('+allBadges().filter(b=>b.have).length+' von '+allBadges().length+')',el('div',{class:'badgelist'},...allBadges().map(b=>badgeNode(b)))):null,
       el('p',{class:'stats'},`Aufgaben bearbeitet: ${total} · Höchstes Treffer-Konto: ${S.bestStreak||0}`),
       fold('Alle Ränge',rankLadder()),
       fold('Alle Ziele',perfectionList()));

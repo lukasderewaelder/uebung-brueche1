@@ -9,7 +9,7 @@
    · Knifflig bei U01, U02, U03: 1 von 5 Aufgaben ist ein Transfer (U05 oder U06)
    Alle drei Typen haben auch eigene Tipps (js/tips.js); U04 ist zusätzlich als Übung einzeln erreichbar.
    ===================================================================== */
-const U_NAMES=['Lena','Ben','Mia','Tom','Ida','Paul','Nora','Jan'];
+const U_NAMES=NAME_LIST; /* P18: Namen aus dem Werkstatt-Team */
 const U_LETTERS=['A','B','C'];
 
 /* Bruch p/q, teilerfremd, mit Wahrscheinlichkeit 0,15 unecht (p > q) */

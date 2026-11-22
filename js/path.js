@@ -195,12 +195,13 @@ function roundAward(info){
   if(info.daily){xp+=10;if(label==='Runde geschafft!')label='Tagesziel!';}
   if(info.final){xp+=50;label='Urkunde!';}
   award(xp,label);
+  if(typeof checkBadges==='function')checkBadges(); /* P19: neue Abzeichen melden */
   if(info.final)setTimeout(()=>finalCard(info.qmod),700);
 }
 function finalCard(modId){
   const mod=moduleById(modId)||activeModules()[0];
-  const m=modal([icon('plakette','big'),el('h2',null,'Urkunde'),el('p',{class:'rankname'},'Lernpfad geschafft'),el('div',{class:'stampbox'},'Geprüft'),
-    el('p',null,mod.finalText||'Stark!'),
+  const m=modal([icon('plakette','big'),el('h2',null,'Urkunde'),el('p',{class:'rankname'},'Etappe '+(mod.letter||'')+' geschafft'),el('div',{class:'stampbox'},'Geprüft'),
+    el('p',null,mod.finalText||'Stark!'),typeof speechBubble==='function'?speechBubble('Theo','Geprüft und für gut befunden!'):null,
     el('button',{type:'button',class:'btn',onclick:()=>{m.remove();go({kind:'home',tab:'pfad',thema:mod.id});}},'Zum Lernpfad')]);
 }
 /* Schema 4: Lernpfad-Felder; Bestandsnutzer behalten ihren Stand (mind. 4 Treffer beim 1. Versuch ⇒ bestanden) */
@@ -358,6 +359,7 @@ function gateCard(mod){
 /* Themenseite: Name, Fortschritt, ein Block je Zustand (Eingangstest oder „Weiter“), die Stationen eingeklappt, zuletzt der Textlink zum Wiederholen des Tests */
 function pfadTab(home,mod){
   const z=lernenZustand(mod),info=pfadInfo(mod),rec=recommendNote(mod);
+  if(typeof etOf==='function'&&etOf(mod))home.dataset.et=etOf(mod); /* P25: Kennfarbe der Etappe */
   home.append(el('h1',null,mod.name),pfadLine(info.doneN,info.must.length));
   if(typeof wordsRow==='function'){const w=wordsRow(mod);if(w)home.append(w);} /* P24: neue Fachwörter der Etappe, antippbar */
   if(z==='gate')home.append(gateCard(mod));

@@ -4,11 +4,13 @@
    Rang 1–11 hängen an den Punkten (XP); der höchste Rang (Legende) braucht
    zusätzlich, dass wirklich alles perfekt geschafft ist.
    ===================================================================== */
+/* P17 neutrale Stufen als Medaillen (gleiche XP-Schwellen); Kristall nur mit „alles perfekt“. [XP, Name, Symbol, Stufe für die Farbe] */
 const RANKS=[
-  [0,'Praktikant','bleistift'],[40,'Azubi','lineal'],[100,'Zeichner','winkel'],[190,'Konstrukteur','zirkel'],
-  [320,'Techniker','netz'],[500,'Werkmeister','schluessel'],[750,'Ingenieur','helm'],[1100,'Baumeister','plakette'],
-  [1600,'Erfinder','gluehbirne'],[2300,'Chefkonstrukteur','pokal'],[3200,'Meister','stern'],[4500,'Legende','krone']
+  [0,'Bronze I','plakette','bronze'],[40,'Bronze II','plakette','bronze'],[100,'Bronze III','plakette','bronze'],[190,'Silber I','plakette','silber'],
+  [320,'Silber II','plakette','silber'],[500,'Silber III','plakette','silber'],[750,'Gold I','plakette','gold'],[1100,'Gold II','plakette','gold'],
+  [1600,'Gold III','plakette','gold'],[2300,'Platin','pokal','platin'],[3200,'Diamant','stern','diamant'],[4500,'Kristall','krone','kristall']
 ];
+const medalIcon=(r,cls)=>el('span',{class:'medal tier-'+(r[3]||'bronze')+(cls?' '+cls:'')},icon(r[2],cls==='big'?'big':''));
 const RANK_TOP=RANKS.length-1;
 
 /* Bedingungen für „alles perfekt“ (höchster Rang) */
@@ -43,7 +45,7 @@ function rankState(xp,perfect){
 const rankInfo=(xp)=>rankState(xp);
 function rankHint(st){
   if(!st.nxt)return 'Höchster Rang erreicht';
-  if(st.topLocked)return 'Legende: erst, wenn alles perfekt ist';
+  if(st.topLocked)return 'Kristall: erst, wenn alles perfekt ist';
   return 'Noch '+(st.nxt[0]-st.xp)+' XP bis „'+st.nxt[1]+'“'+(st.i===RANK_TOP-1?' und alles perfekt':'');
 }
 /* Neuen Rang einmalig melden (auch wenn er durch „alles perfekt“ erreicht wird) */
@@ -57,7 +59,7 @@ function checkRankUp(){
 function chipNode(){
   const st=rankState(),xp=st.xp;
   return el('button',{type:'button',class:'gchip','aria-label':'Rang '+st.cur[1]+', '+xp+' XP. Zur Seite Ich',title:rankHint(st),onclick:()=>go({kind:'home',tab:'rang'})},
-    el('span',{class:'gicon','aria-hidden':'true'},icon(st.cur[2])),
+    el('span',{class:'gicon','aria-hidden':'true'},medalIcon(st.cur)),
     el('span',{class:'gtext'},el('b',{class:'gname'},st.cur[1]),segBar(st.pct)),
     el('span',{class:'gxp'},xp+' XP'),
     (S.streak||0)>1?el('span',{class:'gstreak','aria-hidden':'true'},'TREFFER '+S.streak):null);
@@ -67,7 +69,7 @@ function updateChip(){document.querySelectorAll('.gchip').forEach(c=>c.replaceWi
 /* ---------- Rang-Seite ---------- */
 function rankCard(){
   const st=rankState();
-  return el('div',{class:'rankcard'},el('span',{class:'ico','aria-hidden':'true'},icon(st.cur[2])),
+  return el('div',{class:'rankcard'},el('span',{class:'ico','aria-hidden':'true'},medalIcon(st.cur)),
     el('div',{class:'rk'},el('b',null,st.cur[1]),segBar(st.pct,'big'),
       el('small',null,st.xp+' XP · '+rankHint(st)),el('small',null,'Rang '+(st.i+1)+' von '+RANKS.length),
       el('small',{class:'kontohelp'},'Treffer-Konto: Jede richtige Antwort zählt +1. Ein Fehler halbiert es.')),
@@ -79,7 +81,7 @@ function rankLadder(){
     const done=i<=st.i,cur=i===st.i,top=i===RANK_TOP;
     return el('div',{class:'rung'+(done?' done':'')+(cur?' cur':'')+(top?' top':''),'aria-current':cur?'true':null},
       el('span',{class:'rn'},String(i+1).padStart(2,'0')),
-      el('span',{class:'ri','aria-hidden':'true'},icon(r[2])),
+      el('span',{class:'ri','aria-hidden':'true'},medalIcon(r)),
       el('span',{class:'rt'},el('b',null,r[1]),el('small',null,top?r[0]+' XP und alles perfekt':r[0]+' XP')),
       el('span',{class:'rs'},icon(done?'haken':'schloss'),el('span',{class:'sr'},done?'erreicht':'noch nicht')));
   }));
@@ -87,7 +89,7 @@ function rankLadder(){
 function perfectionList(){
   const pf=perfection();
   return el('div',{class:'perf'},
-    el('p',{class:'perfhead'},pf.all?'Alles perfekt – die Legende ist frei!':'Für die Legende fehlt noch: '+(pf.items.length-pf.done)+' von '+pf.items.length+' Bedingungen.'),
+    el('p',{class:'perfhead'},pf.all?'Alles perfekt – Kristall ist frei!':'Für Kristall fehlt noch: '+(pf.items.length-pf.done)+' von '+pf.items.length+' Bedingungen.'),
     ...pf.items.map(it=>{
       const done=it.have>=it.need;
       return el('div',{class:'prow'+(done?' done':'')},
@@ -116,6 +118,7 @@ function openOptions(){
     el('h2',null,'Einstellungen'),
     optionsExtra(),
     themeOptions(),
+    typeof animOptions==='function'?animOptions():null,
     el('div',{class:'optlist'},
       optRow('schluessel','Hilfe bei Problemen','Wenn etwas nicht klappt',()=>{closeOptions();openProblemHelp();})),
     el('div',{class:'optfoot'},

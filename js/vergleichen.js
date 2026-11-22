@@ -11,7 +11,7 @@
    Fehlercodes: gleichNenner, gleichZahl, gleichAbstand, gleich, gleichwertig, beide, nurZaehler, nurNenner, sign (cmpDiagnose in math.js),
    dazu paint (falsche Zahl gefärbter Teile), same (falsch erkannt, was gleich ist), judge und reason (Behauptung).
    ===================================================================== */
-const CMP_NAMES=['Lena','Ben','Mia','Tom','Ida','Paul','Nora','Jan'];
+const CMP_NAMES=NAME_LIST; /* P18 */
 const cmpAvoid=(a,b,c,d)=>[redKey(a,b),redKey(c,d)];
 const cmpDelta=(a,b,c,d)=>Math.abs(a/b-c/d);
 const cmpSwap=(R,a,b,c,d)=>R.chance(0.5)?[a,b,c,d]:[c,d,a,b];
