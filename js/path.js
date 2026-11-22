@@ -7,12 +7,25 @@
      Was der Eingangstest als „sitzt“ markiert, steht als Markierung in der Liste; die Erklärung bietet dann „Kenne ich schon“.
    · Die frühere „Meine Übersicht“ (und die Wahl „Wie möchtest du lernen?“) gibt es nicht mehr.
    ===================================================================== */
-const PATH_ACC={LAB:'mix',RLAB:'mix',HLAB:'mix',Q00:'ok',ZQ:'ok',QA:'ok',ZA:'ok',WQ:'ok',WA:'ok',RQ:'ok',RA:'ok',HQ:'ok',HA:'ok'};
+const PATH_ACC={FLAB:'mix',FQ:'ok',FA:'ok',LAB:'mix',RLAB:'mix',HLAB:'mix',Q00:'ok',ZQ:'ok',QA:'ok',ZA:'ok',WQ:'ok',WA:'ok',RQ:'ok',RA:'ok',HQ:'ok',HA:'ok'};
 /* Thema, zu dem ein Abschlusscheck (finalId) gehört */
 const finalModOf=(id)=>activeModules().find(m=>m.finalId===id)||null;
-/* Hinweis „Erst …“ (modules.js recommends): nur solange das empfohlene Thema nicht abgeschlossen ist, keine Sperre */
-function recommendNote(mod){const r=mod&&mod.recommends&&moduleById(mod.recommends);return r&&!qstate(r).final?r:null;}
+/* Hinweis „Erst …“ (modules.js recommends, P10 Liste der Vorgänger): die erste empfohlene Etappe, die noch nicht abgeschlossen ist – keine Sperre */
+function recommendNote(mod){
+  const list=mod&&mod.recommends?[].concat(mod.recommends):[];
+  for(const id of list){const r=moduleById(id);if(r&&r.status==='aktiv'&&!qstate(r).final)return r;}
+  return null;
+}
+/* P3 Basis-Ebene: sichtbar nach dem Eingangstest, wenn eine Fähigkeit auf „üben“ steht, oder nach „Ich möchte wiederholen“ */
+function basisOpen(mod){
+  if(S.basis&&S.basis[mod.id])return true;
+  const e=mod.quickcheck&&qstate(mod).einstufung;
+  return !!(e&&e.skills&&Object.values(e.skills).some(x=>x&&x.status==='ueben'));
+}
+const hasBasis=(mod)=>mod.path.some(p=>p.lvl==='basis')||(mod.basisRefs||[]).length>0;
+function toggleBasis(mod){S.basis=S.basis&&typeof S.basis==='object'?S.basis:{};S.basis[mod.id]=!S.basis[mod.id];persist();renderAll();}
 const stationTitle=(id)=>{const m=PATH.find(x=>x.id===id);return (m&&m.title)||(TASKS[id]&&TASKS[id].name)||id;};
+const stationLabel=(id)=>{const c=stationCode(id);return (c?c+' ':'')+stationTitle(id);}; /* P23: mit Kürzel */
 
 /* ---------- Zustand ---------- */
 const stationPassed=(id)=>!!(S.passed[id+'-L1']||S.passed[id+'-L2']);
@@ -41,7 +54,9 @@ function pathState(mod){
   um.path.forEach(m=>{
     const done=stationDone(m.id),checked=stationChecked(m.id);
     const open=allOpen||!blocker; /* S.unlocked (nur noch für Tests und alte Speicherstände): alles offen, die Urkunde gibt es trotzdem nur nach allen Pflicht-Stationen */
-    rows.push({m,id:m.id,must:!!m.must,done,checked,open,locked:!done&&!open,blocker:open?null:blocker,next:false});
+    /* P16 weiche Sperre: nur Kern-Stationen (must) nach der empfohlenen sind „später“ (antippbar mit Rückfrage), Plus und Basis immer offen */
+    const later=!done&&!open&&!!m.must;
+    rows.push({m,id:m.id,must:!!m.must,done,checked,open:open||!m.must,locked:later,later,blocker:later?blocker:null,next:false});
     if(m.must&&!done&&!blocker)blocker=m.id;
   });
   const nx=rows.find(r=>r.must&&!r.done);if(nx)nx.next=true;
@@ -108,7 +123,7 @@ function qEvaluate(results,sk,size,hadProgress,skillList){
   const skills={};
   (skillList||Q_SKILLS).forEach(s=>{
     const x=per[s]||{ok:0,n:0,u:0};
-    skills[s]={ok:x.ok,n:x.n,status:x.u?'ueben':trust&&x.n>=2&&x.ok===x.n?'sitzt':trust&&x.n>=3&&x.ok===x.n-1?'fast':'ueben'};
+    skills[s]={ok:x.ok,n:x.n,status:x.u&&x.ok===0?'ueben':trust&&x.n>=2&&x.ok===x.n?'sitzt':trust&&x.n>=2&&x.ok>=x.n-1&&x.ok>0?'fast':'ueben'}; /* P15: 2 von 2 sitzt, 1 von 2 fast, 0 von 2 üben */
   });
   return {right,unsure,size,trust,skills,stufe:!trust?(hadProgress?'plan':'start'):right>=needOf(size)?'fit':'plan'};
 }
@@ -118,9 +133,30 @@ function roundScore(results,size){
   const points=f+l/2;
   return {right:f+l,f,l,points,need,passed:points>=need&&f>=Math.min(3,need)};
 }
+/* P11 Ansammeln statt Runde: je Station und Niveau zählen richtige Aufgaben (r) und davon ohne Tipp beim 1. Versuch (f).
+   Geschafft, sobald r ≥ ACC_NEED und f ≥ ACC_FREE – über beliebig viele Runden, nichts geht verloren. */
+const ACC_NEED=5,ACC_FREE=2;
+const accOf=(id,lvl)=>{S.acc=S.acc&&typeof S.acc==='object'?S.acc:{};return S.acc[keyOf(id,lvl)]||{r:0,f:0};};
+const accReached=(a)=>a.r>=ACC_NEED&&a.f>=ACC_FREE;
+/* eine richtige Aufgabe einer Lernpfad-Station zählen; true, wenn die Station (dieses Niveau) dadurch gerade geschafft ist */
+function accAdd(id,lvl,first){
+  const k=keyOf(id,lvl),a=accOf(id,lvl);
+  a.r++;if(first)a.f++;S.acc[k]=a;
+  if(accReached(a)&&!S.passed[k]){const was=stationDone(id);S.passed[k]=true;return !was;}
+  return false;
+}
+const isPathStation=(id)=>PATH.some(m=>m.id===id)&&!isLab(id)&&!finalModOf(id)&&!QCHK[id];
+/* Kästchenreihe „4 von 5 geschafft · 1 davon ohne Tipp“ */
+function accRow(id,lvl,withText){
+  const a=accOf(id,lvl),r=Math.min(a.r,ACC_NEED),f=Math.min(a.f,ACC_FREE),txt=r+' von '+ACC_NEED+' geschafft · '+Math.min(a.f,r)+' davon ohne Tipp';
+  const row=el('span',{class:'accrow',role:'img','aria-label':txt});
+  for(let i=0;i<ACC_NEED;i++)row.append(el('i',{class:i<f?'f':i<r?'on':''}));
+  return withText?el('span',{class:'accline'},row,el('small',null,txt+(a.f<ACC_FREE&&a.r>=ACC_NEED?' (noch '+(ACC_FREE-a.f)+' ohne Tipp)':''))):row;
+}
 function onRoundEnd(id,lvl,round){
   const sc=roundScore(round.results,round.size),right=sc.right,need=sc.need;
   const info={right,points:sc.points,need,passed:sc.passed,firstPass:false,placed:[],final:false,daily:false,quiz:null};
+  if(isPathStation(id)){info.passed=!!S.passed[keyOf(id,lvl)];info.firstPass=!!round.newPass;info.acc=true;}
   if(QCHK[id]){
     /* Einstufung: nur „sitzt“ (alle Fragen einer Fähigkeit richtig) schaltet die Bauteile der Fähigkeit per Check frei – und nur,
        wenn nicht fast alles falsch war */
@@ -145,12 +181,10 @@ function onRoundEnd(id,lvl,round){
     info.qmod=fm.id;
     info.ready=pathState(fm).filter(r=>r.must&&!r.m.final).every(r=>r.done);
     if(info.ready&&info.passed&&!qs.final){qs.final=true;info.final=true;}
-  }else if(info.passed&&PATH.some(m=>m.id===id)){
-    info.firstPass=!stationDone(id);
-    S.passed[keyOf(id,lvl)]=true;
   }
   /* perfekte Runde: jede Aufgabe beim 1. Versuch ohne Tipp richtig (zählt für „alles perfekt“) */
   if(round.results.length&&round.results.every(r=>r==='f')){(S.perfect=S.perfect||{})[keyOf(id,lvl)]=true;info.perfect=true;}
+  if(id==='WH')S.whDay=dayKey(new Date()); /* P14: Wiederholung heute geschafft */
   info.daily=markDay();
   return info;
 }
@@ -161,12 +195,13 @@ function roundAward(info){
   if(info.daily){xp+=10;if(label==='Runde geschafft!')label='Tagesziel!';}
   if(info.final){xp+=50;label='Urkunde!';}
   award(xp,label);
+  if(typeof checkBadges==='function')checkBadges(); /* P19: neue Abzeichen melden */
   if(info.final)setTimeout(()=>finalCard(info.qmod),700);
 }
 function finalCard(modId){
   const mod=moduleById(modId)||activeModules()[0];
-  const m=modal([icon('plakette','big'),el('h2',null,'Urkunde'),el('p',{class:'rankname'},'Lernpfad geschafft'),el('div',{class:'stampbox'},'Geprüft'),
-    el('p',null,mod.finalText||'Stark!'),
+  const m=modal([icon('plakette','big'),el('h2',null,'Urkunde'),el('p',{class:'rankname'},'Etappe '+(mod.letter||'')+' geschafft'),el('div',{class:'stampbox'},'Geprüft'),
+    el('p',null,mod.finalText||'Stark!'),typeof speechBubble==='function'?speechBubble('Theo','Geprüft und für gut befunden!'):null,
     el('button',{type:'button',class:'btn',onclick:()=>{m.remove();go({kind:'home',tab:'pfad',thema:mod.id});}},'Zum Lernpfad')]);
 }
 /* Schema 4: Lernpfad-Felder; Bestandsnutzer behalten ihren Stand (mind. 4 Treffer beim 1. Versuch ⇒ bestanden) */
@@ -181,6 +216,13 @@ function migrate4(st){
 /* Schema 6: Schnellcheck mit 15 statt 10 Fragen – alte (laufende oder fertige) Runden verwerfen; Punkte, Checks und Fortschritt bleiben */
 function migrate6(st){
   [1,2].forEach(l=>{const k=keyOf('Q00',l),r=st.rounds&&st.rounds[k];if(r&&r.size!==TASKS.Q00.size)delete st.rounds[k];});
+}
+
+/* Schema 9 (Umbau 2026-11): Runden, deren Größe nicht mehr passt (Eingangstests 15 → 10, Abschlusschecks auf 15), werden verworfen.
+   Bestandene Stationen bleiben geschafft; die neuen Zähler (S.acc) beginnen bei 0; Ergebnisse der Eingangstests bleiben gültig. */
+function migrate9(st){
+  st.acc=st.acc&&typeof st.acc==='object'?st.acc:{};
+  Object.keys(st.rounds||{}).forEach(k=>{const id=k.replace(/-L\d$/,''),r=st.rounds[k];if(TASKS[id]&&r&&r.size!==TASKS[id].size)delete st.rounds[k];});
 }
 
 /* ---------- Wege zu den Bauteilen ---------- */
@@ -215,13 +257,14 @@ function resetSheet(id){
       el('button',{type:'button',class:'btn danger',onclick:()=>{m.remove();clearStation(id);persist();renderAll();toast('Zurückgesetzt: '+title);}},'Zurücksetzen'),
       el('button',{type:'button',class:'btn alt',onclick:()=>m.remove()},'Abbrechen'))]);
 }
+/* P16: keine Sperre mehr, nur eine Empfehlung mit Rückfrage */
 function lockSheet(row){
-  const b=row.blocker,name=stationTitle(b);
-  const m=modal([icon('schloss','big'),el('h2',null,'Noch gesperrt'),
-    el('p',null,'Erst dran: ',el('b',null,name),'.'),
+  const b=row.blocker,name=stationLabel(b);
+  const m=modal([icon('pfad','big'),el('h2',null,'Empfohlen: erst '+name),
+    el('p',null,'Diese Station baut darauf auf. Trotzdem starten?'),
     el('div',{class:'modalbtns'},
-      el('button',{type:'button',class:'btn',onclick:()=>{m.remove();openStation(b);}},'Zu: '+name),
-      el('button',{type:'button',class:'btn alt',onclick:()=>m.remove()},'Schließen'))]);
+      el('button',{type:'button',class:'btn primary',onclick:()=>{m.remove();openStation(b);}},'Zu: '+name),
+      el('button',{type:'button',class:'btn alt',onclick:()=>{m.remove();openStation(row.id);}},'Trotzdem starten'))]);
 }
 
 /* ---------- Ansicht: Themenseite mit Eingangstest-Block, nächster Station und Stationenliste ---------- */
@@ -240,24 +283,38 @@ function modNode(r,pos){
   const id=r.id,m=r.m,title=stationTitle(id),desc=m.desc||(TASKS[id]&&TASKS[id].desc)||'';
   const next=r.next;
   const state=r.done?'done':next?'next':r.locked?'locked':'open';
-  const tag=r.done?'Fertig':next?'Als Nächstes':r.locked?'Gesperrt':r.must?'Offen':'Freiwillig';
+  const tag=r.done?'Fertig':next?'Als Nächstes':r.locked?'Später':r.must?'Offen':m.lvl==='basis'?'Basis':m.lvl==='plus'?'Plus':'Freiwillig';
   const chk=checkMark(id);
   const stars=(isLab(id)||m.final)?null:starNodes((S.passed[id+'-L1']?1:0)+(S.passed[id+'-L2']?1:0),2);
   const li=el('li',{class:'mod '+state+(r.must?'':' frei'),'data-acc':ACC[id]||PATH_ACC[id]||null});
-  li.append(el('span',{class:'lamp','aria-hidden':'true'},r.done?icon('haken'):r.locked?icon('schloss'):null),
+  li.append(el('span',{class:'lamp','aria-hidden':'true'},r.done?icon('haken'):null),
     el('button',{type:'button',class:'modbtn','aria-label':title+': '+tag.toLowerCase()+(chk?', Eingangstest: '+CHECK_TEXT[chk]:'')+(r.must||tag==='Freiwillig'?'':', freiwillig'),onclick:()=>r.locked?lockSheet(r):openStation(id)},
-      el('span',{class:'mpos'},String(pos+1).padStart(2,'0')),
+      el('span',{class:'mpos'},stationCode(id)||(isLab(id)?'Lab':'✓')),
       el('span',{class:'mnm'},el('b',null,title),el('small',null,desc+(m.note&&recommendNote(moduleOf(id))?' '+m.note:''))),
-      el('span',{class:'mside'},chk?el('span',{class:'mchk '+chk},'Check: '+CHECK_TEXT[chk]):null,el('span',{class:'mtag'},tag),stars)));
+      el('span',{class:'mside'},!r.done&&isPathStation(id)&&accOf(id,levelOf(id)).r>0?accRow(id,levelOf(id)):null,chk?el('span',{class:'mchk '+chk},'Test: '+CHECK_TEXT[chk]):null,el('span',{class:'mtag'},tag),stars)));
   if(stationResettable(id))li.append(el('button',{type:'button',class:'modreset','aria-label':title+' zurücksetzen',title:'Zurücksetzen',onclick:()=>resetSheet(id)},icon('neu')));
   return li;
 }
-function pfadMap(rows){
+const GRP_LABEL={Knobeln:'Knobeln (Plus)',Grundlagen:'Grundlagen wiederholen'};
+function pfadMap(rows,mod){
+  mod=mod||(rows[0]&&moduleOf(rows[0].id));
   const ol=el('ol',{class:'rail'});let last=null;
+  const showBasis=!!mod&&basisOpen(mod);
   rows.forEach((r,i)=>{
-    if(r.m.grp!==last){last=r.m.grp;ol.append(el('li',{class:'pgrp'},icon(PATH_GROUPS[last]),last));}
-    ol.append(modNode(r,i));
+    if(r.m.lvl==='basis'&&!showBasis)return;
+    if(r.m.grp!==last){last=r.m.grp;ol.append(el('li',{class:'pgrp'+(r.m.lvl==='basis'?' basis':r.m.lvl==='plus'?' plus':'')},icon((mod&&mod.pathGroups[last])||'pfad'),GRP_LABEL[last]||last));}
+    const li=modNode(r,i);if(r.m.lvl==='basis')li.classList.add('basis');if(r.m.lvl==='plus')li.classList.add('plus');
+    ol.append(li);
   });
+  /* Basis aus anderen Etappen: Verweise */
+  if(showBasis&&mod&&(mod.basisRefs||[]).length){
+    if(last!=='Grundlagen')ol.append(el('li',{class:'pgrp basis'},icon('undo'),'Grundlagen wiederholen'));
+    mod.basisRefs.forEach(id=>ol.append(el('li',{class:'mod open frei basis'},el('span',{class:'lamp','aria-hidden':'true'},stationDone(id)?icon('haken'):null),
+      el('button',{type:'button',class:'modbtn','aria-label':stationTitle(id)+': Grundlage aus '+(moduleOf(id)||{}).name},
+        el('span',{class:'mpos'},stationCode(id)),el('span',{class:'mnm'},el('b',null,stationTitle(id)),el('small',null,'Grundlage aus „'+(moduleOf(id)||{}).name+'“')),
+        el('span',{class:'mside'},el('span',{class:'mtag'},'Basis'))))));
+    [...ol.querySelectorAll('li.basis .modbtn')].slice(-mod.basisRefs.length).forEach((b,j)=>b.addEventListener('click',()=>openStation(mod.basisRefs[j])));
+  }
   return ol;
 }
 /* Stand eines Themas: Zeilen, Pflicht-Stationen, nächste Station */
@@ -302,14 +359,19 @@ function gateCard(mod){
 /* Themenseite: Name, Fortschritt, ein Block je Zustand (Eingangstest oder „Weiter“), die Stationen eingeklappt, zuletzt der Textlink zum Wiederholen des Tests */
 function pfadTab(home,mod){
   const z=lernenZustand(mod),info=pfadInfo(mod),rec=recommendNote(mod);
+  if(typeof etOf==='function'&&etOf(mod))home.dataset.et=etOf(mod); /* P25: Kennfarbe der Etappe */
   home.append(el('h1',null,mod.name),pfadLine(info.doneN,info.must.length));
+  if(typeof wordsRow==='function'){const w=wordsRow(mod);if(w)home.append(w);} /* P24: neue Fachwörter der Etappe, antippbar */
   if(z==='gate')home.append(gateCard(mod));
   else{
     if(rec)home.append(el('p',{class:'modushint'},'Empfohlen: erst '+rec.name+'. Du kannst aber auch gleich anfangen.'));
     const go1=info.go1;
-    if(go1)home.append(bigBtn('play',()=>openStation(go1.id),startWord(info.rows,go1)+': '+stationTitle(go1.id),go1.m.final||isLab(go1.id)?null:LEVEL_LABEL[levelOf(go1.id)],null,'go'));
-    else home.append(el('div',{class:'msg ok'},'Alle Pflicht-Stationen sind fertig – stark! '+(info.rows.some(r=>!r.must)?'Probiere die freiwilligen Stationen oder ein Spiel.':'Probiere ein Spiel oder ein anderes Thema.')));
+    if(go1)home.append(bigBtn('play',()=>openStation(go1.id),startWord(info.rows,go1)+': '+stationLabel(go1.id),go1.m.final||isLab(go1.id)?null:LEVEL_LABEL[levelOf(go1.id)],null,'go'));
+    else home.append(el('div',{class:'msg ok'},'Alle Pflicht-Stationen sind fertig – stark! '+(info.rows.some(r=>!r.must)?'Probiere die freiwilligen Stationen oder ein Spiel.':'Probiere ein Spiel oder eine andere Etappe.')));
   }
-  home.append(fold('Alle Stationen',pfadMap(info.rows)));
+  home.append(fold('Alle Stationen',pfadMap(info.rows,mod)));
   if(mod.quickcheck&&z!=='gate')home.append(el('p',{class:'retake'},linkBtn(qstate(mod).placed?'Eingangstest wiederholen':'Eingangstest machen',()=>startEingang(mod,qstate(mod).placed))));
+  /* P3: Basis-Ebene von Hand öffnen („Ich möchte wiederholen“) oder wieder schließen; vom Eingangstest geöffnet bleibt sie offen */
+  const byHand=!!(S.basis&&S.basis[mod.id]);
+  if(hasBasis(mod)&&(byHand||!basisOpen(mod)))home.append(el('p',{class:'basislink'},linkBtn(byHand?'Grundlagen ausblenden':'Ich möchte wiederholen',()=>toggleBasis(mod),'undo')));
 }

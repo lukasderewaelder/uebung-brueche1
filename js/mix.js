@@ -9,7 +9,7 @@
    · Knifflig bei U01, U02, U03: 1 von 5 Aufgaben ist ein Transfer (U05 oder U06)
    Alle drei Typen haben auch eigene Tipps (js/tips.js); U04 ist zusätzlich als Übung einzeln erreichbar.
    ===================================================================== */
-const U_NAMES=['Lena','Ben','Mia','Tom','Ida','Paul','Nora','Jan'];
+const U_NAMES=NAME_LIST; /* P18: Namen aus dem Werkstatt-Team */
 const U_LETTERS=['A','B','C'];
 
 /* Bruch p/q, teilerfremd, mit Wahrscheinlichkeit 0,15 unecht (p > q) */
@@ -92,14 +92,14 @@ TASKS.U04={area:'Umkehraufgaben',name:'Stimmt das?',desc:'Stimmt die Rechnung? W
     if(!d.j)return invalid('Wähle zuerst: Stimmt das oder stimmt das nicht?');
     if(!d.r)return invalid('Wähle auch die Begründung.');
     const jOk=d.j===(t.truth?'ja':'nein'),rOk=d.r===t.answerR;
-    const proof=t.kind==='full'?'':qCross(t.a,t.b,t.c,t.d)+' ';
+    const proof=t.kind==='full'?'':qSame(t.a,t.b,t.c,t.d)+' ';
     if(jOk&&rOk)return right('Richtig! '+proof+t.opts.find(o=>o.id===t.answerR).txt);
     if(!jOk)return wrong('judge',t.kind==='full'?'Das Urteil stimmt noch nicht. Prüfe, ob eine Zahl größer als 1 beide Zahlen teilt.':'Das Urteil stimmt noch nicht. Rechne nach: '+proof.trim());
     return wrong('reason','Das Urteil stimmt. Die Begründung passt noch nicht. Lies alle drei noch einmal.');
   },
   solution(t){
     const ok=t.opts.find(o=>o.id===t.answerR).txt;
-    return [line(strong(t.truth?'Das stimmt. ':'Das stimmt nicht. '),ok),...(t.kind==='full'?[]:[line(qCross(t.a,t.b,t.c,t.d))])];
+    return [line(strong(t.truth?'Das stimmt. ':'Das stimmt nicht. '),ok),...(t.kind==='full'?[]:[line(qSame(t.a,t.b,t.c,t.d))])];
   }
 };
 

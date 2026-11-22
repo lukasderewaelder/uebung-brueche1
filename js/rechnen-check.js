@@ -248,7 +248,7 @@ function rqGen(level,R,ctx){
   const skill=(ctx&&ctx.skill)||R.pick(RQ_SKILLS),kinds=RQ_KINDS[skill],kind=(ctx&&ctx.occ!=null)?kinds[ctx.occ%kinds.length]:R.pick(kinds);
   return Object.assign({type:'RQ',level,avoid:[]},RQ_GEN[kind](level,R));
 }
-TASKS.RQ=Object.assign({area:'Rechnen',name:'Eingangstest',desc:RQ_SKILLS.length*Q_PER_SKILL+' Kurzfragen zum Antippen – ohne Zeitdruck.',size:RQ_SKILLS.length*Q_PER_SKILL,
+TASKS.RQ=Object.assign({area:'Rechnen',name:'Eingangstest',desc:RQ_SKILLS.length*Q_PER_SKILL+' Fragen zum Antippen – ohne Zeitdruck.',size:RQ_SKILLS.length*Q_PER_SKILL,
   gen:rqGen,
   ctx(round){
     if(!round.plan)round.plan=qPlan(null,RQ_SKILLS,Q_PER_SKILL);

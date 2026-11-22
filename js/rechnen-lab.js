@@ -87,7 +87,7 @@ function renderRLab(){
   const shell=el('div',{class:'shell'}),help=helpPanel('RLAB'),main=el('main',{class:'work lab rlab'});
   shell.append(main,help.el);root.append(shell);app.append(root);
   main.dataset.acc='mix';
-  help.setNotes(['M17','M18'].map(n=>el('section',{class:'note','aria-label':'Merkkasten '+n},el('h3',null,n+' · '+NOTES[n].title),...NOTES[n].build([]))));
+  help.setNotes(['M17','M18'].map(n=>el('section',{class:'note','aria-label':'Merkzettel '+n},el('h3',null,n+' · '+NOTES[n].title),...NOTES[n].build([]))));
   help.setStats(el('div',null,el('h3',null,'Dein Labor'),el('p',null,L.done?'Der Entdeckerauftrag ist geschafft.':'Der Entdeckerauftrag ist noch offen.')));
 
   const segBtn=(op,label)=>{
@@ -121,7 +121,7 @@ function renderRLab(){
   const ctl=el('div',{class:'labctl'},stepsBox,quizBox);
   const undoBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('undo')),'Rückgängig');
   const newBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('neu')),'Neue Aufgabe');
-  const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkkasten');
+  const noteBtn=el('button',{type:'button',class:'btn'},el('span',{class:'emo'},icon('heft')),'Merkzettel');
   main.append(el('div',{class:'actionbar'},ctl,el('div',{class:'primaryrow'},undoBtn,newBtn,noteBtn)));
 
   const sayText=(text,kind)=>{say.replaceChildren(text?(kind?el('div',{class:'msg '+kind},text):el('div',{class:'labtext'},text)):null);};

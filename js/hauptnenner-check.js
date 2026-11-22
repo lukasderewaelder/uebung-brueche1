@@ -9,7 +9,7 @@
 const HQ_SKILLS=['groesse','hn','erw','plus','minus'];
 const HQ_NAMES={groesse:'Größe schätzen',hn:'Hauptnenner finden',erw:'Erweitern',plus:'Addieren',minus:'Subtrahieren'};
 QCHK.HQ={skills:HQ_SKILLS,names:HQ_NAMES,
-  stations:{groesse:[],hn:['H02'],erw:['H02'],plus:['H03','H04'],minus:['H05','H06']},allSure:['H07'],
+  stations:{groesse:[],hn:['H02'],erw:['H02'],plus:['H03','H04'],minus:['H03','H06']},allSure:['H07'],
   startText:'Im Lernpfad lernst du alles Schritt für Schritt. Das Bruchlabor hilft dir beim Start.'};
 const HQ_KINDS={groesse:['stimmtYN','bereich'],hn:['hnWahl','hnYN'],erw:['erwFehlt'],plus:['plusWahl'],minus:['minusWahl','minusYN']};
 const HQ_NOTES={stimmtYN:['M20'],bereich:['M20'],hnWahl:['M19'],hnYN:['M19'],erwFehlt:['M19','M2'],plusWahl:['M20'],minusWahl:['M20'],minusYN:['M20']};
@@ -136,7 +136,7 @@ function hqGen(level,R,ctx){
   const skill=(ctx&&ctx.skill)||R.pick(HQ_SKILLS),kinds=HQ_KINDS[skill],kind=(ctx&&ctx.occ!=null)?kinds[ctx.occ%kinds.length]:R.pick(kinds);
   return Object.assign({type:'HQ',level,avoid:[]},HQ_GEN[kind](level,R));
 }
-TASKS.HQ=Object.assign({area:'Rechnen',name:'Eingangstest',desc:HQ_SKILLS.length*Q_PER_SKILL+' Kurzfragen zum Antippen – ohne Zeitdruck.',size:HQ_SKILLS.length*Q_PER_SKILL,
+TASKS.HQ=Object.assign({area:'Rechnen',name:'Eingangstest',desc:HQ_SKILLS.length*Q_PER_SKILL+' Fragen zum Antippen – ohne Zeitdruck.',size:HQ_SKILLS.length*Q_PER_SKILL,
   gen:hqGen,
   ctx(round){
     if(!round.plan)round.plan=qPlan(null,HQ_SKILLS,Q_PER_SKILL);

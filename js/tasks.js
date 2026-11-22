@@ -103,11 +103,11 @@ TASKS.G01={area:'Grundlagen',name:'Gleiche Anteile erkennen',desc:'Finde die Bil
     const pC=level===1?0.3:0.1;
     const withFill=(f)=>{if(f.mode!=='num')f.fill=scatterFill(f.n,f.d,f.mode,R,{pClassic:pC});return f;};
     const mk=([n,d])=>{
-      const m=n<=d?pickMode(d,R):null;
+      const m=n<=d?pickMode(d,R,null,level):null;
       return withFill({n,d,mode:(m&&R.chance(level===1?0.5:(d>12?0.6:0.35)))?m:'num'});
     };
     const cards=R.shuffle(correct.concat(dist)).map(mk);
-    const tm=level===1&&!imp?(pickMode(b,R)||'strip'):'num';
+    const tm=level===1&&!imp?(gridOK(b)?'grid':'strip'):'num'; /* P5: G01 beginnt mit Rechtecken */
     return {type:'G01',level,target:withFill({n:a,d:b,mode:tm}),cards,avoid:[redKey(a,b)]};
   },
   prompt(t,h){
@@ -156,7 +156,7 @@ TASKS.G01={area:'Grundlagen',name:'Gleiche Anteile erkennen',desc:'Finde die Bil
 function relationText(a,b,c,d){
   if(c%a===0&&d%b===0&&c/a===d/b&&c/a>1)return `erweitert mit ${c/a}`;
   if(a%c===0&&b%d===0&&a/c===b/d&&a/c>1)return `gekürzt mit ${a/c}`;
-  return `Kreuzprobe: ${a} · ${d} = ${a*d} und ${c} · ${b} = ${c*b}`;
+  return qSame(a,b,c,d).replace(/.$/,''); /* P8: statt Kreuzprobe auf denselben Bruch bringen */
 }
 
 /* ---------- G02 Erweitern ---------- */

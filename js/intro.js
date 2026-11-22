@@ -6,7 +6,7 @@
    Rechnungen stehen als Daten in calc, nie im Text: [n,d] = Bruch, [n,d,'x',k] bzw. [n,d,'d',k] = Bruch mit „· k“
    bzw. „: k“ in Zähler und Nenner, {m:[w,n,d]} = gemischte Zahl, Zahl = Zahl, anderer Text = Rechenzeichen oder Wort, {wrong:true,t:[…]} = falsche Rechnung.
    Schritt: h (Überschrift), say (Sätze), dazu höchstens eins von fig (Streifen/Kreise), lab (Ausgang/Jetzt), tryit (Ausprobieren), calc.
-   Gate in renderAll: ungesehen oder per Knopf „Erklärung“ im Merkkasten (view.intro). Altbestand: migrateIntro.
+   Gate in renderAll: ungesehen oder per Knopf „Erklärung“ im Merkzettel (view.intro). Altbestand: migrateIntro.
    ===================================================================== */
 const INTRO={
   LAB:{title:'Bruchlabor',steps:[
@@ -41,12 +41,9 @@ const INTRO={
       fig:[{n:2,d:3},{n:2,d:6}]},
     {h:'Das Gefärbte kann überall liegen',
       say:['Die gefärbten Teile müssen nicht beieinander liegen.','Auch der Anfang ist egal.','Zähle und vergleiche den Anteil.'],
-      fig:{mode:'circle',rows:[{n:1,d:3,fill:[1]},{n:2,d:6,fill:[1,4]}]}},
+      fig:{mode:'grid',rows:[{n:2,d:4,fill:[1,3]},{n:4,d:8,fill:[0,3,5,6]}]}},
     {h:'So antwortest du',
-      say:['Tippe alle Karten an, die denselben Anteil zeigen.','Oft gibt es mehr als eine richtige Karte.','Dann tippe auf **Prüfen**.']},
-    {h:'Mehr als ein Ganzes',
-      say:['Manchmal ist der Zähler größer als der Nenner.','Bei {4|3} sind das mehr als 3 Drittel.','Drei Drittel sind ein Ganzes, dazu kommt noch ein Drittel.'],
-      fig:[{n:3,d:3},{n:1,d:3}]}
+      say:['Tippe alle Karten an, die denselben Anteil zeigen.','Oft gibt es mehr als eine richtige Karte.','Dann tippe auf **Prüfen**.']}
   ]},
   B01:{title:'Bruchbilder verändern',steps:[
     {h:'Das Vorgabebild',
@@ -85,14 +82,14 @@ const INTRO={
       say:['Für **3** und **9** brauchst du die Quersumme.','Addiere dazu alle Ziffern.','Ist die Summe durch 3 teilbar, ist es auch die Zahl.','Bei der 9 ist es genauso.'],
       calc:[[252,'→',2,'+',5,'+',2,'=',9]]},
     {h:'Vier und sechs',
-      say:['**4**: Die letzten zwei Ziffern sind durch 4 teilbar.','**6**: Die Zahl ist durch 2 und durch 3 teilbar.','Alle Regeln findest du im **Merkkasten**.']}
+      say:['**4**: Die letzten zwei Ziffern sind durch 4 teilbar.','**6**: Die Zahl ist durch 2 und durch 3 teilbar.','Alle Regeln findest du im **Merkzettel**.']}
   ]},
   T02:{title:'Gemeinsame Teiler',steps:[
     {h:'Zwei Zahlen, ein Teiler',
       say:['Eine Zahl teilt eine andere, wenn kein Rest bleibt.','Gesucht sind Zahlen, die zwei Zahlen zugleich teilen.','Beide Zahlen müssen passen.'],
       calc:[[12,':',6,'=',2],[18,':',6,'=',3]]},
     {h:'Prüfe jede Zahl',
-      say:['Probiere eine Zahl nach der anderen.','Eine Zahl, die nur eine von beiden teilt, zählt nicht.','Die Regeln dazu stehen im **Merkkasten**.']},
+      say:['Probiere eine Zahl nach der anderen.','Eine Zahl, die nur eine von beiden teilt, zählt nicht.','Die Regeln dazu stehen im **Merkzettel**.']},
     {h:'So antwortest du',
       say:['Tippe alle Zahlen an, die beide Zahlen teilen.','Oft passt mehr als eine Zahl.','Dann tippe auf **Prüfen**.']}
   ]},
@@ -107,7 +104,7 @@ const INTRO={
       say:['Tippe auf **÷ 2**.','Tippe dann auf **÷ 3**. Was passiert?'],
       tryit:{base:[4,6],op:'d',ks:[2,3]}},
     {h:'Nur, wenn beide passen',
-      say:['Du kannst nur durch eine Zahl kürzen, die in beide Zahlen passt.','Prüfe vorher: Bleibt oben und unten kein Rest?','Die Regeln dazu stehen im **Merkkasten**.']}
+      say:['Du kannst nur durch eine Zahl kürzen, die in beide Zahlen passt.','Prüfe vorher: Bleibt oben und unten kein Rest?','Die Regeln dazu stehen im **Merkzettel**.']}
   ]},
   G04:{title:'Kürzen so weit wie möglich',steps:[
     {h:'Kürzen in Schritten',
@@ -163,6 +160,11 @@ const INTRO={
       say:['Zähler und Nenner brauchen immer dieselbe Rechnung.','Dann bleibt der Wert gleich.'],
       calc:[[[2,3],'=',[2,3,'x',3],'=',[6,9]]]}
   ]},
+  O01:{title:'Bruchfamilien',steps:[
+    {h:'Eine Familie',say:['Alle Brüche einer Familie sind gleich viel.','Du findest neue Mitglieder durch Erweitern.'],calc:[[[2,3],'=',[2,3,'x',2],'=',[4,6]]]},
+    {h:'Mehrere Mitglieder',say:['Nimm jedes Mal eine andere Zahl.','So bekommst du viele verschiedene Brüche.'],calc:[[[2,3],'=',[2,3,'x',5],'=',[10,15]]]},
+    {h:'So antwortest du',say:['Trage mehrere verschiedene Brüche ein.','Jeder muss so viel sein wie der Bruch oben.']}
+  ]},
   O02:{title:'Kürzen-Maschine',steps:[
     {h:'Die Kürzen-Maschine',
       say:['Tippe auf eine Zahl, zum Beispiel **÷ 2**.','Der Bruch wird sofort gekürzt.','Es geht nur, wenn beide Zahlen teilbar sind.'],
@@ -174,15 +176,9 @@ const INTRO={
       say:['Du brauchst zwei Wege mit verschiedenen Zahlen.','Weg 1 kann ein großer Schritt sein.','Weg 2 besteht aus kleinen Schritten.','Mit **Weg neu starten** beginnst du noch einmal.'],
       calc:[[[12,18],'=',[12,18,'d',6],'=',[2,3]],[[12,18],'=',[6,9],'=',[2,3]]]}
   ]},
-  Q00:{title:'Eingangstest',steps:[
-    {h:'Kurzfragen',
-      say:[TASKS.Q00.size+' Fragen warten auf dich.','Du tippst eine Antwort an. Dann tippst du auf **Prüfen**.','Es gibt keine Zeitmessung.']},
-    {h:'Sofort eine Rückmeldung',
-      say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Dann geht es mit der nächsten Frage weiter.']},
-    {h:'Danach siehst du, was fehlt',
-      say:['Am Ende siehst du, was du schon kannst.','Bekannte Stationen sind dann im Lernpfad markiert.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
-    {h:'Der Abschlusscheck',
-      say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat '+TASKS.QA.size+' Aufgaben: '+QA_TAP+' zum Antippen und '+QA_CALC.length+' zum Rechnen.','Ab '+needOf(TASKS.Q00.size)+' richtigen Antworten gibt es die Urkunde.']}
+  Q00:{title:'Eingangstest',steps:[ /* P15: eine Karte, danach nur „Weiter“ */
+    {h:'Kurz testen',
+      say:[TASKS.Q00.size+' Fragen, keine Note, keine Zeit.','Tippe eine Antwort an. Dann tippe auf **Weiter**.','Am Ende siehst du, was du schon kannst.']}
   ]},
   QA:{title:'Abschlusscheck',steps:[
     {h:'Wie viele Aufgaben?',
@@ -192,16 +188,9 @@ const INTRO={
     {h:'Die Urkunde',
       say:['Ab '+needOf(TASKS.QA.size)+' richtigen Antworten gibt es die Urkunde.','Aufgaben mit Tipp zählen nur halb.','Alle Pflicht-Stationen müssen vorher fertig sein.']}
   ]},
-  ZQ:{title:'Eingangstest',steps:[
-    {h:'Kurzfragen zum Zahlenstrahl',
-      say:[TASKS.ZQ.size+' Fragen warten auf dich.','Du tippst eine Antwort an. Dann tippst du auf **Prüfen**.','Manchmal siehst du einen Zahlenstrahl.'],
-      nline:{from:0,to:1,parts:5,marks:[{n:3,d:5,text:'A'}],labels:'wholes'}},
-    {h:'Sofort eine Rückmeldung',
-      say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Es gibt keine Zeitmessung.']},
-    {h:'Danach siehst du, was fehlt',
-      say:['Am Ende siehst du, was du schon kannst.','Bekannte Stationen sind dann im Lernpfad markiert.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
-    {h:'Der Abschlusscheck',
-      say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat '+TASKS.ZA.size+' Aufgaben: '+ZA_TAP+' zum Antippen und '+ZA_LINE.length+' am Zahlenstrahl.','Ab '+needOf(TASKS.ZQ.size)+' richtigen Antworten gibt es die Urkunde.']}
+  ZQ:{title:'Eingangstest',steps:[ /* P15: eine Karte, danach nur „Weiter“ */
+    {h:'Kurz testen',
+      say:[TASKS.ZQ.size+' Fragen, keine Note, keine Zeit.','Tippe eine Antwort an. Dann tippe auf **Weiter**.','Am Ende siehst du, was du schon kannst.']}
   ]},
   /* Zahlenstrahl: nline = ein Strahl oder eine Liste von Strahlen {from,to,parts,marks,labels,strip,secs}; nltry = Einteilung ausprobieren {to,ks,mark} */
   Z01:{title:'Einteilung erkennen',steps:[
@@ -320,15 +309,9 @@ const INTRO={
       say:['Manche Brüche sind natürliche Zahlen, wie 1, 2 oder 3.','Bei {8|4} geht der Zähler ohne Rest durch den Nenner.','Es sind genau 2 Ganze.'],
       calc:[[8,':',4,'=',2]]}
   ]},
-  WQ:{title:'Eingangstest',steps:[
-    {h:'Kurzfragen zum Vergleichen',
-      say:[TASKS.WQ.size+' Fragen warten auf dich.','Du tippst eine Antwort an. Dann tippst du auf **Prüfen**.','Manchmal siehst du Brüche in einer Reihe.']},
-    {h:'Sofort eine Rückmeldung',
-      say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Es gibt keine Zeitmessung.']},
-    {h:'Danach siehst du, was fehlt',
-      say:['Am Ende siehst du, was du schon kannst.','Bekannte Stationen sind dann im Lernpfad markiert.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
-    {h:'Der Abschlusscheck',
-      say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat '+TASKS.WA.size+' Aufgaben: '+WA_TAP+' zum Antippen und '+WA_LINE.length+' zum Lösen.','Ab '+needOf(TASKS.WQ.size)+' richtigen Antworten gibt es die Urkunde.']}
+  WQ:{title:'Eingangstest',steps:[ /* P15: eine Karte, danach nur „Weiter“ */
+    {h:'Kurz testen',
+      say:[TASKS.WQ.size+' Fragen, keine Note, keine Zeit.','Tippe eine Antwort an. Dann tippe auf **Weiter**.','Am Ende siehst du, was du schon kannst.']}
   ]},
   WA:{title:'Abschlusscheck',steps:[
     {h:'Wie viele Aufgaben?',
@@ -338,15 +321,9 @@ const INTRO={
     {h:'Die Urkunde',
       say:['Ab '+needOf(TASKS.WA.size)+' richtigen Antworten gibt es die Urkunde.','Aufgaben mit Tipp zählen nur halb.','Alle Pflicht-Stationen müssen vorher fertig sein.']}
   ]},
-  RQ:{title:'Eingangstest',steps:[
-    {h:'Kurzfragen zum Rechnen',
-      say:[TASKS.RQ.size+' Fragen warten auf dich.','Du tippst eine Antwort an. Dann tippst du auf **Prüfen**.','Manchmal ist die Antwort ein Ja oder Nein.']},
-    {h:'Sofort eine Rückmeldung',
-      say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Es gibt keine Zeitmessung.']},
-    {h:'Danach siehst du, was fehlt',
-      say:['Am Ende siehst du, was du schon kannst.','Bekannte Stationen sind dann im Lernpfad markiert.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
-    {h:'Der Abschlusscheck',
-      say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat '+TASKS.RA.size+' Aufgaben zum Rechnen.','Ab '+needOf(TASKS.RA.size)+' richtigen Antworten gibt es die Urkunde.']}
+  RQ:{title:'Eingangstest',steps:[ /* P15: eine Karte, danach nur „Weiter“ */
+    {h:'Kurz testen',
+      say:[TASKS.RQ.size+' Fragen, keine Note, keine Zeit.','Tippe eine Antwort an. Dann tippe auf **Weiter**.','Am Ende siehst du, was du schon kannst.']}
   ]},
   RA:{title:'Abschlusscheck',steps:[
     {h:'Wie viele Aufgaben?',
@@ -563,36 +540,25 @@ const INTRO={
     {h:'Zwei Rechtecke',say:['Das erste Rechteck ist senkrecht geteilt.','Das zweite ist waagerecht geteilt.','Drehe an den Schrauben und schau zu.'],cross:{b:3,a:1,d:2,c:1,stage:1}},
     {h:'Teilung übertragen',say:['Tippe **Teilung übertragen**.','Jedes Rechteck bekommt die Linien des anderen.','Jetzt sind alle Felder gleich groß.'],cross:{b:3,a:1,d:2,c:1,stage:2}}
   ]},
-  HQ:{title:'Eingangstest',steps:[
-    {h:'Kurzfragen zu ungleichnamigen Brüchen',
-      say:[TASKS.HQ.size+' Fragen warten auf dich.','Du tippst eine Antwort an. Dann tippst du auf **Prüfen**.','Manchmal ist die Antwort ein Ja oder Nein.']},
-    {h:'Sofort eine Rückmeldung',
-      say:['Du siehst gleich, ob die Antwort stimmt.','War sie falsch, siehst du die richtige.','Es gibt keine Zeitmessung.']},
-    {h:'Danach siehst du, was fehlt',
-      say:['Am Ende siehst du, was du schon kannst.','Bekannte Stationen sind dann im Lernpfad markiert.','Weißt du etwas nicht, tippe **Weiß ich nicht** an.']},
-    {h:'Der Abschlusscheck',
-      say:['Am Ende des Lernpfads wartet der Abschlusscheck.','Er hat '+TASKS.HA.size+' Aufgaben: '+HA_TAP+' zum Antippen und '+HA_CALC.length+' zum Rechnen.','Ab '+needOf(TASKS.HA.size)+' richtigen Antworten gibt es die Urkunde.']}
+  HQ:{title:'Eingangstest',steps:[ /* P15: eine Karte, danach nur „Weiter“ */
+    {h:'Kurz testen',
+      say:[TASKS.HQ.size+' Fragen, keine Note, keine Zeit.','Tippe eine Antwort an. Dann tippe auf **Weiter**.','Am Ende siehst du, was du schon kannst.']}
   ]},
   H02:{title:'Hauptnenner finden',steps:[
     {h:'Ein Nenner für beide',say:['Gleichnamige Brüche kannst du sofort addieren.','Darum suchst du einen Nenner, der zu beiden passt.','Der kleinste heißt **Hauptnenner**.']},
     {h:'Trick 17',say:['Kreise den größeren Nenner ein.','Prüfe: Passt der kleinere Nenner ohne Rest hinein?','Wenn nein, nimm das nächste Vielfache und prüfe erneut.'],trick:[8,10]},
     {h:'Erweitern',say:['Erweitere beide Brüche auf den Hauptnenner.','{2|8} erweiterst du mit 5, {7|10} mit 4.'],calc:[[[2,8],'=',[2,8,'x',5],'=',[10,40]],[[7,10],'=',[7,10,'x',4],'=',[28,40]]]}
   ]},
-  H03:{title:'Addieren am Bild',steps:[
+  H03:{title:'Am Bild: zusammenfügen, wegnehmen, ergänzen',steps:[
     {h:'Ein Bild lesen',say:['Das erste Rechteck ist senkrecht in Drittel geteilt.','Das zweite ist waagerecht in Hälften geteilt.','Gefärbt sind {1|3} und {1|2}.'],cross:{b:3,a:1,d:2,c:1,stage:1}},
     {h:'Teilung übertragen',say:['Zeichne die Linien des anderen Rechtecks dazu.','Jedes Drittel wird in 2 Stücke geteilt.','Jede Hälfte wird in 3 Stücke geteilt.','Jetzt haben beide Rechtecke 6 gleich große Felder.'],cross:{b:3,a:1,d:2,c:1,stage:2}},
-    {h:'Jetzt gleichnamig',say:['Aus {1|3} wird {2|6}, aus {1|2} wird {3|6}.','Jetzt addierst du nur die Zähler.'],calc:[[[1,3],'+',[1,2],'=',[2,6],'+',[3,6],'=',[5,6]]],cross:{b:3,a:1,d:2,c:1,stage:3}},
-    {h:'So antwortest du',say:['In Leicht trägst du zuerst den **Hauptnenner** ein.','Dann die neuen Zähler und den **Zwischenschritt**.','Das Feld **gekürzt** gibt es immer.']}
+    {h:'Jetzt gleich eingeteilt',say:['Aus {1|3} wird {2|6}, aus {1|2} wird {3|6}.','Jetzt zählst du nur die Felder zusammen.','Beim Minus kreuzt du Felder durch.'],calc:[[[1,3],'+',[1,2],'=',[2,6],'+',[3,6],'=',[5,6]]],cross:{b:3,a:1,d:2,c:1,stage:3}},
+    {h:'Wozu eine Regel?',say:['Bei {5|12} und {7|18} wird das Bild winzig.','Darum brauchst du eine Regel.','Die Regel macht dasselbe wie das Bild: gleich einteilen.']}
   ]},
   H04:{title:'Addieren und rechnen',steps:[
     {h:'Drei Schritte',say:['1. Hauptnenner finden.','2. Beide Brüche erweitern.','3. Zähler addieren, der Nenner bleibt.','Am Ende kürzen, wenn es geht.'],calc:[[[1,4],'+',[2,3],'=',[3,12],'+',[8,12],'=',[11,12]]]},
     {h:'Mehr als ein Ganzes',say:['Manchmal ist das Ergebnis größer als 1.','Du darfst es als Bruch oder als **gemischte Zahl** schreiben.'],calc:[[[3,4],'+',[2,3],'=',[9,12],'+',[8,12],'=',[17,12],'=',{m:[1,5,12]}]]},
     {h:'Geschichten lesen',say:['Prüfe zuerst: Gehören beide Anteile zum selben Ganzen?','Wörter wie zusammen und dazu bedeuten plus.']}
-  ]},
-  H05:{title:'Subtrahieren am Bild',steps:[
-    {h:'Wegnehmen',say:['{3|4} sind gefärbt. Davon wird {1|3} weggenommen.','Erst teilst du beide Rechtecke gleich ein.','Dann kreuzt du die weggenommenen Felder durch.'],cross:{b:4,a:3,d:3,c:1,stage:3,mode:'minus'}},
-    {h:'Ergänzen',say:['Du kannst auch fragen: Wie viel fehlt von {1|3} bis {3|4}?','Zähle die Felder, die noch fehlen.','Das ist dieselbe Aufgabe wie {3|4} − {1|3}.'],calc:[[[3,4],'−',[1,3],'=',[9,12],'−',[4,12],'=',[5,12]],[[1,3],'+',[5,12],'=',[3,4]]]},
-    {h:'So antwortest du',say:['Trage zuerst den **Hauptnenner** ein.','Dann die neuen Zähler, den **Zwischenschritt** und das **Ergebnis**.']}
   ]},
   H06:{title:'Subtrahieren und rechnen',steps:[
     {h:'Drei Schritte',say:['Hauptnenner finden, beide Brüche erweitern.','Dann die Zähler subtrahieren. Der Nenner bleibt.'],calc:[[[5,6],'−',[3,4],'=',[10,12],'−',[9,12],'=',[1,12]]]},
@@ -692,13 +658,14 @@ function migrateIntro(st){
 /* Text mit **fett** und {n|d} (Bruch) → Textstücke und Elemente (nur eigene Texte, kein HTML) */
 function introRich(s){
   const out=[];
+  s=String(s).replace(/\[\[([^\]]+)\]\]/g,'**$1**'); /* [[Hauptnenner]] = Lexikon-Wort */
   s.split('**').forEach((seg,i)=>{
     const kids=[];
     seg.split(/(\{\d+\|\d+\})/).forEach(t=>{
       const m=/^\{(\d+)\|(\d+)\}$/.exec(t);
       if(m)kids.push(frac(+m[1],+m[2]));else if(t)kids.push(t);
     });
-    if(i%2)out.push(el('strong',null,...kids));else out.push(...kids);
+    if(i%2)out.push(typeof glossTerm==='function'&&glossKey(seg)?glossTerm(seg,el('strong',null,...kids)):el('strong',null,...kids));else out.push(...kids);
   });
   return out;
 }
@@ -728,7 +695,7 @@ function introFigNode(spec){
   const box=el('div',{class:'introfigs'+(circ?' circ':'')});
   f.rows.forEach(r=>{
     const rest=r.rest?Array.from({length:r.d-r.n},(_,i)=>r.n+i):null;
-    const svg=drawMode(f.mode,r.n,r.d,{maxW:circ?130:460,fill:r.fill,rest,half:r.half,label:r.n+' von '+r.d+' Teilen gefärbt'});
+    const svg=drawMode(f.mode,r.n,r.d,{maxW:circ?130:f.mode==='grid'?150:460,fill:r.fill,rest,half:r.half,label:r.n+' von '+r.d+' Teilen gefärbt'});
     box.append(el('div',{class:'fig'+(r.acc?' '+r.acc:'')},...(circ?[svg,frac(r.n,r.d)]:[frac(r.n,r.d),svg])));
   });
   return box;
@@ -838,7 +805,8 @@ function buildProbe(id){
 
 /* ---------- Ansicht: Erklärung ---------- */
 function renderIntro(id){
-  const I=INTRO[id],steps=introHasProbe(id)?[PROBE_STEP].concat(I.steps):I.steps,total=steps.length,again=!!(S.view&&S.view.intro);
+  /* P13: erst das Beispiel (Karte 1), dann die Probe mit anderen Zahlen (zählt nicht), dann „Darauf achten“ (Karte 2) */
+  const I=INTRO[id],steps=introHasProbe(id)?I.steps.slice(0,1).concat([PROBE_STEP],I.steps.slice(1)):I.steps,total=steps.length,again=!!(S.view&&S.view.intro);
   const known=!again&&!stationPassed(id)&&checkMark(id)==='sitzt'; /* im Eingangstest schon gezeigt: „Kenne ich schon“ ist der Hauptknopf */
   let P=null; /* die Probeaufgabe bleibt beim Blättern erhalten */
   let i=0;
@@ -857,7 +825,7 @@ function renderIntro(id){
   const row=el('div',{class:'primaryrow introrow'}),bar=el('div',{class:'actionbar'},row);
   main.append(card,bar);
   /* „Los geht’s“ und „Kenne ich schon“: Erklärung gilt als gesehen, es geht zur eigentlichen Ansicht.
-     Ausdrücklich geöffnet (Merkkasten): das Kennzeichen view.intro verschwindet, der Verlaufseintrag wird ersetzt. */
+     Ausdrücklich geöffnet (Merkzettel): das Kennzeichen view.intro verschwindet, der Verlaufseintrag wird ersetzt. */
   const finish=()=>{
     S.intro=S.intro||{};S.intro[id]=true;
     if(S.view&&S.view.intro){
@@ -891,9 +859,10 @@ function renderIntro(id){
     drawBar();
     const ruler=el('div',{class:'ruler introruler','aria-hidden':'true'});
     for(let k=0;k<total;k++)ruler.append(el('i',{class:'tk'+(k<i?' f':k===i?' cur':'')}));
-    const h=el('h2',{class:'introh',tabindex:'-1'},s.h);
+    const h=el('h2',{class:'introh',tabindex:'-1'},s.h,s.sub?el('span',{class:'introsub'},' · '+s.sub):null); /* Unterzeile in derselben Zeile: spart Höhe */
     card.replaceChildren(...[ruler,
-      el('p',{class:'introstep'},'Schritt '+(i+1)+' von '+total+(s.probe?' · Fehler sind erlaubt':'')),
+      el('p',{class:'introstep'},'Karte '+(i+1)+' von '+total),
+      s.probe&&typeof speechBubble==='function'?speechBubble('Ida','Fehler sind erlaubt!'):null, /* P21: Sprechblase statt Kleingedrucktem */
       known?el('p',{class:'introknown'},icon('haken'),'Das konntest du schon im Eingangstest.'):null,
       h,
       el('div',{class:'introtxt'},s.say.map(t=>el('p',null,introRich(t)))),
@@ -923,6 +892,6 @@ function renderIntro(id){
   checkB.addEventListener('click',()=>{if(!P)return;if(P.st.status==='open')P.check();else goNext();});
   draw(false);
 }
-/* Knopf „Erklärung“ im Merkkasten: dieselbe Ansicht noch einmal, mit Erklärung davor */
+/* Knopf „Erklärung“ im Merkzettel: dieselbe Ansicht noch einmal, mit Erklärung davor */
 function openIntro(){go(Object.assign({},S.view,{intro:true}));}
 

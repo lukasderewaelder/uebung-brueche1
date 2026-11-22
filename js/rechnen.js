@@ -14,7 +14,7 @@
    Bilder: Leicht sofort (bis Nenner 24), Knifflig und Rechnungen erst mit dem zweiten Tipp. Fehlercodes: nennerAddiert, zwischenNenner, vertauscht, zahl (Zwischenschritt), andereRechnung, zaehlerNenner, rechenfehler, wert (addDiagnose in math.js),
    dazu nennerFelder, zaehlerFelder (Ablesen), luecke, sel, err (Fehler finden), zeile (offene Zeilen).
    ===================================================================== */
-const ADD_NAMES=['Lena','Ben','Mia','Tom','Ida','Paul','Nora','Jan'];
+const ADD_NAMES=NAME_LIST; /* P18 */
 const ADD_POOL={1:[4,5,6,7,8,9,10,11,12,15,16,20,24],2:[10,12,15,16,18,20,24,25,30,36,40,50,60,75,80,100]};
 const ADD_POOL_PIC=[4,5,6,8,9,10,12,15,16]; /* Bilder zum Abzählen: höchstens 16 Felder (Tafel: 12, 5, 10, 9, 15) */
 const ADD_SIGN=(plus)=>plus?'+':'−';
@@ -568,13 +568,15 @@ TASKS.R03=addBildTask('R03',{name:'Subtrahieren am Bild',desc:'Durchgekreuzte Fe
 TASKS.R04=addRechnenTask('R04',{name:'Subtrahieren und rechnen',desc:'Subtrahiere gleichnamige Brüche. Der Nenner bleibt, die Zähler werden subtrahiert.',notes:['M18','M3']});
 
 /* ---------- Abschlusscheck „Gleichnamige Brüche“ (RA) ----------
-   10 Aufgaben aus allen fünf Stationen (je zwei Arten), in gemischter Reihenfolge. Eine Runde mit Aufgaben mehrerer Arten wie QA, ZA, WA:
+   15 Aufgaben aus allen fünf Stationen (je drei Arten, Umbau P1), in gemischter Reihenfolge. Eine Runde mit Aufgaben mehrerer Arten wie QA, ZA, WA:
    gen() liefert Aufgaben der echten Typen, RA reicht prompt/render/validate/solution/hints an den Typ der Aufgabe weiter (proxyOf).
-   Urkunde ab 8 Punkten (ohne Tipp 1, mit Tipp ½) und nach allen Pflicht-Stationen. Gehört zum Thema „Gleichnamige Brüche“ (Block 1);
+   Urkunde ab 12 Punkten (ohne Tipp 1, mit Tipp ½) und nach allen Pflicht-Stationen. Gehört zum Thema „Gleichnamige Brüche“ (Block 1);
    die späteren Blöcke (unterschiedlich benannt, gemischte Zahlen) bekommen je ein eigenes Thema mit eigenem Check. */
 const RA_SLOTS={
-  1:[['R01','bild'],['R02','plus'],['R03','bild'],['R04','minus'],['R05','art'],['R02','luecke'],['R04','geschichte'],['R01','geschichte'],['R05','fehler'],['R03','minus']],
-  2:[['R01','plus'],['R02','ueber1'],['R03','minus'],['R04','ueber1'],['R05','art'],['R02','luecke'],['R04','geschichte'],['R01','geschichte'],['R05','fehler'],['R03','geschichte']]
+  1:[['R01','bild'],['R02','plus'],['R03','bild'],['R04','minus'],['R05','art'],['R02','luecke'],['R04','geschichte'],['R01','geschichte'],['R05','fehler'],['R03','minus'],
+     ['R01','plus'],['R02','geschichte'],['R03','geschichte'],['R04','luecke'],['R05','art']],
+  2:[['R01','plus'],['R02','ueber1'],['R03','minus'],['R04','ueber1'],['R05','art'],['R02','luecke'],['R04','geschichte'],['R01','geschichte'],['R05','fehler'],['R03','geschichte'],
+     ['R01','bild'],['R02','geschichte'],['R03','bild'],['R04','luecke'],['R05','fehler']]
 };
 TASKS.RA=proxyOf({area:'Rechnen',name:'Abschlusscheck',desc:RA_SLOTS[1].length+' Aufgaben aus allen Stationen zeigen, was du kannst – am Ende des Lernpfads.',notes:['M17','M18'],size:RA_SLOTS[1].length,
   finalTap:0,finalLabel:'Aufgaben richtig',
@@ -583,7 +585,7 @@ TASKS.RA=proxyOf({area:'Rechnen',name:'Abschlusscheck',desc:RA_SLOTS[1].length+'
     if(!Array.isArray(round.plan)||round.plan.length!==RA_SLOTS[1].length)round.plan=RNG.shuffle([...RA_SLOTS[1].keys()]);
     if(!Array.isArray(round.red)||round.red.length!==round.plan.length)round.red=addRedPlan(round.plan.map(i=>slots[i][1]));
     const j=Math.min(round.results.length,round.plan.length-1);
-    return {slot:round.plan[j],step:j<3?0:j<7?2:4,red:round.red[j]}; /* 10 Aufgaben: 1–3 kleine Zahlen, 4–7 mittlere, 8–10 der ganze Zahlenraum */
+    return {slot:round.plan[j],step:j<4?0:j<10?2:4,red:round.red[j]}; /* P1: 15 Aufgaben wie jeder Abschlusscheck: 1–4 kleine Zahlen, 5–10 mittlere, 11–15 der ganze Zahlenraum */
   },
   gen(level,R,ctx){
     const slots=RA_SLOTS[level]||RA_SLOTS[1],i=ctx&&ctx.slot!=null?ctx.slot:0,[id,kind]=slots[i];
