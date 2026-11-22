@@ -10,8 +10,20 @@
 const PATH_ACC={LAB:'mix',RLAB:'mix',HLAB:'mix',Q00:'ok',ZQ:'ok',QA:'ok',ZA:'ok',WQ:'ok',WA:'ok',RQ:'ok',RA:'ok',HQ:'ok',HA:'ok'};
 /* Thema, zu dem ein Abschlusscheck (finalId) gehört */
 const finalModOf=(id)=>activeModules().find(m=>m.finalId===id)||null;
-/* Hinweis „Erst …“ (modules.js recommends): nur solange das empfohlene Thema nicht abgeschlossen ist, keine Sperre */
-function recommendNote(mod){const r=mod&&mod.recommends&&moduleById(mod.recommends);return r&&!qstate(r).final?r:null;}
+/* Hinweis „Erst …“ (modules.js recommends, P10 Liste der Vorgänger): die erste empfohlene Etappe, die noch nicht abgeschlossen ist – keine Sperre */
+function recommendNote(mod){
+  const list=mod&&mod.recommends?[].concat(mod.recommends):[];
+  for(const id of list){const r=moduleById(id);if(r&&r.status==='aktiv'&&!qstate(r).final)return r;}
+  return null;
+}
+/* P3 Basis-Ebene: sichtbar nach dem Eingangstest, wenn eine Fähigkeit auf „üben“ steht, oder nach „Ich möchte wiederholen“ */
+function basisOpen(mod){
+  if(S.basis&&S.basis[mod.id])return true;
+  const e=mod.quickcheck&&qstate(mod).einstufung;
+  return !!(e&&e.skills&&Object.values(e.skills).some(x=>x&&x.status==='ueben'));
+}
+const hasBasis=(mod)=>mod.path.some(p=>p.lvl==='basis')||(mod.basisRefs||[]).length>0;
+function toggleBasis(mod){S.basis=S.basis&&typeof S.basis==='object'?S.basis:{};S.basis[mod.id]=!S.basis[mod.id];persist();renderAll();}
 const stationTitle=(id)=>{const m=PATH.find(x=>x.id===id);return (m&&m.title)||(TASKS[id]&&TASKS[id].name)||id;};
 const stationLabel=(id)=>{const c=stationCode(id);return (c?c+' ':'')+stationTitle(id);}; /* P23: mit Kürzel */
 
@@ -269,7 +281,7 @@ function modNode(r,pos){
   const id=r.id,m=r.m,title=stationTitle(id),desc=m.desc||(TASKS[id]&&TASKS[id].desc)||'';
   const next=r.next;
   const state=r.done?'done':next?'next':r.locked?'locked':'open';
-  const tag=r.done?'Fertig':next?'Als Nächstes':r.locked?'Später':r.must?'Offen':'Freiwillig';
+  const tag=r.done?'Fertig':next?'Als Nächstes':r.locked?'Später':r.must?'Offen':m.lvl==='basis'?'Basis':m.lvl==='plus'?'Plus':'Freiwillig';
   const chk=checkMark(id);
   const stars=(isLab(id)||m.final)?null:starNodes((S.passed[id+'-L1']?1:0)+(S.passed[id+'-L2']?1:0),2);
   const li=el('li',{class:'mod '+state+(r.must?'':' frei'),'data-acc':ACC[id]||PATH_ACC[id]||null});
@@ -281,12 +293,26 @@ function modNode(r,pos){
   if(stationResettable(id))li.append(el('button',{type:'button',class:'modreset','aria-label':title+' zurücksetzen',title:'Zurücksetzen',onclick:()=>resetSheet(id)},icon('neu')));
   return li;
 }
-function pfadMap(rows){
+const GRP_LABEL={Knobeln:'Knobeln (Plus)',Grundlagen:'Grundlagen wiederholen'};
+function pfadMap(rows,mod){
+  mod=mod||(rows[0]&&moduleOf(rows[0].id));
   const ol=el('ol',{class:'rail'});let last=null;
+  const showBasis=!!mod&&basisOpen(mod);
   rows.forEach((r,i)=>{
-    if(r.m.grp!==last){last=r.m.grp;ol.append(el('li',{class:'pgrp'},icon(PATH_GROUPS[last]),last));}
-    ol.append(modNode(r,i));
+    if(r.m.lvl==='basis'&&!showBasis)return;
+    if(r.m.grp!==last){last=r.m.grp;ol.append(el('li',{class:'pgrp'+(r.m.lvl==='basis'?' basis':r.m.lvl==='plus'?' plus':'')},icon((mod&&mod.pathGroups[last])||'pfad'),GRP_LABEL[last]||last));}
+    const li=modNode(r,i);if(r.m.lvl==='basis')li.classList.add('basis');if(r.m.lvl==='plus')li.classList.add('plus');
+    ol.append(li);
   });
+  /* Basis aus anderen Etappen: Verweise */
+  if(showBasis&&mod&&(mod.basisRefs||[]).length){
+    if(last!=='Grundlagen')ol.append(el('li',{class:'pgrp basis'},icon('undo'),'Grundlagen wiederholen'));
+    mod.basisRefs.forEach(id=>ol.append(el('li',{class:'mod open frei basis'},el('span',{class:'lamp','aria-hidden':'true'},stationDone(id)?icon('haken'):null),
+      el('button',{type:'button',class:'modbtn','aria-label':stationTitle(id)+': Grundlage aus '+(moduleOf(id)||{}).name},
+        el('span',{class:'mpos'},stationCode(id)),el('span',{class:'mnm'},el('b',null,stationTitle(id)),el('small',null,'Grundlage aus „'+(moduleOf(id)||{}).name+'“')),
+        el('span',{class:'mside'},el('span',{class:'mtag'},'Basis'))))));
+    [...ol.querySelectorAll('li.basis .modbtn')].slice(-mod.basisRefs.length).forEach((b,j)=>b.addEventListener('click',()=>openStation(mod.basisRefs[j])));
+  }
   return ol;
 }
 /* Stand eines Themas: Zeilen, Pflicht-Stationen, nächste Station */
@@ -339,6 +365,9 @@ function pfadTab(home,mod){
     if(go1)home.append(bigBtn('play',()=>openStation(go1.id),startWord(info.rows,go1)+': '+stationLabel(go1.id),go1.m.final||isLab(go1.id)?null:LEVEL_LABEL[levelOf(go1.id)],null,'go'));
     else home.append(el('div',{class:'msg ok'},'Alle Pflicht-Stationen sind fertig – stark! '+(info.rows.some(r=>!r.must)?'Probiere die freiwilligen Stationen oder ein Spiel.':'Probiere ein Spiel oder eine andere Etappe.')));
   }
-  home.append(fold('Alle Stationen',pfadMap(info.rows)));
+  home.append(fold('Alle Stationen',pfadMap(info.rows,mod)));
   if(mod.quickcheck&&z!=='gate')home.append(el('p',{class:'retake'},linkBtn(qstate(mod).placed?'Eingangstest wiederholen':'Eingangstest machen',()=>startEingang(mod,qstate(mod).placed))));
+  /* P3: Basis-Ebene von Hand öffnen („Ich möchte wiederholen“) oder wieder schließen; vom Eingangstest geöffnet bleibt sie offen */
+  const byHand=!!(S.basis&&S.basis[mod.id]);
+  if(hasBasis(mod)&&(byHand||!basisOpen(mod)))home.append(el('p',{class:'basislink'},linkBtn(byHand?'Grundlagen ausblenden':'Ich möchte wiederholen',()=>toggleBasis(mod),'undo')));
 }

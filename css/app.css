@@ -1448,3 +1448,8 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 .home h1{font-family:var(--font-body);text-transform:none;letter-spacing:normal;font-size:1.3rem}
 .modalcard h2,.helphead h2{font-size:max(16px,1rem)}
 .navb,.gname{font-family:var(--font-body);text-transform:none;letter-spacing:normal}
+/* ---------- Umbau P3: Ebenen im Lernpfad ---------- */
+.rail>li.pgrp.basis,.rail>li.mod.basis{margin-left:1.25rem}
+.mod.basis .modbtn{border-style:dashed}
+.rail>li.pgrp.plus{color:var(--kue)}
+.mod.plus .mtag{color:var(--kue)}

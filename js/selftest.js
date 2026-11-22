@@ -275,15 +275,15 @@ function runSelfTests(){
   const freshP=()=>{S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;S.einstufung=null;S.modus={};S.unlocked={};S.perfect={};S.acc={};};
   const R_=(id)=>pathState(moduleById("veraendern")).find(r=>r.id===id);
   freshP();
-  t('Pfad: Start – nächstes Bauteil G01, Labor und freiwilliges B01 offen, G02 und Abschluss „später“ (weiche Sperre)',pathState(moduleById("veraendern")).find(r=>r.next).id==='G01'&&R_('LAB').open&&R_('G02').locked&&R_('G02').later&&R_('G02').blocker==='G01'&&R_('B01').open&&!R_('B01').locked&&R_('QA').locked);
+  t('Pfad (P3/P16): Start bei G01; Labor, Knobeln (Plus) und Grundlagen (Basis) offen; B01, G02 und Abschluss „später“',pathState(moduleById("veraendern")).find(r=>r.next).id==='G01'&&R_('LAB').open&&R_('B01').later&&R_('B01').blocker==='G01'&&R_('G02').locked&&R_('U01').open&&!R_('U01').locked&&R_('T01').open&&R_('QA').locked);
   S.passed['G01-L1']=true;
-  t('Pfad: G01 fertig ⇒ G02 nächstes, freiwilliges B01 offen',R_('G02').next&&R_('B01').open&&!R_('B01').must);
-  S.checked.G03=true;
-  t('Pfad: im Check beherrscht ist nicht fertig – bleibt gesperrt hinter dem Nächsten',R_('G03').checked&&!R_('G03').done&&R_('G03').locked&&R_('G03').blocker==='G02'&&R_('G04').blocker==='G02');
-  S.passed['G02-L2']=true;S.passed['T01-L1']=true;S.passed['T02-L1']=true;S.passed['G03-L1']=true;
-  t('Pfad: knifflig bestanden zählt, nächstes ist G04',R_('G02').done&&R_('G04').next);
+  t('Pfad: G01 fertig ⇒ B01 nächstes (Kern), Plus und Basis zählen nicht',R_('B01').next&&R_('B01').must&&!R_('U01').must&&!R_('T01').must);
+  S.checked.G04=true;
+  t('Pfad: im Eingangstest beherrscht ist nicht fertig – bleibt „später“ hinter dem Nächsten',R_('G04').checked&&!R_('G04').done&&R_('G04').locked&&R_('G04').blocker==='B01');
+  S.passed['B01-L2']=true;S.passed['G02-L1']=true;
+  t('Pfad: knifflig bestanden zählt, nächstes ist G04',R_('B01').done&&R_('G04').next);
   ['G04','G05'].forEach(x=>{S.passed[x+'-L1']=true;});
-  t('Pfad: nach G05 sind Knobel-Bauteile und Abschluss (QA) offen',['U01','U02','U03','O02','QA'].every(x=>R_(x).open)&&R_('QA').next);
+  t('Pfad: nach G05 ist der Abschlusscheck (QA) dran; Knobeln war immer offen',['U01','U02','U03','O02','QA'].every(x=>R_(x).open)&&R_('QA').next);
   S.final=true;
   t('Pfad: alles fertig ⇒ kein nächstes Bauteil',!pathState(moduleById("veraendern")).some(r=>r.next));
   t('Pfad: 80 %-Regel (5→4, 8→7, 10→8)',needOf(5)===4&&needOf(8)===7&&needOf(10)===8&&needOf(15)===12);
@@ -334,7 +334,7 @@ function runSelfTests(){
   freshP();
   inf=onRoundEnd('Q00',1,rnd(qres(pos('vollstaendig')),qplan));
   t('2+2+2+2+0 ist „fit“, aber nicht fertig: keine Urkunde, G03 beherrscht, G04 und G05 nicht',inf.ev.stufe==='fit'&&!inf.final&&!S.final&&S.checked.G03&&!S.checked.G04&&!S.checked.G05);
-  freshP();['G01','G02','T01','T02','G03','G04','G05'].forEach(x=>{S.passed[x+'-L1']=true;});
+  freshP();['G01','B01','G02','G04','G05'].forEach(x=>{S.passed[x+'-L1']=true;});
   inf=onRoundEnd('QA',1,rnd(qres15(qplan15.map((_,i)=>i).filter(i=>i>=11)),qplan15));
   t('Abschlusscheck: alles fertig, aber nur 11 von 15 ⇒ keine Urkunde (ready, nicht passed)',inf.ready&&!inf.passed&&!inf.final&&!S.final);
   inf=onRoundEnd('QA',1,rnd(qres15(qplan15.map((_,i)=>i).filter(i=>i>=12)),qplan15));
@@ -379,12 +379,12 @@ function runSelfTests(){
     const P=pathState(mod),rP=(id)=>P.find(r=>r.id===id);
     t('Pfad: der Check überspringt nichts – Gleiche Anteile als Nächstes, Erweitern noch gesperrt',rP('G01').next&&!rP('G01').done&&rP('G01').checked&&rP('G02').locked);
     S.passed['G01-L1']=true;
-    t('Fortschritt: G01 fertig, im Pfad ist Erweitern dran',pathState(mod).find(r=>r.id==='G01').done&&pathState(mod).find(r=>r.next).id==='G02');
+    t('Fortschritt: G01 fertig, im Pfad ist B01 dran (Kern: G01, B01, G02, G04, G05)',pathState(mod).find(r=>r.id==='G01').done&&pathState(mod).find(r=>r.next).id==='B01');
     beispiel();
     const pv=view();
     t('Themenseite im Pfad: Name, Fortschrittszeile, genau ein Hauptknopf „Start: Gleiche Anteile erkennen“, Liste eingeklappt, Check-Marken, Textlink „Eingangstest wiederholen“, kein Umschalter',pv.querySelector('h1').textContent===mod.name&&!!pv.querySelector('.pfadline')&&/^Start: (E\d+ )?Gleiche Anteile erkennen/.test(pv.querySelector('.bigbtn').textContent)&&pv.querySelectorAll('.bigbtn,.btn.primary').length===1&&!pv.querySelector('.seg')&&!!pv.querySelector('details.fold:not([open]) .rail')&&pv.querySelectorAll('.mchk.sitzt').length===2&&pv.querySelectorAll('.mchk.fast').length===2&&/Als Nächstes/.test(pv.textContent)&&!/Weiter geht/.test(pv.textContent)&&/Eingangstest wiederholen/.test((pv.querySelector('.retake .linkbtn')||{}).textContent||''));
     S.passed['G01-L1']=true;
-    t('Themenseite: nach der ersten bestandenen Station heißt der Knopf „Weiter“',/^Weiter: (E\d+ )?(Gleiche Anteile erkennen|Erweitern)/.test(view().querySelector('.bigbtn').textContent));
+    t('Themenseite: nach der ersten bestandenen Station heißt der Knopf „Weiter“',/^Weiter: E2 /.test(view().querySelector('.bigbtn').textContent));
     t('Tagesziel und Serie stehen im Reiter Ich (dayCard), nicht mehr im Lernpfad',/Tagesziel/.test(dayCard().textContent)&&!/Tagesziel/.test(view().textContent));
     /* Themenkarte im Reiter Lernen: immer Kopf-Zeile, Fortschritt und höchstens ein Hauptknopf */
     freshP();
@@ -540,7 +540,7 @@ function runSelfTests(){
     /* Gate: ungesehen oder ausdrücklich geöffnet; nie für Spiele, Startseite */
     S.intro={};
     t('Gate: Bruchlabor und Übungen des Lernpfads zeigen die Erklärung, solange sie ungesehen ist',introWanted({kind:'lab'})==='LAB'&&introWanted({kind:'practice',id:'G02'})==='G02'&&introWanted({kind:'practice',id:'Q00'})==='Q00');
-    t('Gate: nie bei Spielen, auf der Startseite und bei unbekannten Kennungen',!introWanted({kind:'practice',id:'O01'})&&!introWanted({kind:'game',id:'S01'})&&!introWanted({kind:'home'})&&!introWanted({kind:'practice',id:'ZZ'})&&!introWanted({kind:'practice',id:'constructor'})&&!introWanted(null));
+    t('Gate: nie bei Spielen, auf der Startseite und bei unbekannten Kennungen',!introWanted({kind:'practice',id:'U04'})&&!introWanted({kind:'game',id:'S01'})&&!introWanted({kind:'home'})&&!introWanted({kind:'practice',id:'ZZ'})&&!introWanted({kind:'practice',id:'constructor'})&&!introWanted(null));
     S.intro={G02:true,LAB:true};
     t('Gate: Gesehenes kommt nicht wieder – außer per Knopf im Merkzettel (view.intro)',!introWanted({kind:'practice',id:'G02'})&&!introWanted({kind:'lab'})&&introWanted({kind:'practice',id:'G02',intro:true})==='G02'&&introWanted({kind:'lab',intro:true})==='LAB'&&introWanted({kind:'practice',id:'G03'})==='G03');
     S.intro=keepI;
@@ -741,9 +741,9 @@ function runSelfTests(){
     const snap={passed:S.passed,checked:S.checked,final:S.final,placed:S.placed,days:S.days,lab:S.lab,einstufung:S.einstufung,modus:S.modus,unlocked:S.unlocked,perfect:S.perfect,mq:S.mq};
     const fresh=()=>{S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;S.einstufung=null;S.modus={};S.unlocked={};S.perfect={};S.mq={};S.acc={};};
     fresh();
-    t('Thema Zahlenstrahl: aktiv, mit Eingangstest ZQ, nicht im Rang, acht Pflicht-Bauteile Z01–Z08 und der Abschlusscheck ZQ, Pfad erst nach dem Eingangstest',zs.status==='aktiv'&&zs.quickcheck&&zs.qid==='ZQ'&&!zs.rank&&zs.path.length===9&&zs.path.slice(0,8).every((p,i)=>p.must&&p.id===('Z0'+(i+1)))&&zs.path[8].id==='ZA'&&zs.path[8].final&&lernenZustand(zs)==='gate'&&PRACTICE_ORDER.includes('Z08')&&PRACTICE_ORDER.includes('ZQ')&&PRACTICE_ORDER.includes('ZA')&&!rankPractice().includes('Z01')&&!rankPath().some(p=>p.id==='Z01')&&moduleOf('Z05').id==='zahlenstrahl'&&moduleOf('Eintragen').id==='zahlenstrahl'&&moduleOf('ZQ').id==='zahlenstrahl');
+    t('Etappe Zahlenstrahl: aktiv, mit Eingangstest ZQ, nicht im Rang, Kern Z01–Z05, Plus Z06–Z08, Abschlusscheck ZA, Pfad erst nach dem Eingangstest',zs.status==='aktiv'&&zs.quickcheck&&zs.qid==='ZQ'&&!zs.rank&&zs.path.length===9&&zs.path.slice(0,5).every((p,i)=>p.must&&p.id===('Z0'+(i+1)))&&zs.path.slice(5,8).every((p,i)=>!p.must&&p.lvl==='plus'&&p.id===('Z0'+(i+6)))&&zs.path[8].id==='ZA'&&zs.path[8].final&&lernenZustand(zs)==='gate'&&PRACTICE_ORDER.includes('Z08')&&PRACTICE_ORDER.includes('ZQ')&&PRACTICE_ORDER.includes('ZA')&&!rankPractice().includes('Z01')&&!rankPath().some(p=>p.id==='Z01')&&moduleOf('Z05').id==='zahlenstrahl'&&moduleOf('ZQ').id==='zahlenstrahl');
     const rows=()=>pathState(zs);
-    t('Pfad Zahlenstrahl: Start bei Z01, Z02 gesperrt (wartet auf Z01), alles andere gesperrt',rows().find(r=>r.next).id==='Z01'&&rows().find(r=>r.id==='Z02').locked&&rows().find(r=>r.id==='Z02').blocker==='Z01'&&rows().find(r=>r.id==='Z08').locked);
+    t('Pfad Zahlenstrahl: Start bei Z01, Z02 „später“ (wartet auf Z01), Kern Z05 später, Plus Z08 offen',rows().find(r=>r.next).id==='Z01'&&rows().find(r=>r.id==='Z02').locked&&rows().find(r=>r.id==='Z02').blocker==='Z01'&&rows().find(r=>r.id==='Z05').locked&&rows().find(r=>r.id==='Z08').open);
     for(let k=0;k<5;k++)accAdd('Z01',1,true);onRoundEnd('Z01',1,{results:['f','f','f','f','f'],size:5});
     t('Pfad Zahlenstrahl: Z01 mit 5 gesammelten richtigen geschafft ⇒ gespeichert, Z02 nächstes',S.passed['Z01-L1']===true&&rows().find(r=>r.next).id==='Z02'&&stationDone('Z01'));
     t('Eingangstest von „Brüche verändern“ bleibt Pflicht, auch wenn Zahlenstrahl-Bauteile bestanden sind; erst Bauteile dieses Themas zählen als Einstieg',lernenZustand(vm)==='gate'&&(S.passed['G01-L1']=true,lernenZustand(vm)==='pfad'));
@@ -822,7 +822,7 @@ function runSelfTests(){
   t('Registry: jede Aufgabe, Gruppe und jedes Bauteil eines aktiven Themas gibt es',activeModules().every(m=>(m.practice||[]).every(id=>TASKS[id])&&Object.values(m.groups||{}).every(g=>g.ids.every(id=>isLab(id)||TASKS[id]))&&(m.path||[]).every(p=>isLab(p.id)||TASKS[p.id])));
   t('Registry: geplante Themen haben keine Aufgaben, keine Gruppen, keinen Lernpfad',plannedModules().length>0&&plannedModules().every(m=>!m.practice&&!m.groups&&!m.path));
   t('Registry: Themen-IDs und Aufgaben-IDs sind eindeutig',new Set(MODULES.map(m=>m.id)).size===MODULES.length&&new Set(PRACTICE_ORDER).size===PRACTICE_ORDER.length&&new Set(PATH.map(p=>p.id)).size===PATH.length);
-  t('Registry: Rang zählt „Erweitern und Kürzen“ (19 Übungen, 14 Stationen)',rankPractice().length===19&&rankPath().length===14&&moduleOf('G02').id==='veraendern'&&moduleOf('Entdecken').id==='veraendern');
+  t('Registry: Rang zählt „Erweitern und Kürzen“ (16 Übungen, 15 Stationen; D01–D03 ziehen ins geplante Thema Dezimalzahlen)',rankPractice().length===16&&rankPath().length===15&&moduleOf('G02').id==='veraendern'&&!rankPractice().includes('D01'));
   /* Navigation: Lernen (Themen) → Lernpfad des Themas → Bauteil, und zurück */
   {
     const keepV=S.view;
@@ -890,7 +890,7 @@ function runSelfTests(){
     }});
     t('Gemeinsame Teiler (T02): 800 Aufgaben – 6 Zahlen, 1–3 passen zu beiden, Fallen teilen nur eine Zahl, Zähler und Nenner bis 60 bzw. 100, richtig/falsch/„fast“/leer werden unterschieden',t02bad.length===0||(console.log(t02bad.slice(0,5)),false));
     const ids7=PATH.map(m=>m.id);
-    t('T02 steht als Pflicht-Station direkt nach T01 im Pfad, in Üben bei Kürzen, mit Erklärung; der Eingangstest schaltet T02 mit T01 frei',ids7.indexOf('T02')===ids7.indexOf('T01')+1&&PATH.find(m=>m.id==='T02').must&&vm7.groups['Kürzen'].ids.includes('T02')&&vm7.practice.includes('T02')&&!!INTRO.T02&&QCHK.Q00.stations.teilbar.join()==='T01,T02');
+    t('T02 steht als Basis-Station direkt nach T01 (Grundlagen), mit Erklärung; der Eingangstest schaltet T02 mit T01 frei',ids7.indexOf('T02')===ids7.indexOf('T01')+1&&PATH.find(m=>m.id==='T02').lvl==='basis'&&vm7.groups.Grundlagen.ids.includes('T02')&&vm7.practice.includes('T02')&&!!INTRO.T02&&QCHK.Q00.stations.teilbar.join()==='T01,T02');
     t('Erklärkarte „Mehr als ein Ganzes“ (G01): Zähler größer als Nenner, zwei Streifen; „Kürzen in Schritten“ (G04): erst die kleinste Zahl, dann noch einmal prüfen',INTRO.G01.steps.some(s=>s.h==='Mehr als ein Ganzes'&&s.say.join(' ').includes('Zähler größer als der Nenner')&&Array.isArray(s.fig)&&s.fig.length===2)&&INTRO.G04.steps[0].h==='Kürzen in Schritten'&&INTRO.G04.steps[0].say.join(' ').includes('kleinste Zahl, die passt'));
     /* große Zahlen (bis 100) in Leicht: immer echte Brüche */
     const bigBad=[];let bigN=0;
@@ -954,7 +954,7 @@ function runSelfTests(){
     const keep6={passed:S.passed,checked:S.checked,final:S.final,placed:S.placed,days:S.days,lab:S.lab,mq:S.mq,perfect:S.perfect,einstufung:S.einstufung,modus:S.modus,unlocked:S.unlocked};
     try{
       S.passed={};S.checked={};S.final=false;S.placed=false;S.days={};S.lab=null;S.mq={};S.perfect={};S.einstufung=null;S.modus={};S.unlocked={};
-      ['G01','G02','T01','T02','G03','G04','G05'].forEach(x=>{S.passed[x+'-L1']=true;});
+      ['G01','B01','G02','G04','G05'].forEach(x=>{S.passed[x+'-L1']=true;});
       let r=onRoundEnd('Q00',1,{results:Array(15).fill('f'),size:15,sk:[].concat(Q_SKILLS,Q_SKILLS,Q_SKILLS)});
       t('Urkunde: der Eingangstest Q00 gibt auch bei 15 von 15 und allen Stationen keine Urkunde mehr',!r.final&&!S.final&&!stationDone('QA'));
       r=onRoundEnd('QA',1,{results:Array(15).fill('f').fill('x',11),size:15});
@@ -1054,18 +1054,18 @@ function runSelfTests(){
       /* Gruppen in Üben = Gruppen im Lernpfad */
       const bad=[];
       activeModules().forEach(m=>{
-        m.path.forEach(p=>{if(!(GROUPS[p.grp]&&GROUPS[p.grp].ids.includes(p.id)))bad.push(m.id+' '+p.id+' ↛ '+p.grp);});
+        m.path.forEach(p=>{if(!(m.groups[p.grp]&&m.groups[p.grp].ids.includes(p.id)))bad.push(m.id+' '+p.id+' ↛ '+p.grp);});
         Object.keys(m.groups).forEach(g=>{if(m.groups[g].ids.some(id=>!isLab(id)&&!m.practice.includes(id)))bad.push('Gruppe '+g+' hat fremde Aufgabe');});
         const inGroups=[].concat(...Object.values(m.groups).map(g=>g.ids)).filter(id=>!isLab(id));
         if(new Set(inGroups).size!==inGroups.length||m.practice.some(id=>!inGroups.includes(id)))bad.push(m.id+' Aufgaben nicht in genau einer Gruppe');
       });
-      t('Gruppen: jede Station des Pfads steht im Üben in derselben Gruppe, jede Aufgabe in genau einer Gruppe, Gruppennamen sind eindeutig',(bad.length===0&&Object.keys(GROUPS).length===activeModules().reduce((n,m)=>n+Object.keys(m.groups).length,0))||(console.log(bad),false));
-      t('Gruppen Erweitern und Kürzen: Entdecken, Erweitern, Kürzen, Mischen, Knobeln, Umwandeln, Abschluss; Teilbarkeit (T01) bei Kürzen, Eingangstest (Q00) und Abschlusscheck (QA) bei Abschluss',Object.keys(vm5.groups).join()==='Entdecken,Erweitern,Kürzen,Mischen,Knobeln,Umwandeln,Abschluss'&&vm5.groups['Kürzen'].ids.join()==='T01,T02,G03,G04'&&vm5.groups.Abschluss.ids.join()==='Q00,QA'&&!vm5.groups.Entdecken.ids.includes('T01')&&!vm5.groups.Entdecken.ids.includes('Q00'));
-      t('Gruppen Zahlenstrahl: Einteilung, Eintragen, Zwei Wege, Weiter, Abschlusscheck wie im Lernpfad',Object.keys(zs5.groups).join()==='Einteilung,Eintragen,Zwei Wege,Weiter,Abschlusscheck'&&zs5.groups['Zwei Wege'].ids.join()==='Z04,Z05,Z06'&&zs5.groups.Abschlusscheck.ids.join()==='ZQ,ZA');
+      t('Gruppen (P1): jede Station des Pfads steht im Wiederholen in derselben Gruppe, jede Aufgabe in genau einer Gruppe, alle Etappen nutzen nur die Gruppen des Takts in fester Reihenfolge',(bad.length===0&&activeModules().every(m=>{const g=Object.keys(m.groups);return g.every(x=>TAKT_ORDER.includes(x))&&g.join()===TAKT_ORDER.filter(x=>g.includes(x)).join();}))||(console.log(bad),false));
+      t('Gruppen Erweitern und Kürzen (Kap. 3.4): Entdecken LAB, Verstehen G01 B01, Üben G02 G04, Anwenden G05, Knobeln U01–O02, Grundlagen T01 T02 G03, Abschlusscheck mit Eingangstest',Object.keys(vm5.groups).join()==='Entdecken,Verstehen,Üben,Anwenden,Knobeln,Grundlagen,Abschlusscheck'&&vm5.groups.Verstehen.ids.join()==='G01,B01'&&vm5.groups['Üben'].ids.join()==='G02,G04'&&vm5.groups.Grundlagen.ids.join()==='T01,T02,G03'&&vm5.groups.Abschlusscheck.ids.join()==='QA,Q00'&&vm5.path.filter(p=>p.must&&!p.final).map(p=>p.id).join()==='G01,B01,G02,G04,G05');
+      t('Gruppen Zahlenstrahl: Verstehen, Üben, Knobeln, Abschlusscheck wie im Lernpfad',Object.keys(zs5.groups).join()==='Verstehen,Üben,Knobeln,Abschlusscheck'&&zs5.groups['Üben'].ids.join()==='Z03,Z04,Z05'&&zs5.groups.Abschlusscheck.ids.join()==='ZA,ZQ');
       /* Es gibt keinen Knopf „Alles freischalten“ und keine „Meine Übersicht“ mehr; S.unlocked öffnet intern noch alles (Tests, alte Speicherstände) */
       S.modus={veraendern:'pfad'};S.checked={G01:true};S.unlocked={};
       const row5=(id)=>pathState(vm5).find(r=>r.id===id);
-      t('Pfad: ohne Freischaltung bleibt gesperrt, was gesperrt ist (G03, Abschluss); G01 ist offen und dran',row5('G03').locked&&row5('QA').locked&&row5('G01').open&&row5('G01').next);
+      t('Pfad: ohne Freischaltung bleibt „später“, was im Kern hinten liegt (G04, Abschluss); Basis G03 offen; G01 ist offen und dran',row5('G04').locked&&row5('QA').locked&&row5('G03').open&&row5('G01').open&&row5('G01').next);
       S.view={kind:'home',tab:'pfad',thema:'veraendern'};renderAll();
       t('Themenseite: kein „Alles freischalten“, kein „Meine Übersicht“, kein „Selbst aussuchen“, keine Wahl',!/Alles freischalten|Meine Übersicht|Selbst aussuchen|Wie möchtest du lernen/.test(app.textContent)&&![...app.querySelectorAll('button')].some(b=>/freischalten/.test(b.textContent)));
       S.unlocked={veraendern:true};
@@ -1590,7 +1590,7 @@ function runSelfTests(){
     }
     t('Vergleichen: Rundenplan hat 5 Arten, bleibt in der Runde gleich, beginnt nie mit einer Behauptung; W01 hat Färben (Leicht) und Behauptung (Knifflig), W02 beginnt mit Stammbrüchen, W03 hat „Keins von beiden“ nur in Knifflig',planBad===0);
     const g0=TASKS.W01.gen(1,RNG),g1=TASKS.W02.gen(1,RNG),g2=TASKS.W03.gen(1,RNG);
-    t('Vergleichen: ohne Plan (Probeaufgabe) gilt die einfachste Art; die Stationen stehen im Pfad von „Brüche vergleichen“ (Pflicht, am Ende der Abschlusscheck WA)',g0.kind==='sign'&&g1.kind==='stamm'&&g2.kind==='which'&&moduleById('vergleichen').path.map(m=>m.id).join()==='W01,W02,W03,W04,W05,W06,W07,W08,W09,W10,WA'&&moduleById('vergleichen').path.every(m=>m.must)&&moduleById('vergleichen').rank===false&&moduleOf('W02').id==='vergleichen');
+    t('Vergleichen: ohne Plan (Probeaufgabe) gilt die einfachste Art; die Stationen stehen im Pfad von „Brüche vergleichen“ (Pflicht, am Ende der Abschlusscheck WA)',g0.kind==='sign'&&g1.kind==='stamm'&&g2.kind==='which'&&moduleById('vergleichen').path.map(m=>m.id).join()==='W01,W02,W03,W05,W08,W04,W06,W07,W09,W10,WA'&&moduleById('vergleichen').path.filter(m=>m.must).map(m=>m.id).join()==='W01,W02,W03,W05,W08,WA'&&moduleById('vergleichen').rank===false&&moduleOf('W02').id==='vergleichen');
   }
   /* Vergleichen W08–W10 (Ordnen, Größer als 1, Dazwischen) und das Ziehen und Ablegen */
   {
@@ -2053,9 +2053,9 @@ function runSelfTests(){
       }
       t('Rechnen: Rundenplan hat 5 Arten und bleibt in der Runde gleich; R01 und R03 haben Geschichte und Bild (Leicht auch „Bild lesen“), R02 und R04 Geschichte und Lücken (Knifflig auch über 1), R05 Rechenart erkennen, ein Bild mit mehreren Aufgaben, Fehler finden und eigene Aufgaben',planBad===0);
       const am=moduleById('addsub'),idx=(id)=>MODULES.findIndex(m=>m.id===id);
-      t('Rechnen: das Thema „Brüche addieren und subtrahieren“ ist aktiv, Block 1, hat im Pfad genau R01 bis R05 und den Abschlusscheck RA (alle Pflicht, in dieser Reihenfolge, Gruppen Addieren, Subtrahieren, Plus oder minus?, Check) und den Eingangstest RQ (nicht im Pfad); das Thema Multiplizieren bleibt „geplant“',
-        !!am&&am.status==='aktiv'&&am.path.map(m=>m.id).join()==='RLAB,R01,R02,R03,R04,R05,RA'&&am.path.filter(m=>m.id!=='RLAB').every(m=>m.must)&&!am.path.find(m=>m.id==='RLAB').must&&am.path.filter(m=>m.final).map(m=>m.id).join()==='RA'&&am.practice.join()==='RQ,RA,R01,R02,R03,R04,R05'&&am.quickcheck===true&&am.qid==='RQ'&&am.finalId==='RA'&&idx('addsub')>idx('vergleichen')&&moduleById('rechnen').status==='geplant'
-        &&['R01','R02','R03','R04','R05','RA','RQ'].every(id=>INTRO[id]&&TASKS[id]&&ICON[id]&&document.getElementById('i-'+ICON[id]))&&Object.keys(am.groups).join()==='Ausprobieren,Addieren,Subtrahieren,Plus oder minus?,Check Gleichnamig'&&am.groups['Check Gleichnamig'].ids.join()==='RQ,RA'&&am.path.every(p=>am.pathGroups[p.grp]&&document.getElementById('i-'+am.pathGroups[p.grp])));
+      t('Rechnen: das Thema „Brüche addieren und subtrahieren“ ist aktiv, Block 1, hat im Pfad genau R01 bis R05 und den Abschlusscheck RA (Kern im Takt: Verstehen R01 R03, Üben R02 R04, Anwenden R05) und den Eingangstest RQ (nicht im Pfad); das Thema Multiplizieren bleibt „geplant“',
+        !!am&&am.status==='aktiv'&&am.path.map(m=>m.id).join()==='RLAB,R01,R03,R02,R04,R05,RA'&&am.path.filter(m=>m.id!=='RLAB').every(m=>m.must)&&!am.path.find(m=>m.id==='RLAB').must&&am.path.filter(m=>m.final).map(m=>m.id).join()==='RA'&&am.practice.join()==='RQ,RA,R01,R03,R02,R04,R05'&&am.quickcheck===true&&am.qid==='RQ'&&am.finalId==='RA'&&idx('addsub')>idx('vergleichen')&&moduleById('rechnen').status==='geplant'
+        &&['R01','R02','R03','R04','R05','RA','RQ'].every(id=>INTRO[id]&&TASKS[id]&&ICON[id]&&document.getElementById('i-'+ICON[id]))&&Object.keys(am.groups).join()==='Entdecken,Verstehen,Üben,Anwenden,Abschlusscheck'&&am.groups.Abschlusscheck.ids.join()==='RA,RQ'&&am.path.every(p=>am.pathGroups[p.grp]&&document.getElementById('i-'+am.pathGroups[p.grp])));
       /* Eingangstest RQ: 15 Antippfragen, 5 Fähigkeiten à 3 Arten, Leicht und Knifflig */
       {
         const problems=[],redStat={1:[0,0],2:[0,0]};let n=0,maxDen={1:0,2:0};
@@ -2098,15 +2098,15 @@ function runSelfTests(){
         for(const lvl of [1,2])for(let k=0;k<25;k++){
           const rnd={results:[],cur:null,size:TASKS.RA.size},cnt={};
           for(let i=0;i<TASKS.RA.size;i++){rnd.results=Array(i).fill('f');const tk=TASKS.RA.gen(lvl,RNG,TASKS.RA.ctx(rnd,lvl));cnt[tk.type]=(cnt[tk.type]||0)+1;if(!validateTask(tk,okDraft(tk)).correct)okAll=false;}
-          if(['R01','R02','R03','R04','R05'].some(id=>cnt[id]!==2))cover=false;
+          if(['R01','R02','R03','R04','R05'].some(id=>cnt[id]!==3))cover=false;
         }
         S.passed={};S.mq={};S.days={};S.perfect={};S.modus={};S.unlocked={};
         ['R01','R02','R03','R04','R05'].forEach(x=>{S.passed[x+'-L1']=true;});
-        let ri=onRoundEnd('RA',1,{results:['f','f','f','f','f','f','f','x','x','x'],size:10});
+        let ri=onRoundEnd('RA',1,{results:Array(15).fill('f').fill('x',11),size:15});
         const noUrk=ri.ready&&!ri.passed&&!ri.final&&!stationDone('RA');
-        ri=onRoundEnd('RA',1,{results:['f','f','f','f','f','f','f','f','x','x'],size:10});
-        t('Abschlusscheck RA (Thema Gleichnamige Brüche): 10 Aufgaben, zwei aus jeder Station, alle richtigen Antworten gelten; alle Stationen fertig und 7 von 10 ⇒ keine Urkunde, 8 von 10 ⇒ Urkunde nur für dieses Thema',
-          TASKS.RA.size===10&&needOf(10)===8&&okAll&&cover&&noUrk&&ri.final&&stationDone('RA')&&qstate(am2).final&&!S.final&&ri.qmod==='addsub'&&pathState(am2).filter(r=>r.must).every(r=>r.done));
+        ri=onRoundEnd('RA',1,{results:Array(15).fill('f').fill('x',12),size:15});
+        t('Abschlusscheck RA (P1: 15 Aufgaben wie jeder Abschlusscheck): drei aus jeder Station, alle richtigen Antworten gelten; alle Stationen fertig und 11 von 15 ⇒ keine Urkunde, 12 von 15 ⇒ Urkunde nur für diese Etappe',
+          TASKS.RA.size===15&&needOf(15)===12&&okAll&&cover&&noUrk&&ri.final&&stationDone('RA')&&qstate(am2).final&&!S.final&&ri.qmod==='addsub'&&pathState(am2).filter(r=>r.must).every(r=>r.done));
         Object.assign(S,snap2);
       }
       /* Eingangstest RQ: Auswertung, „sitzt“ schaltet die Stationen frei, Urkunde bleibt beim Abschlusscheck, andere Themen unberührt */
@@ -2285,9 +2285,9 @@ function runSelfTests(){
         t('Abschlusscheck HA: 10 Antippfragen und 5 Rechenaufgaben (H02, H04, H04, H06, H06), Urkunde ab 12',TASKS.HA.size===15&&needOf(15)===12&&haK.slice(0,10).every(x=>x==='HQ')&&haK.slice(10).join()==='H02,H04,H04,H06,H06'&&finalModOf('HA').id==='addsub2');
         /* Thema, Gruppen, Merkzettel, Labor, Spiel */
         const all=[];MODULES.forEach(m=>Object.keys(m.groups||{}).forEach(g=>all.push(g)));
-        t('Registry (P1): Gruppennamen sind über alle Themen eindeutig',new Set(all).size===all.length);
+        t('Registry (P1): alle Etappen nutzen nur die Gruppen des Takts; alle Abschlusschecks haben 15 Aufgaben',all.every(g=>TAKT_ORDER.includes(g))&&activeModules().every(m=>TASKS[m.finalId].size===15));
         const m2=moduleById('addsub2');
-        t('Thema addsub2: hinter addsub, empfiehlt addsub, Eingangstest HQ, Abschlusscheck HA, Pflicht H02–H07, Knobeln H08–H13 ohne Pflicht, Labor vorn, kein Rang',MODULES.indexOf(m2)===MODULES.indexOf(moduleById('addsub'))+1&&m2.recommends==='addsub'&&m2.qid==='HQ'&&m2.finalId==='HA'&&m2.rank===false
+        t('Thema addsub2: hinter addsub, empfiehlt addsub, Eingangstest HQ, Abschlusscheck HA, Pflicht H02–H07, Knobeln H08–H13 ohne Pflicht, Labor vorn, kein Rang',MODULES.indexOf(m2)===MODULES.indexOf(moduleById('addsub'))+1&&[].concat(m2.recommends).join()==='addsub'&&m2.qid==='HQ'&&m2.finalId==='HA'&&m2.rank===false
           &&m2.path.filter(p=>p.must&&!p.final).map(p=>p.id).join()==='H03,H02,H04,H06,H07'&&m2.path.filter(p=>/^H(0[89]|1)/.test(p.id)).every(p=>!p.must)&&m2.path[0].id==='HLAB'&&isLab('HLAB'));
         t('Symbole: jede neue Kennung hat ein Symbol, kreuzraster und schlange stehen im Sprite',['HQ','HA','H02','H03','H04','H06','H07','H08','H09','H10','H11','H12','H13','H14','S04'].every(x=>ICON[x]&&document.getElementById('i-'+ICON[x]))&&!!document.getElementById('i-kreuzraster')&&!!document.getElementById('i-schlange'));
         const fig=crossFigure({b:3,a:1,d:2,c:1,stage:3}),fig2=crossFigure({b:3,a:2,d:2,c:1,stage:3,mode:'minus'}),ov=crossFigure({b:4,a:3,d:3,c:2,stage:3});

@@ -163,6 +163,11 @@ const INTRO={
       say:['Zähler und Nenner brauchen immer dieselbe Rechnung.','Dann bleibt der Wert gleich.'],
       calc:[[[2,3],'=',[2,3,'x',3],'=',[6,9]]]}
   ]},
+  O01:{title:'Bruchfamilien',steps:[
+    {h:'Eine Familie',say:['Alle Brüche einer Familie sind gleich viel.','Du findest neue Mitglieder durch Erweitern.'],calc:[[[2,3],'=',[2,3,'x',2],'=',[4,6]]]},
+    {h:'Mehrere Mitglieder',say:['Nimm jedes Mal eine andere Zahl.','So bekommst du viele verschiedene Brüche.'],calc:[[[2,3],'=',[2,3,'x',5],'=',[10,15]]]},
+    {h:'So antwortest du',say:['Trage mehrere verschiedene Brüche ein.','Jeder muss so viel sein wie der Bruch oben.']}
+  ]},
   O02:{title:'Kürzen-Maschine',steps:[
     {h:'Die Kürzen-Maschine',
       say:['Tippe auf eine Zahl, zum Beispiel **÷ 2**.','Der Bruch wird sofort gekürzt.','Es geht nur, wenn beide Zahlen teilbar sind.'],
