@@ -173,3 +173,27 @@ function wordsRow(mod){
   const w=WORDS[mod.letter]||[];if(!w.length)return null;
   return el('div',{class:'wordsrow'},el('span',{class:'wl'},'Neue Wörter:'),...w.map(k=>el('button',{type:'button',class:'gloss chipword',onclick:()=>openGloss(k)},k)));
 }
+
+/* ---------- P12 Erklärungen kürzen: höchstens 2 Karten je Station, je Karte höchstens 3 Sätze ----------
+   Karte 1 „So geht's“ (das vorgerechnete Beispiel mit Bild: die erste Karte), Karte 2 „Darauf achten“ (die Karte mit einem typischen Fehler
+   oder Merksatz, sonst die letzte inhaltliche). Die alte Überschrift bleibt als Unterzeile (sub). Bedienhinweise („So antwortest du“) entfallen:
+   die Probe zeigt die Bedienung. Eingangstests und Abschlusschecks behalten ihre (kurzen) Karten, höchstens 2. */
+/* feste Auswahl, wo die Regel nicht passt: [Karte 1, Karte 2] als Index der ausführlichen Fassung */
+const INTRO_PICK={H02:[1,0],H03:[1,3]}; /* H03: Teilung übertragen, dann die Brückenkarte (P7) */
+const INTRO_C2=/acht|fehler|vorsicht|falle|nicht|merk|wichtig|prüf|aufpass|nur|immer/i;
+function shortIntro(I,id){
+  if(!I||!Array.isArray(I.steps))return I;
+  const isTest=!!(QCHK[id]||finalModOf(id));
+  const cut=(s,h)=>Object.assign({},s,{h,sub:s.h!==h?s.h:undefined,say:s.say.slice(0,3)});
+  if(isTest)return Object.assign({},I,{steps:I.steps.slice(0,2).map(s=>Object.assign({},s,{say:s.say.slice(0,3)}))});
+  if(I.steps.length&&I.steps[0].h==='So geht\'s')return Object.assign({},I,{steps:I.steps.slice(0,2).map(s=>Object.assign({},s,{say:s.say.slice(0,3)}))});
+  const content=I.steps.filter(s=>!/antwortest|so geht es|bedienung/i.test(s.h));
+  const list=content.length?content:I.steps;
+  const pick=INTRO_PICK[id];
+  if(pick)return Object.assign({},I,{steps:[cut(I.steps[pick[0]],'So geht\'s')].concat(pick[1]!=null?[cut(I.steps[pick[1]],'Darauf achten')]:[])});
+  const c1=list[0],rest=list.slice(1).filter(s=>!s.tryit&&!s.nltry&&!/probier/i.test(s.h));
+  const c2=rest.find(s=>INTRO_C2.test(s.h))||rest.find(s=>s.say.some(x=>INTRO_C2.test(x)))||rest[rest.length-1];
+  return Object.assign({},I,{steps:[cut(c1,'So geht\'s')].concat(c2?[cut(c2,'Darauf achten')]:[])});
+}
+const INTRO_LONG={};
+Object.keys(INTRO).forEach(id=>{INTRO_LONG[id]=INTRO[id];INTRO[id]=shortIntro(INTRO[id],id);});

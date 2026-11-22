@@ -805,7 +805,8 @@ function buildProbe(id){
 
 /* ---------- Ansicht: Erklärung ---------- */
 function renderIntro(id){
-  const I=INTRO[id],steps=introHasProbe(id)?[PROBE_STEP].concat(I.steps):I.steps,total=steps.length,again=!!(S.view&&S.view.intro);
+  /* P13: erst das Beispiel (Karte 1), dann die Probe mit anderen Zahlen (zählt nicht), dann „Darauf achten“ (Karte 2) */
+  const I=INTRO[id],steps=introHasProbe(id)?I.steps.slice(0,1).concat([PROBE_STEP],I.steps.slice(1)):I.steps,total=steps.length,again=!!(S.view&&S.view.intro);
   const known=!again&&!stationPassed(id)&&checkMark(id)==='sitzt'; /* im Eingangstest schon gezeigt: „Kenne ich schon“ ist der Hauptknopf */
   let P=null; /* die Probeaufgabe bleibt beim Blättern erhalten */
   let i=0;
@@ -863,6 +864,7 @@ function renderIntro(id){
       el('p',{class:'introstep'},'Karte '+(i+1)+' von '+total+(s.probe?' · Fehler sind erlaubt':'')),
       known?el('p',{class:'introknown'},icon('haken'),'Das konntest du schon im Eingangstest.'):null,
       h,
+      s.sub?el('p',{class:'introsub'},s.sub):null,
       el('div',{class:'introtxt'},s.say.map(t=>el('p',null,introRich(t)))),
       s.lab?el('div',{class:'introstage'},labFigure({mode:'strip',base:s.lab.base.slice(),cur:s.lab.cur.slice(),last:{op:s.lab.op,k:s.lab.k}})):null,
       s.fig?introFigNode(s.fig):null,

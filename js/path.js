@@ -184,6 +184,7 @@ function onRoundEnd(id,lvl,round){
   }
   /* perfekte Runde: jede Aufgabe beim 1. Versuch ohne Tipp richtig (zählt für „alles perfekt“) */
   if(round.results.length&&round.results.every(r=>r==='f')){(S.perfect=S.perfect||{})[keyOf(id,lvl)]=true;info.perfect=true;}
+  if(id==='WH')S.whDay=dayKey(new Date()); /* P14: Wiederholung heute geschafft */
   info.daily=markDay();
   return info;
 }

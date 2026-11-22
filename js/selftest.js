@@ -209,7 +209,7 @@ function runSelfTests(){
     const labRow=bomList(['RLAB'],{head:false});
     const nf=noteFor('R01',null).filter(n=>n.classList.contains('labnote')),nf5=noteFor('R05',null).filter(n=>n.classList.contains('labnote')),nf2=noteFor('G01',null).filter(n=>n.classList&&n.classList.contains('labnote'));
     t('Bruchlabor Plus und Minus: eingebunden (Tabelle LABS, Pfad ohne Pflicht vor R01, Zurück zum Thema, Erklärung mit 3 Karten, Knopf im Merkzettel der Addieren-Stationen, Zeile in Üben)',
-      isLab('LAB')&&isLab('RLAB')&&!isLab('R01')&&pfadView('RLAB').thema==='addsub'&&bk.thema==='addsub'&&bk2.tab==='ueben'&&introIdOf({kind:'lab',id:'RLAB'})==='RLAB'&&introIdOf({kind:'lab'})==='LAB'&&INTRO.RLAB.steps.length===3
+      isLab('LAB')&&isLab('RLAB')&&!isLab('R01')&&pfadView('RLAB').thema==='addsub'&&bk.thema==='addsub'&&bk2.tab==='ueben'&&introIdOf({kind:'lab',id:'RLAB'})==='RLAB'&&introIdOf({kind:'lab'})==='LAB'&&INTRO_LONG.RLAB.steps.length===3&&INTRO.RLAB.steps.length===2
       &&nf.length===1&&nf5.length===1&&nf2.length===1&&labRow.textContent.includes('Bruchlabor Plus und Minus')&&stationTitle('RLAB')==='Bruchlabor Plus und Minus'&&LABS.RLAB.started()===true);
     S.labR=keepR;S.view=keepV;S.intro=keepI;persist();
   }
@@ -455,11 +455,11 @@ function runSelfTests(){
     const words=(s)=>s.split(/\s+/).filter(Boolean).length;
     const sentences=(s)=>s.replace(/\*\*/g,'').split(/[.!?]\s+/);
     const texts=[],steps=[];
-    ids.forEach(id=>{const I=INTRO[id];if(!I)return;texts.push(I.title);I.steps.forEach(s=>{steps.push(s);texts.push(s.h,...(s.say||[]));});});
+    ids.forEach(id=>{const I=INTRO_LONG[id];if(!I)return;texts.push(I.title);I.steps.forEach(s=>{steps.push(s);texts.push(s.h,...(s.say||[]));});});
     const longest=Math.max(...[].concat(...texts.map(sentences)).map(words));
     /* Knobelstationen H08–H13 und das Labor HLAB haben laut Konzept (Block 2) zwei kurze Karten */
     const twoOk=(id)=>/^H(0[89]|1[0-3]|LAB)$/.test(id)||/^F(\d\d|LAB|A)$/.test(id); /* Etappe F: zwei Karten (P12) */
-    t('Erklärungen: jedes der '+ids.length+' Lernpfad-Bauteile hat eine mit 3–5 Schritten (Knobeln und Labor Block 2: 2), Überschrift und 2–5 Sätzen',ids.every(id=>INTRO[id]&&INTRO[id].title&&INTRO[id].steps.length>=(twoOk(id)?2:3)&&INTRO[id].steps.length<=5&&INTRO[id].steps.every(s=>s.h&&Array.isArray(s.say)&&s.say.length>=2&&s.say.length<=5))&&Object.keys(INTRO).length===ids.length+Object.keys(QCHK).length);
+    t('P12 Erklärungen: jede der '+ids.length+' Stationen hat höchstens 2 Karten mit Überschrift und höchstens 3 Sätzen; die ausführliche Fassung (INTRO_LONG) bleibt zum Nachlesen',ids.every(id=>INTRO[id]&&INTRO[id].title&&INTRO[id].steps.length>=1&&INTRO[id].steps.length<=2&&INTRO[id].steps.every(s=>s.h&&Array.isArray(s.say)&&s.say.length>=1&&s.say.length<=3)&&INTRO_LONG[id])&&Object.keys(INTRO).length===ids.length+Object.keys(QCHK).length);
     t('Erklärungen: kurze Sätze, höchstens 14 Wörter (längster: '+longest+')',longest<=14);
     t('Erklärungen: keine Rechnung im Text (Zahlen, Rechenzeichen, Brüche stehen als Daten), kein Emoji, kein ✓/★/✗',texts.every(x=>!/\d\s*[·×÷+−=]\s*\d|\d\s*:\s*\d|[☀-➿\u{1F000}-\u{1FFFF}]/u.test(x)));
     /* Rechnungen: alle Brüche einer Zeile gleich (Lücke „?“ muss ganzzahlig lösbar sein), Erweitern/Kürzen mit Zahl ≥ 2 passend, Rechenketten stimmen */
@@ -532,7 +532,7 @@ function runSelfTests(){
         &&ty.ks.some(k=>labCan(ty.base,ty.op,k))&&(ty.op==='x'||ty.ks.some(k=>!labCan(ty.base,ty.op,k)));
     })&&steps.filter(s=>s.tryit).length===4);
     t('Erklärungen: Schnellcheck nennt die Zahlen aus den Einstellungen (Fragen, Urkunden-Hürde)',(()=>{const x=INTRO.Q00.steps.map(s=>s.say.join(' ')).join(' ');return x.includes(TASKS.Q00.size+' Fragen')&&x.includes('keine Note')&&INTRO.Q00.steps.length===1&&['ZQ','WQ','RQ','HQ'].every(q=>INTRO[q].steps.length===1);})());
-    t('Erklärungen: Wörter und Knöpfe stimmen mit den Namen auf dem Bildschirm überein',[['G02','Erweiterungszahl'],['G03','Kürzungszahl'],['G04','Geht nicht mehr'],['G04','Sind beide Zahlen gerade'],['G01','Prüfen'],['LAB','Rückgängig'],['O02','Weg neu starten'],['T01','Merkzettel']].every(([id,w])=>INTRO[id].steps.some(s=>s.say.some(x=>x.includes('**'+w)))));
+    t('Erklärungen: Wörter und Knöpfe stimmen mit den Namen auf dem Bildschirm überein',[['G02','Erweiterungszahl'],['G03','Kürzungszahl'],['G04','Geht nicht mehr'],['G04','Sind beide Zahlen gerade'],['G01','Prüfen'],['LAB','Rückgängig'],['O02','Weg neu starten'],['T01','Merkzettel']].every(([id,w])=>INTRO_LONG[id].steps.some(s=>s.say.some(x=>x.includes('**'+w)))));
     let built=true;
     try{steps.forEach(s=>{introRich(s.h);s.say.forEach(introRich);if(s.fig)introFigNode(s.fig);if(s.add)introAddNode(s.add);if(s.calc)introCalcNode(s.calc);if(s.tryit)introTry(s.tryit);if(s.lab)labFigure({mode:'strip',base:s.lab.base,cur:s.lab.cur,last:{op:s.lab.op,k:s.lab.k}});});}catch(e){built=false;}
     t('Erklärungen: alle Schritte lassen sich aufbauen',built);
@@ -809,7 +809,7 @@ function runSelfTests(){
     const zqKinds=new Set();for(let i=0;i<400;i++)zqKinds.add(zqGen(1+i%2,RNG,{skill:ZQ_SKILLS[i%5]}).kind);
     t('Eingangstest Zahlenstrahl: Fragenplan 5 Fähigkeiten × 3, jede Art kommt vor',qPlan(RNG,ZQ_SKILLS,3).length===15&&ZQ_SKILLS.every(s=>qPlan(RNG,ZQ_SKILLS,3).filter(x=>x===s).length===3)&&zqKinds.size===14);
     /* Erklärungen der Zahlenstrahl-Bauteile: Strahlen und Ausprobieren gültig */
-    const zsSteps=[].concat(...['Z01','Z02','Z03','Z04','Z05','Z06','Z07','Z08'].map(id=>INTRO[id].steps));
+    const zsSteps=[].concat(...['Z01','Z02','Z03','Z04','Z05','Z06','Z07','Z08'].map(id=>INTRO_LONG[id].steps));
     t('Erklärungen Zahlenstrahl: jeder Strahl und jedes Ausprobieren ist gültig (Teile, Marken im Strahl, Strichzahl, passende und unpassende Einteilung)',zsSteps.every(s=>{
       const lines=s.nline?[].concat(s.nline):[];
       const ok=lines.every(l=>l.to>(l.from||0)&&Number.isInteger(l.parts)&&l.parts>=1&&(l.to-(l.from||0))*l.parts<=12&&(l.marks||[]).every(m=>m.i!=null?m.i>=0&&m.i<=(l.to-(l.from||0))*l.parts:m.n/m.d<=l.to)&&(!l.strip||(l.strip.d>=1&&l.strip.n<=l.strip.d)));
@@ -891,7 +891,7 @@ function runSelfTests(){
     t('Gemeinsame Teiler (T02): 800 Aufgaben – 6 Zahlen, 1–3 passen zu beiden, Fallen teilen nur eine Zahl, Zähler und Nenner bis 60 bzw. 100, richtig/falsch/„fast“/leer werden unterschieden',t02bad.length===0||(console.log(t02bad.slice(0,5)),false));
     const ids7=PATH.map(m=>m.id);
     t('T02 steht als Basis-Station direkt nach T01 (Grundlagen), mit Erklärung; der Eingangstest schaltet T02 mit T01 frei',ids7.indexOf('T02')===ids7.indexOf('T01')+1&&PATH.find(m=>m.id==='T02').lvl==='basis'&&vm7.groups.Grundlagen.ids.includes('T02')&&vm7.practice.includes('T02')&&!!INTRO.T02&&QCHK.Q00.stations.teilbar.join()==='T01,T02');
-    t('P6: Karte „Mehr als ein Ganzes“ steht nicht mehr in G01 (Brüche größer 1 kommen in F05); „Kürzen in Schritten“ (G04): erst die kleinste Zahl, dann noch einmal prüfen',!INTRO.G01.steps.some(s=>s.h==='Mehr als ein Ganzes')&&INTRO.F05.steps[0].say.join(' ').includes('Ganzes')&&INTRO.G04.steps[0].h==='Kürzen in Schritten'&&INTRO.G04.steps[0].say.join(' ').includes('kleinste Zahl, die passt'));
+    t('P6: Karte „Mehr als ein Ganzes“ steht nicht mehr in G01 (Brüche größer 1 kommen in F05); „Kürzen in Schritten“ (G04): erst die kleinste Zahl, dann noch einmal prüfen',!INTRO.G01.steps.some(s=>s.h==='Mehr als ein Ganzes')&&INTRO.F05.steps[0].say.join(' ').includes('Ganzes')&&INTRO_LONG.G04.steps[0].h==='Kürzen in Schritten'&&INTRO_LONG.G04.steps[0].say.join(' ').includes('kleinste Zahl, die passt'));
     /* große Zahlen (bis 100) in Leicht: immer echte Brüche */
     const bigBad=[];let bigN=0;
     const Rbig={...RNG,chance:(p)=>p===BIG_SHARE?true:RNG.chance(p)}; /* erzwingt den kleinen Anteil großer Zahlen */
@@ -908,7 +908,9 @@ function runSelfTests(){
       S.view={kind:'practice',id:'G02'};renderAll();
       const barBtns=()=>[...app.querySelectorAll('.actionbar .primaryrow .btn')],btns=barBtns().map(b=>b.textContent.trim());
       const dockMsg=()=>(app.querySelector('.actionbar .dockmsg')||{textContent:''}).textContent;
-      t('Erklärung: erste Karte „Probiere es aus“ ist ein Bildschirm wie eine Übung: Aufgabe in der Karte, ein Bedienpult unten (Tipp | Kenne ich schon | Prüfen), ein gelber Hauptknopf; 5 Schritte (4 + Probe)',/Probiere es aus/.test(app.querySelector('.introh').textContent)&&!!app.querySelector('.introprobe input')&&/Karte 1 von 5/.test(app.textContent)&&btns.join('|')==='Tipp|Kenne ich schon|Prüfen'&&app.querySelectorAll('.actionbar .btn.primary').length===1&&app.querySelectorAll('.card button').length===0&&!app.querySelector('.linkrow'));
+      t('P13: erste Karte „So geht’s“ mit Beispiel; unten ‹ | Kenne ich schon | Weiter; 3 Karten (Beispiel, Probe, Darauf achten)',/So geht/.test(app.querySelector('.introh').textContent)&&!app.querySelector('.introprobe')&&/Karte 1 von 3/.test(app.textContent)&&btns.join('|')==='|Kenne ich schon|Weiter'&&app.querySelectorAll('.actionbar .btn.primary').length===1);
+      barBtns()[2].click();
+      t('P13: danach die Probe wie eine Übung: Aufgabe in der Karte, Bedienpult (Tipp | Kenne ich schon | Prüfen), ein gelber Hauptknopf',/Probiere es aus/.test(app.querySelector('.introh').textContent)&&!!app.querySelector('.introprobe input')&&/Karte 2 von 3/.test(app.textContent)&&barBtns().map(b=>b.textContent.trim()).join('|')==='Tipp|Kenne ich schon|Prüfen'&&app.querySelectorAll('.actionbar .btn.primary').length===1&&app.querySelectorAll('.card button').length===0);
       const box=app.querySelector('.introprobe'),fr=box.querySelector('.frac'),ka=+box.querySelector('strong').textContent,a7=+fr.querySelector('.num').textContent,b7=+fr.querySelector('.den').textContent;
       const ins=[...box.querySelectorAll('input[type=text]')],setI=(i,v)=>{i.value=String(v);i.dispatchEvent(new Event('input',{bubbles:true}));};
       const pruefen=()=>barBtns().find(b=>b.textContent.trim()==='Prüfen').click();
@@ -920,13 +922,13 @@ function runSelfTests(){
       t('Probeaufgabe: richtige Antwort zeigt die Rechnung, der Hauptknopf heißt dann „Weiter“; keine Punkte, keine Serie, kein Fortschritt (zählt nicht für Sterne)',/Richtig: /.test(dockMsg())&&barBtns()[2].textContent.trim()==='Weiter'&&S.xp===40&&S.streak===3&&Object.keys(S.progress).length===0&&Object.keys(S.rounds).length===0);
       barBtns()[2].click();
       const bs=barBtns();
-      t('Erklärung: „Weiter“ führt zur ersten Erklärkarte der Station; ab Karte 2 stehen unten ‹ | Kenne ich schon | Weiter (nur Pfeil links, ein gelber Hauptknopf)',/Karte 2 von 5/.test(app.textContent)&&/Erweitern heißt: feiner teilen/.test(app.querySelector('.introh').textContent)&&bs.map(b=>b.textContent.trim()).join('|')==='|Kenne ich schon|Weiter'&&bs[0].getAttribute('aria-label')==='Zurück zum vorigen Schritt'&&app.querySelectorAll('.actionbar .btn.primary').length===1);
+      t('P13: nach der Probe Karte 3 „Darauf achten“; unten ‹ | Kenne ich schon | Los geht’s (ein gelber Hauptknopf)',/Karte 3 von 3/.test(app.textContent)&&/Darauf achten/.test(app.querySelector('.introh').textContent)&&bs[0].getAttribute('aria-label')==='Zurück zum vorigen Schritt'&&/Los geht/.test(bs[2].textContent)&&app.querySelectorAll('.actionbar .btn.primary').length===1);
       barBtns()[1].click();
       t('„Kenne ich schon“: Erklärung gilt als gesehen, die Übung öffnet sich',S.intro.G02===true&&!app.querySelector('.introwork'));
       S.intro={};S.view={kind:'lab'};renderAll();
-      t('Bruchlabor: keine Probeaufgabe, vier Schritte; „Kenne ich schon“ auch dort',!app.querySelector('.introprobe')&&/Karte 1 von 4/.test(app.textContent)&&[...app.querySelectorAll('.actionbar .primaryrow .btn')][1].textContent.trim()==='Kenne ich schon');
+      t('Bruchlabor: keine Probeaufgabe, zwei Karten (P12); „Kenne ich schon“ auch dort',!app.querySelector('.introprobe')&&/Karte 1 von 2/.test(app.textContent)&&[...app.querySelectorAll('.actionbar .primaryrow .btn')][1].textContent.trim()==='Kenne ich schon');
       S.intro={};S.view={kind:'practice',id:'QA'};renderAll();
-      t('Abschlusscheck: keine Probeaufgabe vor der Erklärung',!app.querySelector('.introprobe')&&/Karte 1 von 3/.test(app.textContent));
+      t('Abschlusscheck: keine Probeaufgabe vor der Erklärung, höchstens zwei Karten',!app.querySelector('.introprobe')&&/Karte 1 von 2/.test(app.textContent));
       S.intro={G03:true};S.view={kind:'practice',id:'G03',intro:true};renderAll();
       t('Erklärung aus dem Merkzettel (again): Knopf heißt „Schließen“',[...app.querySelectorAll('.actionbar .primaryrow .btn')][1].textContent.trim()==='Schließen');
     }finally{Object.assign(S,keep7);persist();renderAll();}
@@ -1099,7 +1101,7 @@ function runSelfTests(){
       t('Üben: die Gruppen stehen als Überschriften, die Nummern laufen je Thema durch (Kopfzeile nur einmal)',activeModules().every((m,i)=>folds[i].querySelectorAll('h3.grp').length===Object.values(m.groups).filter(g=>g.ids.some(id=>!isCheck(id))).length&&folds[i].querySelectorAll('.bomhead').length===1&&[...folds[i].querySelectorAll('.bomrow .pos')].map(e=>e.textContent).join()===[...Array(folds[i].querySelectorAll('.bomrow').length).keys()].map(k=>String(k+1).padStart(2,'0')).join()));
       S.last='W05';renderAll();
       const folds2=[...app.querySelectorAll('details.fold')],vi=activeModules().findIndex(m=>m.id==='vergleichen');
-      t('Üben: „Weiter üben“ ist der einzige Hauptknopf; das Thema der letzten Aufgabe ist geöffnet',app.querySelectorAll('.bigbtn.go').length===1&&/Weiter üben/.test(app.querySelector('.bigbtn.go').textContent)&&folds2[vi].open&&folds2.filter(d=>d.open).length===1);
+      t('Wiederholen: höchstens ein Hauptknopf (Wiederholung heute), „Weiter üben“ steht da; die Etappe der letzten Aufgabe ist geöffnet',app.querySelectorAll('.bigbtn.go').length<=1&&/Weiter üben/.test(app.textContent)&&folds2[vi].open&&folds2.filter(d=>d.open).length===1);
       S.levelByType.W05=1;app.querySelectorAll('.levelrow .seg button')[1].click();
       t('Üben: der Schwierigkeits-Umschalter gilt für alle Aufgaben der Seite',levelOf('W05')===2&&levelOf('G01')===2&&levelOf('Z03')===2);
       S.view={kind:'home',tab:'ueben',group:'Erweitern'};renderAll();
@@ -1309,7 +1311,7 @@ function runSelfTests(){
     t('O02-Tipp: nennt andere Kürzungszahlen, keine Rechenketten',HINT.ways.join(' ').includes('andere Kürzungszahlen')&&!HINT.ways.join(' ').includes('Rechenketten'));
     const z04=INTRO.Z04.steps.map(s=>s.say.join(' ')).join(' ');
     t('Z04-Erklärung: zählt Abschnitte von 0 aus, kein „sechster Strich“',z04.includes('Zähle 6 Abschnitte von 0 aus')&&!/sechste|Strich:/.test(z04));
-    const t01=INTRO.T01.steps.map(s=>s.say.join(' ')).join(' ');
+    const t01=INTRO_LONG.T01.steps.map(s=>s.say.join(' ')).join(' ');
     t('T01-Erklärung: Quersumme heißt „Addiere dazu alle Ziffern“, nicht „zähle zusammen“',t01.includes('Addiere dazu alle Ziffern.')&&!/zusammen/.test(t01));
     t('Teilbarkeit durch 4: zweistellig gezeigt („00“, „04“), 00 ist durch 4 teilbar',divExplain(400,4)[0]==='Letzte zwei Ziffern: 00.'&&divExplain(400,4)[1]==='00 ist durch 4 teilbar.'&&divExplain(504,4)[0]==='Letzte zwei Ziffern: 04.'&&divExplain(504,4)[1].startsWith('04 : 4')&&divExplain(512,4)[0]==='Letzte zwei Ziffern: 12.');
     t('Labor: Meldung zum Zähler ist ein vollständiger Satz',LAB_WRONG.zaehler.includes('mit der Zahl multipliziert oder durch sie geteilt'));
@@ -1317,8 +1319,8 @@ function runSelfTests(){
     t('Begriffe: „gemischte Zahl“ und „Bruch“, nie „gemeiner Bruch“ oder „gemischte Schreibweise“ (Merkzettel, Aufgaben, Erklärungen)',!/gemeine[rn]? Bruch|[Gg]emischte Schreibweise/.test(noteText+JSON.stringify(INTRO)+Object.values(TASKS).map(x=>x.name+' '+x.desc).join(' '))&&TASKS.D03.name==='Gemischte Zahl → Bruch'&&NOTES.M6.title==='Gemischte Zahl als Bruch');
     t('Merkzettel: Erweiterungszahl und Kürzungszahl „mindestens 2“; M5 ohne „führende Nullen“, mit „Zähle alle Stellen“',noteText.includes('Erweiterungszahl. Sie ist mindestens 2')&&noteText.includes('Kürzungszahl. Sie ist mindestens 2')&&noteText.includes('Zähle alle Stellen hinter dem Komma')&&!/Führende Nullen|unbemerkt/.test(noteText));
     t('Merkzettel M9: Weg 1 (Einteilung anpassen) vor Weg 2 (Bruch anpassen), kein Weg A/B',noteText.indexOf('Weg 1: Einteilung anpassen')>=0&&noteText.indexOf('Weg 1: Einteilung anpassen')<noteText.indexOf('Weg 2: Bruch anpassen')&&!/Weg [AB]\b/.test(noteText));
-    t('Kleinstes gemeinsames Vielfaches: nur als Randnotiz (Z06-Erklärung nennt zuerst „die kleinste Zahl, in die alle Nenner passen“)',INTRO.Z06.steps.some(s=>s.say[1]&&s.say[1].includes('kleinste Zahl, in die alle Nenner passen')&&s.say.some(x=>x.includes('Fachwort'))));
-    t('Z08-Erklärung: gemischte Zahl mit Rechnung 7/4 = 1 + 3/4 = 1 ¾, Überschrift „Brüche, die natürliche Zahlen sind“',INTRO.Z08.steps.some(s=>(s.calc||[]).some(l=>l.some(x=>x&&x.m&&x.m.join()==='1,3,4')))&&INTRO.Z08.steps.some(s=>s.h==='Brüche, die natürliche Zahlen sind'&&s.say[0].includes('1, 2 oder 3')));
+    t('Kleinstes gemeinsames Vielfaches: nur als Randnotiz (Z06-Erklärung nennt zuerst „die kleinste Zahl, in die alle Nenner passen“)',INTRO_LONG.Z06.steps.some(s=>s.say[1]&&s.say[1].includes('kleinste Zahl, in die alle Nenner passen')&&s.say.some(x=>x.includes('Fachwort'))));
+    t('Z08-Erklärung: gemischte Zahl mit Rechnung 7/4 = 1 + 3/4 = 1 ¾, Überschrift „Brüche, die natürliche Zahlen sind“',INTRO_LONG.Z08.steps.some(s=>(s.calc||[]).some(l=>l.some(x=>x&&x.m&&x.m.join()==='1,3,4')))&&INTRO_LONG.Z08.steps.some(s=>s.h==='Brüche, die natürliche Zahlen sind'&&s.say[0].includes('1, 2 oder 3')));
     t('Memory: Regel je Niveau, verschieden und nicht leer',MEMORY_RULE[1]&&MEMORY_RULE[2]&&MEMORY_RULE[1]!==MEMORY_RULE[2]);
     const lc=levelControl('G02').textContent;
     t('Niveau heißt überall „Leicht“ und „Knifflig“ (Niveau-Schalter), nie „Niveau 1“',lc.includes('Leicht')&&lc.includes('Knifflig')&&!lc.includes('Niveau'));
@@ -1373,7 +1375,7 @@ function runSelfTests(){
     const keepB={view:S.view,intro:S.intro,einstufung:S.einstufung,checked:S.checked,passed:S.passed};
     try{
       S.intro={};S.passed={};S.checked={};S.einstufung=null;
-      const second=()=>{renderAll();app.querySelector('.page').introApi.next();}; /* Karte 2 (Karte 1 ist die Probeaufgabe) */
+      const second=()=>{renderAll();}; /* P13: Karte 1 ist das Beispiel („So geht’s“), die Probe kommt danach */
       S.view={kind:'practice',id:'G02'};second();
       const plain=!app.querySelector('.introknown')&&app.querySelector('.intronext').classList.contains('primary')&&!app.querySelector('.introskip').classList.contains('primary');
       S.einstufung={at:1,right:15,size:15,skills:{erweitern:{status:'sitzt'}}};S.checked={G02:true};second();
@@ -2350,6 +2352,19 @@ function runSelfTests(){
     t('P24 Wörterliste: je Etappe höchstens 3 neue Fachwörter, jedes im Lexikon mit Alltagswort; fette Fachwörter in Erklärungen sind antippbar; P5: Leicht ohne Kreise, G01 beginnt mit Rechtecken',
       activeModules().every(m=>(WORDS[m.letter]||[]).length<=3)&&Object.values(WORDS).flat().every(k=>GLOSSAR[k]&&ALLTAG[k])&&introRich('Der **Hauptnenner** ist klein.').some(n=>n.classList&&n.classList.contains('gloss'))&&introRich('Feld **gekürzt**').every(n=>!(n.classList&&n.classList.contains('gloss')))
       &&Array.from({length:60},()=>pickMode(RNG.int(2,12),RNG,null,1)).every(m=>m!=='circle')&&Array.from({length:30},()=>TASKS.G01.gen(1,RNG)).every(t=>t.target.mode!=='circle'&&t.cards.every(c=>c.mode!=='circle')));
+  }
+  /* P14 Wiederholung heute */
+  {
+    const kp={passed:S.passed,rev:S.rev,whDay:S.whDay};
+    try{
+      S.passed={'G01-L1':true,'G02-L1':true,'R01-L1':true};S.rev={G02:{err:5,last:null},G01:{err:0,last:dayKey(new Date())},R01:{err:0,last:dayKey(new Date())}};
+      const plans=Array.from({length:20},()=>whPlan());
+      const okPlan=plans.every(p=>p.length===5&&new Set(p).size<=3&&['G01','G02','R01'].every(id=>p.filter(x=>x===id).length<=2)&&p.every(id=>['G01','G02','R01'].includes(id)));
+      const g02=plans.every(p=>p.includes('G02'));
+      S.passed={};const empty=whPlan().length===0&&!!whCard().classList.contains('empty');
+      S.passed={'G01-L1':true};const tk=TASKS.WH.gen(1,RNG,{id:'G01'});
+      t('P14 Wiederholung heute: 5 Aufgaben nur aus geschafften Stationen, höchstens 2 je Station, Station mit Fehlern immer dabei; ohne geschaffte Station ein Hinweis; Aufgaben sind echte Aufgaben der Station',okPlan&&g02&&empty&&tk.type==='G01'&&validateTask(tk,{}).correct===false);
+    }finally{Object.assign(S,kp);persist();}
   }
   const bad=res.filter(r=>!r.ok);
   console.log(`Selbsttest: ${res.length-bad.length}/${res.length} bestanden`);

@@ -103,8 +103,9 @@ function renderHome(){
   }else{
     /* Üben: frei wählen. Ein Umschalter für alle, je Thema eine aufklappbare Liste (das Thema der letzten Aufgabe ist offen) */
     const last=S.last&&TASKS[S.last]&&!isCheck(S.last)?S.last:null,lastMod=last?moduleOf(last):null,mods=activeModules();
-    if(last)home.append(bigBtn('play',()=>openEntry(last),'Weiter üben',TASKS[last].name,LEVEL_LABEL[levelOf(last)],'go'));
-    home.append(el('h1',null,'Wiederholen'),listLevel(PRACTICE_ORDER.filter(id=>!isCheck(id))));
+    home.append(el('h1',null,'Wiederholen'),whCard()); /* P14: oben die Wiederholung heute */
+    if(last)home.append(bigBtn('play',()=>openEntry(last),'Weiter üben',TASKS[last].name,LEVEL_LABEL[levelOf(last)]));
+    home.append(el('h2',{class:'area'},'Geschaffte Stationen frei üben'),listLevel(PRACTICE_ORDER.filter(id=>!isCheck(id))));
     mods.forEach(m=>home.append(fold(m.name,uebenBody(m),lastMod?lastMod.id===m.id:m===mods[0])));
   }
   root.append(home,bottomNav());app.append(root);
