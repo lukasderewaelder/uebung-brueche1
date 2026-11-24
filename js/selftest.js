@@ -2450,6 +2450,8 @@ function runSelfTests(){
       &&vm.path.filter(p=>!p.final&&!isLab(p.id)).map(p=>stationCode(p.id)).join()==='V1,V2,V3,V4,V5,V6,V7,V8,V9,V10'&&vm.path.filter(p=>p.must&&!p.final).map(p=>p.id).join()==='N01,N02,N03,N04,N05,N06'
       &&isLab('NLAB')&&MAP_LAYOUT.strands[1].ids.join()==='addsub,addsub2,vervielfachen'&&WORDS.V.every(k=>GLOSSAR[k]&&ALLTAG[k])&&['M26','M27','M28'].every(n=>NOTES[n].build([]).length>3)
       &&['N01','N02','N03','N04','N05','N06','N07','N08','N09','N10','NQ','NA','NLAB'].every(id=>INTRO[id]&&(isLab(id)||document.getElementById('i-'+ICON[id]))));
+    {const kv=S.vt;try{S.vt={schaetz:5,wege:{z:true,n:true},fix:1};const bs=badgesOf(moduleById('vervielfachen')).filter(b=>/^v-/.test(b.grp));
+      t('Etappe V Abzeichen: Erst schätzen (5), Zwei Wege (beide), Fehlerdetektiv (V7), Selbst korrigiert (3) – mit Symbol und Spruch',bs.length===4&&bs[0].have&&bs[1].have&&!bs[3].have&&bs[3].n===1&&bs.every(b=>document.getElementById('i-'+b.icon)&&b.say&&b.fig)&&!!badgeNode(bs[0]));}finally{S.vt=kv;}}
     const keepL={view:S.view,labV:S.labV,xp:S.xp};
     try{
       S.labV=null;S.view={kind:'lab',id:'NLAB'};renderAll();

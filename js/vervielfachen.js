@@ -835,5 +835,7 @@ TIPS.N09=(t)=>{
 };
 TIPS.N10=(t)=>t.kind==='verteilen'?TIPS.N02(Object.assign({},t,{kind:'ergebnis'})):TIPS.N01(Object.assign({},t,{kind:'torte'}));
 ['N01','N02','N03','N04','N05','N06','N07','N08','N09','N10'].forEach(id=>{TASKS[id].hints=function(t){return TIPS[id](t);};});
+/* „Selbst korrigiert“: richtig nach einer Rückmeldung in derselben Aufgabe (Spur für das Abzeichen) */
+['N01','N02','N03','N04','N05','N06','N07','N08','N09','N10'].forEach(id=>{const own=TASKS[id].onRight;TASKS[id].onRight=function(t,d,att){if(own)own(t,d,att);if(att>0)vtCount('fix');};});
 /* Rechenprobe nach „richtig“: kurze Rechnung, wo es eine gibt */
 ['N03','N04','N05'].forEach(id=>{PROOF[id]=(t)=>t.kind==='rechnen'||t.kind==='zaehler'||t.kind==='mul'||t.kind==='div'?vtProofText(t):null;});

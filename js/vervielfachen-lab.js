@@ -114,3 +114,19 @@ LABS.NLAB={name:'Bruch-Maschine',desc:'Brüche vervielfachen und teilen ausprobi
   done:()=>!!(S.labV&&S.labV.done),
   started:()=>!!(S.labV&&(S.labV.done||(S.labV.did&&(S.labV.did.mul||S.labV.did.div)))),
   render:()=>renderVLab()};
+
+/* ---------- Abzeichen für Lernhandlungen der Etappe V (Konzept Kap. 7) ----------
+   Spuren in S.vt (nur nach „richtig“, js/vervielfachen.js): schaetz (Größenfrage richtig), wege.z / wege.n (beide Wege beim Teilen), fix (nach Rückmeldung verbessert) */
+(function(){
+  const m=typeof moduleById==='function'?moduleById('vervielfachen'):null;
+  if(!m)return;
+  m.badges=()=>{
+    const v=S.vt&&typeof S.vt==='object'?S.vt:{},w=v.wege||{},sch=Math.min(5,v.schaetz|0),fix=Math.min(3,v.fix|0),ways=(w.z?1:0)+(w.n?1:0);
+    return [
+      {mod:m.id,grp:'v-schaetz',label:'Erst schätzen',icon:'auge',have:sch>=5,n:sch,of:5,fig:'Juna',say:'Erst schätzen, dann rechnen. Klug!'},
+      {mod:m.id,grp:'v-wege',label:'Zwei Wege',icon:'wechsel',have:ways===2,n:ways,of:2,fig:'Ida',say:'Du kennst beide Wege beim Teilen!'},
+      {mod:m.id,grp:'v-detektiv',label:'Fehlerdetektiv',icon:'lupe',have:typeof stationDone==='function'&&stationDone('N07'),n:typeof stationDone==='function'&&stationDone('N07')?1:0,of:1,fig:'Paul',say:'Jeden Fehler gefunden!'},
+      {mod:m.id,grp:'v-fix',label:'Selbst korrigiert',icon:'undo',have:fix>=3,n:fix,of:3,fig:'Malik',say:'Aus Fehlern gelernt. Stark!'}
+    ];
+  };
+})();
