@@ -5,6 +5,8 @@
    zusätzlich, dass wirklich alles perfekt geschafft ist.
    ===================================================================== */
 /* P17 neutrale Stufen als Medaillen (gleiche XP-Schwellen); Kristall nur mit „alles perfekt“. [XP, Name, Symbol, Stufe für die Farbe] */
+/* Punkte kommen aus allen Stationen. Neue Etappen und Stationen geben automatisch XP und zählen bei „alles perfekt“ mit (rankPractice, rankPath).
+   Wenn weitere Bausteine dazukommen, die Schwellen hier prüfen: Ab Platin sind sie mit Absicht hoch angesetzt. */
 /* Wie in vielen Spielen: Metalle mit je drei Stufen (I bis III), dann Diamant; Kristall nur mit „alles perfekt“. */
 const RANKS=[
   [0,'Bronze I','plakette','bronze'],[40,'Bronze II','plakette','bronze'],[100,'Bronze III','plakette','bronze'],

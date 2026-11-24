@@ -197,3 +197,11 @@ function shortIntro(I,id){
 }
 const INTRO_LONG={};
 Object.keys(INTRO).forEach(id=>{INTRO_LONG[id]=INTRO[id];INTRO[id]=shortIntro(INTRO[id],id);});
+/* H14: Die automatische Kürzung ließ die Kreuz-Regel weg. Zwei eigene Karten erklären den Trick wirklich: erst das Malnehmen über Kreuz, dann Zusammenrechnen und Kürzen. */
+if(INTRO_LONG.H14&&INTRO_LONG.H14.steps.length>=4){
+  const L=INTRO_LONG.H14.steps;
+  INTRO.H14=Object.assign({},INTRO_LONG.H14,{steps:[
+    Object.assign({},L[1],{h:"So geht's",sub:'Über Kreuz malnehmen',say:['Der Schmetterling ist ein zweiter Weg zum gemeinsamen Nenner.','Nimm jeden Zähler mit dem anderen Nenner mal. Das steht oben.','Nimm die beiden Nenner mal. Das steht unten.']}),
+    Object.assign({},L[2],{h:'Darauf achten',sub:'Zusammenrechnen und Kürzen',say:['Oben rechnest du plus oder minus. Unten bleibt der neue Nenner.','Er ist oft größer als der Hauptnenner.','Kürze am Ende, wenn es geht.']})
+  ]});
+}
