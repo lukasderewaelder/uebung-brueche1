@@ -18,7 +18,7 @@
   --paper:#eef5fb;--ink:#0b2a4a;--ink-dim:#3d5a78;--mark:#ffe58a;
   --sel-bg:#1f68b3;--sel-ink:#ffffff;--sel-line:#9fd0ff;--sel-tile:#cfe5ff;  /* Umbau P22: ausgewählte Antwort blau */
   --et-F:#3fae6a;--et-E:#e8833a;--et-Z:#22aab8;--et-W:#8a6fd1;--et-R:#3f7fd6;--et-H:#d6585a;  /* Umbau P25: Kennfarbe je Etappe */
-  --medal-bronze:#c0773a;--medal-silber:#a9b6c3;--medal-gold:#e0b12b;--medal-platin:#7fc9c4;--medal-diamant:#6fc3ff;--medal-kristall:#b79cff;  /* P17 */
+  --medal-bronze:#c0773a;--medal-silber:#a9b6c3;--medal-gold:#e0b12b;--medal-platin:#7fc9c4;--medal-diamant:#6fc3ff;--medal-kristall:#b79cff;--medal-palladium:#d6cfc0;--medal-rhodium:#f08fa8;--medal-iridium:#6cc36a;  /* P17 */
   --amber-fill:#ffc53d;                         /* Fläche von Hauptknöpfen; --amber ist die Schriftfarbe (im hellen Modus dunkler) */
   --track:rgba(184,212,238,.22);--tick:rgba(184,212,238,.35);  /* leere Balken, Strichmarken */
   --nl-sec:rgba(173,216,255,.1);--nl-on:rgba(120,190,255,.55); /* Zahlenstrahl: Abschnitt, gefärbter Abschnitt */
@@ -1481,7 +1481,7 @@ button.gloss:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 .bubble .bclose{all:unset;cursor:pointer;font-size:1.25rem;line-height:1;padding:.125rem .375rem;min-width:28px;text-align:center}
 .medal{display:inline-grid;place-items:center;width:1.75em;height:1.75em;border-radius:50%;background:var(--medal-bronze);color:#1b1b1b}
 .medal.big{width:3.5rem;height:3.5rem}
-.medal.tier-silber{background:var(--medal-silber)}.medal.tier-gold{background:var(--medal-gold)}.medal.tier-platin{background:var(--medal-platin)}.medal.tier-diamant{background:var(--medal-diamant)}.medal.tier-kristall{background:var(--medal-kristall)}
+.medal.tier-silber{background:var(--medal-silber)}.medal.tier-gold{background:var(--medal-gold)}.medal.tier-platin{background:var(--medal-platin)}.medal.tier-diamant{background:var(--medal-diamant)}.medal.tier-kristall{background:var(--medal-kristall)}.medal.tier-palladium{background:var(--medal-palladium)}.medal.tier-rhodium{background:var(--medal-rhodium)}.medal.tier-iridium{background:var(--medal-iridium)}
 .badge{display:inline-flex;flex-direction:column;align-items:center;gap:.125rem;padding:.375rem;border:2px dashed var(--chalk-dim);border-radius:12px;color:var(--chalk-dim);min-width:4.5rem;text-align:center}
 .badge.have{border-style:solid;border-color:var(--et,var(--amber));color:var(--chalk);background:color-mix(in srgb,var(--et,var(--amber)) 18%,transparent)}
 .badge small{font-size:14px}

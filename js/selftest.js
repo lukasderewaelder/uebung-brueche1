@@ -45,9 +45,9 @@ function runSelfTests(){
   t('G05: 6/9 = □/3 → 2',validateTask(g05,{'r.n':'2'}).correct&&!validateTask(g05,{'r.n':'3'}).correct);
   const g05t={type:'G05',level:1,mode:'twostep',a:4,b:6,k:3,m:2};
   t('G05: 4/6 mit 3 erweitern, mit 2 kürzen',validateTask(g05t,{'r1.n':'12','r1.d':'18','r2.n':'6','r2.d':'9'}).correct);
-  t('Ränge: 12 Stufen, Schwellen steigen',RANKS.length===12&&RANKS.every((r,i)=>!i||r[0]>RANKS[i-1][0]));
-  t('Rang-Berechnung nach Punkten',rankState(0,false).i===0&&rankState(40,false).i===1&&rankState(3200,false).i===10);
-  t('Höchster Rang nur bei „alles perfekt“',rankState(99999,false).i===RANK_TOP-1&&rankState(99999,false).topLocked&&rankState(99999,true).i===RANK_TOP&&rankState(4499,true).i===RANK_TOP-1);
+  t('Ränge: 23 Stufen, Schwellen steigen, je Metall drei Stufen',RANKS.length===23&&RANKS.filter(r=>r[3]==='iridium').length===3&&RANKS.every((r,i)=>!i||r[0]>RANKS[i-1][0]));
+  t('Rang-Berechnung nach Punkten',rankState(0,false).i===0&&rankState(40,false).i===1&&rankState(3300,false).i===12&&rankState(3299,false).i===11);
+  t('Höchster Rang nur bei „alles perfekt“',rankState(99999,false).i===RANK_TOP-1&&rankState(99999,false).topLocked&&rankState(99999,true).i===RANK_TOP&&rankState(9999,true).i===RANK_TOP-1);
   /* Generatoren: viele Läufe, jede Variante muss lösbar und erzeugbar sein */
   let gen=0;
   for(const id of PRACTICE_ORDER)for(const lvl of [1,2])for(let i=0;i<150;i++){

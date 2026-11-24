@@ -1,14 +1,20 @@
 'use strict';
 /* =====================================================================
    Ränge, „alles perfekt“ und Einstellungen (Fenster hinter dem Knopf im Reiter „Ich“)
-   Rang 1–11 hängen an den Punkten (XP); der höchste Rang (Legende) braucht
+   Rang 1–22 hängen an den Punkten (XP); der höchste Rang (Kristall) braucht
    zusätzlich, dass wirklich alles perfekt geschafft ist.
    ===================================================================== */
 /* P17 neutrale Stufen als Medaillen (gleiche XP-Schwellen); Kristall nur mit „alles perfekt“. [XP, Name, Symbol, Stufe für die Farbe] */
+/* Wie in vielen Spielen: Metalle mit je drei Stufen (I bis III), dann Diamant; Kristall nur mit „alles perfekt“. */
 const RANKS=[
-  [0,'Bronze I','plakette','bronze'],[40,'Bronze II','plakette','bronze'],[100,'Bronze III','plakette','bronze'],[190,'Silber I','plakette','silber'],
-  [320,'Silber II','plakette','silber'],[500,'Silber III','plakette','silber'],[750,'Gold I','plakette','gold'],[1100,'Gold II','plakette','gold'],
-  [1600,'Gold III','plakette','gold'],[2300,'Platin','pokal','platin'],[3200,'Diamant','stern','diamant'],[4500,'Kristall','krone','kristall']
+  [0,'Bronze I','plakette','bronze'],[40,'Bronze II','plakette','bronze'],[100,'Bronze III','plakette','bronze'],
+  [190,'Silber I','plakette','silber'],[320,'Silber II','plakette','silber'],[500,'Silber III','plakette','silber'],
+  [750,'Gold I','plakette','gold'],[1100,'Gold II','plakette','gold'],[1600,'Gold III','plakette','gold'],
+  [2000,'Platin I','pokal','platin'],[2400,'Platin II','pokal','platin'],[2850,'Platin III','pokal','platin'],
+  [3300,'Palladium I','schluessel','palladium'],[3800,'Palladium II','schluessel','palladium'],[4350,'Palladium III','schluessel','palladium'],
+  [4900,'Rhodium I','gluehbirne','rhodium'],[5500,'Rhodium II','gluehbirne','rhodium'],[6150,'Rhodium III','gluehbirne','rhodium'],
+  [6800,'Iridium I','zahnrad','iridium'],[7500,'Iridium II','zahnrad','iridium'],[8250,'Iridium III','zahnrad','iridium'],
+  [9000,'Diamant','stern','diamant'],[10000,'Kristall','krone','kristall']
 ];
 const medalIcon=(r,cls)=>el('span',{class:'medal tier-'+(r[3]||'bronze')+(cls?' '+cls:'')},icon(r[2],cls==='big'?'big':''));
 const RANK_TOP=RANKS.length-1;
@@ -51,7 +57,7 @@ function rankHint(st){
 /* Neuen Rang einmalig melden (auch wenn er durch „alles perfekt“ erreicht wird) */
 function checkRankUp(){
   const i=rankState().i;
-  if(S.rankSeen==null){S.rankSeen=i;persist();return;}
+  if(S.rankSeen==null||S.rankV!==2){S.rankSeen=i;S.rankV=2;persist();return;} /* rankV 2: neue Rangliste mit 23 Stufen, kein falsches „Neue Stufe“ beim ersten Laden */
   if(i>S.rankSeen){S.rankSeen=i;persist();setTimeout(()=>rankUpCard(i),900);}
 }
 
