@@ -258,6 +258,7 @@ function noteFor(typeId,task){
   if(ids.some(id=>id==='M1'||id==='M2'||id==='M3'))out.push(el('p',{class:'labnote'},labLink('LAB')));
   if(ids.some(id=>id==='M17'||id==='M18'))out.push(el('p',{class:'labnote'},labLink('RLAB')));
   if(ids.some(id=>id==='M19'||id==='M20'))out.push(el('p',{class:'labnote'},labLink('HLAB')));
+  if(ids.some(id=>id==='M26'||id==='M27')&&typeof LABS!=='undefined'&&LABS.NLAB)out.push(el('p',{class:'labnote'},labLink('NLAB')));
   return out;
 }
 

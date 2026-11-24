@@ -514,7 +514,7 @@ TASKS.R05={area:'Rechnen',name:'Plus oder minus?',desc:'Erkenne die Rechenart, f
       }
       if(!any)return invalid('Schreibe mindestens eine Rechnung auf.');
       if(good<t.need)issues.push(`${good} von ${t.need} verschiedenen Rechnungen gefunden.`);
-      if(!issues.length)return right('Richtig! In ein Bild passt eine Plusaufgabe und es passen zwei Minusaufgaben.');
+      if(!issues.length)return right('Richtig! In ein Bild passt eine Additionsaufgabe und es passen zwei Subtraktionsaufgaben.');
       return (bad?wrong:soft)('zeile',issues.join(' '),marks);
     }
     if(t.kind==='fehler'){
@@ -546,7 +546,7 @@ TASKS.R05={area:'Rechnen',name:'Plus oder minus?',desc:'Erkenne die Rechenart, f
     if(t.kind==='art')return [line(t.plus?'Es wird zusammengefügt: plus.':'Es wird weggenommen: minus.'),...(addHasPic(t)?[addTaskFigure(t)]:[]),...addSolLines(t)];
     if(t.kind==='drei'){
       const T=t.p1+t.p2,b=t.b;
-      return [line('Zu einem Bild passt eine Plusaufgabe und es passen zwei Minusaufgaben.'),addFigure(b,t.p1,t.p2,{mode:'plus'}),
+      return [line('Zu einem Bild passt eine Additionsaufgabe und es passen zwei Subtraktionsaufgaben.'),addFigure(b,t.p1,t.p2,{mode:'plus'}),
         eq(frac(t.p1,b),'+',frac(t.p2,b),'=',frac(T,b)),eq(frac(T,b),'−',frac(t.p2,b),'=',frac(t.p1,b)),eq(frac(T,b),'−',frac(t.p1,b),'=',frac(t.p2,b))];
     }
     if(t.kind==='fehler'){

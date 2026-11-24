@@ -524,7 +524,7 @@ const INTRO={
     {h:'Plus oder minus?',
       say:['Erst überlegst du: Wird zusammengefügt oder weggenommen?','Wörter wie zusammen bedeuten plus. Wörter wie übrig bedeuten minus.','Dann rechnest du den Rechenweg.']},
     {h:'Ein Bild, drei Aufgaben',
-      say:['In dasselbe Bild passt eine Plusaufgabe.','Es passen auch zwei Minusaufgaben.','Finde sie alle.'],
+      say:['In dasselbe Bild passt eine Additionsaufgabe.','Es passen auch zwei Subtraktionsaufgaben.','Finde sie alle.'],
       add:{d:8,p1:3,p2:2,mode:'plus'},calc:[[[3,8],'+',[2,8],'=',[5,8]],[[5,8],'−',[2,8],'=',[3,8]],[[5,8],'−',[3,8],'=',[2,8]]]},
     {h:'Fehler finden',
       say:['Vier Rechnungen stehen da. Eine ist falsch.','Typische Fehler: Der Nenner wird mitgerechnet. Plus und minus werden verwechselt.','Oder ein Zähler stimmt nicht. Tippe die falsche Rechnung an.'],
@@ -645,7 +645,8 @@ function migrateIntro(st){
   });
   PATH.forEach(m=>{
     let seen;
-    if(isLab(m.id))seen=m.id==='LAB'?!!(st.lab&&(st.lab.done||(st.lab.did&&(st.lab.did.x||st.lab.did.d)))):!!(st.labR&&(st.labR.done||(st.labR.did&&(st.labR.did.plus||st.labR.did.minus))));
+    if(m.id==='NLAB')seen=!!(st.labV&&(st.labV.done||(st.labV.did&&(st.labV.did.mul||st.labV.did.div))));
+    else if(isLab(m.id))seen=m.id==='LAB'?!!(st.lab&&(st.lab.done||(st.lab.did&&(st.lab.did.x||st.lab.did.d)))):!!(st.labR&&(st.labR.done||(st.labR.did&&(st.labR.did.plus||st.labR.did.minus))));
     else seen=worked(m.id)||(m.id==='QA'&&!!st.final)||(m.id==='ZA'&&!!(st.mq&&st.mq.zahlenstrahl&&st.mq.zahlenstrahl.final));
     if(seen)st.intro[m.id]=true;
   });
@@ -865,6 +866,7 @@ function renderIntro(id){
       s.probe&&typeof speechBubble==='function'?speechBubble('Ida','Fehler sind erlaubt!','think'):null, /* P21: Sprechblase statt Kleingedrucktem */
       known?el('p',{class:'introknown'},icon('haken'),'Das konntest du schon im Eingangstest.'):null,
       h,
+      s.bubble&&typeof speechBubble==='function'?speechBubble(s.bubble[0],s.bubble[1],s.bubble[2],true):null, /* „Paul sagt: …“ vor dem Text */
       el('div',{class:'introtxt'},s.say.map(t=>el('p',null,introRich(t)))),
       s.lab?el('div',{class:'introstage'},labFigure({mode:'strip',base:s.lab.base.slice(),cur:s.lab.cur.slice(),last:{op:s.lab.op,k:s.lab.k}})):null,
       s.fig?introFigNode(s.fig):null,
@@ -874,6 +876,7 @@ function renderIntro(id){
       s.trick?el('div',{class:'introstage'},trickRow(s.trick)):null,
       s.strip?introStripNode(s.strip):null,
       s.whole?el('div',{class:'introstage'},hnWholes()):null,
+      s.vt&&typeof vtIntroNode==='function'?vtIntroNode(s.vt):null,
       s.nline?introLineNode(s.nline):null,
       s.nltry?introLineTry(s.nltry):null,
       s.calc?introCalcNode(s.calc):null,

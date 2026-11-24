@@ -148,15 +148,18 @@ const GLOSSAR={
   'gemeinsamer Nenner':{txt:'Ein Nenner, der zu beiden Brüchen passt.'},
   'gleichnamig':{txt:'Brüche mit demselben Nenner.'},
   'ungleichnamig':{txt:'Brüche mit verschiedenen Nennern.'},
-  'Hauptnenner':{txt:'Der kleinste gemeinsame Nenner von zwei Brüchen.'}
+  'Hauptnenner':{txt:'Der kleinste gemeinsame Nenner von zwei Brüchen.'},
+  'vervielfachen':{txt:'Etwas mehrmals nehmen. Beim Bruch nimmst du den Zähler mal die Zahl.',fig:[2,5]},
+  'das …-Fache':{txt:'Das 3-Fache ist dreimal so viel. Das 15-Fache ist fünfzehnmal so viel.'}
 };
 const GLOSS_FORMS={'zähler':'Zähler','nenner':'Nenner','gemischte zahl':'gemischte Zahl','gemischten zahl':'gemischte Zahl','erweitern':'erweitern','erweiterst':'erweitern',
   'kürzen':'kürzen','kürzt':'kürzen','gleichwertig':'gleichwertig','zahlenstrahl':'Zahlenstrahl','einteilung':'Einteilung','gemeinsamer nenner':'gemeinsamer Nenner',
-  'gemeinsamen nenner':'gemeinsamer Nenner','gleichnamig':'gleichnamig','gleichnamige':'gleichnamig','ungleichnamig':'ungleichnamig','ungleichnamige':'ungleichnamig','hauptnenner':'Hauptnenner'};
+  'gemeinsamen nenner':'gemeinsamer Nenner','gleichnamig':'gleichnamig','gleichnamige':'gleichnamig','ungleichnamig':'ungleichnamig','ungleichnamige':'ungleichnamig','hauptnenner':'Hauptnenner','vervielfachen':'vervielfachen','vervielfachst':'vervielfachen','vervielfacht':'vervielfachen',
+  'das …-fache':'das …-Fache','3-fache':'das …-Fache','das 3-fache':'das …-Fache'};
 const glossKey=(w)=>GLOSS_FORMS[String(w).trim().toLowerCase()]||null;
-const WORDS={F:['Zähler','Nenner','gemischte Zahl'],E:['erweitern','kürzen','gleichwertig'],Z:['Zahlenstrahl','Einteilung'],W:['gemeinsamer Nenner'],R:['gleichnamig'],H:['ungleichnamig','Hauptnenner']};
+const WORDS={F:['Zähler','Nenner','gemischte Zahl'],E:['erweitern','kürzen','gleichwertig'],Z:['Zahlenstrahl','Einteilung'],W:['gemeinsamer Nenner'],R:['gleichnamig'],H:['ungleichnamig','Hauptnenner'],V:['vervielfachen','das …-Fache']};
 const ALLTAG={'Zähler':'die gefärbten Teile','Nenner':'alle Teile','gemischte Zahl':'mehr als ein Ganzes','erweitern':'feiner einteilen','kürzen':'gröber einteilen','gleichwertig':'gleich viel',
-  'Zahlenstrahl':'Streifen am Lineal','Einteilung':'Striche zwischen zwei Zahlen','gemeinsamer Nenner':'gleich einteilen','gleichnamig':'gleich eingeteilt','ungleichnamig':'verschieden eingeteilt','Hauptnenner':'die kleinste gemeinsame Einteilung'};
+  'Zahlenstrahl':'Streifen am Lineal','Einteilung':'Striche zwischen zwei Zahlen','gemeinsamer Nenner':'gleich einteilen','gleichnamig':'gleich eingeteilt','ungleichnamig':'verschieden eingeteilt','Hauptnenner':'die kleinste gemeinsame Einteilung','vervielfachen':'mehrmals nehmen','das …-Fache':'so oft so viel'};
 function openGloss(key){
   const g=GLOSSAR[key];if(!g)return;
   const m=modal([el('h2',null,key),el('p',null,g.txt),ALLTAG[key]?el('p',{class:'glalltag'},'Im Alltag: '+ALLTAG[key]+'.'):null,

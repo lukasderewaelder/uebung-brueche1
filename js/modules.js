@@ -8,7 +8,7 @@
    aus anderen Etappen (Verweise, z. B. G02 für Vergleichen). must = Kern oder Abschlusscheck (für ältere Teile der App).
    status 'aktiv': erscheint in Lernen und Wiederholen. status 'geplant': nur ein Hinweis „Bald“ ohne Link.
    quickcheck/qid: Eingangstest (QCHK); finalId: Abschlusscheck (finalText); recommends: Liste von Etappen, die man vorher machen sollte
-   (nur Empfehlung, keine Sperre; P10 zwei Stränge: nach E entweder Ordnen Z → W oder Rechnen R → H).
+   (nur Empfehlung, keine Sperre; P10 zwei Stränge: nach E entweder Ordnen Z → W oder Rechnen R → H → V).
    rank: Aufgaben und Lernpfad der Etappe zählen für „alles perfekt“ (höchste Stufe).
    ===================================================================== */
 const needOf=(size)=>Math.ceil(size*4/5); /* 80 % */
@@ -77,9 +77,16 @@ const MODULES=[
     basisRefs:['G02','R02'],
     texts:{Entdecken:'Labor: gemeinsame Teilung ausprobieren',Verstehen:'Am Bild: zusammenfügen, wegnehmen, ergänzen',Üben:'Hauptnenner finden, plus und minus rechnen',Anwenden:'Erweitern oder nicht? Fehler, das gleiche Ganze',
       Knobeln:'Rätsel, Muster, magisches Quadrat, Schmetterlingstrick',Abschlusscheck:'Eingangstest und Abschlusscheck'}}),
+  etappe({id:'vervielfachen',letter:'V',name:'Brüche vervielfachen und teilen',desc:'Brüche und gemischte Zahlen mal und durch eine natürliche Zahl.',icon:'mal',rank:true,qid:'NQ',finalId:'NA',recommends:['veraendern'],
+    finalText:'Du kannst Brüche vervielfachen und teilen. Stark!',
+    st:{Entdecken:[{id:'NLAB',title:'Bruch-Maschine',desc:'Brüche vervielfachen und teilen ausprobieren.'}],Verstehen:['N01','N02'],
+      Üben:['N03','N04',{id:'N05',note:'Dafür hilft das Umwandeln gemischter Zahlen.'}],Anwenden:['N06'],Knobeln:['N07','N08','N09','N10']},
+    basisRefs:['F05','G02'],
+    texts:{Entdecken:'Labor: die Bruch-Maschine',Verstehen:'Am Bild: mehrmals nehmen, gerecht verteilen',Üben:'Vervielfachen und teilen mit der Regel, gemischte Zahlen',Anwenden:'Sachaufgaben: mehr oder weniger?',
+      Knobeln:'Fehler, geschickt rechnen, Rätsel, Torten',Abschlusscheck:'Eingangstest und Abschlusscheck'}}),
   {id:'dezimal',letter:'D',name:'Brüche und Dezimalzahlen',desc:'Brüche als Dezimalzahlen schreiben und umgekehrt.',icon:'wechsel',status:'geplant'},
   {id:'gemischt',name:'Gemischte Zahlen rechnen',desc:'Ganze und Bruchteil getrennt addieren und subtrahieren.',icon:'plus',status:'geplant'},
-  {id:'rechnen',name:'Brüche multiplizieren und dividieren',desc:'Malnehmen und teilen mit Brüchen.',icon:'winkel',status:'geplant'}
+  {id:'rechnen',name:'Bruch mal Bruch, Bruch durch Bruch',desc:'Brüche miteinander multiplizieren und dividieren.',icon:'winkel',status:'geplant'}
 ];
 
 const activeModules=()=>MODULES.filter(m=>m.status==='aktiv');

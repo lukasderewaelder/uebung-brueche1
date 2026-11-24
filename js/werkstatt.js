@@ -12,22 +12,24 @@ const TEAM={
   Paul:{role:'prüft und kontrolliert',shirt:'var(--amber-fill)',hair:'curl'}
 };
 /* Figur als Bild (img/team/<name>-<pose>.webp, freigestellt). Posen: wave, think, cheer. size = Breite des Rahmens, die Figur ist höher als breit. */
+/* Posen „point“ (erklären), „oops“ (Fehler), „share“ (teilen): bis die Bilder da sind, stehen die drei vorhandenen dafür */
+const POSE_SUB={point:'wave',oops:'think',share:'cheer'};
 function teamAvatar(name,size,pose){
-  const T=TEAM[name]?name:'Ida',s=size||44,p=['wave','think','cheer'].includes(pose)?pose:'wave';
+  const T=TEAM[name]?name:'Ida',s=size||44,q=POSE_SUB[pose]||pose,p=['wave','think','cheer'].includes(q)?q:'wave';
   return el('img',{class:'avatar',src:'img/team/'+T.toLowerCase()+'-'+p+'.webp',alt:'',width:Math.round(s*1.3),height:Math.round(s*1.3*184/139),loading:'lazy',decoding:'async','data-name':name});
 }
 
 /* P21 Sprechblase einer Figur: höchstens eine gleichzeitig, wegklickbar */
-function speechBubble(name,text,pose){
+function speechBubble(name,text,pose,says){
   document.querySelectorAll('.bubble').forEach(b=>b.remove());
   const b=el('div',{class:'bubble',role:'note'},el('span',{class:'bav','aria-hidden':'true'},teamAvatar(name,30,pose)),
-    el('p',{class:'btx'},el('b',null,name+': '),text),
+    el('p',{class:'btx'},el('b',null,name+(says?' sagt: ':': ')),text),
     el('button',{type:'button',class:'bclose','aria-label':'Sprechblase schließen',onclick:()=>b.remove()},'×'));
   return b;
 }
 
 /* ---------- P25 Kennfarben je Etappe und Animationen ---------- */
-const ET_COLOR={F:'F',E:'E',Z:'Z',W:'W',R:'R',H:'H'};
+const ET_COLOR={F:'F',E:'E',Z:'Z',W:'W',R:'R',H:'H',V:'V'};
 const etOf=(mod)=>mod&&mod.letter&&ET_COLOR[mod.letter]?mod.letter:null;
 const animOn=()=>!(S.ui&&S.ui.anim===false)&&!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 function animOptions(){
@@ -46,13 +48,14 @@ function badgesOf(mod){
     if(!ids.length)return;
     out.push({mod:mod.id,grp:g,plus:g==='Knobeln',label:(g==='Knobeln'?'Plus-Abzeichen':g)+' '+mod.letter,have:ids.every(stationDone),n:ids.filter(stationDone).length,of:ids.length});
   });
+  if(typeof mod.badges==='function')out.push(...mod.badges()); /* Abzeichen für Lernhandlungen (Etappe V) */
   return out;
 }
 const allBadges=()=>activeModules().reduce((a,m)=>a.concat(badgesOf(m)),[]);
 function badgeNode(b,small){
   const m=moduleById(b.mod);
   return el('span',{class:'badge'+(b.have?' have':'')+(b.plus?' plus':'')+(small?' sm':''),'data-et':etOf(m),role:'img','aria-label':b.label+(b.have?': geschafft':': '+b.n+' von '+b.of)},
-    icon(b.plus?'zirkel':TAKT[b.grp].icon),small?null:el('small',null,b.label));
+    icon(b.icon||(b.plus?'zirkel':TAKT[b.grp].icon)),small?null:el('small',null,b.label));
 }
 /* neue Abzeichen nach einer Runde melden (einmal) */
 function checkBadges(){
@@ -63,9 +66,9 @@ function checkBadges(){
   return fresh;
 }
 function badgeCard(b){
-  const fig=['Ida','Juna','Paul','Malik'][BADGE_GROUPS.indexOf(b.grp)%4];
+  const fig=b.fig||['Ida','Juna','Paul','Malik'][Math.max(0,BADGE_GROUPS.indexOf(b.grp))%4];
   const m=modal([el('div',{class:'badgebig'+(animOn()?' pop':'')},badgeNode(b)),el('h2',null,'Neues Abzeichen'),el('p',{class:'rankname'},b.label),
-    speechBubble(fig,b.plus?'Stark geknobelt!':'Diese Gruppe hast du geschafft!','cheer'),
+    speechBubble(fig,b.say||(b.plus?'Stark geknobelt!':'Diese Gruppe hast du geschafft!'),'cheer'),
     el('button',{type:'button',class:'btn primary',onclick:()=>m.remove()},'Weiter')]);
 }
 
@@ -89,7 +92,7 @@ function weekCard(){
 
 /* ---------- P2 Lernlandkarte (Reiter „Lernen“) ---------- */
 /* Reihenfolge und Verzweigung: F → E → zwei Stränge (Ordnen: Z → W, Rechnen: R → H) */
-const MAP_LAYOUT={trunk:['verstehen','veraendern'],strands:[{name:'Brüche ordnen',sub:'Zahlenstrahl und Vergleichen',icon:'lineal',et:'Z',ids:['zahlenstrahl','vergleichen']},{name:'Brüche rechnen',sub:'Plus und Minus',icon:'plusminus',et:'R',ids:['addsub','addsub2']}]}; /* zwei Wege nach Etappe E */
+const MAP_LAYOUT={trunk:['verstehen','veraendern'],strands:[{name:'Brüche ordnen',sub:'Zahlenstrahl und Vergleichen',icon:'lineal',et:'Z',ids:['zahlenstrahl','vergleichen']},{name:'Brüche rechnen',sub:'Plus, Minus, mal und durch',icon:'plusminus',et:'R',ids:['addsub','addsub2','vervielfachen']}]}; /* zwei Wege nach Etappe E */
 /* die Etappe, bei der es weitergeht: zuerst der Stamm, dann der Strang mit dem meisten Fortschritt */
 function focusModule(){
   const act=activeModules(),open=(m)=>m&&(lernenZustand(m)==='gate'||pfadInfo(m).go1);

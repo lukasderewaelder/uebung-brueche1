@@ -421,7 +421,7 @@ const tipsDrei=(t)=>{
   return [
     ['Zähle die Teile im ersten und im zweiten Muster.'],
     [`${later}Das erste Muster hat ${t.p1} Teile, das zweite ${t.p2}. Das Ganze hat ${t.b} Teile.`],
-    [`Zusammen sind es ${t.p1+t.p2} Teile. Eine Plusaufgabe passt und zwei Minusaufgaben auch.`]];
+    [`Zusammen sind es ${t.p1+t.p2} Teile. Eine Additionsaufgabe passt und zwei Subtraktionsaufgaben auch.`]];
 };
 /* R01 Addieren am Bild und R03 Subtrahieren am Bild */
 const tipsBild=(t)=>{
@@ -557,7 +557,7 @@ TIPS.H07=(t)=>{
   if(t.kind==='hausaufgaben')return [['Rechne jede Rechnung mit dem Hauptnenner nach.'],[`Prüfe Rechnung ${'ABCD'[t.wrong]}.`],['Wurden Zähler und Nenner einzeln gerechnet? Wurden beide Brüche erweitert?']];
   if(t.kind==='ganzes')return [['Worauf beziehen sich die beiden Anteile?'],['Der erste Anteil gehört zu einem Ganzen. Und der zweite?'],['Verschiedene Ganze kannst du nicht zusammenzählen. Auch die Größen müssen passen.']];
   if(t.kind==='schlange'){const o=t.ops[0];return [['Rechne ein Kästchen nach dem anderen. Kürze jedes Ergebnis.'],[`Das erste Kästchen: ${tfx(t.start)} ${hnSign(o.plus)} ${tfx(o.f)}. Welcher Nenner passt?`],[`Das erste Kästchen ist ${tfx(t.vals[0])}.`]];}
-  return [['Lies die beiden Anteile am Bild ab.'],[`Die Anteile sind ${tf(t.a,t.b)} und ${tf(t.c,t.d)}.`],['Eine Plusaufgabe und zwei Minusaufgaben passen. Die Summe ist der Anfang der Minusaufgaben.']];
+  return [['Lies die beiden Anteile am Bild ab.'],[`Die Anteile sind ${tf(t.a,t.b)} und ${tf(t.c,t.d)}.`],['Eine Additionsaufgabe und zwei Subtraktionsaufgaben passen. Die Summe steht am Anfang der Subtraktion.']];
 };
 TIPS.H08=(t)=>[[t.mode==='minus'?'Gesucht ist, was weggenommen wird. Rechne Anfang minus Rest.':'Rechne rückwärts: Die Umkehr von plus ist minus, von minus ist plus.'],
   [`Rechne ${tfx(t.terms[0])} ${t.signs[0]} ${tfx(t.terms[1])}.`],[`Der Hauptnenner ist ${hnSmallest(t.terms)}. Prüfe zuletzt das Feld **gekürzt**.`]];

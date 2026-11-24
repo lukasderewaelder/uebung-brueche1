@@ -7,7 +7,7 @@
      Was der Eingangstest als „sitzt“ markiert, steht als Markierung in der Liste; die Erklärung bietet dann „Kenne ich schon“.
    · Die frühere „Meine Übersicht“ (und die Wahl „Wie möchtest du lernen?“) gibt es nicht mehr.
    ===================================================================== */
-const PATH_ACC={FLAB:'mix',FQ:'ok',FA:'ok',LAB:'mix',RLAB:'mix',HLAB:'mix',Q00:'ok',ZQ:'ok',QA:'ok',ZA:'ok',WQ:'ok',WA:'ok',RQ:'ok',RA:'ok',HQ:'ok',HA:'ok'};
+const PATH_ACC={FLAB:'mix',FQ:'ok',FA:'ok',LAB:'mix',RLAB:'mix',HLAB:'mix',Q00:'ok',ZQ:'ok',QA:'ok',ZA:'ok',WQ:'ok',WA:'ok',RQ:'ok',RA:'ok',HQ:'ok',HA:'ok',NLAB:'mix',NQ:'ok',NA:'ok'};
 /* Thema, zu dem ein Abschlusscheck (finalId) gehört */
 const finalModOf=(id)=>activeModules().find(m=>m.finalId===id)||null;
 /* Hinweis „Erst …“ (modules.js recommends, P10 Liste der Vorgänger): die erste empfohlene Etappe, die noch nicht abgeschlossen ist – keine Sperre */

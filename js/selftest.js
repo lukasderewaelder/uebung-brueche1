@@ -480,7 +480,28 @@ function runSelfTests(){
       for(let x=1;x<=200;x++)if(hits(x))return true;
       return false;
     };
+    /* Etappe V: Rechenketten mit Bruch · Zahl, Bruch : Zahl, gemischten Zahlen und Zahlen (Punkt vor Strich); ein „?“ muss ganzzahlig lösbar sein */
+    const isMulLine=(l)=>l.some(x=>x==='·'||x===':')&&l.some(x=>Array.isArray(x)||(x&&x.m))&&!l.some(x=>x==='<'||x==='>');
+    const mulLine=(l)=>{
+      const segs=[[]];l.forEach(x=>{if(x==='=')segs.push([]);else segs[segs.length-1].push(x);});
+      if(segs.length<2)return false;
+      const num=(x,sub)=>x==='?'?[sub,1]:typeof x==='number'?[x,1]:x&&x.m?[x.m[0]*x.m[2]+x.m[1],x.m[2]]:Array.isArray(x)?[x[0],x[1]]:null;
+      const ev=(s,sub)=>{
+        const vals=[],ops=[];
+        for(let i=0;i<s.length;i++){if(i%2===0){const v=num(s[i],sub);if(!v)return null;vals.push(v);}else ops.push(s[i]);}
+        if(vals.length!==ops.length+1)return null;
+        const v2=[vals[0]],o2=[];
+        ops.forEach((o,i)=>{const b=vals[i+1];if(o==='·'||o===':'){const a=v2.pop();v2.push(o==='·'?[a[0]*b[0],a[1]*b[1]]:[a[0]*b[1],a[1]*b[0]]);}else{o2.push(o);v2.push(b);}});
+        let v=v2[0];o2.forEach((o,i)=>{const b=v2[i+1];v=o==='+'?addFrac(v[0],v[1],b[0],b[1]):subFrac(v[0],v[1],b[0],b[1]);});
+        return v;
+      };
+      const hits=(sub)=>{const v=segs.map(s=>ev(s,sub));return v.every(x=>x&&x[1]!==0)&&v.every(x=>equivalent(v[0][0],v[0][1],x[0],x[1]));};
+      if(!l.includes('?'))return hits(0);
+      for(let x=1;x<=200;x++)if(hits(x))return true;
+      return false;
+    };
     const isOp=(x)=>x==='+'||x==='·'||x===':',calcOK=(l)=>{
+      if(isMulLine(l))return mulLine(l);
       if(isArithLine(l))return arithLine(l);
       if(l.some(x=>x&&x.m)){ /* gemischte Zahl: Bruch = Ganze + Rest = {m} */
         const [w,n,d]=l.find(x=>x&&x.m).m,f2=l.filter(Array.isArray);
@@ -512,7 +533,8 @@ function runSelfTests(){
     steps.forEach(s=>(s.calc||[]).forEach(l=>{
       calcs++;
       if(l.wrong){
-        if(isArithLine(l.t)){if(arithLine(l.t))wrongBad++;} /* falsche Rechnung: das Ergebnis darf nicht stimmen */
+        if(isMulLine(l.t)){if(mulLine(l.t))wrongBad++;}
+        else if(isArithLine(l.t)){if(arithLine(l.t))wrongBad++;} /* falsche Rechnung: das Ergebnis darf nicht stimmen */
         else{const [x,,y]=l.t;if(equivalent(x[0],x[1],y[0],y[1]))wrongBad++;}
       }
       else if(!calcOK(l))calcBad++;
@@ -822,7 +844,7 @@ function runSelfTests(){
   t('Registry: jede Aufgabe, Gruppe und jedes Bauteil eines aktiven Themas gibt es',activeModules().every(m=>(m.practice||[]).every(id=>TASKS[id])&&Object.values(m.groups||{}).every(g=>g.ids.every(id=>isLab(id)||TASKS[id]))&&(m.path||[]).every(p=>isLab(p.id)||TASKS[p.id])));
   t('Registry: geplante Themen haben keine Aufgaben, keine Gruppen, keinen Lernpfad',plannedModules().length>0&&plannedModules().every(m=>!m.practice&&!m.groups&&!m.path));
   t('Registry: Themen-IDs und Aufgaben-IDs sind eindeutig',new Set(MODULES.map(m=>m.id)).size===MODULES.length&&new Set(PRACTICE_ORDER).size===PRACTICE_ORDER.length&&new Set(PATH.map(p=>p.id)).size===PATH.length);
-  t('Registry: Rang zählt „Erweitern und Kürzen“ (16 Übungen, 15 Stationen; D01–D03 ziehen ins geplante Thema Dezimalzahlen)',rankPractice().length===16&&rankPath().length===15&&moduleOf('G02').id==='veraendern'&&!rankPractice().includes('D01'));
+  t('Registry: Rang zählt „Erweitern und Kürzen“ und „Vervielfachen und Teilen“ (16 + 12 Übungen, 15 + 12 Stationen; D01–D03 ziehen ins geplante Thema Dezimalzahlen)',rankPractice().length===28&&rankPath().length===27&&rankPractice().includes('N10')&&moduleOf('G02').id==='veraendern'&&!rankPractice().includes('D01'));
   /* Navigation: Lernen (Themen) → Lernpfad des Themas → Bauteil, und zurück */
   {
     const keepV=S.view;
@@ -1188,7 +1210,7 @@ function runSelfTests(){
       const f=nodes[0];if(f.classList.contains('ex')||/^Beispiel/.test(f.textContent))firstOK++;
       nodes.filter(n=>n.tagName==='P'||n.classList.contains('rule')).forEach(n=>n.textContent.split(/[.!?]\s+/).forEach(s=>{longest=Math.max(longest,words(s));}));
     });
-    t('Merkzettel: alle 25 (M1–M25) bauen sich, beginnen mit dem Beispiel, Sätze höchstens 14 Wörter (längster: '+longest+')',ids.length===25&&bad.length===0&&firstOK===25&&longest<=14);
+    t('Merkzettel: alle 28 (M1–M28) bauen sich, beginnen mit dem Beispiel, Sätze höchstens 14 Wörter (längster: '+longest+')',ids.length===28&&bad.length===0&&firstOK===28&&longest<=14);
     const txt=(id)=>NOTES[id].build([]).map(n=>n.textContent).join(' ');
     t('Merkzettel: Fachwörter kommen nach dem Beispiel mit Erklärung (Erweiterungszahl, Kürzungszahl, Quersumme, Dezimalbruch, gemischte Zahl, kgV)',txt('M2').includes('Erweiterungszahl. Sie ist mindestens 2')&&txt('M3').includes('Kürzungszahl. Sie ist mindestens 2')&&txt('M7').includes('Quersumme bekommst du, wenn du alle Ziffern addierst')&&txt('M4').includes('heißt Dezimalbruch')&&txt('M6').includes('Natürliche Zahlen sind 1, 2, 3')&&txt('M10').includes('kleinstes gemeinsames Vielfaches (kgV)'));
     /* Schrift: Menü und Rang-Chip mindestens 16 px */
@@ -2365,6 +2387,79 @@ function runSelfTests(){
       S.passed={'G01-L1':true};const tk=TASKS.WH.gen(1,RNG,{id:'G01'});
       t('P14 Wiederholung heute: 5 Aufgaben nur aus geschafften Stationen, höchstens 2 je Station, Station mit Fehlern immer dabei; ohne geschaffte Station ein Hinweis; Aufgaben sind echte Aufgaben der Station',okPlan&&g02&&empty&&tk.type==='G01'&&validateTask(tk,{}).correct===false);
     }finally{Object.assign(S,kp);persist();}
+  }
+  /* Etappe V „Brüche vervielfachen und teilen“: jede Art beider Niveaus lösbar, leere Antwort abgelehnt, Tipps, Ansicht, Lösung, Bildgrenzen */
+  {
+    const resD=(t)=>{const r=vtRes(t),g=simplify(r[0],r[1]),o={'r.n':String(r[0]),'r.d':String(r[1])};if(g[0]!==r[0]){o['k.n']=String(g[0]);o['k.d']=String(g[1]);}else o.kn=true;return o;};
+    const valD=(f)=>({'r.n':String(f[0]),'r.d':String(f[1])});
+    const seq=(n)=>Array.from({length:n},(_,i)=>i);
+    const okV=(t)=>{
+      const k=t.kind,r=vtRes(t),A=t.a*t.n;
+      switch(t.type){
+        case 'N01':return k==='legen'?Object.assign({cp:t.n,s1:true},valD(r)):k==='zuordnen'?{add:'A',mul:'A'}:k==='ergebnis'?{c:t.answer}:k==='groesser1'?{yn:A>t.b?'ja':'nein'}
+          :k==='strahl'?Object.assign({nl:{pts:[A]}},valD(r)):k==='ueber1'?(()=>{const g=simplify(r[0],r[1]);return Object.assign(valD(r),{'g.w':String(Math.floor(g[0]/g[1])),'g.n':String(g[0]%g[1]),'g.d':String(g[1])});})()
+          :Object.assign({cs:seq(A)},valD(r));
+        case 'N02':return k==='schneiden'?Object.assign({cut:t.n,sel:seq(t.a),s1:true},valD(r)):k==='gruppen'?Object.assign({grp:seq(t.a).map(i=>i%t.n+1),s1:true},valD([t.a/t.n,t.b])):k==='strahl'?Object.assign({nl:{pts:[t.a]}},valD(r))
+          :k==='ordnen'?{ord:['d3','d2','f','m2']}:{c:t.answer};
+        case 'N03':return k==='unterschied'?{c:t.asks}:k==='groesser1'?{yn:A>t.b?'ja':'nein'}:Object.assign(t.level===1?{m1:String(t.a),m2:String(t.n),m3:String(t.b)}:{},resD(t));
+        case 'N04':return k==='unterschied'?{c:t.asks}:k==='mehrWeniger'?{yn:vtCmpWord(t)?'ja':'nein'}:Object.assign(t.level===1&&k==='rechnen'?{m1:String(t.a),m2:String(t.b),m3:String(t.n)}:{},resD(t));
+        case 'N05':return k==='bild'?valD(r):resD(t);
+        case 'N06':return k==='schaetzen'?Object.assign({yn:A>t.b?'ja':'nein'},valD(r)):Object.assign({op:t.ops.find(o=>o.op===t.op&&o.n===t.n).id},valD(r));
+        case 'N07':return k==='welche'?{c:t.answer}:Object.assign({c:t.err},valD(r));
+        case 'N08':{const g=simplify(r[0],r[1]);return k==='ganz'?{yn:g[1]===1?'ja':'nein'}:valD(g);}
+        case 'N09':return k==='natuerlich'?{pick:t.list.filter(x=>(t.a*x)%t.b===0)}:k==='sonder'?(t.n===0?{z:'0'}:valD(r)):{x:String(t.blank==='a'?t.a:t.n)};
+        default:return k==='verteilen'?{c:t.answer}:Object.assign({cs:seq(A)},valD(r));
+      }
+    };
+    const vBad=[];let vN=0;
+    ['N01','N02','N03','N04','N05','N06','N07','N08','N09','N10'].forEach(id=>[1,2].forEach(lvl=>TASKS[id].layoutKinds(lvl).forEach(kind=>{for(let i=0;i<25;i++){
+      const tk=TASKS[id].gen(lvl,RNG,{kind,step:i%5,red:i%2===0});vN++;const tag=id+'-L'+lvl+' '+kind;
+      try{
+        const ans=okV(tk),v=validateTask(tk,ans);
+        if(!v.correct)vBad.push(tag+' richtig abgelehnt: '+v.feedback+' '+JSON.stringify(tk).slice(0,120));
+        if(validateTask(tk,{}).correct)vBad.push(tag+' leer angenommen');
+        if(tk.op&&tk.n>=1&&vtCollides(tk)&&!['sonder','unterschied'].includes(kind))vBad.push(tag+' Fehlermuster gleich Lösung');
+        if(['legen','zuordnen','ergebnis','schneiden','gruppen','strahl','ueber1','torte'].includes(kind)&&(id==='N01'||id==='N02')){
+          const cells=tk.op==='mul'?Math.max(1,Math.ceil(tk.a*tk.n/tk.b))*tk.b:tk.b*tk.n;
+          if(tk.b>6||cells>VT_MAXCELLS)vBad.push(tag+' Bild zu groß ('+tk.b+', '+cells+')');
+        }
+        if(i<3){const h=TASKS[id].hints(tk);if(h.length!==3||/undefined|NaN/.test(h.flat().join(' ')))vBad.push(tag+' Tipps');
+          const host=el('div');mountTask(host,newState(tk),{save(){},done(){}});if(!host.querySelector('.stage')||!buildWorkedSolution(tk).length)vBad.push(tag+' Ansicht');}
+      }catch(e){vBad.push(tag+' '+e.message);}
+    }})));
+    t('Etappe V: '+vN+' Aufgaben N01–N10 beider Niveaus – richtige Antwort angenommen, leere abgelehnt, kein Fehlermuster mit dem Wert der Lösung, Bilder höchstens Nenner 6 und 12 Felder, Tipps, Ansicht, Lösung',vBad.length===0||(console.log(vBad.slice(0,8)),false));
+    /* Fehlerliste (Konzept Kap. 4): Erkennung über den Wert */
+    const m={op:'mul',w:0,a:3,b:5,n:4},dv={op:'div',w:0,a:15,b:18,n:3},gm={op:'mul',w:3,a:1,b:5,n:4},gd={op:'div',w:3,a:1,b:2,n:3};
+    t('Etappe V Fehlerliste: erweitert, kleiner, addiert, Rechenfehler; gekürzt, größer, zweimal geteilt, Nenner plus; Ganze allein, Bruchteil allein, nur die Ganzen geteilt',
+      vtDiagnose(m,12,20)==='mulGleich'&&vtDiagnose(m,3,20)==='mulKleiner'&&vtDiagnose(m,7,5)==='mulAddiert'&&vtDiagnose(m,13,5)==='rechenfehler'
+      &&vtDiagnose(dv,5,6)==='divGleich'&&vtDiagnose(dv,45,18)==='divGroesser'&&vtDiagnose({op:'div',w:0,a:3,b:4,n:3},1,12)==='divDoppelt'&&vtDiagnose({op:'div',w:0,a:3,b:5,n:2},3,7)==='divPlus'
+      &&vtDiagnose({op:'div',w:0,a:4,b:6,n:2},4,3)==='divGroesser'&&vtDiagnose(gm,61,5)==='gemNurGanze'&&vtDiagnose(gm,19,5)==='gemNurBruch'&&vtDiagnose(gd,3,2)==='gemDivTeil'&&vtDiagnose(gd,1,2)==='gemDivTeil'
+      &&vtCollides({op:'mul',w:0,a:2,b:7,n:2})&&!vtCollides({op:'mul',w:0,a:2,b:7,n:3}));
+    /* Zwei Wege beim Teilen und Wertung */
+    const z={type:'N04',level:2,kind:'zaehler',op:'div',w:0,a:6,b:7,n:3},d1=validateTask(z,{'r.n':'2','r.d':'7',kn:true}),d2=validateTask(z,{'r.n':'6','r.d':'21','k.n':'2','k.d':'7'});
+    const s6={type:'N06',level:1,kind:'sache',op:'mul',w:0,a:3,b:4,n:6,story:'sticker',who:['A','B','C'],ops:[{id:'A',op:'mul',n:6},{id:'B',op:'div',n:6},{id:'C',op:'mul',n:7},{id:'D',op:'add',n:6}]};
+    const sOk=validateTask(s6,{op:'A','r.n':'18','r.d':'4'}),sMix=validateTask(s6,{op:'A','g.w':'4','g.n':'1','g.d':'2'}),sOp=validateTask(s6,{op:'B','r.n':'1','r.d':'8'});
+    t('Etappe V: Teilen auf beiden Wegen richtig (Zähler teilen oder Nenner mal), Sachaufgabe ungekürzt und als gemischte Zahl richtig (mit Hinweis), falsche Rechenart erkannt',
+      d1.correct&&d2.correct&&sOk.correct&&/kürzen/.test(sOk.feedback)&&sMix.correct&&!sOp.correct&&sOp.errorCode==='opFalsch');
+    /* Eingangstest, Abschlusscheck, Etappe, Labor */
+    const nq=[];for(let i=0;i<80;i++){const tk=TASKS.NQ.gen(1,RNG,{skill:NQ_SKILLS[i%5],occ:Math.floor(i/5)%4});const other=tk.answer==='ja'?'nein':tk.answer==='nein'?'ja':(tk.opts.find(o=>o.id!==tk.answer)||{}).id;
+      nq.push(validateTask(tk,{ans:tk.answer}).correct&&!validateTask(tk,{ans:other}).correct&&(!tk.opts||new Set(tk.opts.map(o=>o.txt)).size===tk.opts.length));}
+    const vm=moduleById('vervielfachen');
+    t('Etappe V: Eingangstest NQ (10 Fragen, 5 Fähigkeiten, jede Antwort eindeutig), Abschlusscheck NA (10 + 5), Pfad V1–V10 mit Bruch-Maschine, zählt für Kristall, im Weg „Brüche rechnen“ nach H, Fachwörter, Merkzettel M26–M28, Symbole',
+      nq.every(Boolean)&&TASKS.NQ.size===10&&TASKS.NA.size===15&&TASKS.NA.finalTap===10&&vm.status==='aktiv'&&vm.rank&&vm.letter==='V'
+      &&vm.path.filter(p=>!p.final&&!isLab(p.id)).map(p=>stationCode(p.id)).join()==='V1,V2,V3,V4,V5,V6,V7,V8,V9,V10'&&vm.path.filter(p=>p.must&&!p.final).map(p=>p.id).join()==='N01,N02,N03,N04,N05,N06'
+      &&isLab('NLAB')&&MAP_LAYOUT.strands[1].ids.join()==='addsub,addsub2,vervielfachen'&&WORDS.V.every(k=>GLOSSAR[k]&&ALLTAG[k])&&['M26','M27','M28'].every(n=>NOTES[n].build([]).length>3)
+      &&['N01','N02','N03','N04','N05','N06','N07','N08','N09','N10','NQ','NA','NLAB'].every(id=>INTRO[id]&&(isLab(id)||document.getElementById('i-'+ICON[id]))));
+    const keepL={view:S.view,labV:S.labV,xp:S.xp};
+    try{
+      S.labV=null;S.view={kind:'lab',id:'NLAB'};renderAll();
+      const key=(txt)=>[...app.querySelectorAll('.vlabkeys button')].find(b=>b.textContent.trim()===txt);
+      key('· 2').click();const a1=S.labV.did.mul&&/· 2/.test(app.querySelector('.rlabchain').textContent);
+      [...app.querySelectorAll('.labseg button')].find(b=>b.textContent==='Teilen').click();key(': 3').click();const a2=S.labV.did.div&&app.querySelectorAll('.vlabfig g.cell').length===15;
+      [...app.querySelectorAll('.labseg button')].find(b=>b.textContent==='Vervielfachen').click();
+      S.labV.b=4;S.labV.a=2;key('· 2').click();
+      t('Bruch-Maschine: Vervielfachen und Teilen mit Bild und Rechnung, Auftrag 3 „genau ein Ganzes“ schließt das Labor ab',a1&&a2&&S.labV.done===true&&LABS.NLAB.done()&&/Genau/.test(app.querySelector('.labsay').textContent));
+    }finally{Object.assign(S,keepL);persist();renderAll();}
   }
   const bad=res.filter(r=>!r.ok);
   console.log(`Selbsttest: ${res.length-bad.length}/${res.length} bestanden`);

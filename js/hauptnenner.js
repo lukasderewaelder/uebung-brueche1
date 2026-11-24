@@ -469,7 +469,7 @@ TASKS.H03=hnStation('H03',{name:'Am Bild: zusammenfügen, wegnehmen, ergänzen',
     return hnBase('H03',level,kind,hnBildNums(R,level,kind!=='bildMinus',ctx));
   },
   prompt(t,h){
-    if(t.kind==='bild'||t.kind==='bildMinus'){h.append(el('p',{class:'q'},(t.plus?'Welche Plusaufgabe':'Welche Minusaufgabe')+' gehört zum Bild? Teile gleich ein und rechne aus.'));return;}
+    if(t.kind==='bild'||t.kind==='bildMinus'){h.append(el('p',{class:'q'},(t.plus?'Welche Additionsaufgabe':'Welche Subtraktionsaufgabe')+' gehört zum Bild? Teile gleich ein und rechne aus.'));return;}
     if(t.kind==='ergaenzen'){h.append(el('p',{class:'q qa'},`Von ${ft(t.c,t.d)} bis ${ft(t.a,t.b)}: Wie viel fehlt?`));return;}
     hnCalcPrompt(t,h);
   },
@@ -766,7 +766,7 @@ TASKS.H07=hnStation('H07',{name:'Erweitern oder nicht?',desc:'Erst hinschauen, F
       case 'hausaufgaben':h.append(el('p',{class:'q'},`${NAMES.d} hat Hausaufgaben gemacht. Eine Rechnung ist falsch.`));break;
       case 'ganzes':h.append(el('p',{class:'q qa'},HN_GANZES[t.gi].txt));break;
       case 'schlange':h.append(el('p',{class:'q'},'Rechne die Schlange von links nach rechts. Kürze jedes Ergebnis.'));break;
-      default:h.append(el('p',{class:'q'},'Finde eine Plus- und zwei Minusaufgaben.'));
+      default:h.append(el('p',{class:'q'},'Finde eine Additionsaufgabe und zwei Subtraktionsaufgaben.'));
     }
   },
   render(view,host){
@@ -852,7 +852,7 @@ TASKS.H07=hnStation('H07',{name:'Erweitern oder nicht?',desc:'Erst hinschauen, F
     }
     if(!any)return invalid('Schreibe mindestens eine Rechnung auf.');
     if(good<t.need)issues.push(`${good} von ${t.need} verschiedenen Rechnungen gefunden.`);
-    if(!issues.length)return right('Richtig! Eine Plusaufgabe und zwei Minusaufgaben passen zum Bild.');
+    if(!issues.length)return right('Richtig! Eine Additionsaufgabe und zwei Subtraktionsaufgaben passen zum Bild.');
     return (bad?wrong:soft)('zeile',issues.join(' '),marks);
   },
   solution(t){

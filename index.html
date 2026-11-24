@@ -13,7 +13,7 @@
 <title>Bruchwerkstatt</title>
 <script>/* Darstellung vor dem ersten Zeichnen setzen: Wahl „Hell“ oder „Dunkel“ aus dem Speicher; sonst folgt die Seite dem Gerät */
 try{var u=JSON.parse(localStorage.getItem('bruchwerkstatt_v1')).ui;if(u&&(u.theme==='hell'||u.theme==='dunkel'))document.documentElement.setAttribute('data-theme',u.theme);}catch(e){}</script>
-<link rel="stylesheet" href="css/app.css?v=151">
+<link rel="stylesheet" href="css/app.css?v=152">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -81,7 +81,7 @@ try{var u=JSON.parse(localStorage.getItem('bruchwerkstatt_v1')).ui;if(u&&(u.them
 <symbol id="i-kolben" viewBox="0 0 24 24"><path d="M9.5 3h5M10.5 3v6.5L4.6 19a1.6 1.6 0 0 0 1.4 2.4h12a1.6 1.6 0 0 0 1.4-2.4L13.5 9.5V3M7.6 15.5h8.8"/></symbol>
 <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
 <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
-<symbol id="i-plusminus" viewBox="0 0 24 24"><path d="M12 3.5v9M7.5 8h9M7.5 18.5h9"/></symbol>
+<symbol id="i-plusminus" viewBox="0 0 24 24"><path d="M12 3.5v9M7.5 8h9M7.5 18.5h9"/></symbol><symbol id="i-mal" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol><symbol id="i-geteilt" viewBox="0 0 24 24"><path d="M5 12h14"/><circle cx="12" cy="6.5" r="1.6"/><circle cx="12" cy="17.5" r="1.6"/></symbol><symbol id="i-kreis" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5V12l7.4 4.2M12 12l-7.4 4.2"/></symbol>
 <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H10"/></symbol>
 <symbol id="i-kreuzraster" viewBox="0 0 24 24"><path d="M3.5 5.5h17v13h-17z"/><path d="M12 5.5v13M3.5 12h17"/></symbol>
 <symbol id="i-schmetterling" viewBox="0 0 24 24"><path d="M12 7.5v11"/><path d="M12 10C10 5 4 3.5 3.5 7.5S7 13 12 12.5"/><path d="M12 10c2-5 8-6.5 8.5-2.5S17 13 12 12.5"/><path d="M12 13.5c-2 0-6 1-5.5 4s4.5.5 5.5-2M12 13.5c2 0 6 1 5.5 4s-4.5.5-5.5-2"/><path d="M12 7.5 10 4M12 7.5 14 4"/></symbol>
@@ -89,47 +89,53 @@ try{var u=JSON.parse(localStorage.getItem('bruchwerkstatt_v1')).ui;if(u&&(u.them
 </svg>
 <div id="app"></div>
 <div id="scrim" class="scrim"></div>
-<script src="js/math.js?v=151"></script>
-<script src="js/dom.js?v=151"></script>
-<script src="js/viz.js?v=151"></script>
-<script src="js/store.js?v=151"></script>
-<script src="js/names.js?v=151"></script>
-<script src="js/notes.js?v=151"></script>
-<script src="js/tasks.js?v=151"></script>
-<script src="js/quickcheck.js?v=151"></script>
-<script src="js/linewidget.js?v=151"></script>
-<script src="js/zahlenstrahl.js?v=151"></script>
-<script src="js/zahlenstrahl-check.js?v=151"></script>
-<script src="js/vergleichen-widgets.js?v=151"></script>
-<script src="js/vergleichen.js?v=151"></script>
-<script src="js/vergleichen-check.js?v=151"></script>
-<script src="js/rechnen-widgets.js?v=151"></script>
-<script src="js/rechnen.js?v=151"></script>
-<script src="js/rechnen-check.js?v=151"></script>
-<script src="js/hauptnenner-math.js?v=151"></script>
-<script src="js/hauptnenner-widgets.js?v=151"></script>
-<script src="js/hauptnenner.js?v=151"></script>
-<script src="js/hauptnenner-check.js?v=151"></script>
-<script src="js/mix.js?v=151"></script>
-<script src="js/tips.js?v=151"></script>
-<script src="js/verstehen.js?v=151"></script>
-<script src="js/modules.js?v=151"></script>
-<script src="js/lab.js?v=151"></script>
-<script src="js/rechnen-lab.js?v=151"></script>
-<script src="js/hauptnenner-lab.js?v=151"></script>
-<script src="js/path.js?v=151"></script>
-<script src="js/wiederholen.js?v=151"></script>
-<script src="js/intro.js?v=151"></script>
-<script src="js/verstehen-extra.js?v=151"></script>
-<script src="js/rank.js?v=151"></script>
-<script src="js/help.js?v=151"></script>
-<script src="js/exercise.js?v=151"></script>
-<script src="js/games.js?v=151"></script>
-<script src="js/vergleichen-spiel.js?v=151"></script>
-<script src="js/spiel-schlange.js?v=151"></script>
-<script src="js/home.js?v=151"></script>
-<script src="js/werkstatt.js?v=151"></script>
-<script src="js/selftest.js?v=151"></script>
-<script src="js/app.js?v=151"></script>
+<script src="js/math.js?v=152"></script>
+<script src="js/dom.js?v=152"></script>
+<script src="js/viz.js?v=152"></script>
+<script src="js/store.js?v=152"></script>
+<script src="js/names.js?v=152"></script>
+<script src="js/notes.js?v=152"></script>
+<script src="js/tasks.js?v=152"></script>
+<script src="js/quickcheck.js?v=152"></script>
+<script src="js/linewidget.js?v=152"></script>
+<script src="js/zahlenstrahl.js?v=152"></script>
+<script src="js/zahlenstrahl-check.js?v=152"></script>
+<script src="js/vergleichen-widgets.js?v=152"></script>
+<script src="js/vergleichen.js?v=152"></script>
+<script src="js/vergleichen-check.js?v=152"></script>
+<script src="js/rechnen-widgets.js?v=152"></script>
+<script src="js/rechnen.js?v=152"></script>
+<script src="js/rechnen-check.js?v=152"></script>
+<script src="js/hauptnenner-math.js?v=152"></script>
+<script src="js/hauptnenner-widgets.js?v=152"></script>
+<script src="js/hauptnenner.js?v=152"></script>
+<script src="js/hauptnenner-check.js?v=152"></script>
+<script src="js/mix.js?v=152"></script>
+<script src="js/tips.js?v=152"></script>
+<script src="js/vervielfachen-math.js?v=152"></script>
+<script src="js/vervielfachen-widgets.js?v=152"></script>
+<script src="js/vervielfachen.js?v=152"></script>
+<script src="js/vervielfachen-check.js?v=152"></script>
+<script src="js/verstehen.js?v=152"></script>
+<script src="js/modules.js?v=152"></script>
+<script src="js/lab.js?v=152"></script>
+<script src="js/rechnen-lab.js?v=152"></script>
+<script src="js/hauptnenner-lab.js?v=152"></script>
+<script src="js/vervielfachen-lab.js?v=152"></script>
+<script src="js/path.js?v=152"></script>
+<script src="js/wiederholen.js?v=152"></script>
+<script src="js/intro.js?v=152"></script>
+<script src="js/vervielfachen-intro.js?v=152"></script>
+<script src="js/verstehen-extra.js?v=152"></script>
+<script src="js/rank.js?v=152"></script>
+<script src="js/help.js?v=152"></script>
+<script src="js/exercise.js?v=152"></script>
+<script src="js/games.js?v=152"></script>
+<script src="js/vergleichen-spiel.js?v=152"></script>
+<script src="js/spiel-schlange.js?v=152"></script>
+<script src="js/home.js?v=152"></script>
+<script src="js/werkstatt.js?v=152"></script>
+<script src="js/selftest.js?v=152"></script>
+<script src="js/app.js?v=152"></script>
 </body>
 </html>
