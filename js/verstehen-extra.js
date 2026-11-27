@@ -208,3 +208,11 @@ if(INTRO_LONG.H14&&INTRO_LONG.H14.steps.length>=4){
     Object.assign({},L[2],{h:'Darauf achten',sub:'Zusammenrechnen und Kürzen',say:['Oben rechnest du plus oder minus. Unten bleibt der neue Nenner.','Er ist oft größer als der Hauptnenner.','Kürze am Ende, wenn es geht.']})
   ]});
 }
+
+/* Abschlusschecks (27.11.2026): überall dieselben zwei Karten – „Wie viele Aufgaben?“ und „Die Urkunde“ */
+MODULES.filter(m=>m.finalId&&INTRO[m.finalId]).forEach(m=>{
+  const id=m.finalId,I=INTRO[id],size=(TASKS[id]&&TASKS[id].size)||15;
+  const first=(I.steps[0].say||[]).filter(x=>!/Urkunde/.test(x)).slice(0,3);
+  I.steps=[{h:'Wie viele Aufgaben?',say:first.length?first:['Der Abschlusscheck hat '+size+' Aufgaben.']},
+    {h:'Die Urkunde',say:['Ab '+needOf(size)+' Punkten gibt es die Urkunde.','Mit Tipp oder zweitem Versuch zählt eine Aufgabe halb.','Alle Pflicht-Stationen müssen vorher fertig sein.']}];
+});

@@ -9,7 +9,7 @@
    · Knifflig bei U01, U02, U03: 1 von 5 Aufgaben ist ein Transfer (U05 oder U06)
    Alle drei Typen haben auch eigene Tipps (js/tips.js); U04 ist zusätzlich als Übung einzeln erreichbar.
    ===================================================================== */
-const U_NAMES=NAME_LIST; /* P18: Namen aus dem Werkstatt-Team */
+const U_NAMES=NAME_LIST; /* Namen für Geschichten (js/names.js) */
 const U_LETTERS=['A','B','C'];
 
 /* Bruch p/q, teilerfremd, mit Wahrscheinlichkeit 0,15 unecht (p > q) */
@@ -190,11 +190,12 @@ TASKS.U06={area:'Umkehraufgaben',name:'Zwei Schritte prüfen',desc:'Finde die fa
 /* Plätze einer Runde (round.mix: je Aufgabe null, 'U04', 'U05' oder 'U06'); die erste Aufgabe bleibt eine gewohnte */
 function mixSlots(round,level,id,R){
   if(round.mix)return round.mix;
-  const size=round.size||5,slots=Array(size).fill(null),free=R.shuffle(Array.from({length:size-1},(_,i)=>i+1));
+  /* eine Form je Runde (27.11.2026): die eigene Aufgabe, „Stimmt das?“ (U04) oder ein Transfer (U05/U06) – nie gemischt */
+  const size=round.size||5;
   const stands=['G02','G03','G04','G05'].includes(id),transfer=level===2&&['G03','G04','U01','U02','U03'].includes(id);
-  if(stands){const n=transfer&&['G03','G04'].includes(id)?1:R.pick([1,2]);for(let i=0;i<n&&free.length;i++)slots[free.shift()]='U04';}
-  if(transfer&&free.length)slots[free.shift()]=R.pick(['U05','U06']);
-  round.mix=slots;return slots;
+  const f=oneFormPlan('mix-'+id,level,['eigen'].concat(stands?['U04']:[],transfer?['tr']:[]),1)[0];
+  const tr=R.pick(['U05','U06']);
+  round.mix=Array(size).fill(f==='eigen'?null:f==='tr'?tr:'U04');return round.mix;
 }
 ['G02','G03','G04','G05','U01','U02','U03'].forEach(id=>{
   const T=TASKS[id],gen=T.gen;

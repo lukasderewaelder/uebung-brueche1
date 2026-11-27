@@ -49,6 +49,23 @@ function generateUnique(typeId,level,ctx,round){
 const levelOf=(id)=>S.levelByType[id]||1;
 const keyOf=(id,l)=>id+'-L'+l;
 function prog(key){return S.progress[key]||(S.progress[key]={done:0,first:0,later:0,skipped:0,shown:0});}
+/* ---------- Eine Aufgabenform je Runde (Lehrer, 27.11.2026) ---------- */
+const FORM_SAME={ /* Arten, die dieselbe Form sind (nur andere Zahlen oder Antworten) */
+  F04:[['geld','zeit','menge','gewicht']],F08:[['klein','gross']],
+  W03:[['nenner','zaehler','keins']],W06:[['halb','eins']],W07:[['nenner','zaehler','fehlt','zahl','erw','konflikt']],W08:[['ord3','ord4','ord5','desc3','desc4']]
+};
+const formOfKind=(id,k)=>{const g=(FORM_SAME[id]||[]).find(x=>x.includes(k));return g?g[0]:k;};
+/* Plan einer Runde: alle Plätze aus einer Form; die Form wechselt von Runde zu Runde in der Reihenfolge des Plans (erste = Grundform) */
+function oneFormPlan(id,level,P,size){
+  P=(P||[]).filter(Boolean);size=size||P.length;
+  const forms=[...new Set(P.map(k=>formOfKind(id,k)))];
+  let f=forms[0];
+  if(forms.length>1){const n=(S.formRot&&S.formRot[keyOf(id,level)])||0;f=forms[n%forms.length];}
+  const ks=P.filter(k=>formOfKind(id,k)===f);
+  return Array.from({length:size},(_,j)=>ks[j%ks.length]);
+}
+/* nach einer fertigen Runde: nächste Form (auch für die Misch-Runden in E, Schlüssel „mix-ID“) */
+function advanceForm(id,level){S.formRot=S.formRot&&typeof S.formRot==='object'?S.formRot:{};[id,'mix-'+id].forEach(x=>{const k=keyOf(x,level);S.formRot[k]=(S.formRot[k]||0)+1;});}
 function newState(task){return {task,draft:{},hint:0,attempts:0,status:'open',fb:null};}
 
 

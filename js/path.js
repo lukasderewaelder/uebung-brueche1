@@ -154,6 +154,7 @@ function accRow(id,lvl,withText){
   return withText?el('span',{class:'accline'},row,el('small',null,txt+(a.f<ACC_FREE&&a.r>=ACC_NEED?' (noch '+(ACC_FREE-a.f)+' ohne Tipp)':''))):row;
 }
 function onRoundEnd(id,lvl,round){
+  advanceForm(id,lvl); /* eine Form je Runde: die nächste Runde übt die nächste Form */
   const sc=roundScore(round.results,round.size),right=sc.right,need=sc.need;
   const info={right,points:sc.points,need,passed:sc.passed,firstPass:false,placed:[],final:false,daily:false,quiz:null};
   if(isPathStation(id)){info.passed=!!S.passed[keyOf(id,lvl)];info.firstPass=!!round.newPass;info.acc=true;}
@@ -201,7 +202,7 @@ function roundAward(info){
 function finalCard(modId){
   const mod=moduleById(modId)||activeModules()[0];
   const m=modal([icon('plakette','big'),el('h2',null,'Urkunde'),el('p',{class:'rankname'},'Etappe '+(mod.letter||'')+' geschafft'),el('div',{class:'stampbox'},'Geprüft'),
-    el('p',null,mod.finalText||'Stark!'),typeof speechBubble==='function'?speechBubble('Paul','Geprüft und für gut befunden!','cheer'):null,
+    el('p',null,mod.finalText||'Stark!'),
     el('button',{type:'button',class:'btn',onclick:()=>{m.remove();go({kind:'home',tab:'pfad',thema:mod.id});}},'Zum Lernpfad')]);
 }
 /* Schema 4: Lernpfad-Felder; Bestandsnutzer behalten ihren Stand (mind. 4 Treffer beim 1. Versuch ⇒ bestanden) */

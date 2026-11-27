@@ -134,8 +134,7 @@ function hnCtx(id){
   return (round,level)=>{
     const size=TASKS[id].size,P=(HN_PLAN[id][level]||HN_PLAN[id][1]);
     if(!Array.isArray(round.hn)||round.hn.length!==size){
-      const k=P.slice(0,size);
-      round.hn=k;
+      round.hn=oneFormPlan(id,level,P,size); /* eine Form je Runde */
     }
     const ks=round.hn;
     if(!Array.isArray(round.red)||round.red.length!==size)round.red=hnRedPlan(ks,HN_RES[id]||[]);

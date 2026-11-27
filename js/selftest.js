@@ -3,7 +3,7 @@
    11 Selbsttest (Entwicklerkonsole: runSelfTests())
    ===================================================================== */
 function runSelfTests(){
-  const res=[],t=(name,ok)=>res.push({name,ok:!!ok}),__acc=JSON.stringify(S.acc||{});
+  const res=[],t=(name,ok)=>res.push({name,ok:!!ok}),__acc=JSON.stringify(S.acc||{}),__rot=JSON.stringify(S.formRot||{});
   t('2/3 = 4/6',equivalent(2,3,4,6));
   t('12/18 = 2/3',equivalent(12,18,2,3));
   t('4/6 ≠ 8/6',!equivalent(4,6,8,6));
@@ -933,7 +933,7 @@ function runSelfTests(){
       const dockMsg=()=>(app.querySelector('.actionbar .dockmsg')||{textContent:''}).textContent;
       t('P13: erste Karte „So geht’s“ mit Beispiel; unten ‹ | Kenne ich schon | Weiter; 3 Karten (Beispiel, Probe, Darauf achten)',/So geht/.test(app.querySelector('.introh').textContent)&&!app.querySelector('.introprobe')&&/Karte 1 von 3/.test(app.textContent)&&btns.join('|')==='|Kenne ich schon|Weiter'&&app.querySelectorAll('.actionbar .btn.primary').length===1);
       barBtns()[2].click();
-      t('P13: danach die Probe wie eine Übung: Aufgabe in der Karte, Bedienpult (Tipp | Kenne ich schon | Prüfen), ein gelber Hauptknopf',/Probiere es aus/.test(app.querySelector('.introh').textContent)&&!!app.querySelector('.introprobe input')&&/Karte 2 von 3/.test(app.textContent)&&barBtns().map(b=>b.textContent.trim()).join('|')==='Tipp|Kenne ich schon|Prüfen'&&app.querySelectorAll('.actionbar .btn.primary').length===1&&app.querySelectorAll('.card button:not(.bclose)').length===0&&/Fehler sind erlaubt/.test((app.querySelector('.card .bubble')||{}).textContent||''));
+      t('P13: danach die Probe wie eine Übung: Aufgabe in der Karte, Bedienpult (Tipp | Kenne ich schon | Prüfen), ein gelber Hauptknopf',/Probiere es aus/.test(app.querySelector('.introh').textContent)&&!!app.querySelector('.introprobe input')&&/Karte 2 von 3/.test(app.textContent)&&barBtns().map(b=>b.textContent.trim()).join('|')==='Tipp|Kenne ich schon|Prüfen'&&app.querySelectorAll('.actionbar .btn.primary').length===1&&app.querySelectorAll('.card button:not(.bclose)').length===0&&/Fehler sind hier erlaubt/.test((app.querySelector('.card .probenote')||{}).textContent||'')&&!app.querySelector('.card .bubble'));
       const box=app.querySelector('.introprobe'),fr=box.querySelector('.frac'),ka=+box.querySelector('strong').textContent,a7=+fr.querySelector('.num').textContent,b7=+fr.querySelector('.den').textContent;
       const ins=[...box.querySelectorAll('input[type=text]')],setI=(i,v)=>{i.value=String(v);i.dispatchEvent(new Event('input',{bubbles:true}));};
       const pruefen=()=>barBtns().find(b=>b.textContent.trim()==='Prüfen').click();
@@ -1005,17 +1005,19 @@ function runSelfTests(){
     const mixOK=[];
     const count=(slots,x)=>slots.filter(s=>s===x).length;
     ['G02','G03','G04','G05','U01','U02','U03'].forEach(id=>[1,2].forEach(lvl=>{
-      for(let i=0;i<60;i++){
-        const round={results:[],size:5},slots=mixSlots(round,lvl,id,RNG),u4=count(slots,'U04'),tr=count(slots,'U05')+count(slots,'U06');
-        const stands=['G02','G03','G04','G05'].includes(id),transfer=lvl===2&&['G03','G04','U01','U02','U03'].includes(id);
-        const wantU4=stands?(transfer&&['G03','G04'].includes(id)?[1]:[1,2]):[0],wantTr=transfer?1:0;
-        if(slots.length!==5||slots[0]!==null||!wantU4.includes(u4)||tr!==wantTr)mixOK.push(id+'-L'+lvl+' '+JSON.stringify(slots));
+      const seen=new Set();
+      for(let i=0;i<6;i++){
+        const round={results:[],size:5},slots=mixSlots(round,lvl,id,RNG);
+        if(slots.length!==5||new Set(slots).size!==1)mixOK.push(id+'-L'+lvl+' '+JSON.stringify(slots));
+        seen.add(slots[0]===null?'eigen':slots[0]==='U04'?'U04':'tr');advanceForm(id,lvl);
       }
+      const stands=['G02','G03','G04','G05'].includes(id),transfer=lvl===2&&['G03','G04','U01','U02','U03'].includes(id);
+      if(!seen.has('eigen')||seen.has('U04')!==stands||seen.has('tr')!==transfer)mixOK.push(id+'-L'+lvl+' Formen '+[...seen].join());
     }));
-    t('Gemischte Runden: G02–G05 haben 1–2 mal „Stimmt das?“ (nie als erste Aufgabe), Knifflig bei G03/G04 genau 1 und dazu 1 Transfer, Knifflig bei U01–U03 genau 1 Transfer, Leicht bei U01–U03 keine',mixOK.length===0||(console.log(mixOK.slice(0,3)),false));
-    const rm={results:[],size:5},typesSeen=new Set();
-    for(let i=0;i<5;i++){const c=TASKS.G03.ctx(rm,2);typesSeen.add(generateTask('G03',2,null,c).type);rm.results.push('f');}
-    t('Gemischte Runden: eine Runde G03 Knifflig enthält Aufgaben von drei Arten (Kürzen, Stimmt das?, Transfer), jede Aufgabe trägt ihren echten Typ',typesSeen.has('G03')&&typesSeen.has('U04')&&(typesSeen.has('U05')||typesSeen.has('U06')));
+    t('Eine Form je Runde (E): G02–G05 wechseln von Runde zu Runde zwischen eigener Aufgabe und „Stimmt das?“, Knifflig bei G03/G04 und U01–U03 auch Transfer; innerhalb einer Runde nie gemischt',mixOK.length===0||(console.log(mixOK.slice(0,3)),false));
+    const typesSeen=new Set();
+    for(let j=0;j<4;j++){const rm={results:[],size:5};for(let i=0;i<5;i++){const c=TASKS.G03.ctx(rm,2);typesSeen.add(generateTask('G03',2,null,c).type);rm.results.push('f');}advanceForm('G03',2);}
+    t('Eine Form je Runde (E): G03 Knifflig bringt über mehrere Runden drei Arten (Kürzen, Stimmt das?, Transfer), jede Aufgabe trägt ihren echten Typ',typesSeen.has('G03')&&typesSeen.has('U04')&&(typesSeen.has('U05')||typesSeen.has('U06')));
     t('Gemischte Runden: ohne ctx erzeugen G02–G05 weiter nur ihren eigenen Typ',['G02','G03','G04','G05','U01','U02','U03'].every(id=>[1,2].every(l=>{for(let i=0;i<30;i++)if(generateTask(id,l).type!==id)return false;return true;})));
     /* U04 Stimmt das? */
     let u4bad=[];
@@ -1616,13 +1618,13 @@ function runSelfTests(){
     }
     t('Vergleichen W01–W07: '+n+' Aufgaben in Zahlenraum (Leicht bis 24, Knifflig bis 100), Art und Lösbarkeit, falsche Zeichen und Urteile benannt, Tipps (3 Stufen, kurz), Ansicht und Lösung bauen sich',problems.length===0||(console.log(problems.slice(0,6)),false));
     t('Vergleichen: Fehlercodes gleichNenner, gleichZahl, nurNenner kommen vor; die Zeichen < und > sind in Leicht ausgewogen (W01)',['gleichNenner','gleichZahl','nurNenner','sign'].every(c=>codes.has(c))&&signs['<']>signs['>']*0.35&&signs['>']>signs['<']*0.35&&!signs['=']); /* nur grobe Schieflage; bei 40 Zufallsaufgaben fiel die Schwelle 0,5 in rund 7 % der Läufe */
-    const plan=(id,lvl)=>{const r={results:[],cur:null},ks=[];for(let i=0;i<5;i++){r.results=Array(i).fill('f');ks.push(TASKS[id].ctx(r,lvl).kind);}return {r,ks};};
+    const plan=(id,lvl)=>{const all=[];let one=true;for(let j=0;j<8;j++){const r={results:[],cur:null},ks=[];for(let i=0;i<5;i++){r.results=Array(i).fill('f');ks.push(TASKS[id].ctx(r,lvl).kind);}const again=[];for(let k=0;k<5;k++){r.results=Array(k).fill('f');again.push(TASKS[id].ctx(r,lvl).kind);}if(ks.length!==5||ks.join()!==again.join()||new Set(ks.map(k=>formOfKind(id,k))).size!==1)one=false;all.push(...ks);advanceForm(id,lvl);}return {ks:all,one};}; /* 8 Runden: jede Runde eine Form und stabil, zusammen alle Arten */
     let planBad=0;
-    for(const id of ['W01','W02','W03','W04','W05','W06','W07'])for(const lvl of [1,2])for(let i=0;i<40;i++){
-      const {r,ks}=plan(id,lvl),again=[];for(let k=0;k<5;k++){r.results=Array(k).fill('f');again.push(TASKS[id].ctx(r,lvl).kind);}
-      if(ks.length!==5||ks.join()!==again.join()||ks[0]==='claim'||ks[0]==='conflict'||(id==='W03'&&lvl===1&&ks.includes('keins'))||(id==='W03'&&lvl===2&&!ks.includes('keins'))||(id==='W01'&&lvl===1&&!ks.includes('paint'))||(id==='W01'&&lvl===2&&!ks.includes('claim'))||(id==='W02'&&!ks.includes('stamm'))||(id==='W04'&&(!ks.includes('check')||!ks.includes('claim')||(lvl===2&&!ks.includes('conflict'))||(lvl===1&&ks.includes('conflict'))))||(id==='W05'&&(lvl===1?ks.some(k=>k!=='ziel'):!(ks.includes('frei')&&ks.includes('zaehler'))))||(id==='W06'&&(!ks.includes('halb')||!ks.includes('sign')||(lvl===2)!==ks.includes('eins')))||(id==='W07'&&(ks.length!==5||new Set(ks).size!==5)))planBad++;
+    for(const id of ['W01','W02','W03','W04','W05','W06','W07'])for(const lvl of [1,2])for(let i=0;i<6;i++){
+      const {ks,one}=plan(id,lvl);
+      if(!one||(id==='W03'&&lvl===1&&ks.includes('keins'))||(id==='W03'&&lvl===2&&!ks.includes('keins'))||(id==='W01'&&lvl===1&&!ks.includes('paint'))||(id==='W01'&&lvl===2&&!ks.includes('claim'))||(id==='W02'&&!ks.includes('stamm'))||(id==='W04'&&(!ks.includes('check')||!ks.includes('claim')||(lvl===2&&!ks.includes('conflict'))||(lvl===1&&ks.includes('conflict'))))||(id==='W05'&&(lvl===1?ks.some(k=>k!=='ziel'):!(ks.includes('frei')&&ks.includes('zaehler'))))||(id==='W06'&&(!ks.includes('halb')||!ks.includes('sign')||(lvl===2)!==ks.includes('eins')))||(id==='W07'&&new Set(ks).size!==5))planBad++;
     }
-    t('Vergleichen: Rundenplan hat 5 Arten, bleibt in der Runde gleich, beginnt nie mit einer Behauptung; W01 hat Färben (Leicht) und Behauptung (Knifflig), W02 beginnt mit Stammbrüchen, W03 hat „Keins von beiden“ nur in Knifflig',planBad===0);
+    t('Vergleichen: je Runde eine Form (W03, W06–W08: Varianten derselben Frage bleiben gemischt), in der Runde gleich, über mehrere Runden alle Arten; W01 hat Färben (Leicht) und Behauptung (Knifflig), W02 beginnt mit Stammbrüchen, W03 hat „Keins von beiden“ nur in Knifflig',planBad===0);
     const g0=TASKS.W01.gen(1,RNG),g1=TASKS.W02.gen(1,RNG),g2=TASKS.W03.gen(1,RNG);
     t('Vergleichen: ohne Plan (Probeaufgabe) gilt die einfachste Art; die Stationen stehen im Pfad von „Brüche vergleichen“ (Pflicht, am Ende der Abschlusscheck WA)',g0.kind==='sign'&&g1.kind==='stamm'&&g2.kind==='which'&&moduleById('vergleichen').path.map(m=>m.id).join()==='W01,W02,W03,W05,W08,W04,W06,W07,W09,W10,WA'&&moduleById('vergleichen').path.filter(m=>m.must).map(m=>m.id).join()==='W01,W02,W03,W05,W08,WA'&&moduleById('vergleichen').rank===false&&moduleOf('W02').id==='vergleichen');
   }
@@ -1689,9 +1691,10 @@ function runSelfTests(){
       return tk.order.join()===cmpIdxSorted(tk.fr,false).join()&&byNum.errorCode==='byNum'&&byDen.errorCode==='byDen';
     })());
     let planBad=0;
-    for(const id of ['W08','W09','W10'])for(const lvl of [1,2])for(let i=0;i<30;i++){
-      const r={results:[],cur:null},ks=[];for(let k=0;k<5;k++){r.results=Array(k).fill('f');ks.push(TASKS[id].ctx(r,lvl).kind);}
-      if(ks.length!==5||ks[0]==='claim'||(id==='W08'&&ks.some(k=>!/^(ord|desc)[345]$/.test(k)))||(id==='W09'&&!ks.includes('ordnen'))||(id==='W10'&&!ks.includes('claim')))planBad++;
+    const planW=(id,lvl)=>{const all=[];let one=true;for(let j=0;j<8;j++){const r={results:[],cur:null},ks=[];for(let i=0;i<5;i++){r.results=Array(i).fill('f');ks.push(TASKS[id].ctx(r,lvl).kind);}const again=[];for(let k=0;k<5;k++){r.results=Array(k).fill('f');again.push(TASKS[id].ctx(r,lvl).kind);}if(ks.length!==5||ks.join()!==again.join()||new Set(ks.map(k=>formOfKind(id,k))).size!==1)one=false;all.push(...ks);advanceForm(id,lvl);}return {ks:all,one};}; /* 8 Runden: jede Runde eine Form und stabil, zusammen alle Arten */
+    for(const id of ['W08','W09','W10'])for(const lvl of [1,2])for(let i=0;i<6;i++){
+      const {ks,one}=planW(id,lvl);
+      if(!one||(id==='W08'&&ks.some(k=>!/^(ord|desc)[345]$/.test(k)))||(id==='W09'&&!ks.includes('ordnen'))||(id==='W10'&&!ks.includes('claim')))planBad++;
     }
     t('Vergleichen: Rundenplan für W08–W10 (Ordnen 3–5 Karten, W09 mit Zahlenreihe, W10 mit Behauptung)',planBad===0);
     /* Ziehen und Ablegen in der echten Ansicht: Antippen und Ziehen mit Pointer-Ereignissen */
@@ -2074,18 +2077,19 @@ function runSelfTests(){
     }
     /* Rundenplan, Reihenfolge und Anmeldung */
     {
-      const plan=(id,lvl)=>{const r={results:[],cur:null},ks=[];for(let i=0;i<5;i++){r.results=Array(i).fill('f');ks.push(TASKS[id].ctx(r,lvl).kind);}return {r,ks};};
+      const plan=(id,lvl)=>{const all=[];let one=true;for(let j=0;j<8;j++){const r={results:[],cur:null},ks=[];for(let i=0;i<5;i++){r.results=Array(i).fill('f');ks.push(TASKS[id].ctx(r,lvl).kind);}const again=[];for(let k=0;k<5;k++){r.results=Array(k).fill('f');again.push(TASKS[id].ctx(r,lvl).kind);}if(ks.length!==5||ks.join()!==again.join()||new Set(ks.map(k=>formOfKind(id,k))).size!==1)one=false;all.push(...ks);advanceForm(id,lvl);}return {ks:all,one};}; /* 8 Runden: jede Runde eine Form und stabil, zusammen alle Arten */
       let planBad=0;
-      for(const id of ['R01','R02','R03','R04','R05'])for(const lvl of [1,2])for(let i=0;i<40;i++){
-        const {r,ks}=plan(id,lvl),again=[];for(let k=0;k<5;k++){r.results=Array(k).fill('f');again.push(TASKS[id].ctx(r,lvl).kind);}
+      for(const id of ['R01','R02','R03','R04','R05'])for(const lvl of [1,2])for(let i=0;i<6;i++){
+        const {ks,one}=plan(id,lvl);
         const has=(k)=>ks.includes(k),cnt=(k)=>ks.filter(x=>x===k).length;
         const bildSt=(id==='R01'&&(!has('plus')||has('minus'))||id==='R03'&&(!has('minus')||has('plus')))&&true;
-        if(ks.length!==5||ks.join()!==again.join())planBad++;
+        if(!one)planBad++;
         else if((id==='R01'||id==='R03')&&(!has('geschichte')||(lvl===1)!==has('bild')||bildSt||has('drei')||has('luecke')))planBad++;
         else if((id==='R02'||id==='R04')&&(!has('luecke')||!has('geschichte')||(lvl===2)!==has('ueber1')||has('bild')||has('drei')||(id==='R02'&&has('minus'))||(id==='R04'&&has('plus'))))planBad++;
-        else if(id==='R05'&&(cnt('drei')!==1||cnt('finde')!==1||!has('fehler')||!has('art')||has('plus')||has('minus')||has('luecke')))planBad++;
+        else if(id==='R05'&&(!has('drei')||!has('finde')||!has('fehler')||!has('art')||has('plus')||has('minus')||has('luecke')))planBad++;
       }
-      t('Rechnen: Rundenplan hat 5 Arten und bleibt in der Runde gleich; R01 und R03 haben Geschichte und Bild (Leicht auch „Bild lesen“), R02 und R04 Geschichte und Lücken (Knifflig auch über 1), R05 Rechenart erkennen, ein Bild mit mehreren Aufgaben, Fehler finden und eigene Aufgaben',planBad===0);
+      t('Rechnen: je Runde eine Form, in der Runde gleich, über mehrere Runden alle Arten; R01 und R03 haben Geschichte und Bild (Leicht auch „Bild lesen“), R02 und R04 Geschichte und Lücken (Knifflig auch über 1), R05 Rechenart erkennen, ein Bild mit mehreren Aufgaben, Fehler finden und eigene Aufgaben',planBad===0);
+      {const ids=Object.keys(TASKS).filter(id=>/^(F0[1-8]|H(0[2-9]|1[0-4])|N(0[1-9]|10)|Z01)$/.test(id)&&TASKS[id].ctx);const bad=[];ids.forEach(id=>[1,2].forEach(lvl=>{const {ks,one}=plan(id,lvl);if(!one)bad.push(id+'-L'+lvl);}));t('Eine Form je Runde: alle Stationen in F, H, V und Z01 üben in einer Runde genau eine Form ('+ids.length+' Stationen)',ids.length>=30&&bad.length===0||(console.log(bad),false));}
       const am=moduleById('addsub'),idx=(id)=>MODULES.findIndex(m=>m.id===id);
       t('Rechnen: das Thema „Brüche addieren und subtrahieren“ ist aktiv, Block 1, hat im Pfad genau R01 bis R05 und den Abschlusscheck RA (Kern im Takt: Verstehen R01 R03, Üben R02 R04, Anwenden R05) und den Eingangstest RQ (nicht im Pfad); das Thema Multiplizieren bleibt „geplant“',
         !!am&&am.status==='aktiv'&&am.path.map(m=>m.id).join()==='RLAB,R01,R03,R02,R04,R05,RA'&&am.path.filter(m=>m.id!=='RLAB').every(m=>m.must)&&!am.path.find(m=>m.id==='RLAB').must&&am.path.filter(m=>m.final).map(m=>m.id).join()==='RA'&&am.practice.join()==='RQ,RA,R01,R03,R02,R04,R05'&&am.quickcheck===true&&am.qid==='RQ'&&am.finalId==='RA'&&idx('addsub')>idx('vergleichen')&&moduleById('rechnen').status==='geplant'
@@ -2477,6 +2481,7 @@ function runSelfTests(){
   console.log(`Selbsttest: ${res.length-bad.length}/${res.length} bestanden`);
   bad.forEach(b=>console.error('FEHLER:',b.name));
   S.acc=JSON.parse(__acc);persist();
+  S.formRot=JSON.parse(__rot);persist(); /* Tests drehen die Formen; Stand des Kindes wiederherstellen */
   return {total:res.length,failed:bad.map(b=>b.name),passed:res.length-bad.length};
 }
 window.runSelfTests=runSelfTests;

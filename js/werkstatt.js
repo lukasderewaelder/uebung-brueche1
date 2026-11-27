@@ -66,9 +66,8 @@ function checkBadges(){
   return fresh;
 }
 function badgeCard(b){
-  const fig=b.fig||['Ida','Juna','Paul','Malik'][Math.max(0,BADGE_GROUPS.indexOf(b.grp))%4];
   const m=modal([el('div',{class:'badgebig'+(animOn()?' pop':'')},badgeNode(b)),el('h2',null,'Neues Abzeichen'),el('p',{class:'rankname'},b.label),
-    speechBubble(fig,b.say||(b.plus?'Stark geknobelt!':'Diese Gruppe hast du geschafft!'),'cheer'),
+    el('p',null,b.say||(b.plus?'Stark geknobelt!':'Diese Gruppe hast du geschafft!')), /* ohne Figur (27.11.2026) */
     el('button',{type:'button',class:'btn primary',onclick:()=>m.remove()},'Weiter')]);
 }
 

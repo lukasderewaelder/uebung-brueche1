@@ -1808,3 +1808,7 @@ input:focus{border-color:var(--line)!important;box-shadow:3px 3px 0 var(--focus)
 .etsum{border:2px dashed var(--line);border-radius:6px 14px 6px 6px;background:var(--bp-2);box-shadow:none}
 .etsum .etn{flex:none;display:grid;place-items:center;width:1.5rem;height:1.5rem;border-radius:50%;background:var(--chalk);color:var(--bp);font:800 .85rem var(--font-body)}
 .etsum .etc{font:700 .85rem var(--font-body);color:var(--chalk);text-decoration:underline solid var(--sticker);text-decoration-thickness:3px}
+/* Erklärkarten ohne Figuren: Probe-Hinweis und typischer Fehler als ruhige Zeilen */
+.probenote{margin:0 0 0.375rem;font-size:.85rem;color:var(--chalk-dim)}
+.typfehler{margin:0.25rem 0 0.5rem;padding:0.375rem 0.625rem;border:2px solid var(--line);border-left:6px solid var(--bad);border-radius:4px 12px 4px 4px;background:var(--bp-2)}
+.typfehler b{color:var(--bad)}

@@ -88,8 +88,8 @@ const VT_PLAN={
 const VT_RED=['rechnen','zaehler','mul','div'];
 function vtCtx(id){
   return (round,level)=>{
-    const size=TASKS[id].size,P=(VT_PLAN[id][level]||VT_PLAN[id][1]).slice(0,size);
-    if(!Array.isArray(round.vt)||round.vt.length!==size)round.vt=P;
+    const size=TASKS[id].size,P=(VT_PLAN[id][level]||VT_PLAN[id][1]);
+    if(!Array.isArray(round.vt)||round.vt.length!==size)round.vt=oneFormPlan(id,level,P,size); /* eine Form je Runde */
     if(!Array.isArray(round.red)||round.red.length!==size)round.red=hnRedPlan(round.vt,VT_RED);
     const i=Math.min(round.results.length,size-1);
     return {kind:round.vt[i],step:i,red:round.red[i]};

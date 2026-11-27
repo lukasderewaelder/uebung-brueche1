@@ -54,7 +54,12 @@ Die Aufgabenformate im Thema Brüche addieren und subtrahieren folgen didaktisch
 
 ## Design
 
-Blaupausen-Look: Aufgaben sind Zeichenblätter mit Schriftfeld, Erweitern (orange, ×) und Kürzen (petrol, ÷) haben feste Farben, Hilfen liegen auf hellem Pauspapier. Eigene Linien-Symbole statt Emoji, nur System-Schriften.
+Design „Poster“ (seit 27.11.2026, wie die App Mixup): cremefarbener Grund, Tintenlinien (2 px), harte versetzte Schatten, eine große Ecke oben rechts, gelber Marker unter dem Reiternamen. Hauptknopf: Tinte mit orangem Schatten, immer rechts unten und breiter als die Nebenknöpfe. Schrift Bricolage Grotesque (`fonts/`, OFL, offline). Erweitern (orange, ×) und Kürzen (petrol, ÷) behalten ihre Farben, die Kennfarbe einer Etappe steht nur als Kante. Standard ist „Hell“; „Automatisch“ und „Dunkel“ lassen sich wählen. Eigene Linien-Symbole statt Emoji. Alles in `css/app.css` (Token oben, Abschnitt 13 „Design Poster“ unten).
+
+Ablauf (seit 27.11.2026, Entscheidung des Lehrers):
+- **Eine Aufgabenform je Runde.** Eine Runde übt genau eine Form; nach einer fertigen Runde kommt die nächste Form der Station (`oneFormPlan`, `advanceForm` in `js/exercise.js`, Zähler `S.formRot`). Abgebrochene Runden wiederholen dieselbe Form. Arten, die nur andere Zahlen in derselben Frage sind, gelten als eine Form (`FORM_SAME`, z. B. W07 „Welcher Weg passt?“). In E wechseln eigene Aufgabe, „Stimmt das?“ und Transfer von Runde zu Runde. Eingangstests, Abschlusschecks und die Wiederholung bleiben gemischt.
+- **Keine Figuren.** Keine Sprechblasen; die Karte „Darauf achten“ nennt den typischen Fehler als Satz (`fehler` an der Erklärkarte). Sachaufgaben nutzen eigene Namen (`NAMES` in `js/names.js`).
+- **Erklärkarten überall gleich:** „So geht's“ (Beispiel) · Probe · „Darauf achten“; Abschlusschecks „Wie viele Aufgaben?“ · „Die Urkunde“.
 
 App-Icon: der Bruch ¾ mit amberfarbenem Bruchstrich auf Blaupausen-Raster. `favicon.svg` (Zahlen als Linienzüge, also ohne Schrift) ist die Vorlage; daraus entstanden `apple-touch-icon.png` (180 px, ohne Rundung, iOS rundet selbst) und `icons/icon-192.png`, `icons/icon-512.png` und `icons/icon-maskable-512.png` (Android, mit Sicherheitsrand). `manifest.webmanifest` benennt die App und die Farben (Anzeige „browser“, keine Offline-Installation). Neu erzeugen: SVG in einer Seite mit festem `<img>` in der gewünschten Größe öffnen und mit `msedge --headless=new --screenshot` (Hintergrund `--default-background-color=00000000`) aufnehmen.
 
@@ -115,6 +120,8 @@ Regeln für jeden neuen Baustein (Aufgabe, Karte, Liste, Fenster). Anlass: Eine 
 ## Tests
 
 - Browser: Konsole, `runSelfTests()`
+- Antworten: `await runChoiceScan(10)` (keine zwei gleich aussehenden Antworten; nach Neuladen kein „[object Object]“) und `await runAnswerScan(5)` (jede Antipp-Aufgabe lösbar, alle Antwortkombinationen samt Folgeschritt). Beide laufen einige Minuten; im Hintergrund starten (`setTimeout(async()=>{window.r=await runAnswerScan(5)})`) und danach `window.r` lesen.
+- Aufgabendaten dürfen keine fertigen Bildschirm-Elemente enthalten (sie werden gespeichert): Antwortkarten als Daten (`f` Bruch, `x` Rechnung), gezeichnet wird in `render`.
 - Node: `node tests/run.mjs` ist nur eine Attrappe ohne echtes DOM (SVG, Klicks); die Tests mit DOM laufen dort nicht. Maßgeblich ist der Browser-Test
 
 ## Veröffentlichen

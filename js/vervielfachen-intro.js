@@ -3,7 +3,7 @@
    Erklärkarten der Etappe V „Brüche vervielfachen und teilen“ (nach js/intro.js, vor js/verstehen-extra.js, das sie auf 2 Karten kürzt)
    Karte 1 heißt „So geht's“ (das Beispiel), Karte 2 „Darauf achten“ (der typische Fehler); dazwischen setzt die App die Probeaufgabe.
    Sätze höchstens 14 Wörter, keine Rechnungen im Satz: Rechnungen stehen in calc. vt = Bild der Etappe (vtIntroNode),
-   bubble = [Name, Text, Pose]: eine Figur spricht („Paul sagt: …“).
+   fehler = der typische Fehler als kurzer Satz (Karte „Darauf achten“; seit 27.11.2026 ohne Figuren).
    ===================================================================== */
 Object.assign(INTRO,{
   NLAB:{title:'Bruch-Maschine',steps:[
@@ -17,13 +17,13 @@ Object.assign(INTRO,{
     {h:"So geht's",sub:'Mehrmals nehmen',say:['**Vervielfachen** heißt: Du nimmst einen Anteil mehrmals.','Lege die Stücke aneinander. Es bleiben Siebtel.','Es werden nur mehr Siebtel.'],
       vt:{kind:'strips',a:2,b:7,n:3},calc:[[[2,7],'·',3,'=',[2,7],'+',[2,7],'+',[2,7],'=',[6,7]]]},
     {h:'Darauf achten',sub:'Zähler und Nenner mal 3?',say:['So wäre es genauso viel wie vorher.','Du hast aber dreimal so viel. Das passt nicht.'],
-      bubble:['Paul','Ich habe Zähler und Nenner mal 3 genommen.','oops'],calc:[{wrong:true,t:[[2,7],'·',3,'=',[6,21]]}]}
+      fehler:'Zähler und Nenner mal 3 nehmen.',calc:[{wrong:true,t:[[2,7],'·',3,'=',[6,21]]}]}
   ]},
   N02:{title:'Teilen am Bild',steps:[
-    {h:"So geht's",sub:'Gerecht verteilen',say:['Juna und Ida teilen eine Blechpizza gerecht.','Schneide jedes Fünftel in 2 gleiche Stücke.','Jede bekommt 3 Stücke. Jedes Stück ist ein Zehntel.'],
+    {h:"So geht's",sub:'Gerecht verteilen',say:['Zwei Kinder teilen eine Blechpizza gerecht.','Schneide jedes Fünftel in 2 gleiche Stücke.','Jede bekommt 3 Stücke. Jedes Stück ist ein Zehntel.'],
       vt:{kind:'rect',a:3,b:5,n:2},calc:[[[3,5],':',2,'=',[3,10]]]},
     {h:'Darauf achten',sub:'Es wird weniger',say:['Beim Teilen bekommt jeder weniger als vorher.','Mehr als ein Ganzes kann nicht stimmen.','Geht der Zähler glatt auf, bildest du Gruppen.'],
-      bubble:['Ida','Bei mir kommt mehr als ein Ganzes heraus.','oops'],calc:[{wrong:true,t:[[4,6],':',2,'=',[4,3]]},[[6,7],':',3,'=',[2,7]]]}
+      fehler:'Beim Teilen kommt mehr als vorher heraus.',calc:[{wrong:true,t:[[4,6],':',2,'=',[4,3]]},[[6,7],':',3,'=',[2,7]]]}
   ]},
   N03:{title:'Vervielfachen rechnen',steps:[
     {h:"So geht's",sub:'Die Regel',say:['Viele kleine Teile kannst du kaum zählen.','Der Nenner bleibt gleich.','Nimm nur den Zähler mal die Zahl.'],calc:[[[2,9],'·',4,'=',[8,9]],[[3,4],'·',3,'=',[9,4],'=',{m:[2,1,4]}]]},
@@ -34,15 +34,15 @@ Object.assign(INTRO,{
     {h:'Darauf achten',sub:'Nicht kürzen',say:['Teilen ist nicht Kürzen.','Beim Kürzen bleibt es gleich viel.','Beim Teilen wird es weniger.'],calc:[[[15,18],'=',[5,6]],[[15,18],':',3,'=',[5,18]]]}
   ]},
   N05:{title:'Gemischte Zahlen',steps:[
-    {h:"So geht's",sub:'Zwei Wege',say:['Ida macht zuerst einen Bruch daraus.','Paul rechnet Ganze und Bruchteil getrennt.','Beide Wege sind richtig. Wähle deinen Weg.'],
+    {h:"So geht's",sub:'Zwei Wege',say:['Weg 1: Mach zuerst einen Bruch daraus.','Weg 2: Rechne Ganze und Bruchteil getrennt.','Beide Wege sind richtig. Wähle deinen Weg.'],
       calc:[[{m:[3,1,5]},'·',4,'=',[16,5],'·',4,'=',[64,5],'=',{m:[12,4,5]}],[3,'·',4,'+',[1,5],'·',4,'=',12,'+',[4,5],'=',{m:[12,4,5]}]]},
     {h:'Darauf achten',sub:'Auch den Bruchteil',say:['Nimm auch den Bruchteil mal die Zahl.','Beim Teilen wandelst du zuerst in einen Bruch um.'],
-      bubble:['Malik','Ich habe nur die Ganzen malgenommen.','oops'],calc:[{wrong:true,t:[{m:[3,1,5]},'·',4,'=',{m:[12,1,5]}]}]}
+      fehler:'Nur die Ganzen malnehmen.',calc:[{wrong:true,t:[{m:[3,1,5]},'·',4,'=',{m:[12,1,5]}]}]}
   ]},
   N06:{title:'Sachaufgaben',steps:[
     {h:"So geht's",sub:'Mehr oder weniger?',say:['Lies genau: Wird es mehr oder weniger?','Mehrere gleiche Portionen: Du vervielfachst.','Gerecht verteilen: Du teilst.']},
     {h:'Darauf achten',sub:'Was ist das Ganze?',say:['Das Rezept ist schon für 4 Personen.','Für 12 Personen brauchst du nur 3-mal so viel.','Frage immer: Was ist hier das Ganze?'],
-      bubble:['Malik','Für 12 Personen nehme ich alles mal 12.','oops'],calc:[[[3,8],'·',3,'=',[9,8],'=',{m:[1,1,8]}]]}
+      fehler:'Für 12 Personen alles mal 12 nehmen.',calc:[[[3,8],'·',3,'=',[9,8],'=',{m:[1,1,8]}]]}
   ]},
   N07:{title:'Fehlerdetektiv',steps:[
     {h:"So geht's",sub:'Fehler finden',say:['Jede Rechnung hat einen typischen Fehler.','Vergleiche den Wert vorher und nachher.','Wähle die Erklärung. Rechne dann richtig.'],calc:[{wrong:true,t:[[15,18],':',3,'=',[5,6]]}]},

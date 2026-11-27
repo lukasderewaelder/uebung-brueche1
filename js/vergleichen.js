@@ -94,8 +94,8 @@ const cmpKindsOf=(id,lvl)=>{const src=CMP_PLAN[id][lvl];return Array.from(new Se
 function cmpCtx(id){
   return (round,level)=>{
     if(!Array.isArray(round.cmp)||round.cmp.length!==TASKS[id].size){
-      const src=CMP_PLAN[id][level];let p;
-      for(let i=0;i<20;i++){p=RNG.shuffle(typeof src==='function'?src(RNG):src);if(p[0]!=='claim'&&p[0]!=='conflict')break;}
+      const src=CMP_PLAN[id][level],base=oneFormPlan(id,level,typeof src==='function'?src(RNG):src,TASKS[id].size);let p; /* eine Form je Runde */
+      for(let i=0;i<20;i++){p=RNG.shuffle(base);if(p[0]!=='claim'&&p[0]!=='conflict')break;}
       round.cmp=p;
     }
     return {kind:round.cmp[Math.min(round.results.length,round.cmp.length-1)]};

@@ -83,7 +83,7 @@ const ADD_PLAN={
 };
 function addCtx(id){
   return (round,level)=>{
-    if(!Array.isArray(round.add)||round.add.length!==TASKS[id].size)round.add=RNG.shuffle(ADD_PLAN[id][level]);
+    if(!Array.isArray(round.add)||round.add.length!==TASKS[id].size)round.add=RNG.shuffle(oneFormPlan(id,level,ADD_PLAN[id][level],TASKS[id].size)); /* eine Form je Runde */
     if(!Array.isArray(round.red)||round.red.length!==round.add.length)round.red=addRedPlan(round.add);
     const i=Math.min(round.results.length,round.add.length-1);
     return {kind:round.add[i],step:i,red:round.red[i]};

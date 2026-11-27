@@ -24,13 +24,14 @@ function fUnequal(widths,on){
 }
 /* Streifen mit fester Länge (für „verschieden große Ganze“): len in rem */
 function fStripLen(n,d,len,label){const s=drawFractionStrip(n,d,{maxW:len*16,label});s.style.width=len+'rem';return s;}
+const fPlanId=(plans)=>plans.__id;
 const fPlanCtx=(plans)=>(round,level)=>{
   const P=plans[level]||plans[1],size=P.length;
-  if(!Array.isArray(round.fk)||round.fk.length!==size)round.fk=P.slice();
+  if(!Array.isArray(round.fk)||round.fk.length!==size)round.fk=oneFormPlan(fPlanId(plans),level,P,size); /* eine Form je Runde */
   const i=Math.min(round.results.length,size-1);
   return {kind:round.fk[i],step:i};
 };
-const fStation=(id,meta,plans,impl)=>Object.assign({area:'Verstehen',size:5,planKey:'fk',ctx:fPlanCtx(plans),layoutKinds:(l)=>Array.from(new Set(plans[l]||plans[1]))},meta,impl);
+const fStation=(id,meta,plans,impl)=>(Object.defineProperty(plans,'__id',{value:id,enumerable:false}),Object.assign({area:'Verstehen',size:5,planKey:'fk',ctx:fPlanCtx(plans),layoutKinds:(l)=>Array.from(new Set(plans[l]||plans[1]))},meta,impl));
 const fq=(R,list)=>R.pick(list);
 const fRedPair=(R,qs,proper)=>{let p,q;do{q=R.pick(qs);p=proper===false?R.int(q+1,3*q-1):R.int(1,q-1);}while(gcd(p,q)!==1);return [p,q];};
 

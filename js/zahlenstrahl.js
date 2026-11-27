@@ -61,8 +61,9 @@ function nlPickList(view,host,items,key){
 
 /* ---------- Z01 Einteilung erkennen ---------- */
 TASKS.Z01={area:'Zahlenstrahl',name:'Einteilung erkennen',desc:'Abschnitte zählen und gleiche Einteilungen erkennen.',notes:['M8'],size:5,
-  gen(level,R){
-    const kind=R.pick(level===1?['count','count','pick']:['count','pick','even']);
+  ctx(round,level){if(!Array.isArray(round.zk)||round.zk.length!==5)round.zk=oneFormPlan('Z01',level,level===1?['count','pick']:['count','pick','even'],5);return {kind:round.zk[Math.min(round.results.length,4)]};},
+  gen(level,R,ctx){
+    const kind=(ctx&&ctx.kind)||R.pick(level===1?['count','count','pick']:['count','pick','even']); /* eine Form je Runde über ctx */
     if(kind==='count'){
       if(level===1)return {type:'Z01',level,kind,u:1,m:R.pick([2,3,4,5,6,7,8,9,10]),avoid:[]};
       const u=R.pick([2,3,4]);
