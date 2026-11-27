@@ -351,7 +351,8 @@ function backTarget(){
   if(v.from==='opt'&&v.back)return v.back;
   if(v.from==='pfad'&&(v.kind==='practice'||v.kind==='lab'))return pfadView(v.kind==='lab'?(v.id||'LAB'):v.id);
   if(v.kind==='home'&&v.tab==='pfad'&&v.thema)return {kind:'home',tab:'pfad'};
-  if(v.kind==='practice')return {kind:'home',tab:'ueben'};
+  if(v.kind==='home'&&v.tab==='ueben'&&v.thema)return {kind:'home',tab:'ueben'};
+  if(v.kind==='practice'){const m=moduleOf(v.id);return m&&!isCheck(v.id)&&v.id!=='WH'?{kind:'home',tab:'ueben',thema:m.id}:{kind:'home',tab:'ueben'};}
   if(v.kind==='game')return {kind:'home',tab:'spiele'};
   if(v.kind==='lab')return {kind:'home',tab:'ueben'};
   return null;

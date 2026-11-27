@@ -1742,3 +1742,32 @@ input:focus{border-color:var(--line)!important;box-shadow:3px 3px 0 var(--focus)
 .ruler{margin-bottom:0.625rem}
 .ruler .tk{height:0.5rem}
 .actionbar{padding-top:0.625rem}
+/* Üben seitenweise: Reiter je Gruppe (wie die Ansichts-Reiter in Mixup) */
+.grptabs{display:flex;flex-wrap:wrap;gap:0.375rem;margin:0.25rem 0 0.75rem}
+.grptabs button{display:inline-flex;align-items:center;gap:0.3125rem;min-height:max(40px,2.5rem);padding:0 0.75rem;border:2px solid var(--line);border-radius:6px 12px 6px 6px;background:var(--bp-2);color:var(--chalk);font:700 .9rem var(--font-body);cursor:pointer}
+.grptabs button .ic{width:1.1rem;height:1.1rem}
+.grptabs button[aria-pressed="true"]{background:var(--sel-bg);color:var(--sel-ink);border-color:var(--sel-bg)}
+.uebenbody h3.grp{display:none}
+.uebenmods{margin-top:0.875rem}
+.uebenmods .etrow>.ic{display:block;color:var(--chalk-dim)}
+.home>.bigbtn{margin-bottom:0.75rem;width:calc(100% - 5px)}
+/* Kästen auf Etappenseite und „Ich“: gleiche Fläche wie überall */
+.gate,.rankcard,.daycard,.whcard{background:var(--bp-2);border:2px solid var(--line);border-radius:var(--r);box-shadow:5px 5px 0 var(--shade);margin-right:5px}
+.gate-ic{color:var(--chalk)}
+.rankcard .ico{border:2px solid var(--line);border-radius:var(--r-s);color:var(--chalk);background:var(--bp-3)}
+.rankcard b{font:800 1.15rem var(--font-body)}
+.whcard{display:flex;flex-direction:column;gap:0.25rem;padding:0.75rem 0.875rem}
+.whcard small{color:var(--chalk-dim)}
+.techstate{border-radius:6px 14px 6px 6px}
+.techstate.ok{color:var(--ok);border-color:var(--ok);background:var(--bp-2)}
+.techstate.bad{color:var(--bad);border-color:var(--bad);background:var(--bp-2)}
+.modalcard .btn.danger,.modalcard .linkbtn.danger{color:var(--bad);border-color:var(--bad);text-decoration-color:var(--bad)}
+.tile{border:2px solid var(--line);border-radius:6px 14px 6px 6px;box-shadow:3px 3px 0 var(--shade)}
+.tile:active:not(:disabled){transform:translate(3px,3px);box-shadow:none}
+.tile .ltr{border-radius:4px 0 0 4px}
+.pick,.opt{border:2px solid var(--line);border-radius:6px 14px 6px 6px}
+.home h1[data-et]{border-bottom:5px solid var(--et);padding-bottom:0.25rem}
+/* Stationszeilen kompakt: Beschreibung einzeilig, damit eine Gruppe ohne Scrollen passt */
+.bomrow{min-height:3.25rem;padding-top:0.25rem;padding-bottom:0.25rem}
+.bomrow .nm small{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.whcard{margin-bottom:0.75rem}

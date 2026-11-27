@@ -1118,19 +1118,26 @@ function runSelfTests(){
     const keepU={view:S.view,last:S.last,levelByType:Object.assign({},S.levelByType)};
     try{
       S.last=null;S.view={kind:'home',tab:'ueben'};renderAll();
-      const folds=[...app.querySelectorAll('details.fold')];
-      t('Üben: ein Umschalter für alle, je Thema eine Liste (das erste geöffnet), jede Aufgabe ohne Zwischenseite erreichbar',app.querySelectorAll('.levelrow').length===1&&folds.length===activeModules().length&&folds[0].open&&folds.slice(1).every(d=>!d.open)&&activeModules().every((m,i)=>folds[i].querySelectorAll('.bomrow').length===Object.values(m.groups).reduce((n,g)=>n+g.ids.filter(id=>!isCheck(id)).length,0))&&!app.querySelector('.menu')&&app.querySelectorAll('.btn.primary,.bigbtn').length===0);
-      t('Üben: keine Eingangstests und Abschlusschecks (die stehen nur im Lernpfad)',!/Eingangstest|Abschlusscheck/.test(app.textContent)&&['Q00','QA','ZQ','ZA','WQ','WA','RQ','RA'].every(isCheck)&&!isCheck('R01')&&!isCheck('LAB'));
-      t('Üben: die Gruppen stehen als Überschriften, die Nummern laufen je Thema durch (Kopfzeile nur einmal)',activeModules().every((m,i)=>folds[i].querySelectorAll('h3.grp').length===Object.values(m.groups).filter(g=>g.ids.some(id=>!isCheck(id))).length&&folds[i].querySelectorAll('.bomhead').length===1&&[...folds[i].querySelectorAll('.bomrow .pos')].map(e=>e.textContent).join()===[...Array(folds[i].querySelectorAll('.bomrow').length).keys()].map(k=>String(k+1).padStart(2,'0')).join()));
-      S.last='W05';renderAll();
-      const folds2=[...app.querySelectorAll('details.fold')],vi=activeModules().findIndex(m=>m.id==='vergleichen');
-      t('Wiederholen: höchstens ein Hauptknopf (Wiederholung heute), „Weiter üben“ steht da; die Etappe der letzten Aufgabe ist geöffnet',app.querySelectorAll('.bigbtn.go').length<=1&&/Weiter üben/.test(app.textContent)&&folds2[vi].open&&folds2.filter(d=>d.open).length===1);
+      t('Üben (seitenweise): Startseite mit einer Zeile je Etappe, kein Umschalter, keine Stationsliste, kein Hauptknopf außer der Wiederholung',app.querySelectorAll('.uebenmods .etrow').length===activeModules().length&&!app.querySelector('.levelrow')&&!app.querySelector('.bomrow')&&app.querySelectorAll('.btn.primary,.bigbtn:not(.go)').length===0);
+      const ueAll=activeModules().every(m=>{S.view={kind:'home',tab:'ueben',thema:m.id};renderAll();const gs=[...app.querySelectorAll('.grptabs button')];let n=0;gs.forEach(b=>{b.click();n+=app.querySelectorAll('.bomrow').length;});return gs.length===Object.values(m.groups).filter(g=>g.ids.some(id=>!isCheck(id))).length&&n===uebenIds(m).length&&app.querySelectorAll('.levelrow').length===1;});
+      t('Üben: jede Etappe hat Reiter je Gruppe; zusammen sind alle Stationen ohne Checks erreichbar, ein Umschalter je Seite',ueAll);
+      t('Üben: keine Eingangstests und Abschlusschecks (die stehen nur im Lernpfad)',activeModules().every(m=>uebenIds(m).every(id=>!isCheck(id)))&&['Q00','QA','ZQ','ZA','WQ','WA','RQ','RA'].every(isCheck)&&!isCheck('R01')&&!isCheck('LAB'));
+      const vg=moduleById('vergleichen'),gs2=Object.keys(vg.groups).filter(g=>vg.groups[g].ids.some(id=>!isCheck(id)));
+      S.view={kind:'home',tab:'ueben',thema:'vergleichen',grp:gs2[1]};renderAll();
+      const nos=[...app.querySelectorAll('.bomrow .pos')].map(e=>+e.textContent),before=vg.groups[gs2[0]].ids.filter(id=>!isCheck(id)).length;
+      t('Üben: die Nummern laufen je Etappe über die Gruppen durch',nos[0]===before+1&&nos.every((x,i)=>x===nos[0]+i)&&app.querySelectorAll('.bomhead').length===1);
+      S.last='W05';S.view={kind:'home',tab:'ueben'};renderAll();
+      t('Wiederholen: höchstens ein Hauptknopf (Wiederholung heute), „Weiter üben“ steht da; die Zeile der Etappe der letzten Aufgabe ist markiert',app.querySelectorAll('.bigbtn.go').length<=1&&/Weiter üben/.test(app.textContent)&&app.querySelectorAll('.uebenmods .etrow.here').length===1&&!!app.querySelector('.uebenmods .etrow.here[data-mod="vergleichen"]'));
+      S.view={kind:'home',tab:'ueben',thema:'vergleichen'};renderAll();
+      t('Üben: auf der Etappenseite ist die Gruppe der letzten Aufgabe gewählt',!![...app.querySelectorAll('.bomrow')].find(b=>/W05|Auf einen Nenner/.test(b.textContent)));
       S.levelByType.W05=1;app.querySelectorAll('.levelrow .seg button')[1].click();
-      t('Üben: der Schwierigkeits-Umschalter gilt für alle Aufgaben der Seite',levelOf('W05')===2&&levelOf('G01')===2&&levelOf('Z03')===2);
+      t('Üben: der Schwierigkeits-Umschalter gilt für alle Aufgaben der Etappe',levelOf('W05')===2&&uebenIds(vg).every(id=>levelOf(id)===2));
       S.view={kind:'home',tab:'ueben',group:'Erweitern'};renderAll();
-      t('Üben: ein alter Verlaufseintrag mit Gruppe zeigt die Üben-Liste',!!app.querySelector('.uebenbody')&&/Wiederholen/.test(app.querySelector('h1').textContent));
-      app.querySelectorAll('.bomrow')[1].click(); /* die erste Zeile ist das Bruchlabor */
-      t('Üben: ein Antippen öffnet die Aufgabe, Zurück führt in die Üben-Liste',S.view.kind==='practice'&&S.last===S.view.id&&backTarget().tab==='ueben');
+      t('Üben: ein alter Verlaufseintrag mit Gruppe zeigt die Üben-Startseite',!!app.querySelector('.uebenmods')&&/Wiederholen/.test(app.querySelector('h1').textContent));
+      const vm=moduleById('veraendern'),gG=Object.keys(vm.groups).find(g=>vm.groups[g].ids.includes('G02'));
+      S.view={kind:'home',tab:'ueben',thema:'veraendern',grp:gG};renderAll();
+      [...app.querySelectorAll('.bomrow')].find(b=>b.textContent.includes(TASKS.G02.name)).click();
+      t('Üben: ein Antippen öffnet die Aufgabe, Zurück führt auf die Üben-Seite ihrer Etappe',S.view.kind==='practice'&&S.last===S.view.id&&backTarget().tab==='ueben'&&backTarget().thema===moduleOf(S.view.id).id);
       /* Leitregeln: ein gelber Hauptknopf je Bildschirm, „Lernpfad“ nie als Knopf oder Überschrift */
       const homeViews=[{kind:'home',tab:'pfad'},{kind:'home',tab:'pfad',thema:'veraendern'},{kind:'home',tab:'pfad',thema:'zahlenstrahl'},{kind:'home',tab:'pfad',thema:'vergleichen'},{kind:'home',tab:'ueben'},{kind:'home',tab:'spiele'},{kind:'home',tab:'rang'}];
       const yellow=homeViews.map(v=>{S.view=v;renderAll();return app.querySelectorAll('.btn.primary,.bigbtn.go').length;});

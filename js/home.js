@@ -41,15 +41,24 @@ function bomList(ids,opts={}){
 /* Eingangstests und Abschlusschecks stehen nur im Lernpfad, nicht in Üben */
 const isCheck=(id)=>!!((typeof QCHK!=='undefined'&&QCHK[id])||finalModOf(id));
 /* Üben: alle Aufgaben eines Themas, nach Gruppen, in einer fortlaufenden Liste (ohne Checks; Gruppen nur mit Checks entfallen) */
-function uebenBody(m){
-  const body=el('div',{class:'uebenbody'});let n=0,first=true;
-  Object.keys(m.groups).forEach(g=>{
-    const ids=m.groups[g].ids.filter(id=>!isCheck(id));
-    if(!ids.length)return;
-    body.append(el('h3',{class:'grp'},icon(m.groups[g].icon),g),bomList(ids,{head:first,start:n}));
-    n+=ids.length;first=false;
-  });
-  return body;
+function uebenBody(m,grp){
+  const gs=Object.keys(m.groups).filter(g=>m.groups[g].ids.some(id=>!isCheck(id)));
+  const lastG=gs.find(g=>m.groups[g].ids.includes(S.last));
+  const sel=gs.includes(grp)?grp:lastG||gs[0];
+  const tabs=el('div',{class:'grptabs',role:'group','aria-label':'Gruppe wählen'},...gs.map(g=>el('button',{type:'button','aria-pressed':String(g===sel),
+    onclick:()=>go({kind:'home',tab:'ueben',thema:m.id,grp:g},true)},icon(m.groups[g].icon),g)));
+  let n=0;for(const g of gs){if(g===sel)break;n+=m.groups[g].ids.filter(id=>!isCheck(id)).length;}
+  return el('div',{class:'uebenbody'},tabs,el('h3',{class:'grp'},icon(m.groups[sel].icon),sel),bomList(m.groups[sel].ids.filter(id=>!isCheck(id)),{start:n}));
+}
+/* alle übbaren Stationen einer Etappe (ohne Checks) */
+const uebenIds=(m)=>[].concat(...Object.values(m.groups).map(g=>g.ids.filter(id=>!isCheck(id))));
+/* Zeile auf der Üben-Startseite: führt zur Seite der Etappe */
+function uebenRow(m,lastMod){
+  const n=uebenIds(m).length,here=lastMod&&lastMod.id===m.id;
+  return el('button',{type:'button',class:'etrow'+(here?' here':''),'data-et':etOf(m)||'','data-mod':m.id,'aria-label':m.name+': '+n+' Stationen frei üben',
+    onclick:()=>go({kind:'home',tab:'ueben',thema:m.id})},
+    el('span',{class:'etl','aria-hidden':'true'},m.letter||''),
+    el('span',{class:'ettx'},el('b',null,m.short||m.name),el('small',null,n+' Stationen')),icon('weiter'));
 }
 /* Reiter „Lernen“: eine quadratische Kachel je Thema, zwei nebeneinander. Die Kachel hat immer dieselben Teile: Symbol, Name, Fortschritt und eine Marke
    („Start“, „Weiter“ oder „Geschafft“). Sie führt zur Themenseite; dort steht der eine Hauptknopf („Eingangstest starten“ oder „Weiter: Station“).
@@ -86,7 +95,8 @@ function fold(title,content,open){
 function renderHome(){
   const v=S.view,tab=homeTab(),root=el('div');
   const thema=tab==='pfad'&&v.thema?activeModules().find(m=>m.id===v.thema):null;
-  const head=thema?null:{pfad:'Lernen',ueben:'Wiederholen',spiele:'Spiele',rang:'Ich'}[tab]; /* Design „Klar“: der Reitername steht als Überschrift in der Kopfzeile */
+  const uthema=tab==='ueben'&&v.thema&&activeModules().some(m=>m.id===v.thema);
+  const head=thema||uthema?null:{pfad:'Lernen',ueben:'Wiederholen',spiele:'Spiele',rang:'Ich'}[tab]; /* Design „Klar“: der Reitername steht als Überschrift in der Kopfzeile */
   root.append(topbar('',null,head));
   const home=el('div',{class:'home'});
   if(tab==='pfad'){
@@ -102,13 +112,16 @@ function renderHome(){
       el('p',{class:'stats'},`Aufgaben bearbeitet: ${total} · Höchstes Treffer-Konto: ${S.bestStreak||0}`),
       fold('Alle Ränge',rankLadder()),
       fold('Alle Ziele',perfectionList()));
+  }else if(v.thema&&activeModules().some(m=>m.id===v.thema)){
+    /* Üben, Seite einer Etappe: Umschalter, Reiter je Gruppe, nur die Stationen der gewählten Gruppe (passt ohne Scrollen) */
+    const m=activeModules().find(x=>x.id===v.thema);
+    home.append(el('h1',{'data-et':etOf(m)||null},m.name),listLevel(uebenIds(m)),uebenBody(m,v.grp));
   }else{
-    /* Üben: frei wählen. Ein Umschalter für alle, je Thema eine aufklappbare Liste (das Thema der letzten Aufgabe ist offen) */
-    const last=S.last&&TASKS[S.last]&&!isCheck(S.last)?S.last:null,lastMod=last?moduleOf(last):null,mods=activeModules();
+    /* Üben, Startseite: Wiederholung heute, „Weiter üben“, je Etappe eine Zeile (Design „Poster“: seitenweise statt langer Liste) */
+    const last=S.last&&TASKS[S.last]&&!isCheck(S.last)?S.last:null,lastMod=last?moduleOf(last):null;
     home.append(whCard()); /* P14: oben die Wiederholung heute */
     if(last)home.append(bigBtn('play',()=>openEntry(last),'Weiter üben',TASKS[last].name,LEVEL_LABEL[levelOf(last)]));
-    home.append(el('h2',{class:'area'},'Geschaffte Stationen frei üben'),listLevel(PRACTICE_ORDER.filter(id=>!isCheck(id))));
-    mods.forEach(m=>home.append(fold(m.name,uebenBody(m),lastMod?lastMod.id===m.id:m===mods[0])));
+    home.append(el('section',{class:'etgrp uebenmods'},el('h2',{class:'area'},'Frei üben'),...activeModules().map(m=>uebenRow(m,lastMod))));
   }
   root.append(home,bottomNav());app.append(root);
 }
