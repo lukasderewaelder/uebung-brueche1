@@ -265,11 +265,15 @@ function vtAnswerRow(view,host,label,noMix){
 
 /* ---------- Antworten als kompakte Kacheln (zwei Spalten) ----------
    items: [{id, parts}], Entwurf draft[key] = id, Eingaben key+id; o.txt: Wörter (Textschrift); onPick(id) nach der Wahl */
+/* Rechnung aus Daten zeichnen: [Zähler, Nenner] = Bruch, sonst Zeichen oder Zahl */
+const vtX=(x)=>eq(...x.map(e=>Array.isArray(e)?frac(e[0],e[1]):String(e)));
+/* Inhalt einer Antwortkarte: x (Rechnung), f (Bruch) oder parts (Text/Knoten, nur beim Zeichnen gebaut) */
+const vtPartsOf=(it)=>it.x?[vtX(it.x)]:it.f?[frac(it.f[0],it.f[1])]:(it.parts||[]).map(p=>p instanceof Node||typeof p==='string'?p:'');
 function vtTiles(view,host,key,items,label,onPick,o){
   o=o||{};
   const d=view.draft,grid=el('div',{class:'tiles vttiles'+(o.txt?' vtwords':''),role:'group','aria-label':label||'Antworten'});
   items.forEach((it,i)=>{
-    const b=el('button',{type:'button',class:'tile '+(o.txt?'tile-txt':'tile-fs'),'aria-pressed':String(d[key]===it.id)},el('span',{class:'ltr','aria-hidden':'true'},'ABCDE'[i]),el('span',{class:'tv'},...it.parts));
+    const b=el('button',{type:'button',class:'tile '+(o.txt?'tile-txt':'tile-fs'),'aria-pressed':String(d[key]===it.id)},el('span',{class:'ltr','aria-hidden':'true'},'ABCDE'[i]),el('span',{class:'tv'},...vtPartsOf(it)));
     b.disabled=view.locked();
     b.addEventListener('click',()=>{if(view.locked())return;d[key]=it.id;view.save();grid.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));if(onPick)onPick(it.id);});
     view.inputs[key+it.id]=b;grid.append(b);
@@ -289,7 +293,7 @@ function vtOrder(view,host,items){
     if(view.changed)view.changed();
   };
   items.forEach(it=>{
-    const b=el('button',{type:'button',class:'tile tile-fs','data-id':it.id},el('span',{class:'tv'},...it.parts));
+    const b=el('button',{type:'button',class:'tile tile-fs','data-id':it.id},el('span',{class:'tv'},...vtPartsOf(it)));
     b.addEventListener('click',()=>{if(view.locked()||d.ord.includes(it.id))return;d.ord.push(it.id);view.save();draw();});
     pool.append(b);
   });

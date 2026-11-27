@@ -219,7 +219,7 @@ function hnStages(view,host,list,onChange){
     if(open<0)open=n-1;
     for(let i=0;i<n;i++){
       boxes[i].hidden=i!==open;sums[i].hidden=!(i<open);
-      if(i<open){sums[i].replaceChildren(icon('haken'),el('span',{class:'ets'},list[i].summary()),view.locked()?'':el('span',{class:'etc'},'ändern'));sums[i].disabled=view.locked();}
+      if(i<open){sums[i].replaceChildren(el('span',{class:'etn','aria-hidden':'true'},String(i+1)),el('span',{class:'ets'},list[i].summary()),view.locked()?'':el('span',{class:'etc'},'ändern'));sums[i].disabled=view.locked();}
     }
     if(onChange)onChange(open);
     if(view.changed)view.changed();

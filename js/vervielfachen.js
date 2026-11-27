@@ -104,11 +104,10 @@ function vtStation(id,meta,impl){
 const vtAvoid=(t)=>[redKey(t.a,t.b)];
 const vtBase=(id,level,kind,t,extra)=>Object.assign({type:id,level,kind},t,{avoid:vtAvoid(t)},extra||{});
 const vtExpr=(t,end)=>eq(...vtHead(t),...(end===undefined?[]:['=',end]));
-const vtFr=(f)=>({f,parts:[frac(f[0],f[1])]});
 /* vier Antworten als Brüche (die richtige gekürzt, Fallen aus den Fehlermustern), als Liste für hnChoice */
 function vtFracChoices(R,t,cands){
   const r=simplify(...vtRes(t)),list=rqFracList(R,r,cands.filter(c=>c[1]>0&&c[0]>=1));
-  const items=R.shuffle(list.map((f,i)=>({id:'o'+i,f,parts:[frac(f[0],f[1])]})));
+  const items=R.shuffle(list.map((f,i)=>({id:'o'+i,f}))); /* nur Daten (Neuladen!), vtTiles zeichnet den Bruch */
   return {items,answer:'o0'};
 }
 const vtMulCands=(t)=>{const [A,B]=vtVal(t),n=t.n;return [[A*n,B*n],[A,B*n],[A+n,B],[A*n,B+n],[A*n+1,B]];};
@@ -154,12 +153,12 @@ TASKS.N01=vtStation('N01',{name:'Vervielfachen am Bild',desc:'Einen Anteil mehrm
     if(kind==='torte'){const t=vtPicNums(R,2,'mul',{over:true});return vtBase('N01',level,kind,t,{k:Math.ceil(t.a*t.n/t.b)});}
     const t=vtPicNums(R,level,'mul',{over:kind==='ueber1'||kind==='strahl'?true:level===1?false:null});
     if(kind==='zuordnen'){
-      const adds=[{id:'A',parts:[eq(...Array.from({length:t.n},(_,i)=>i?['+',frac(t.a,t.b)]:[frac(t.a,t.b)]).flat())]},
-        {id:'B',parts:[eq(frac(t.a,t.b),'+',String(t.n))]},
-        {id:'C',parts:[eq(...Array.from({length:t.n},(_,i)=>i?['+',frac(1,t.b)]:[frac(1,t.b)]).flat())]}];
-      const muls=[{id:'A',parts:[eq(frac(t.a,t.b),'·',String(t.n))]},{id:'B',parts:[eq(frac(t.a,t.b),':',String(t.n))]},
-        {id:'C',parts:[eq(frac(t.a*t.n,t.b),'·',String(t.n))]},{id:'D',parts:[eq(frac(t.a,t.b*t.n),'·',String(t.n))]}];
-      return vtBase('N01',level,kind,t,{adds:R.shuffle(adds),muls:R.shuffle(muls)});
+      /* Falle C: bei Zähler > 1 „n-mal ein Feld“ (Feld statt Stück gezählt), bei Zähler 1 wäre das dieselbe Rechnung → „ein Stück zu viel“ */
+      const sum=(k,f)=>Array.from({length:k},(_,i)=>i?['+',f]:[f]).flat();
+      const cMore=t.a===1;
+      const adds=[{id:'A',x:sum(t.n,[t.a,t.b])},{id:'B',x:[[t.a,t.b],'+',t.n]},{id:'C',x:cMore?sum(t.n+1,[t.a,t.b]):sum(t.n,[1,t.b])}];
+      const muls=[{id:'A',x:[[t.a,t.b],'·',t.n]},{id:'B',x:[[t.a,t.b],':',t.n]},{id:'C',x:[[t.a*t.n,t.b],'·',t.n]},{id:'D',x:[[t.a,t.b*t.n],'·',t.n]}];
+      return vtBase('N01',level,kind,t,{adds:R.shuffle(adds),muls:R.shuffle(muls),cMore});
     }
     if(kind==='ergebnis')return vtBase('N01',level,kind,t,vtFracChoices(R,t,vtMulCands(t)));
     return vtBase('N01',level,kind,t);
@@ -189,7 +188,8 @@ TASKS.N01=vtStation('N01',{name:'Vervielfachen am Bild',desc:'Einen Anteil mehrm
       }
       case 'zuordnen':{
         const fig=el('div',{class:'vtfig'},vtStrips(t.a,t.b,t.n));host.append(fig);
-        const d=view.draft,stg=hnStages(view,host,[{isDone:()=>!!d.add,summary:()=>'Additionsaufgabe gewählt'},{}]);
+        const d=view.draft,chosen=()=>{const it=(t.adds||[]).find(x=>x.id===d.add);return it&&it.x?el('span',null,'Deine Addition: ',vtX(it.x)):'Addition gewählt';};
+        const stg=hnStages(view,host,[{isDone:()=>!!d.add,summary:chosen},{}]);
         stg.boxes[0].append(el('p',null,strong('1. Welche Additionsaufgabe passt?')));vtTiles(view,stg.boxes[0],'add',t.adds,'Additionsaufgabe',()=>stg.advance(0));
         stg.boxes[1].append(el('p',null,strong('2. Welche Multiplikationsaufgabe passt?')));vtTiles(view,stg.boxes[1],'mul',t.muls,'Multiplikationsaufgabe');
         stg.upd();
@@ -216,8 +216,9 @@ TASKS.N01=vtStation('N01',{name:'Vervielfachen am Bild',desc:'Einen Anteil mehrm
       }
       case 'zuordnen':{
         if(!d.add||!d.mul)return invalid('Wähle eine Additionsaufgabe und eine Multiplikationsaufgabe.');
-        if(d.add!=='A')return wrong('zuordnen',d.add==='B'?`Das Bild zeigt nicht ${t.n} dazu. Es zeigt ${t.n} gleiche Stücke. Tippe oben auf „ändern“.`:'Zähle, wie viele Felder ein Stück hat. Tippe oben auf „ändern“.',{['add'+d.add]:false});
-        if(d.mul!=='A')return wrong('zuordnen',d.mul==='B'?'Beim Bild wird es mehr, nicht weniger. Du nimmst mehrmals.':`Ein Stück ist ${t.a}/${t.b}. Davon nimmst du ${t.n}.`,{['mul'+d.mul]:false});
+        const mulOk=d.mul==='A',addOk=d.add==='A';
+        if(!addOk)return wrong('zuordnen',(mulOk?'Die Multiplikation stimmt. Die Addition noch nicht: ':'')+(d.add==='B'?`Das Bild zeigt nicht ${t.n} dazu. Es zeigt ${t.n} gleiche Stücke.`:t.cMore?`Zähle die Stücke im Bild. Es sind ${t.n}.`:'Zähle, wie viele Felder ein Stück hat.')+' Tippe oben auf „ändern“.',{['add'+d.add]:false});
+        if(!mulOk)return wrong('zuordnen','Die Addition stimmt. Die Multiplikation noch nicht: '+(d.mul==='B'?'Beim Bild wird es mehr, nicht weniger. Du nimmst mehrmals.':`Ein Stück ist ${t.a}/${t.b}. Davon nimmst du ${t.n}.`),{['mul'+d.mul]:false});
         return right(`Richtig! ${t.n}-mal ${t.a}/${t.b} ist ${t.a}/${t.b} · ${t.n} = ${A}/${t.b}.`);
       }
       case 'ergebnis':{const c=vtChoiceCheck(t,d,'c');return c||vtOkText(t);}

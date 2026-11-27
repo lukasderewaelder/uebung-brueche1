@@ -1804,3 +1804,7 @@ input:focus{border-color:var(--line)!important;box-shadow:3px 3px 0 var(--focus)
 .badge{border-radius:6px 14px 6px 6px}
 .badge.have{border:2px solid var(--line);box-shadow:3px 3px 0 var(--et,var(--shade))}
 .weekcard .lamp{border-color:var(--line)}
+/* Erledigter Teil einer zweiteiligen Aufgabe: neutral (Tinte, gestrichelt), Schrittnummer statt Haken – ob es stimmt, sagt erst „Prüfen“ */
+.etsum{border:2px dashed var(--line);border-radius:6px 14px 6px 6px;background:var(--bp-2);box-shadow:none}
+.etsum .etn{flex:none;display:grid;place-items:center;width:1.5rem;height:1.5rem;border-radius:50%;background:var(--chalk);color:var(--bp);font:800 .85rem var(--font-body)}
+.etsum .etc{font:700 .85rem var(--font-body);color:var(--chalk);text-decoration:underline solid var(--sticker);text-decoration-thickness:3px}

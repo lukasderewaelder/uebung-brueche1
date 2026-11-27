@@ -2661,3 +2661,110 @@ async function runFracScan(samples=3,ids,opts={}){
   if(errs.length)console.log(errs.join('\n'));
   return {hits,errs};
 }
+
+/* =====================================================================
+   Antwort-Prüfung (27.11.2026): sucht in allen Antipp-Aufgaben Antworten, die genau gleich aussehen.
+   Zwei gleich aussehende Antworten sind immer ein Fehler (das Kind wählt die richtige und bekommt „Noch nicht“).
+   Aufruf im Browser: await runChoiceScan(20) – läuft je Aufgabe, Niveau und Art mit `samples` Zufallsaufgaben.
+   ===================================================================== */
+async function runChoiceScan(samples=10,ids){
+  ids=ids||Object.keys(TASKS);
+  const f=document.createElement('iframe');
+  f.style.cssText='position:fixed;left:0;top:0;width:900px;height:700px;border:0;visibility:hidden;pointer-events:none';
+  f.src='index.html?choicescan='+Date.now();
+  document.body.append(f);
+  await new Promise(r=>{f.onload=r;});
+  const cw=f.contentWindow;
+  cw.eval(`persist=function(){};Object.keys(INTRO).forEach(k=>S.intro[k]=true);
+    window.__dups=new Map();
+    window.__key=(b)=>{const c=b.cloneNode(true);c.querySelectorAll('.ltr').forEach(x=>x.remove());return (c.textContent.replace(/\s+/g,' ').trim()+'|'+[...c.querySelectorAll('svg')].map(s=>s.innerHTML.replace(/id="[^"]*"/g,'')).join('')).slice(0,4000);};
+    window.__scanDup=(tag)=>{document.querySelectorAll('.tiles,.cards,.vttiles,[role="group"]').forEach(g=>{
+      const bs=[...g.children].filter(b=>b.matches('button.tile,button.pick,button.btn.yn'));if(bs.length<2)return;
+      const seen=new Map();bs.forEach(b=>{const k=__key(b);if(!k.replace('|','').trim())return;if(seen.has(k)){const t=tag+': „'+k.split('|')[0].slice(0,60)+'“';if(!__dups.has(t))__dups.set(t,1);}else seen.set(k,b);});});};`);
+  const errs=[];
+  for(const id of ids){
+    for(const lvl of [1,2]){
+      const kinds=(TASKS[id].layoutKinds&&TASKS[id].layoutKinds(lvl))||[null];
+      for(const kind of kinds){
+        const rs=kind?`{'${keyOf(id,lvl)}':{results:[],cur:null,size:${TASKS[id].size},${TASKS[id].planKey||'cmp'}:Array(${TASKS[id].size}).fill('${kind}')}}`:'{}';
+        const r=cw.eval(`(()=>{try{for(let i=0;i<${samples};i++){
+            S.levelByType['${id}']=${lvl};S.rounds=${rs};S.view={kind:'practice',id:'${id}'};renderAll();
+            __scanDup('${id}-L${lvl}${kind?' '+kind:''}');
+            S=JSON.parse(JSON.stringify(S));renderAll();__scanDup('${id}-L${lvl}${kind?' '+kind:''} neu geladen');
+            if(/\\[object Object\\]|undefined|NaN/.test(document.querySelector('#app').textContent)){const t='${id}-L${lvl}${kind?' '+kind:''}: nach Neuladen „[object Object]“, „undefined“ oder „NaN“';if(!__dups.has(t))__dups.set(t,1);}}
+            return null;}catch(e){return e.message;}})()`);
+        if(r)errs.push(id+': '+r);
+      }
+    }
+  }
+  const dups=[...cw.__dups.keys()];
+  f.remove();
+  console.log('Antwort-Prüfung: '+dups.length+' Gruppe(n) mit gleich aussehenden Antworten, '+errs.length+' Fehler');
+  if(dups.length)console.log(dups.join('\n'));
+  return {dups,errs};
+}
+
+/* =====================================================================
+   Lösbarkeits-Prüfung (27.11.2026): reine Antipp-Aufgaben (keine Eingabefelder, höchstens 3 Antwortgruppen)
+   werden mit jeder Kombination aus je einer Antwort pro Gruppe geprüft (validate der Aufgabe).
+   Fehler: keine Kombination richtig (unlösbar) oder mehrere gleich aussehende Kombinationen mit verschiedenem Ergebnis.
+   Mehrfachauswahl (Karten, die man an- und abwählt) wird übersprungen. Aufruf: await runAnswerScan(5)
+   ===================================================================== */
+async function runAnswerScan(samples=5,ids){
+  ids=ids||Object.keys(TASKS);
+  const f=document.createElement('iframe');
+  f.style.cssText='position:fixed;left:0;top:0;width:900px;height:700px;border:0;visibility:hidden;pointer-events:none';
+  f.src='index.html?answerscan='+Date.now();
+  document.body.append(f);
+  await new Promise(r=>{f.onload=r;});
+  const cw=f.contentWindow;
+  cw.eval(`persist=function(){};Object.keys(INTRO).forEach(k=>S.intro[k]=true);window.__bad=new Map();
+    window.__groups=()=>[...document.querySelectorAll('#app .card .tiles,#app .card .vttiles,#app .card .cards,#app .card [role="group"],#app .card [role="radiogroup"]')]
+      .map(g=>[...g.children].filter(b=>b.matches('button.tile,button.btn.yn,label.opt')))
+      .filter(bs=>bs.length>=2);`);
+  const errs=[];let tried=0;
+  for(const id of ids){
+    if(GAMES[id])continue;
+    for(const lvl of [1,2]){
+      const kinds=(TASKS[id].layoutKinds&&TASKS[id].layoutKinds(lvl))||[null];
+      for(const kind of kinds){
+        const tag=id+'-L'+lvl+(kind?' '+kind:'');
+        const rs=kind?`{'${keyOf(id,lvl)}':{results:[],cur:null,size:${TASKS[id].size},${TASKS[id].planKey||'cmp'}:Array(${TASKS[id].size}).fill('${kind}')}}`:'{}';
+        const r=cw.eval(`(()=>{try{let n=0;for(let i=0;i<${samples};i++){
+            S.levelByType['${id}']=${lvl};S.rounds=${rs};S.view={kind:'practice',id:'${id}'};renderAll();
+            const key=keyOf('${id}',${lvl}),round=S.rounds[key];if(!round||!round.cur)continue;
+            if(document.querySelector('#app .card input:not([type=radio]):not([type=checkbox]),#app .card .pick,#app .card svg [role="button"],#app .card .nlbox,#app .card .vtord'))continue; /* Eingaben, Mehrfachauswahl, Bildklicks: nicht hier */
+            const gs=__groups();if(!gs.length||gs.length>3)continue;
+            const task=JSON.stringify(round.cur.task),T=TASKS[round.cur.task.type];
+            {const g=gs.find(x=>x.length>=2&&x.every(b=>b.matches('button')));if(g){g[0].click();g[1].click();const multi=g[0].getAttribute('aria-pressed')==='true'&&g[1].getAttribute('aria-pressed')==='true';round.cur=newState(JSON.parse(task));renderAll();if(multi)continue;}} /* Mehrfachauswahl („alle antippen“): nicht hier */
+            const sizes=gs.map(g=>g.length),combos=[];
+            const rec=(k,acc)=>{if(k===sizes.length){combos.push(acc);return;}for(let j=0;j<sizes[k];j++)rec(k+1,acc.concat(j));};rec(0,[]);
+            if(combos.length>64)continue;
+            const res=combos.map(c=>{
+              round.cur=newState(JSON.parse(task));renderAll();const g2=__groups();
+              c.forEach((j,k)=>{const b=g2[k]&&g2[k][j];if(b){const x=b.matches('label')?b.querySelector('input'):b;x.click();}});
+              const v=T.validate(round.cur.task,round.cur.draft);
+              if(v.invalid){ /* Folgeschritt (z. B. erst Weg, dann Zeichen): jede Antwort der neu erschienenen Gruppen ausprobieren */
+                const extra=__groups().slice(c.length);
+                for(let k=0;k<extra.length;k++)for(let j=0;j<extra[k].length;j++){
+                  round.cur=newState(JSON.parse(task));renderAll();const g3=__groups();
+                  c.forEach((jj,kk)=>{const b=g3[kk]&&g3[kk][jj];if(b)(b.matches('label')?b.querySelector('input'):b).click();});
+                  const g4=__groups(),b=g4[c.length+k]&&g4[c.length+k][j];if(b)(b.matches('label')?b.querySelector('input'):b).click();
+                  if(T.validate(round.cur.task,round.cur.draft).correct)return 'R';
+                }
+              }
+              return v.correct?'R':v.invalid?'I':'F';});
+            n++;
+            const ok=res.filter(x=>x==='R').length;
+            if(ok===0&&!res.every(x=>x==='I')){const t='${tag}: keine Antwort gilt als richtig ('+res.join('')+')';if(!__bad.has(t))__bad.set(t,JSON.parse(task));}
+          }return n;}catch(e){return 'E:'+e.message;}})()`);
+        if(typeof r==='string')errs.push(tag+': '+r);else tried+=r;
+      }
+    }
+  }
+  const bad=[...cw.__bad.entries()].map(([k,t])=>k);
+  f.remove();
+  console.log('Lösbarkeits-Prüfung: '+tried+' Aufgaben ausprobiert, '+bad.length+' Befund(e), '+errs.length+' Fehler');
+  if(bad.length)console.log(bad.join('\n'));
+  return {tried,bad,errs};
+}
