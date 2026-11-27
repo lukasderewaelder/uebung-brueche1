@@ -1454,7 +1454,7 @@ function runSelfTests(){
     const hellRule=rules.find(r=>r.sel.includes('data-theme="hell"')),autoRule=rules.find(r=>r.sel.includes(':not([data-theme])')&&/light/.test(r.media));
     const dark=darkRule?tokensOf(darkRule):{},hell=hellRule?tokensOf(hellRule):{},auto=autoRule?tokensOf(autoRule):{};
     const sorted=(o)=>JSON.stringify(Object.keys(o).sort().map(k=>[k,o[k]]));
-    t('Heller Modus: „Hell“ und „Automatisch bei hellem Gerät“ haben genau dieselben Werte; alles, was sie ändern, gibt es im dunklen Grundsatz',Object.keys(hell).length>=20&&sorted(hell)===sorted(auto)&&Object.keys(hell).every(k=>k in dark)&&hell['--bp']==='#f5f6f8'&&dark['--bp']==='#14181e');
+    t('Heller Modus: „Hell“ und „Automatisch bei hellem Gerät“ haben genau dieselben Werte; alles, was sie ändern, gibt es im dunklen Grundsatz',Object.keys(hell).length>=20&&sorted(hell)===sorted(auto)&&Object.keys(hell).every(k=>k in dark)&&hell['--bp']==='#fbf6ec'&&dark['--bp']==='#161b26');
     const lumOf=(h)=>{const m=h.replace('#','');const v=[0,2,4].map(i=>parseInt(m.slice(i,i+2),16)/255).map(x=>x<=0.03928?x/12.92:Math.pow((x+0.055)/1.055,2.4));return 0.2126*v[0]+0.7152*v[1]+0.0722*v[2];};
     const cr=(a,b)=>{const x=lumOf(a),y=lumOf(b);return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05);};
     const pairs=[['--chalk','--bp'],['--chalk','--bp-2'],['--chalk','--bp-3'],['--chalk-dim','--bp'],['--chalk-dim','--bp-2'],['--amber','--bp'],['--amber','--bp-2'],['--erw','--bp'],['--erw','--bp-2'],['--kue','--bp'],['--kue','--bp-2'],['--ok','--bp'],['--ok','--bp-2'],['--bad','--bp'],['--bad','--bp-2'],['--ink','--paper'],['--ink-dim','--paper'],['--on-amber','--amber-fill']];
@@ -1469,7 +1469,7 @@ function runSelfTests(){
       S.ui={size:'m',theme:'dunkel'};applyUi();
       const d=[root.dataset.theme,getComputedStyle(root).backgroundColor,metaTc(),getComputedStyle(root).colorScheme];
       S.ui={size:'m'};applyUi();
-      t('Darstellung: „Hell“ = heller Grund und Adressleiste in Grundfarbe, „Dunkel“ = dunkler Grund, „Automatisch“ (nichts gewählt) setzt kein Attribut',h[0]==='hell'&&h[1]==='rgb(245, 246, 248)'&&h[2]==='#f5f6f8'&&h[3]==='light'&&d[0]==='dunkel'&&d[1]==='rgb(20, 24, 30)'&&d[2]==='#14181e'&&d[3]==='dark'&&root.dataset.theme===undefined&&themeOf()==='auto');
+      t('Darstellung: „Hell“ = heller Grund und Adressleiste in Grundfarbe, „Dunkel“ = dunkler Grund, „Automatisch“ (nichts gewählt) setzt kein Attribut',h[0]==='hell'&&h[1]==='rgb(251, 246, 236)'&&h[2]==='#fbf6ec'&&h[3]==='light'&&d[0]==='dunkel'&&d[1]==='rgb(22, 27, 38)'&&d[2]==='#161b26'&&d[3]==='dark'&&root.dataset.theme===undefined&&themeOf()==='auto');
       S.ui={size:'m',theme:'dunkel'};applyUi();openOptions();
       const seg=[...document.querySelectorAll('.optmodal .optseg')].find(x=>x.getAttribute('aria-label')==='Darstellung wählen');
       const btns=seg?[...seg.querySelectorAll('button')]:[],pressed=()=>btns.filter(b=>b.getAttribute('aria-pressed')==='true').map(b=>b.textContent).join();

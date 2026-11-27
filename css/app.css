@@ -1,74 +1,75 @@
 /* =====================================================================
-   Bruchwerkstatt – Design „Klar“ (seit 27.11.2026, vorher „Blaupause“)
-   Ruhig und sachlich: heller Grund, weiße Flächen, dünne Linien, keine Muster, keine Großbuchstaben-Etiketten.
-   Asymmetrisch: Inhalt linksbündig, die Hauptaktion steht rechts unten und ist breiter als die Nebenaktionen.
-   Schrift Atkinson Hyperlegible (fonts/, offline). Farbe = Bedeutung: Blau Hauptaktion und Auswahl ·
-   Orange Erweitern (×) · Petrol Kürzen (÷) · Grün richtig · Rot falsch · Kennfarbe der Etappe nur als schmale Marke.
+   Bruchwerkstatt – Design „Poster“ (seit 27.11.2026, wie die App Mixup; vorher „Blaupause“)
+   Cremefarbener Grund, Tintenlinien, harte versetzte Schatten, eine große Ecke oben rechts (Asymmetrie),
+   gelber Marker unter Überschriften. Keine Muster, keine Großbuchstaben-Etiketten.
+   Hauptaktion: Tinte mit orangem Schatten, rechts unten, breiter als die Nebenaktionen.
+   Schrift Bricolage Grotesque (fonts/, offline, OFL). Farbe = Bedeutung: Orange Erweitern (×) · Petrol Kürzen (÷) ·
+   Grün richtig · Rot falsch · Gelb Markierung · Kennfarbe der Etappe nur als Kante.
    Aufbau: 1 Token · 2 Grund · 3 Bruchdarstellung · 4 Kopf/Navigation · 5 Bausteine · 6 Hilfen · 7 Bruchbilder ·
-           8 Aufgabentypen · 9 Menüs · 10 Spiele · 11 Anpassungen · 12 Bewegung · 13 Design Klar
+           8 Aufgabentypen · 9 Menüs · 10 Spiele · 11 Anpassungen · 12 Bewegung · 13 Design Poster
    ===================================================================== */
-@font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/atkinson-400.woff2) format("woff2");size-adjust:94%}
-@font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:700;font-display:swap;src:url(../fonts/atkinson-700.woff2) format("woff2");size-adjust:94%}
+@font-face{font-family:"Bricolage Grotesque";font-style:normal;font-weight:200 800;font-display:swap;src:url(../fonts/bricolage-grotesque-latin-opsz-normal.woff2) format("woff2");size-adjust:92%;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Bricolage Grotesque";font-style:normal;font-weight:200 800;font-display:swap;src:url(../fonts/bricolage-grotesque-latin-ext-opsz-normal.woff2) format("woff2");size-adjust:92%;unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 
 /* ---------- 1 Token ---------- */
 :root{
-  /* dunkel (Grundsatz der Datei; der helle Modus überschreibt) */
-  --bp:#14181e;--bp-2:#1c222a;--bp-3:#28303b;
-  --chalk:#e9edf2;--chalk-dim:#a9b3c0;
-  --grid:rgba(233,237,242,.05);--grid-2:rgba(233,237,242,.12);
-  --line:#38414d;--line-soft:#2b323c;
-  --amber:#93b2ff;--on-amber:#0d1526;--amber-fill:#93b2ff;--sel-line:#93b2ff;--sel-bg:#93b2ff;--sel-ink:#0d1526;--sel-tile:#26324a;
+  /* dunkel (Grundsatz der Datei; der helle Modus überschreibt): Poster umgekehrt, cremefarbene Linien auf Tinte */
+  --bp:#161b26;--bp-2:#1f2533;--bp-3:#2a3142;
+  --chalk:#fbf6ec;--chalk-dim:#bcc1cc;
+  --grid:rgba(251,246,236,.05);--grid-2:rgba(251,246,236,.12);
+  --line:#e9e2d4;--line-soft:#3a4152;--shade:#000000;--hit:#c44f23;--sticker:#ffd84a;--focus:#8fb0ff;
+  --amber:#ff9d70;--on-amber:#161b26;--amber-fill:#fbf6ec;--sel-line:#fbf6ec;--sel-bg:#fbf6ec;--sel-ink:#161b26;--sel-tile:#ffd84a;
   --erw:#f4a061;--kue:#5fcfdc;
   --ok:#72d69d;--bad:#ff9189;
-  --paper:#222932;--ink:#e9edf2;--ink-dim:#a9b3c0;--mark:#5a4a12;
-  --et-F:#3f9e64;--et-E:#d9783a;--et-Z:#1f9fab;--et-W:#8a6fd1;--et-R:#3f7fd6;--et-H:#cf5658;--et-V:#b8921d;  /* Kennfarbe je Etappe: nur als schmale Marke */
+  --paper:#262d3c;--ink:#fbf6ec;--ink-dim:#bcc1cc;--mark:#6b5a14;
+  --et-F:#0f8a5f;--et-E:#c44f23;--et-Z:#1a8fa0;--et-W:#9b59c9;--et-R:#3f71d3;--et-H:#c23a4a;--et-V:#b8921d;  /* Kennfarbe je Etappe: nur als Kante */
   --medal-bronze:#c0773a;--medal-silber:#a9b6c3;--medal-gold:#e0b12b;--medal-platin:#7fc9c4;--medal-diamant:#6fc3ff;--medal-kristall:#b79cff;--medal-palladium:#d6cfc0;--medal-rhodium:#f08fa8;--medal-iridium:#6cc36a;
-  --track:#2b323c;--tick:rgba(233,237,242,.3);
-  --nl-sec:rgba(233,237,242,.06);--nl-on:rgba(147,178,255,.35);
-  --hatch-amber:#93b2ff;--hatch-erw:#f4a061;--hatch-kue:#5fcfdc;--hatch-ink:#e9edf2;
-  --fill-amber:#3c5596;--fill-erw:#87502a;--fill-kue:#1f646d;--fill-ink:#4a5563;--hatch-op:0; /* Bruchbilder: Flächenfarbe; --hatch-op 0 = keine Schraffur */
-  --hatch-amber-bg:rgba(91,127,224,.14);--hatch-erw-bg:rgba(224,122,50,.14);--hatch-kue-bg:rgba(26,154,168,.14);--hatch-ink-bg:rgba(27,36,48,.07);
+  --track:#2f3647;--tick:rgba(251,246,236,.3);
+  --nl-sec:rgba(251,246,236,.06);--nl-on:rgba(143,176,255,.35);
+  --hatch-amber:#8fb0ff;--hatch-erw:#f4a061;--hatch-kue:#5fcfdc;--hatch-ink:#fbf6ec;
+  --fill-amber:#a88a1c;--fill-erw:#87502a;--fill-kue:#1f646d;--fill-ink:#4a5563;--hatch-op:0; /* Bruchbilder: Flächenfarbe; --hatch-op 0 = keine Schraffur */
+  --hatch-amber-bg:rgba(63,113,211,.14);--hatch-erw-bg:rgba(224,122,50,.14);--hatch-kue-bg:rgba(26,154,168,.14);--hatch-ink-bg:rgba(22,27,38,.07);
   color-scheme:dark;
-  --acc:var(--amber);
+  --acc:var(--chalk);
   --cell-stroke:var(--chalk);--cell-on:url(#hatch-amber);
-  --r:14px;--r-s:10px;                         /* Ecken: Flächen, Bedienelemente */
+  --r:6px 22px 6px 6px;--r-s:8px;--r-b:8px 20px 8px 8px; /* Ecken: Flächen (große Ecke oben rechts), Bedienelemente, Hauptknopf */
   --fs:clamp(15px,calc(13.6px + .55vw),22px); /* Grundschrift wächst mit dem Display */
   --ui-scale:1;                                /* Textgröße aus den Optionen */
   --tap:max(44px,2.75rem);                     /* Mindestgröße für Tippflächen */
-  --font-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  --font-mono:var(--font-body);                /* früher Schreibmaschinenschrift; Zahlen stehen jetzt mit gleicher Breite (tabular-nums) */
+  --font-body:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-mono:var(--font-body);                /* früher Schreibmaschinenschrift; Zahlen stehen mit gleicher Breite (tabular-nums) */
 }
-/* Heller Modus: gilt bei Wahl „Hell“ und bei „Automatisch“, wenn das Gerät hell eingestellt ist.
+/* Heller Modus („Poster“ wie Mixup): gilt bei Wahl „Hell“ und bei „Automatisch“, wenn das Gerät hell eingestellt ist.
    Beide Blöcke müssen dieselben Werte haben (der Selbsttest vergleicht sie und prüft die Kontraste). */
 :root[data-theme="hell"]{
-    --bp:#f5f6f8;--bp-2:#ffffff;--bp-3:#eceff3;
-    --chalk:#1b2430;--chalk-dim:#525d6b;
-    --grid:rgba(27,36,48,.05);--grid-2:rgba(27,36,48,.12);
-    --line:#d5dae1;--line-soft:#e6e9ee;
-    --amber:#1f4fd1;--on-amber:#ffffff;--amber-fill:#1f4fd1;--sel-line:#1f4fd1;--sel-bg:#1f4fd1;--sel-ink:#ffffff;--sel-tile:#dce6fb;
+    --bp:#fbf6ec;--bp-2:#ffffff;--bp-3:#f2e9d6;
+    --chalk:#161b26;--chalk-dim:#4f5566;
+    --grid:rgba(22,27,38,.05);--grid-2:rgba(22,27,38,.12);
+    --line:#161b26;--line-soft:#ddd3bf;--shade:#161b26;--hit:#c44f23;--sticker:#ffd84a;--focus:#3f71d3;
+    --amber:#b0431b;--on-amber:#ffffff;--amber-fill:#161b26;--sel-line:#161b26;--sel-bg:#161b26;--sel-ink:#ffffff;--sel-tile:#ffd84a;
     --erw:#a8460b;--kue:#0b6c78;
-    --ok:#17733f;--bad:#b4271f;
-    --paper:#eef2f7;--ink:#1b2430;--ink-dim:#4a5564;--mark:#fde68a;
-    --track:#e3e7ec;--tick:rgba(27,36,48,.25);
-    --nl-sec:rgba(27,36,48,.05);--nl-on:rgba(31,79,209,.25);
-    --hatch-amber:#5b7fe0;--hatch-erw:#e07a32;--hatch-kue:#1a9aa8;--hatch-ink:#1b2430;
-    --fill-amber:#b3c5f3;--fill-erw:#f4c29d;--fill-kue:#a6dbe1;--fill-ink:#c4ccd6;
+    --ok:#1c7a35;--bad:#b4232f;
+    --paper:#f2e9d6;--ink:#161b26;--ink-dim:#4a4f5e;--mark:#ffd84a;
+    --track:#e9dfca;--tick:rgba(22,27,38,.3);
+    --nl-sec:rgba(22,27,38,.05);--nl-on:rgba(63,113,211,.3);
+    --hatch-amber:#3f71d3;--hatch-erw:#e07a32;--hatch-kue:#1a9aa8;--hatch-ink:#161b26;
+    --fill-amber:#ffd84a;--fill-erw:#f4b98e;--fill-kue:#9fd8de;--fill-ink:#c9c2b2;
     color-scheme:light;
 }
 @media (prefers-color-scheme:light){
   :root:not([data-theme]){
-    --bp:#f5f6f8;--bp-2:#ffffff;--bp-3:#eceff3;
-    --chalk:#1b2430;--chalk-dim:#525d6b;
-    --grid:rgba(27,36,48,.05);--grid-2:rgba(27,36,48,.12);
-    --line:#d5dae1;--line-soft:#e6e9ee;
-    --amber:#1f4fd1;--on-amber:#ffffff;--amber-fill:#1f4fd1;--sel-line:#1f4fd1;--sel-bg:#1f4fd1;--sel-ink:#ffffff;--sel-tile:#dce6fb;
+    --bp:#fbf6ec;--bp-2:#ffffff;--bp-3:#f2e9d6;
+    --chalk:#161b26;--chalk-dim:#4f5566;
+    --grid:rgba(22,27,38,.05);--grid-2:rgba(22,27,38,.12);
+    --line:#161b26;--line-soft:#ddd3bf;--shade:#161b26;--hit:#c44f23;--sticker:#ffd84a;--focus:#3f71d3;
+    --amber:#b0431b;--on-amber:#ffffff;--amber-fill:#161b26;--sel-line:#161b26;--sel-bg:#161b26;--sel-ink:#ffffff;--sel-tile:#ffd84a;
     --erw:#a8460b;--kue:#0b6c78;
-    --ok:#17733f;--bad:#b4271f;
-    --paper:#eef2f7;--ink:#1b2430;--ink-dim:#4a5564;--mark:#fde68a;
-    --track:#e3e7ec;--tick:rgba(27,36,48,.25);
-    --nl-sec:rgba(27,36,48,.05);--nl-on:rgba(31,79,209,.25);
-    --hatch-amber:#5b7fe0;--hatch-erw:#e07a32;--hatch-kue:#1a9aa8;--hatch-ink:#1b2430;
-    --fill-amber:#b3c5f3;--fill-erw:#f4c29d;--fill-kue:#a6dbe1;--fill-ink:#c4ccd6;
+    --ok:#1c7a35;--bad:#b4232f;
+    --paper:#f2e9d6;--ink:#161b26;--ink-dim:#4a4f5e;--mark:#ffd84a;
+    --track:#e9dfca;--tick:rgba(22,27,38,.3);
+    --nl-sec:rgba(22,27,38,.05);--nl-on:rgba(63,113,211,.3);
+    --hatch-amber:#3f71d3;--hatch-erw:#e07a32;--hatch-kue:#1a9aa8;--hatch-ink:#161b26;
+    --fill-amber:#ffd84a;--fill-erw:#f4b98e;--fill-kue:#9fd8de;--fill-ink:#c9c2b2;
     color-scheme:light;
   }
 }
@@ -1577,155 +1578,167 @@ button.gloss:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 
 .vttiles{margin:.375rem 0}.vttiles .tile{min-height:3.25rem;font-size:1.25rem;padding:.375rem .5rem .375rem 2.25rem}.vttiles .tile.tile-txt{font-size:max(14px,.9rem)}
 
-/* ---------- 13 Design „Klar“ (27.11.2026): ruhige Flächen, feste Zonen, asymmetrische Aktionsleiste ---------- */
+/* ---------- 13 Design „Poster“ (27.11.2026, wie Mixup): Tintenlinien, harte Schatten, feste Zonen ---------- */
 html{background-image:none}
 body{font-family:var(--font-body);font-variant-numeric:tabular-nums}
-.lblm{font:700 .8rem/1.3 var(--font-body);color:var(--chalk-dim)}
-:focus-visible{outline:3px solid var(--amber);outline-offset:2px;border-radius:4px}
-/* Kopf: Grundfarbe, keine Linie; Titel links, Messanzeige klein rechts */
-.topbar{background:var(--bp);border-bottom:0;box-shadow:none}
-.brand{font:700 1rem var(--font-body);color:var(--chalk)}
-.gchip{background:transparent;border:0;padding:0.25rem 0.25rem 0.25rem 0.5rem;gap:0.375rem}
+h1,h2,h3{font-weight:800}
+.lblm{font:700 .85rem/1.3 var(--font-body);color:var(--chalk-dim)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* Kopf: Grundfarbe, dicke Tintenlinie unten; Reitername groß mit gelbem Marker */
+.topbar{background:var(--bp);border-bottom:3px solid var(--line);box-shadow:none}
+.brand{font:800 1.1rem var(--font-body);color:var(--chalk)}
+.topbar .tabhead{margin:0;font:800 1.5rem/1.15 var(--font-body);letter-spacing:-.02em;color:var(--chalk);
+  background:linear-gradient(transparent 62%,var(--mark) 62%,var(--mark) 90%,transparent 90%);padding-right:.15em}
+.gchip{background:transparent;border:0;box-shadow:none;padding:0.25rem 0.25rem 0.25rem 0.5rem;gap:0.375rem}
 .gchip .gtext{min-width:0}
-.gchip .gname{font:700 .8rem/1 var(--font-body);color:var(--chalk-dim)}
+.gchip .gname{font:700 max(16px,.9rem)/1 var(--font-body);color:var(--chalk-dim)}
 .gchip .gseg{display:none}
-.gxp{font:700 .9rem var(--font-body)}
-.gicon .ic{width:1.375rem;height:1.375rem}
-/* Untere Leiste: weiße Fläche, aktiver Reiter blau mit Fläche hinter dem Symbol */
-.bottomnav{background:var(--bp-2);border-top:1px solid var(--line-soft)}
-.navb{font:700 .8rem var(--font-body);border-top:0;gap:0.25rem}
-.navb .ic{width:1.5rem;height:1.5rem;padding:0.125rem 0.75rem;box-sizing:content-box;border-radius:999px}
-.navb[aria-current="true"]{color:var(--amber);background:none}
-.navb[aria-current="true"] .ic{background:var(--sel-tile)}
-/* Arbeitsfläche: weiße Fläche ohne Rahmen; die Kennfarbe der Etappe ist eine schmale Kante links */
-.card{background:var(--bp-2);border:0;border-radius:var(--r);box-shadow:0 0 0 1px var(--line-soft);padding:1rem 1rem 0 1.125rem}
-.card::before{inset:0 auto 0 0;width:4px;border:0;border-radius:var(--r) 0 0 var(--r);background:var(--acc,var(--line))}
+.gxp{font:800 max(16px,.9rem) var(--font-body);color:var(--chalk)}
+.gstreak{font-size:max(16px,.9rem)}
+.gicon .ic{width:1.375rem;height:1.375rem;color:var(--chalk)}
+/* Untere Leiste: Tintenlinie oben, aktiver Reiter mit gelbem Sticker hinter dem Symbol */
+.bottomnav{background:var(--bp);border-top:3px solid var(--line)}
+.navb{font:700 max(16px,.85rem) var(--font-body);border-top:0;gap:0.25rem;color:var(--chalk-dim)}
+.navb .ic{width:1.5rem;height:1.5rem;padding:0.125rem 0.75rem;box-sizing:content-box;border-radius:6px 12px 6px 6px;border:2px solid transparent}
+.navb[aria-current="true"]{color:var(--chalk);background:none}
+.navb[aria-current="true"] .ic{background:var(--sticker);color:#161b26;border-color:#161b26}
+/* Arbeitsfläche: weiße Fläche, Tintenrand, große Ecke oben rechts, harter Schatten; Kennfarbe als Kante links */
+.card{background:var(--bp-2);border:2px solid var(--line);border-radius:var(--r);box-shadow:5px 5px 0 var(--shade);padding:1rem 1rem 0 1.25rem;margin-right:5px}
+.card::before{inset:0 auto 0 0;width:6px;border:0;border-radius:4px 0 0 4px;background:var(--acc,var(--line))}
 .card::after{display:none}
 .prompt::before{display:none}
-.titleblock{margin:0.875rem -1rem 0 -1.125rem;border-top:1px solid var(--line-soft);font:700 .8rem/1.2 var(--font-body);color:var(--chalk-dim)}
+.titleblock{margin:0.875rem -1rem 0 -1.25rem;border-top:2px solid var(--line);font:700 .85rem/1.2 var(--font-body);color:var(--chalk-dim)}
 .titleblock .tb-id{background:none;color:var(--chalk-dim)}
-.titleblock .tb-c{border-left:1px solid var(--line-soft)}
-/* Fortschritt: schmale Balkenstücke, ohne Blinken */
-.ruler{gap:0.1875rem;margin:0 0 0.75rem}
-.ruler .tk{height:0.375rem;border:0;border-radius:3px;background:var(--track)}
+.titleblock .tb-c{border-left:2px solid var(--line)}
+/* Fortschritt: Kästchen mit Tintenrand, ohne Blinken */
+.ruler{gap:0.25rem;margin:0 5px 0.875rem 0}
+.ruler .tk{height:0.625rem;border:2px solid var(--line);border-radius:3px;background:var(--bp-2)}
 .ruler .tk.f{background:var(--ok)}
-.ruler .tk.l{background:color-mix(in srgb,var(--ok) 55%,var(--track))}
+.ruler .tk.l{background:color-mix(in srgb,var(--ok) 50%,var(--bp-2))}
 .ruler .tk.x{background:var(--bad)}
-.ruler .tk.cur{background:var(--amber);animation:none}
-/* Knöpfe: Hauptaktion blau gefüllt, Nebenaktionen weiß mit dünner Linie */
-.btn{border-radius:var(--r-s);font-weight:700}
-.btn:hover:not(:disabled){background:var(--bp-3)}
-.btn.primary{background:var(--amber-fill);border-color:var(--amber-fill);color:var(--on-amber)}
-.btn.primary:hover:not(:disabled){background:var(--amber-fill);filter:brightness(1.1)}
-.btn.go{color:var(--bp-2)}
-.linkbtn{text-decoration:underline solid var(--line);text-decoration-thickness:1px}
-.seg{border-radius:var(--r-s);overflow:hidden}
-.seg button{font:700 .85rem var(--font-body)}
+.ruler .tk.cur{background:var(--sticker);animation:none}
+/* Knöpfe: weiß mit Tintenrand und Tintenschatten; Hauptknopf Tinte mit orangem Schatten; Drücken schiebt in den Schatten */
+.btn{border:2px solid var(--line);border-radius:var(--r-s);background:var(--bp-2);color:var(--chalk);font-weight:700;box-shadow:3px 3px 0 var(--shade);transition:transform .15s,box-shadow .15s}
+.btn:hover:not(:disabled){background:var(--bp-2);transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--shade)}
+.btn:active:not(:disabled){transform:translate(3px,3px);box-shadow:0 0 0 var(--shade)}
+.btn:disabled{box-shadow:none;border-style:dashed}
+.btn.primary{background:var(--amber-fill);border-color:var(--amber-fill);color:var(--on-amber);box-shadow:3px 3px 0 var(--hit)}
+.btn.primary:hover:not(:disabled){background:var(--amber-fill);filter:none;box-shadow:4px 4px 0 var(--hit)}
+.btn.primary:active:not(:disabled){box-shadow:0 0 0 var(--hit)}
+.btn.go{background:var(--ok);border-color:var(--line);color:#fff}
+.linkbtn{color:var(--chalk);text-decoration:underline solid var(--sticker);text-decoration-thickness:4px;text-underline-offset:.15em}
+.linkbtn:hover{color:var(--chalk);text-decoration-color:var(--hit)}
+.seg{border:2px solid var(--line);border-radius:8px 16px 8px 8px;overflow:hidden;background:var(--bp-2)}
+.seg button{font:700 .9rem var(--font-body);background:var(--bp-2)}
+.seg button+button{border-left:2px solid var(--line)}
 .seg button[aria-pressed="true"]{background:var(--sel-bg);color:var(--sel-ink)}
-.stepper button{border-radius:var(--r-s);font-family:var(--font-body)}
-/* Eingabefelder */
-.frac.inp input,input.intin,input.decin{font-family:var(--font-body);background:var(--bp-2);border:2px solid var(--line);border-radius:var(--r-s);caret-color:var(--amber)}
-input:focus{box-shadow:0 0 0 3px color-mix(in srgb,var(--amber) 30%,transparent)}
-/* Aktionsleiste: Nebenaktionen links schmal, Hauptaktion rechts doppelt so breit */
-.actionbar{background:var(--bp);border-top:1px solid var(--line-soft);background-image:none}
+.stepper button{border:2px solid var(--line);border-radius:var(--r-s);font-family:var(--font-body);box-shadow:2px 2px 0 var(--shade)}
+/* Eingabefelder: Tintenrand, kleine Ecke oben rechts, Fokus mit blauem Schatten */
+.frac.inp input,input.intin,input.decin{font-family:var(--font-body);font-weight:800;background:var(--bp-2);border:2px solid var(--line);border-radius:6px 14px 6px 6px;caret-color:var(--focus)}
+input:focus{border-color:var(--line)!important;box-shadow:3px 3px 0 var(--focus)}
+/* Aktionsleiste: Tintenlinie oben; Nebenaktionen links so breit wie ihr Wort, Hauptaktion rechts breit mit großer Ecke */
+.actionbar{background:var(--bp);border-top:3px solid var(--line);background-image:none;padding-right:calc(0.875rem + 4px)}
 .actionbar::before{display:none}
-.primaryrow{display:flex;gap:0.5rem}
+.primaryrow{display:flex;gap:0.625rem}
 .primaryrow>.btn{flex:1 1 0}
-.primaryrow>.btn.primary{flex:2 1 0}
-.key{background:var(--bp-2);border-radius:var(--r-s);font-family:var(--font-body)}
-.key.fn{background:var(--bp-3)}
-/* Rückmeldung: Kante links und ein Wort (nie nur Farbe) */
-.msg{padding:0.625rem 0.875rem;border:0;border-left:4px solid var(--line);border-radius:0 var(--r-s) var(--r-s) 0;background:var(--bp-2);gap:0.625rem}
-.msg.ok{padding-left:0.875rem;border-left-color:var(--ok)}
-.msg.bad{border-left-color:var(--bad)}
-.msg.warn{border-left-color:var(--amber)}
-.msg.info{border-left-style:solid}
-.msg::before{position:static;transform:none;border:0;padding:0;flex:none;font:700 .9rem var(--font-body);animation:none}
-.msg.ok::before{content:"Richtig"}
-.msg.bad::before{content:"Noch nicht"}
-/* Tipp und Musterlösung */
-.hint{border:0;border-left:4px solid var(--amber);border-radius:0 var(--r-s) var(--r-s) 0;background:var(--paper)}
-.hint b.lab,.hint-toggle,.hint-closed{font-family:var(--font-body);font-size:.85rem}
-.solbox{border:1px dashed var(--line);border-radius:var(--r-s)}
-.solbox h4{font-family:var(--font-body);font-size:.9rem}
-/* Meldungen und Fenster */
-.toast{background:var(--chalk);color:var(--bp);border:0;border-radius:999px;font:700 .95rem var(--font-body)}
-.modal{background:rgba(15,20,28,.55)}
-.modalcard{background:var(--bp-2);color:var(--chalk);border-radius:var(--r);box-shadow:0 12px 32px rgba(15,20,28,.18)}
-.modalcard .ic.big{color:var(--chalk)}
-.modalcard h2{font:700 1rem var(--font-body)}
-.modalcard .btn{background:var(--amber-fill);color:var(--on-amber);border-color:var(--amber-fill)}
-.stampbox{transform:none;animation:none;border-width:2px;border-radius:var(--r-s);color:var(--ok);font-family:var(--font-body)}
-.help{border-radius:var(--r);box-shadow:0 12px 32px rgba(15,20,28,.18)}
-.fold{border-radius:var(--r-s)}
-.fold>summary{font:700 .9rem var(--font-body)}
-/* Startseite: Überschrift linksbündig, Hauptkarte nach links gerückt (rechts bleibt Luft), Nebenkarten nach rechts */
-.home h1{font:700 1.375rem var(--font-body);margin:0.75rem 0 0.75rem}
-.area{font:700 .9rem var(--font-body)}
-.bigbtn{border:0;border-radius:var(--r);box-shadow:0 0 0 1px var(--line-soft);padding-left:1rem;min-height:5rem}
-.bigbtn .ico{border:0;border-radius:var(--r-s);background:var(--bp-3);background-image:none!important;width:max(48px,3rem);height:max(48px,3rem)}
-.bigbtn .ico .ic{width:1.625rem;height:1.625rem}
-.bigbtn .pg{font:700 .8rem var(--font-body)}
-.bigbtn.go{box-shadow:none;margin-right:12%}
-.bigbtn.go .ico{background:rgba(255,255,255,.16);color:var(--on-amber)}
-.bom,.ladder{border-radius:var(--r);overflow:hidden;border-color:var(--line-soft)}
-.bomrow{box-shadow:inset 4px 0 0 var(--acc,var(--line))}
-.bomhead{font:700 .8rem var(--font-body)}
-/* Lernkarte als Liste (js/werkstatt.js etRow): Grundlagen oben, zwei Wege nebeneinander */
-.lmap{display:flex;flex-direction:column;gap:0.75rem;margin-top:0.5rem}
-.etgrp{display:flex;flex-direction:column;gap:0.375rem;min-width:0}
-.etgrp>.area{margin:0 0 0.125rem}
-.etfork{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0.75rem;align-items:start}
-.etrow{display:flex;align-items:center;gap:0.625rem;width:100%;min-height:max(56px,3.5rem);padding:0.5rem 0.625rem 0.5rem 0.75rem;border:0;border-radius:var(--r-s);background:var(--bp-2);box-shadow:inset 4px 0 0 var(--et,var(--line)),0 0 0 1px var(--line-soft);color:var(--chalk);text-align:left;cursor:pointer;font:inherit}
-.etrow:hover{background:var(--bp-3)}
-.etrow:active{transform:scale(.99)}
-.etrow .etl{flex:none;width:1.25rem;font:700 1rem var(--font-body);color:var(--et)}
-.etrow .ettx{flex:1;min-width:0;display:flex;flex-direction:column;gap:0.125rem;line-height:1.2}
-.etrow .ettx b{font-size:.95rem;overflow-wrap:anywhere}
-.etrow .ettx small{font-size:.8rem;color:var(--chalk-dim)}
-.etbar{display:block;height:4px;border-radius:2px;background:var(--track);overflow:hidden;margin-top:0.125rem}
-.etbar i{display:block;height:100%;background:var(--et,var(--ok))}
-.etrow>.ic{flex:none;width:1rem;height:1rem;color:var(--chalk-dim)}
-.etrow.here{box-shadow:inset 4px 0 0 var(--et,var(--line)),0 0 0 2px var(--amber)}
-.etrow.done>.ic{color:var(--ok)}
-@media (min-width:700px){.lmap{max-width:44rem}.etgrp:first-child{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0.375rem 0.75rem}.etgrp:first-child>.area{grid-column:1/-1}}
-/* Handy: eine Spalte, flache Zeilen (Name links, Zahl rechts); ab 600 px die zwei Wege nebeneinander */
-.etfork{grid-template-columns:minmax(0,1fr);gap:0.75rem}
-.etrow{min-height:max(48px,3rem);padding:0.375rem 0.75rem}
-.etrow .ettx{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:0.5rem;align-items:baseline}
-.etrow .ettx .etbar{grid-column:1/-1}
-.etrow .ettx small{white-space:nowrap}
-.etrow>.ic{display:none}
-.etrow.done>.ic{display:block}
-.etgrp{gap:0.3125rem}
-.lmap{gap:0.625rem}
-.soonline{margin:0.875rem 0 0;font-size:.85rem;color:var(--chalk-dim)}
-.home>.bigbtn.go{width:auto;margin-right:12%;min-height:4.25rem;padding:0.625rem 0.875rem}
-.home>.bigbtn.go b{font-size:1.05rem}
-.home>.bigbtn.go small{font-size:.85rem}
-.home h1{margin:0.25rem 0 0.625rem}
-@media (min-width:600px){.etfork{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
-.topbar .tabhead{margin:0;font:700 1.25rem/1.2 var(--font-body);color:var(--chalk)}
-.ichhead{display:flex;justify-content:flex-end}
-.home{padding-top:0.25rem}
-/* Paare: zwei Etappen nebeneinander, Zahl unter dem Namen */
-.etgrp.pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0.3125rem 0.5rem}
-.etgrp.pair>.area{grid-column:1/-1}
-.etgrp.pair .etrow .ettx{display:flex}
-@media (min-width:600px){.etgrp.pair{display:flex}.etgrp.pair .etrow .ettx{display:grid}.etfork .etgrp.pair{display:flex}}
-@media (min-width:700px){.etgrp:first-child.pair{display:grid}}
-.home{padding-bottom:calc(max(62px,3.875rem) + 0.75rem + env(safe-area-inset-bottom))}
-.etgrp.pair .etrow .ettx{flex-direction:column}
-.etgrp.pair .etbar{width:100%}
-@media (max-width:420px){.home>.bigbtn.go{margin-right:6%}}
-@media (max-height:700px){.soonline{display:none}} /* kleine Handys: „Bald“ fällt weg, damit nichts scrollt */
 .primaryrow>.btn:not(.primary){flex:0 1 auto;padding:0 0.875rem}
-.primaryrow>.btn.primary{flex:1 1 0}
+.primaryrow>.btn.primary{flex:1 1 0;border-radius:var(--r-b);box-shadow:5px 5px 0 var(--hit)}
 .primaryrow .btn{overflow-wrap:normal;hyphens:auto}
-.navb{font-size:max(16px,.85rem)}
-.gchip .gname,.gxp,.gstreak{font-size:max(16px,.9rem)}
-/* ab 600 px: die zwei Wege nebeneinander, darin eine Spalte; Name links, Zahl rechts */
+.key{background:var(--bp-2);border:2px solid var(--line);border-radius:var(--r-s);font-family:var(--font-body);font-weight:800;box-shadow:2px 2px 0 var(--shade)}
+.key:active{transform:translate(2px,2px);box-shadow:none}
+.key.fn{background:var(--bp-3)}
+/* Rückmeldung: Tintenrand, Schatten in der Zustandsfarbe, ein Wort davor (nie nur Farbe) */
+.msg{padding:0.625rem 0.875rem;border:2px solid var(--line);border-radius:6px 16px 6px 6px;background:var(--bp-2);gap:0.625rem;box-shadow:3px 3px 0 var(--line)}
+.msg.ok{padding-left:0.875rem;box-shadow:3px 3px 0 var(--ok);border-color:var(--line)}
+.msg.bad{box-shadow:3px 3px 0 var(--bad);border-color:var(--line)}
+.msg.warn{box-shadow:3px 3px 0 var(--sticker);border-color:var(--line)}
+.msg.info{border-style:solid}
+.msg::before{position:static;transform:none;border:0;padding:0.0625rem 0.375rem;flex:none;font:800 .9rem var(--font-body);animation:none;border-radius:4px}
+.msg.ok::before{content:"Richtig";background:var(--ok);color:#fff}
+.msg.bad::before{content:"Noch nicht";background:var(--bad);color:#fff}
+.msg.warn::before{background:var(--sticker);color:#161b26}
+.msg.info::before{color:var(--chalk)}
+/* Tipp: cremefarbene Fläche mit Tintenrand; Musterlösung gestrichelt */
+.hint{border:2px solid var(--line);border-radius:6px 16px 6px 6px;background:var(--paper);color:var(--ink);box-shadow:3px 3px 0 var(--shade)}
+.hint b.lab,.hint-toggle,.hint-closed{font-family:var(--font-body);font-size:.9rem}
+.solbox{border:2px dashed var(--line);border-radius:6px 16px 6px 6px}
+.solbox h4{font-family:var(--font-body);font-size:.95rem}
+/* Meldungen und Fenster */
+.toast{background:var(--chalk);color:var(--bp);border:0;border-radius:6px;box-shadow:4px 4px 0 var(--hit);font:800 .95rem var(--font-body)}
+.modal{background:rgba(22,27,38,.55)}
+.modalcard{background:var(--bp-2);color:var(--chalk);border:3px solid var(--line);border-radius:6px 24px 6px 6px;box-shadow:8px 8px 0 var(--shade)}
+.modalcard .ic.big{color:var(--chalk)}
+.modalcard h2{font:800 1.1rem var(--font-body)}
+.modalcard .btn{background:var(--amber-fill);color:var(--on-amber);border-color:var(--amber-fill);box-shadow:3px 3px 0 var(--hit)}
+.stampbox{transform:rotate(-3deg);animation:none;border:2px solid var(--line);border-radius:4px;background:var(--sticker);color:#161b26;font-family:var(--font-body)}
+.help{border:3px solid var(--line);border-radius:6px 24px 6px 6px;box-shadow:8px 8px 0 var(--shade)}
+.fold{border:2px solid var(--line);border-radius:6px 16px 6px 6px;box-shadow:3px 3px 0 var(--shade)}
+.fold>summary{font:800 .95rem var(--font-body)}
+.bubble{border:2px solid var(--line);border-radius:6px 16px 6px 6px;box-shadow:3px 3px 0 var(--shade)}
+/* Startseite */
+.home{padding-top:0.5rem;padding-bottom:calc(max(62px,3.875rem) + 0.75rem + env(safe-area-inset-bottom))}
+.home h1{font:800 1.5rem var(--font-body);margin:0.25rem 0 0.75rem}
+.area{font:800 .95rem var(--font-body);color:var(--chalk)}
+.bigbtn{border:2px solid var(--line);border-radius:var(--r);box-shadow:5px 5px 0 var(--shade);padding-left:1rem;min-height:5rem;background:var(--bp-2)}
+.bigbtn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--shade)}
+.bigbtn .ico{border:2px solid var(--line);border-radius:var(--r-s);background:var(--bp-3);background-image:none!important;width:max(48px,3rem);height:max(48px,3rem);color:var(--chalk)}
+.bigbtn .ico .ic{width:1.625rem;height:1.625rem}
+.bigbtn .pg{font:700 .85rem var(--font-body)}
+.bigbtn.go{background:var(--amber-fill);color:var(--on-amber);border-color:var(--amber-fill);box-shadow:5px 5px 0 var(--hit);border-radius:var(--r-b)}
+.bigbtn.go .ico{background:transparent;border-color:var(--on-amber);color:var(--on-amber)}
+.bigbtn.go small{color:var(--on-amber)}
+.home>.bigbtn.go{width:auto;margin-right:12%;min-height:4.25rem;padding:0.625rem 0.875rem}
+.home>.bigbtn.go b{font-size:1.1rem}
+.home>.bigbtn.go small{font-size:.9rem}
+@media (max-width:420px){.home>.bigbtn.go{margin-right:6%}}
+.bom,.ladder{border:2px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:4px 4px 0 var(--shade)}
+.bomrow{box-shadow:inset 5px 0 0 var(--acc,var(--line))}
+.bomhead{font:800 .85rem var(--font-body)}
+.ichhead{display:flex;justify-content:flex-end}
+/* Lernkarte als Liste (js/werkstatt.js etRow): Grundlagen oben, zwei Wege darunter (ab 600 px nebeneinander) */
+.lmap{display:flex;flex-direction:column;gap:0.75rem;margin-top:0.5rem}
+.etgrp{display:flex;flex-direction:column;gap:0.5rem;min-width:0}
+.etgrp>.area{margin:0}
+.etfork{display:grid;grid-template-columns:minmax(0,1fr);gap:0.75rem;align-items:start}
+.etrow{display:flex;align-items:center;gap:0.625rem;width:calc(100% - 4px);min-height:max(48px,3rem);padding:0.375rem 0.75rem 0.375rem 0.875rem;border:2px solid var(--line);border-radius:6px 16px 6px 6px;background:var(--bp-2);box-shadow:inset 5px 0 0 var(--et,var(--line)),3px 3px 0 var(--shade);color:var(--chalk);text-align:left;cursor:pointer;font:inherit;transition:transform .15s,box-shadow .15s}
+.etrow:active{transform:translate(3px,3px);box-shadow:inset 5px 0 0 var(--et,var(--line)),0 0 0 var(--shade)}
+.etrow .etl{flex:none;width:1.25rem;font:800 1.05rem var(--font-body);color:var(--et)}
+.etrow .ettx{flex:1;min-width:0;display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:0.5rem;align-items:baseline;line-height:1.2}
+.etrow .ettx b{font-size:.98rem;font-weight:700;overflow-wrap:anywhere}
+.etrow .ettx small{font-size:.82rem;color:var(--chalk-dim);white-space:nowrap}
+.etbar{grid-column:1/-1;display:block;height:6px;border-radius:3px;background:var(--track);overflow:hidden;margin-top:0.25rem}
+.etbar i{display:block;height:100%;background:var(--et,var(--ok))}
+.etrow>.ic{display:none;flex:none;width:1.1rem;height:1.1rem}
+.etrow.done>.ic{display:block;color:var(--ok)}
+.etrow.here{box-shadow:inset 5px 0 0 var(--et,var(--line)),4px 4px 0 var(--hit)}
+.etgrp.pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0.5rem 0.625rem}
+.etgrp.pair>.area{grid-column:1/-1}
+.etgrp.pair .etrow .ettx{display:flex;flex-direction:column}
+.etgrp.pair .etbar{width:100%}
+.soonline{margin:1rem 0 0;font-size:.88rem;color:var(--chalk-dim)}
+@media (max-height:700px){.soonline{display:none}} /* kleine Handys: „Bald“ fällt weg, damit nichts scrollt */
 @media (min-width:600px){
+  .etfork{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
   .etfork .etgrp.pair{display:flex;flex-direction:column}
   .etgrp.pair .etrow .ettx{display:grid}
 }
+@media (min-width:700px){.lmap{max-width:44rem}}
+@media (prefers-reduced-motion:reduce){.btn,.etrow{transition:none}}
+.etrow .etl{color:var(--chalk)} /* Buchstabe in Schriftfarbe (lesbar hell und dunkel), die Kennfarbe steht in der Kante */
+/* kleine Handys (Höhe bis 700 px): alles etwas enger, damit die Lernkarte ohne Scrollen passt */
+@media (max-height:700px){
+  .home>.bigbtn.go{min-height:0;padding:0.5rem 0.75rem}
+  .home>.bigbtn.go .ico{width:2.5rem;height:2.5rem}
+  .home>.bigbtn.go small{font-size:.82rem;line-height:1.25}
+  .lmap{gap:0.5rem;margin-top:0.375rem}
+  .etgrp{gap:0.375rem}
+  .etrow{min-height:44px;padding-top:0.25rem;padding-bottom:0.25rem}
+  .etbar{height:5px;margin-top:0.1875rem}
+}
+/* Aufgabenkarte am Handy straffen (Rand und Schatten brauchen Platz) */
+.card{padding:0.75rem 0.75rem 0 1.125rem}
+.titleblock{margin:0.75rem -0.75rem 0 -1.125rem}
+.titleblock>*{padding:0.375rem 0.5rem}
+.ruler{margin-bottom:0.625rem}
+.ruler .tk{height:0.5rem}
+.actionbar{padding-top:0.625rem}
