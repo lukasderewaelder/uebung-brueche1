@@ -140,7 +140,7 @@ function openOptions(){
 const TEXT_SIZES=[['s','Klein'],['m','Normal'],['l','Groß'],['xl','Sehr groß']];
 /* Darstellung: „Automatisch“ folgt dem Gerät (hell oder dunkel), „Hell“ und „Dunkel“ gelten immer. Ohne Wahl kein Attribut data-theme. */
 const THEMES=[['auto','Automatisch'],['hell','Hell'],['dunkel','Dunkel']];
-const themeOf=()=>(S.ui&&S.ui.theme)||'auto';
+const themeOf=()=>(S.ui&&S.ui.theme)||'hell'; /* Standard: Hell */
 /* Farbe der Adressleiste passend zum Hintergrund */
 function syncThemeColor(){
   const m=document.querySelector('meta[name="theme-color"]'),bp=getComputedStyle(document.documentElement).getPropertyValue('--bp').trim();
@@ -170,7 +170,7 @@ function themeOptions(){
   const seg=el('div',{class:'seg optseg optseg3',role:'group','aria-label':'Darstellung wählen'});
   THEMES.forEach(([k,label])=>{
     const b=el('button',{type:'button','aria-pressed':String(cur===k),onclick:()=>{
-      S.ui=S.ui||{};S.ui.theme=k;persist();applyUi();
+      S.ui=S.ui||{};S.ui.theme=k;S.ui.themeV=2;persist();applyUi();
       seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
     }},el('span',{class:'azl'},label));
     seg.append(b);

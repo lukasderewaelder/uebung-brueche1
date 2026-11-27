@@ -1475,8 +1475,8 @@ function runSelfTests(){
       const h=[root.dataset.theme,getComputedStyle(root).backgroundColor,metaTc(),getComputedStyle(root).colorScheme];
       S.ui={size:'m',theme:'dunkel'};applyUi();
       const d=[root.dataset.theme,getComputedStyle(root).backgroundColor,metaTc(),getComputedStyle(root).colorScheme];
-      S.ui={size:'m'};applyUi();
-      t('Darstellung: „Hell“ = heller Grund und Adressleiste in Grundfarbe, „Dunkel“ = dunkler Grund, „Automatisch“ (nichts gewählt) setzt kein Attribut',h[0]==='hell'&&h[1]==='rgb(251, 246, 236)'&&h[2]==='#fbf6ec'&&h[3]==='light'&&d[0]==='dunkel'&&d[1]==='rgb(22, 27, 38)'&&d[2]==='#161b26'&&d[3]==='dark'&&root.dataset.theme===undefined&&themeOf()==='auto');
+      S.ui={size:'m',theme:'auto',themeV:2};applyUi();
+      t('Darstellung: „Hell“ = heller Grund und Adressleiste in Grundfarbe, „Dunkel“ = dunkler Grund, „Automatisch“ (bewusst gewählt) setzt kein Attribut',h[0]==='hell'&&h[1]==='rgb(251, 246, 236)'&&h[2]==='#fbf6ec'&&h[3]==='light'&&d[0]==='dunkel'&&d[1]==='rgb(22, 27, 38)'&&d[2]==='#161b26'&&d[3]==='dark'&&root.dataset.theme===undefined&&themeOf()==='auto');
       S.ui={size:'m',theme:'dunkel'};applyUi();openOptions();
       const seg=[...document.querySelectorAll('.optmodal .optseg')].find(x=>x.getAttribute('aria-label')==='Darstellung wählen');
       const btns=seg?[...seg.querySelectorAll('button')]:[],pressed=()=>btns.filter(b=>b.getAttribute('aria-pressed')==='true').map(b=>b.textContent).join();
@@ -1484,7 +1484,7 @@ function runSelfTests(){
       if(btns[1])btns[1].click();const afterHell=[S.ui.theme,root.dataset.theme,pressed()].join();
       if(btns[0])btns[0].click();const afterAuto=[S.ui.theme,String(root.dataset.theme),pressed()].join();
       closeOptions();
-      t('Einstellungen: Zeile „Darstellung“ mit Automatisch, Hell, Dunkel; die gewählte ist markiert; Tippen speichert und wendet sofort an',names==='Automatisch,Hell,Dunkel'&&first==='Dunkel'&&afterHell==='hell,hell,Hell'&&afterAuto==='auto,undefined,Automatisch'&&defaultState().ui.theme==='auto'&&techInfo().textContent.includes('Darstellung'));
+      t('Einstellungen: Zeile „Darstellung“ mit Automatisch, Hell, Dunkel; die gewählte ist markiert; Tippen speichert und wendet sofort an',names==='Automatisch,Hell,Dunkel'&&first==='Dunkel'&&afterHell==='hell,hell,Hell'&&afterAuto==='auto,undefined,Automatisch'&&defaultState().ui.theme==='hell'&&(()=>{const k=S.ui;S.ui={size:'m'};const v=themeOf();S.ui=k;return v==='hell';})()&&techInfo().textContent.includes('Darstellung'));
     }finally{S.ui=keepD.ui;applyUi();persist();}
     const pats=[...document.querySelectorAll('pattern[id^="hatch-"]')];
     t('Bruchbilder (Muster) nehmen Fläche und Linie aus den Tokens, keine festen Farben; Seite meldet „dark light“',pats.length===5&&pats.every(p=>!/#[0-9a-f]{3,6}|rgba?\(/i.test(p.innerHTML)&&p.querySelectorAll('[style*="var(--"]').length===2)&&document.querySelector('meta[name="color-scheme"]').content==='dark light');
@@ -1493,10 +1493,12 @@ function runSelfTests(){
     let bootOK=false;const keepRaw=(()=>{try{return localStorage.getItem(KEY);}catch(e){return null;}})();
     try{
       const run=(raw)=>{root.removeAttribute('data-theme');if(raw===null)localStorage.removeItem(KEY);else localStorage.setItem(KEY,raw);new Function(boot.textContent)();return root.dataset.theme;};
-      bootOK=run(JSON.stringify({v:1,ui:{theme:'hell'}}))==='hell'&&run(JSON.stringify({v:1,ui:{theme:'dunkel'}}))==='dunkel'&&run(JSON.stringify({v:1,ui:{theme:'auto'}}))===undefined&&run('kaputt')===undefined&&run(null)===undefined;
+      bootOK=run(JSON.stringify({v:1,ui:{theme:'hell'}}))==='hell'&&run(JSON.stringify({v:1,ui:{theme:'dunkel'}}))==='dunkel'&&run(JSON.stringify({v:1,ui:{theme:'auto',themeV:2}}))===undefined&&run(JSON.stringify({v:1,ui:{theme:'auto'}}))==='hell'&&run(JSON.stringify({v:1}))==='hell'&&run('kaputt')==='hell'&&run(null)==='hell';
+      const mo={ui:{size:'m',theme:'auto'}};migrateState(mo);const mo2={ui:{size:'m',theme:'auto',themeV:2}};migrateState(mo2);const mo3={ui:{theme:'dunkel'}};migrateState(mo3);
+      bootOK=bootOK&&mo.ui.theme==='hell'&&mo2.ui.theme==='auto'&&mo3.ui.theme==='dunkel';
     }catch(e){bootOK=false;}
     finally{try{if(keepRaw===null)localStorage.removeItem(KEY);else localStorage.setItem(KEY,keepRaw);}catch(e){}applyUi();}
-    t('Start: das Skript im <head> setzt „Hell“ oder „Dunkel“ aus dem Speicher vor dem ersten Zeichnen; kaputter oder leerer Speicher stört nicht',!!boot&&bootOK);
+    t('Start: das Skript im <head> setzt „Hell“ oder „Dunkel“ vor dem ersten Zeichnen; Standard und kaputter Speicher = Hell; „Automatisch“ nur, wenn bewusst gewählt (alte Stände werden einmal auf Hell gestellt)',!!boot&&bootOK);
   }
   /* Paket E: ein Bildschirm ohne Scrollen (Bedienpult mit festen Plätzen, Meldung/Tipp statt Zahlentasten, Lösungsfenster, Etappen) */
   {
