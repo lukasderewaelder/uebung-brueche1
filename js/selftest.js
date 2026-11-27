@@ -401,10 +401,11 @@ function runSelfTests(){
     /* Reiter Lernen: gelb ist nur die Aktion der Karte, bei der es weitergeht (ein gelber Knopf je Bildschirm) */
     freshP();
     const lt=el('div');lernenTab(lt);
-    t('Reiter Lernen: die Kacheln liegen in einem Raster mit zwei Spalten; nur die erste Kachel, bei der es weitergeht, ist hervorgehoben (gelbe Marke)',!!lt.querySelector('.tgrid')&&lt.querySelectorAll('.ttile').length===activeModules().length&&lt.querySelectorAll('.ttile.focus').length===1&&lt.querySelector('.ttile.focus')===lt.querySelectorAll('.ttile')[0]&&lt.querySelectorAll('.btn').length===0&&lt.querySelector('.ttile:not(.focus) .tt-tag')!==null);
+    t('Reiter Lernen (Design „Klar“): eine Zeile je Etappe in Gruppen (Grundlagen, zwei Wege); nur die erste Zeile, bei der es weitergeht, ist markiert; keine weiteren Knöpfe',!!lt.querySelector('.lmap')&&lt.querySelectorAll('.etgrp').length>=3&&lt.querySelectorAll('.etrow').length===activeModules().length&&lt.querySelectorAll('.etrow.here').length===1&&lt.querySelector('.etrow.here')===lt.querySelectorAll('.etrow')[0]&&lt.querySelectorAll('.btn').length===0&&lt.querySelectorAll('.etrow .etbar').length===activeModules().length);
     mod.path.filter(m=>m.must&&!m.final).forEach(m=>{S.passed[m.id+'-L1']=true;});S.placed=true;S.final=true;
     const lt2=el('div');lernenTab(lt2);
-    t('Reiter Lernen: ist das erste Thema fertig (Urkunde), wird die nächste Kachel hervorgehoben',lt2.querySelectorAll('.ttile.focus').length===1&&lt2.querySelectorAll('.ttile')[activeModules().indexOf(mod)].classList.contains('done')&&!lt2.querySelectorAll('.ttile')[activeModules().indexOf(mod)].classList.contains('focus'));
+    const r2=lt2.querySelector('.etrow[data-mod="'+mod.id+'"]');
+    t('Reiter Lernen: ist das erste Thema fertig (Urkunde), wird die nächste Zeile markiert',lt2.querySelectorAll('.etrow.here').length===1&&!!r2&&r2.classList.contains('done')&&!r2.classList.contains('here'));
     freshP();
   }
   /* Bruch-Tresor: Code-Bruch, Schlösser, Tür */
@@ -1453,7 +1454,7 @@ function runSelfTests(){
     const hellRule=rules.find(r=>r.sel.includes('data-theme="hell"')),autoRule=rules.find(r=>r.sel.includes(':not([data-theme])')&&/light/.test(r.media));
     const dark=darkRule?tokensOf(darkRule):{},hell=hellRule?tokensOf(hellRule):{},auto=autoRule?tokensOf(autoRule):{};
     const sorted=(o)=>JSON.stringify(Object.keys(o).sort().map(k=>[k,o[k]]));
-    t('Heller Modus: „Hell“ und „Automatisch bei hellem Gerät“ haben genau dieselben Werte; alles, was sie ändern, gibt es im dunklen Grundsatz',Object.keys(hell).length>=20&&sorted(hell)===sorted(auto)&&Object.keys(hell).every(k=>k in dark)&&hell['--bp']==='#ffffff'&&dark['--bp']==='#0d3b66');
+    t('Heller Modus: „Hell“ und „Automatisch bei hellem Gerät“ haben genau dieselben Werte; alles, was sie ändern, gibt es im dunklen Grundsatz',Object.keys(hell).length>=20&&sorted(hell)===sorted(auto)&&Object.keys(hell).every(k=>k in dark)&&hell['--bp']==='#f5f6f8'&&dark['--bp']==='#14181e');
     const lumOf=(h)=>{const m=h.replace('#','');const v=[0,2,4].map(i=>parseInt(m.slice(i,i+2),16)/255).map(x=>x<=0.03928?x/12.92:Math.pow((x+0.055)/1.055,2.4));return 0.2126*v[0]+0.7152*v[1]+0.0722*v[2];};
     const cr=(a,b)=>{const x=lumOf(a),y=lumOf(b);return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05);};
     const pairs=[['--chalk','--bp'],['--chalk','--bp-2'],['--chalk','--bp-3'],['--chalk-dim','--bp'],['--chalk-dim','--bp-2'],['--amber','--bp'],['--amber','--bp-2'],['--erw','--bp'],['--erw','--bp-2'],['--kue','--bp'],['--kue','--bp-2'],['--ok','--bp'],['--ok','--bp-2'],['--bad','--bp'],['--bad','--bp-2'],['--ink','--paper'],['--ink-dim','--paper'],['--on-amber','--amber-fill']];
@@ -1468,7 +1469,7 @@ function runSelfTests(){
       S.ui={size:'m',theme:'dunkel'};applyUi();
       const d=[root.dataset.theme,getComputedStyle(root).backgroundColor,metaTc(),getComputedStyle(root).colorScheme];
       S.ui={size:'m'};applyUi();
-      t('Darstellung: „Hell“ = weißer Grund und weiße Adressleiste, „Dunkel“ = Blaupausen-Blau, „Automatisch“ (nichts gewählt) setzt kein Attribut',h[0]==='hell'&&h[1]==='rgb(255, 255, 255)'&&h[2]==='#ffffff'&&h[3]==='light'&&d[0]==='dunkel'&&d[1]==='rgb(13, 59, 102)'&&d[2]==='#0d3b66'&&d[3]==='dark'&&root.dataset.theme===undefined&&themeOf()==='auto');
+      t('Darstellung: „Hell“ = heller Grund und Adressleiste in Grundfarbe, „Dunkel“ = dunkler Grund, „Automatisch“ (nichts gewählt) setzt kein Attribut',h[0]==='hell'&&h[1]==='rgb(245, 246, 248)'&&h[2]==='#f5f6f8'&&h[3]==='light'&&d[0]==='dunkel'&&d[1]==='rgb(20, 24, 30)'&&d[2]==='#14181e'&&d[3]==='dark'&&root.dataset.theme===undefined&&themeOf()==='auto');
       S.ui={size:'m',theme:'dunkel'};applyUi();openOptions();
       const seg=[...document.querySelectorAll('.optmodal .optseg')].find(x=>x.getAttribute('aria-label')==='Darstellung wählen');
       const btns=seg?[...seg.querySelectorAll('button')]:[],pressed=()=>btns.filter(b=>b.getAttribute('aria-pressed')==='true').map(b=>b.textContent).join();
@@ -1479,7 +1480,7 @@ function runSelfTests(){
       t('Einstellungen: Zeile „Darstellung“ mit Automatisch, Hell, Dunkel; die gewählte ist markiert; Tippen speichert und wendet sofort an',names==='Automatisch,Hell,Dunkel'&&first==='Dunkel'&&afterHell==='hell,hell,Hell'&&afterAuto==='auto,undefined,Automatisch'&&defaultState().ui.theme==='auto'&&techInfo().textContent.includes('Darstellung'));
     }finally{S.ui=keepD.ui;applyUi();persist();}
     const pats=[...document.querySelectorAll('pattern[id^="hatch-"]')];
-    t('Schraffuren (Bruchbilder) nehmen ihre Farben aus den Tokens, keine festen Farben; Seite meldet „dark light“',pats.length===5&&pats.every(p=>!/#[0-9a-f]{3,6}|rgba?\(/i.test(p.innerHTML)&&p.querySelectorAll('[style*="var(--hatch-"]').length===2)&&document.querySelector('meta[name="color-scheme"]').content==='dark light');
+    t('Bruchbilder (Muster) nehmen Fläche und Linie aus den Tokens, keine festen Farben; Seite meldet „dark light“',pats.length===5&&pats.every(p=>!/#[0-9a-f]{3,6}|rgba?\(/i.test(p.innerHTML)&&p.querySelectorAll('[style*="var(--"]').length===2)&&document.querySelector('meta[name="color-scheme"]').content==='dark light');
     /* Start ohne Aufblitzen: das kleine Skript im <head> liest die Wahl aus dem Speicher */
     const boot=[...document.scripts].find(s=>!s.src&&s.textContent.includes('data-theme'));
     let bootOK=false;const keepRaw=(()=>{try{return localStorage.getItem(KEY);}catch(e){return null;}})();

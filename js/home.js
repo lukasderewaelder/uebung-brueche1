@@ -86,16 +86,17 @@ function fold(title,content,open){
 function renderHome(){
   const v=S.view,tab=homeTab(),root=el('div');
   const thema=tab==='pfad'&&v.thema?activeModules().find(m=>m.id===v.thema):null;
-  root.append(topbar('')); /* Themenseite, Üben und die anderen Reiter tragen ihren Namen als Überschrift */
+  const head=thema?null:{pfad:'Lernen',ueben:'Wiederholen',spiele:'Spiele',rang:'Ich'}[tab]; /* Design „Klar“: der Reitername steht als Überschrift in der Kopfzeile */
+  root.append(topbar('',null,head));
   const home=el('div',{class:'home'});
   if(tab==='pfad'){
     if(thema)pfadTab(home,thema);else lernenTab(home);
   }else if(tab==='spiele'){
-    home.append(el('h1',null,'Spiele'),listLevel(GAME_IDS),el('div',{class:'menu'},
+    home.append(listLevel(GAME_IDS),el('div',{class:'menu'},
       ...GAME_IDS.map(id=>{const r=S.games[keyOf(id,levelOf(id))];return bigBtn(ICON[id],()=>openEntry(id),GAMES[id].name,GAMES[id].desc,[r?`Runden: ${r.played}`:'',id==='S02'&&lootOf().length?`Sammelkarten: ${lootOf().length} von ${LOOT.length}`:'',id==='S04'&&snakesOf().length?`Sammelkarten: ${snakesOf().length} von ${SNAKES.length}`:''].filter(Boolean).join(' · '),'',null,id==='S01'?'dots':id==='S02'?'hatch':id==='S03'?'dash':'dots');})));
   }else if(tab==='rang'){
     const total=Object.values(S.progress).reduce((a,p)=>a+p.done,0);
-    home.append(el('div',{class:'ichhead'},el('h1',null,'Ich'),linkBtn('Einstellungen',openOptions,'zahnrad')),
+    home.append(el('div',{class:'ichhead'},linkBtn('Einstellungen',openOptions,'zahnrad')),
       rankCard(),typeof weekCard==='function'?weekCard():dayCard(),
       typeof allBadges==='function'?fold('Abzeichen ('+allBadges().filter(b=>b.have).length+' von '+allBadges().length+')',el('div',{class:'badgelist'},...allBadges().map(b=>badgeNode(b)))):null,
       el('p',{class:'stats'},`Aufgaben bearbeitet: ${total} · Höchstes Treffer-Konto: ${S.bestStreak||0}`),
@@ -104,7 +105,7 @@ function renderHome(){
   }else{
     /* Üben: frei wählen. Ein Umschalter für alle, je Thema eine aufklappbare Liste (das Thema der letzten Aufgabe ist offen) */
     const last=S.last&&TASKS[S.last]&&!isCheck(S.last)?S.last:null,lastMod=last?moduleOf(last):null,mods=activeModules();
-    home.append(el('h1',null,'Wiederholen'),whCard()); /* P14: oben die Wiederholung heute */
+    home.append(whCard()); /* P14: oben die Wiederholung heute */
     if(last)home.append(bigBtn('play',()=>openEntry(last),'Weiter üben',TASKS[last].name,LEVEL_LABEL[levelOf(last)]));
     home.append(el('h2',{class:'area'},'Geschaffte Stationen frei üben'),listLevel(PRACTICE_ORDER.filter(id=>!isCheck(id))));
     mods.forEach(m=>home.append(fold(m.name,uebenBody(m),lastMod?lastMod.id===m.id:m===mods[0])));

@@ -100,42 +100,33 @@ function focusModule(){
   const cand=[].concat(...MAP_LAYOUT.strands.map(s=>s.ids)).map(moduleById).filter(open);
   return cand.sort((a,b)=>pfadInfo(b).doneN-pfadInfo(a).doneN)[0]||act.find(open)||null;
 }
-function stationDots(mod){
-  const rows=pathState(mod),box=el('span',{class:'sdots','aria-hidden':'true'});
-  rows.filter(r=>!/LAB$/.test(r.id)&&r.m.lvl!=='basis').forEach(r=>box.append(el('i',{class:(r.m.lvl==='plus'?'p':'k')+(r.done?' on':'')+(r.next?' cur':'')+(r.m.final?' fin':'')})));
-  return box;
-}
-function mapNode(m,focus){
-  const card=moduleCard(m,m===focus);
-  card.classList.add('etnode');card.dataset.et=etOf(m)||'';
-  card.prepend(el('span',{class:'etl','aria-hidden':'true'},m.letter||''));
-  card.append(stationDots(m),el('span',{class:'badgerow'},...badgesOf(m).filter(b=>b.have).map(b=>badgeNode(b,true))));
-  const wrap=el('div',{class:'etwrap'+(m===focus?' here':'')},card);
-  if(m===focus)wrap.append(el('span',{class:'standort','aria-hidden':'true'},teamAvatar('Ida',30,'wave'),el('small',null,'Du bist hier')));
-  return wrap;
+/* Eine Zeile der Lernkarte: Kennfarbe als Kante, Buchstabe, Name, Fortschritt als Zahl und schmaler Balken. Führt zur Etappenseite. */
+function etRow(m,focus){
+  const z=lernenZustand(m),{must,doneN,go1}=pfadInfo(m),fertig=z!=='gate'&&!go1,here=m===focus;
+  const label=m.name+': '+doneN+' von '+must.length+' Stationen fertig'+(fertig?', Urkunde geschafft':here?', hier geht es weiter':'');
+  const bar=el('span',{class:'etbar','aria-hidden':'true'},el('i',{style:'width:'+(must.length?Math.round(100*doneN/must.length):0)+'%'}));
+  return el('button',{type:'button',class:'etrow'+(here?' here':'')+(fertig?' done':''),'data-et':etOf(m)||'','data-mod':m.id,'aria-label':label,onclick:()=>go({kind:'home',tab:'pfad',thema:m.id})},
+    el('span',{class:'etl','aria-hidden':'true'},m.letter||''),
+    el('span',{class:'ettx'},el('b',null,m.short||m.name),el('small',null,fertig?'geschafft':doneN+' von '+must.length),bar),
+    fertig?icon('haken'):icon('weiter'));
 }
 function lernenTab(home){
   const focus=focusModule();
-  home.append(el('h1',null,'Lernen'));
   /* Karte „Weiter“ ganz oben */
   if(focus){
     const z=lernenZustand(focus),go1=pfadInfo(focus).go1;
     home.append(bigBtn('play',()=>{if(z==='gate')go({kind:'home',tab:'pfad',thema:focus.id});else openStation(go1.id);},
       z==='gate'?'Weiter: '+focus.name:'Weiter: '+stationLabel(go1.id),z==='gate'?'Etappe '+focus.letter+' beginnt mit dem Eingangstest.':focus.name,null,'go mapgo'));
   }
-  const map=el('div',{class:'tgrid lmap',role:'list','aria-label':'Lernlandkarte'});
-  MAP_LAYOUT.trunk.forEach(id=>{const m=moduleById(id);if(m&&m.status==='aktiv')map.append(el('div',{class:'mapstep',role:'listitem'},mapNode(m,focus)));});
-  const fork=el('div',{class:'mapfork',role:'listitem'},el('span',{class:'forkline','aria-hidden':'true'}));
-  MAP_LAYOUT.strands.forEach(s=>{
-    const col=el('div',{class:'strand',role:'group','aria-label':s.name,'data-et':s.et},el('div',{class:'strandhead'},el('span',{class:'strandico','aria-hidden':'true'},icon(s.icon)),el('span',{class:'strandtx'},el('b',null,s.name),el('small',null,s.sub))));
-    s.ids.forEach(id=>{const m=moduleById(id);if(m&&m.status==='aktiv')col.append(mapNode(m,focus));});
-    fork.append(col);
-  });
-  map.append(fork);
-  /* Etappen, die nicht im Bild stehen (Sicherheit, falls neue dazukommen) */
-  activeModules().filter(m=>!MAP_LAYOUT.trunk.includes(m.id)&&!MAP_LAYOUT.strands.some(s=>s.ids.includes(m.id))).forEach(m=>map.append(el('div',{class:'mapstep',role:'listitem'},mapNode(m,focus))));
+  /* Lernkarte: Grundlagen untereinander, danach die zwei Wege nebeneinander (Design „Klar“: Liste statt Bild, passt ohne Scrollen) */
+  const rowOf=(id)=>{const m=moduleById(id);return m&&m.status==='aktiv'?etRow(m,focus):null;};
+  const map=el('div',{class:'lmap','aria-label':'Lernlandkarte',role:'group'},
+    el('section',{class:'etgrp'+(MAP_LAYOUT.trunk.length===2?' pair':'')},el('h2',{class:'area'},'Grundlagen'),...MAP_LAYOUT.trunk.map(rowOf).filter(Boolean)),
+    el('div',{class:'etfork'},...MAP_LAYOUT.strands.map(st=>el('section',{class:'etgrp'+(st.ids.length===2?' pair':''),'aria-label':st.name},el('h2',{class:'area'},st.name),...st.ids.map(rowOf).filter(Boolean)))));
+  /* Etappen, die nicht in der Karte stehen (Sicherheit, falls neue dazukommen) */
+  const rest=activeModules().filter(m=>!MAP_LAYOUT.trunk.includes(m.id)&&!MAP_LAYOUT.strands.some(s=>s.ids.includes(m.id)));
+  if(rest.length)map.append(el('section',{class:'etgrp'},el('h2',{class:'area'},'Weitere'),...rest.map(m=>etRow(m,focus))));
   home.append(map);
-  const soon=plannedModules();
-  if(soon.length)home.append(el('section',{class:'soon','aria-label':'Geplante Etappen'},el('h2',{class:'area'},'Bald'),
-    el('ul',null,...soon.map(m=>el('li',null,icon(m.icon),el('span',null,el('b',null,m.name),el('small',null,m.desc)),el('em',null,'geplant'))))));
+  const soon=plannedModules(); /* geplante Etappen: eine ruhige Zeile statt Kästen */
+  if(soon.length)home.append(el('p',{class:'soonline'},el('b',null,'Bald: '),soon.map(m=>m.name).join(' · ')));
 }
