@@ -224,7 +224,12 @@ function fitPage(){
   const card=document.querySelector('.page .card');if(!card)return;
   const doc=document.documentElement,figs=[...card.querySelectorAll('svg:not(.ic)')];
   figs.forEach(s=>{s.style.zoom='';});
+  doc.classList.remove('padcompact');
   let over=doc.scrollHeight-innerHeight;
+  /* Handy hoch (28.11.2026): großes Zahlenfeld in vier Reihen, wenn Platz ist; fehlt Platz, zuerst zwei Reihen, erst dann Bilder verkleinern */
+  if(over>0&&document.querySelector('.work>.actionbar .keypad:not(.hidden)')&&matchMedia('(orientation:portrait) and (max-width:740px)').matches){
+    doc.classList.add('padcompact');over=doc.scrollHeight-innerHeight;
+  }
   if(over<=0||!figs.length)return;
   const total=figs.reduce((a,s)=>a+s.getBoundingClientRect().height,0);
   if(total<=0)return;

@@ -1783,11 +1783,18 @@ input:focus{border-color:var(--line)!important;box-shadow:3px 3px 0 var(--focus)
 .kbmeasure{gap:.25rem}
 .kbfoldq{margin:.125rem 0}
 .kbfoldq .frac{font-size:.85em}
-/* Niedrige Handys im Hochformat (unter 740 px, z. B. 375 × 667): dieselben Tasten in zwei Reihen, damit keine Aufgabe scrollt */
-@media (max-height:739px) and (orientation:portrait){
+/* Niedrige Handys im Hochformat (unter 680 px, z. B. 375 × 667): dieselben Tasten in zwei Reihen, damit keine Aufgabe scrollt */
+@media (max-height:679px) and (orientation:portrait){
   .keypad{grid-template-columns:repeat(7,minmax(0,1fr));grid-template-areas:"k1 k2 k3 k4 k5 dl nx" "k6 k7 k8 k9 k0 kc mx";max-width:32.5rem;gap:.25rem}
   .key.next .kl{display:none}
   .key.next{flex-direction:row}
+}
+/* fitPage setzt padcompact, wenn die Aufgabe mit dem großen Zahlenfeld nicht ohne Scrollen passt: dann zwei Reihen in voller Breite */
+@media (orientation:portrait){
+  html.padcompact .work>.actionbar .keypad{grid-template-columns:repeat(7,minmax(0,1fr));grid-template-areas:"k1 k2 k3 k4 k5 dl nx" "k6 k7 k8 k9 k0 kc mx";max-width:32.5rem;gap:.25rem;margin-bottom:.375rem}
+  html.padcompact .work>.actionbar .key{min-height:max(46px,2.875rem)}
+  html.padcompact .work>.actionbar .key.next .kl{display:none}
+  html.padcompact .work>.actionbar .key.next{flex-direction:row}
 }
 /* Etappe K auf dem Handy (Rückmeldung 28.11.2026): Rechnung groß und mit Abstand, große Antwortfelder,
    Rückmeldung in voller Höhe lesbar (Text umbrechen statt über den Rand, bei langen Texten scrollbar) */
@@ -1804,13 +1811,14 @@ input:focus{border-color:var(--line)!important;box-shadow:3px 3px 0 var(--focus)
 /* Handy hoch: Bedienpult unten am Rand (Daumenbereich), Tasten und Knöpfe größer; der Platz oben gehört der Aufgabe */
 @media (max-width:740px) and (orientation:portrait){
   .work>.actionbar{margin-top:auto}
+  .work>.actionbar .keypad{width:100%} /* volle Breite (bis max-width), sonst schrumpft das Feld in der Rasterzelle auf schmale Tasten */
 }
-/* nur auf hohen Handys (ab 760 px): größere Tasten, sonst passt die Aufgabe auf kurzen Bildschirmen nicht mehr ohne Scrollen */
-@media (max-width:740px) and (orientation:portrait) and (min-height:760px){
+/* ab 680 px Höhe: großes Zahlenfeld in vier Reihen; Tastenhöhe wächst mit der Bildschirmhöhe (46 bis 54 px) */
+@media (max-width:740px) and (orientation:portrait) and (min-height:680px){
   .work>.actionbar{padding-bottom:calc(.75rem + env(safe-area-inset-bottom))}
   .work>.actionbar .keypad{gap:.4rem;margin-bottom:.5rem}
-  .work>.actionbar .key{min-height:max(50px,3.1rem);font-size:1.4rem}
+  .work>.actionbar .key{min-height:clamp(46px,6.6dvh,54px);font-size:1.4rem}
   .work>.actionbar .key.next{font-size:.85rem}
   .work>.actionbar .key.fn{font-size:1.15rem}
-  .work>.actionbar .btn{min-height:max(50px,3.1rem);font-size:1.05rem}
+  .work>.actionbar .btn{min-height:clamp(46px,6.6dvh,54px);font-size:1.05rem}
 }
