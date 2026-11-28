@@ -8,7 +8,8 @@
 /* Punkte kommen aus allen Stationen. Neue Etappen und Stationen geben automatisch XP und zählen bei „alles perfekt“ mit (rankPractice, rankPath).
    Wenn weitere Bausteine dazukommen, die Schwellen hier prüfen: Ab Platin sind sie mit Absicht hoch angesetzt. */
 /* Wie in vielen Spielen: Metalle mit je drei Stufen (I bis III), dann Diamant; Kristall nur mit „alles perfekt“. */
-const RANKS=[
+/* Basis-Tabelle: gilt für einen Lernweg mit RANK_REF_XP Pflicht-XP (Diamant = alle Pflicht-Stationen). Die echte Skala steht unten in RANKS. */
+const RANK_BASE=[
   [0,'Bronze I','plakette','bronze'],[40,'Bronze II','plakette','bronze'],[100,'Bronze III','plakette','bronze'],
   [190,'Silber I','plakette','silber'],[320,'Silber II','plakette','silber'],[500,'Silber III','plakette','silber'],
   [750,'Gold I','plakette','gold'],[1100,'Gold II','plakette','gold'],[1600,'Gold III','plakette','gold'],
@@ -18,6 +19,23 @@ const RANKS=[
   [6800,'Iridium I','zahnrad','iridium'],[7500,'Iridium II','zahnrad','iridium'],[8250,'Iridium III','zahnrad','iridium'],
   [9000,'Diamant','stern','diamant'],[10000,'Kristall','krone','kristall']
 ];
+/* Punkteskala (Lehrer, 28.11.2026): Die Schwellen wachsen mit den Bausteinen. RANK_REF_XP ist der Lernweg, für den die Basis-Tabelle gemacht ist.
+   pflichtXP() rechnet die Pflicht-XP aller aktiven Etappen aus; jede Schwelle wird mit dem Faktor Pflicht-XP / RANK_REF_XP
+   gestreckt und auf 10 XP gerundet. Diamant liegt damit bei allen Pflicht-Stationen, Kristall darüber (zusätzlich „alles perfekt“). */
+const RANK_REF_XP=9000;
+const RANK_XP_ANSWER=12; /* mittlere XP je richtiger Antwort (10 bis 15, je nach Treffer-Konto) */
+function pflichtXP(){
+  let xp=0;
+  activeModules().forEach(m=>(m.path||[]).forEach(p=>{
+    const n=(TASKS[p.id]||{}).size||0;
+    if(/LAB$/.test(p.id))xp+=15; /* Labor: Entdeckerauftrag */
+    else if(p.final)xp+=15+50+RANK_XP_ANSWER*n; /* Abschlusscheck: Runde und Urkunde */
+    else if(p.must)xp+=2*(15+20+RANK_XP_ANSWER*n); /* Pflicht-Station, beide Stufen: Runde und „Station fertig“ */
+  }));
+  return xp;
+}
+const RANK_SCALE=pflichtXP()/RANK_REF_XP;
+const RANKS=RANK_BASE.map(r=>[Math.round(r[0]*RANK_SCALE/10)*10,r[1],r[2],r[3]]);
 const medalIcon=(r,cls)=>el('span',{class:'medal tier-'+(r[3]||'bronze')+(cls?' '+cls:'')},icon(r[2],cls==='big'?'big':''));
 const RANK_TOP=RANKS.length-1;
 

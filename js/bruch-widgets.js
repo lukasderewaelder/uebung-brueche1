@@ -11,7 +11,8 @@
    Alle Zustände liegen als einfache Daten im Entwurf (view.draft). Bildgrenzen: Nenner höchstens 6, höchstens 12 Felder.
    ===================================================================== */
 const KB_MAXCELLS=12;
-const kbExpr=(t,end)=>eq(kbNode(t.x),kbSign(t.op),kbNode(t.y),...(end===undefined?[]:['=',end]));
+/* Rechnung der Etappe K: eigene Klasse kbeq, damit Zahlen auf dem Handy größer und mit Abstand stehen (css/app.css) */
+const kbExpr=(t,end)=>{const d=eq(kbNode(t.x),kbSign(t.op),kbNode(t.y),...(end===undefined?[]:['=',end]));d.classList.add('kbeq');return d;};
 const kbBlank=()=>el('span',{class:'blank','aria-label':'gesucht'},'?');
 
 /* ---------- Falt-Rechteck ---------- */

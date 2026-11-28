@@ -1789,3 +1789,28 @@ input:focus{border-color:var(--line)!important;box-shadow:3px 3px 0 var(--focus)
   .key.next .kl{display:none}
   .key.next{flex-direction:row}
 }
+/* Etappe K auf dem Handy (Rückmeldung 28.11.2026): Rechnung groß und mit Abstand, große Antwortfelder,
+   Rückmeldung in voller Höhe lesbar (Text umbrechen statt über den Rand, bei langen Texten scrollbar) */
+.q .kbeq{gap:.5em;row-gap:.45em;flex-wrap:wrap;align-items:center}
+.q .kbeq .frac{font-size:1.4em;margin:0 .2em}
+.q .kbeq .frac>.num,.q .kbeq .frac>.den{padding-left:.35em;padding-right:.35em}
+.vtans .hnline .frac.inp input,.vtans .hnline input.intin{width:3.3rem;height:3.25rem;font-size:1.3rem}
+.vtans .hnline .frac.inp>.num{padding-bottom:.3rem}
+.vtans .hnline .frac.inp>.den{padding-top:.3rem}
+.vtans .hnline .hnlab{font-size:.8rem;line-height:1.1}
+.msg{display:block;line-height:1.5;overflow-wrap:anywhere}
+.msg::before{display:inline-block;margin-right:.5em;vertical-align:.12em}
+.dockpanel.msgmode>.dockmsg,.dockpanel.reserve.msgmode>.dockmsg{max-height:min(46dvh,20rem);overflow:auto;overscroll-behavior:contain;touch-action:pan-y}
+/* Handy hoch: Bedienpult unten am Rand (Daumenbereich), Tasten und Knöpfe größer; der Platz oben gehört der Aufgabe */
+@media (max-width:740px) and (orientation:portrait){
+  .work>.actionbar{margin-top:auto}
+}
+/* nur auf hohen Handys (ab 760 px): größere Tasten, sonst passt die Aufgabe auf kurzen Bildschirmen nicht mehr ohne Scrollen */
+@media (max-width:740px) and (orientation:portrait) and (min-height:760px){
+  .work>.actionbar{padding-bottom:calc(.75rem + env(safe-area-inset-bottom))}
+  .work>.actionbar .keypad{gap:.4rem;margin-bottom:.5rem}
+  .work>.actionbar .key{min-height:max(50px,3.1rem);font-size:1.4rem}
+  .work>.actionbar .key.next{font-size:.85rem}
+  .work>.actionbar .key.fn{font-size:1.15rem}
+  .work>.actionbar .btn{min-height:max(50px,3.1rem);font-size:1.05rem}
+}
