@@ -49,7 +49,8 @@ function prog(key){return S.progress[key]||(S.progress[key]={done:0,first:0,late
 /* ---------- Eine Aufgabenform je Runde (Lehrer, 27.11.2026) ---------- */
 const FORM_SAME={ /* Arten, die dieselbe Form sind (nur andere Zahlen oder Antworten) */
   F04:[['geld','zeit','menge','gewicht']],F08:[['klein','gross']],
-  W03:[['nenner','zaehler','keins']],W06:[['halb','eins']],W07:[['nenner','zaehler','fehlt','zahl','erw','konflikt']],W08:[['ord3','ord4','ord5','desc3','desc4']]
+  W03:[['nenner','zaehler','keins']],W06:[['halb','eins']],W07:[['nenner','zaehler','fehlt','zahl','erw','konflikt']],W08:[['ord3','ord4','ord5','desc3','desc4']],
+  K07:[['nullDurch','durchNull','selbst','einsDurch','kehrMal']],K08:[['vergleich','warum'],['verdoppeln','verdoppelnDurch']],K10:[['gedacht','pfeil']]
 };
 const formOfKind=(id,k)=>{const g=(FORM_SAME[id]||[]).find(x=>x.includes(k));return g?g[0]:k;};
 /* Plan einer Runde: alle Plätze aus einer Form; die Form wechselt von Runde zu Runde in der Reihenfolge des Plans (erste = Grundform) */
@@ -158,21 +159,25 @@ function makeKeypad(host,onSubmit){
     b.addEventListener('click',()=>{const i=ensure();if(i)fn(i);});
     return b;
   };
+  /* Anordnung wie am Handy (Lehrer, 28.11.2026): 1 2 3 oben, 0 unten; rechts „nächstes Feld“ und „gemischte Zahl“ (springt in das Feld der Ganzen) */
   const pad=el('div',{class:'keypad hidden',role:'group','aria-label':'Zahlentastatur'});
-  '1234567890'.split('').forEach(d=>pad.append(key(d,'',i=>{if(i.value.length<(i.maxLength>0?i.maxLength:99)){i.value+=d;fire(i);}})));
-  pad.append(key(icon('loeschen'),'fn',i=>{i.value=i.value.slice(0,-1);fire(i);},'Löschen'));
-  const alt=el('button',{type:'button',class:'key fn','aria-label':'Nächstes Feld'},'Weiter ▸');
-  alt.addEventListener('pointerdown',e=>e.preventDefault());
-  alt.addEventListener('click',()=>{
-    const i=ensure();if(!i)return;
-    if(i.classList.contains('decin')){if(!i.value.includes(',')){i.value+=',';fire(i);}return;}
-    const l=list();cur=l[(l.indexOf(i)+1)%l.length];cur.focus({preventScroll:true});
-  });
-  pad.append(alt);
+  '1234567890'.split('').forEach(d=>{const b=key(d,'kd',i=>{if(i.value.length<(i.maxLength>0?i.maxLength:99)){i.value+=d;fire(i);}});b.style.gridArea='k'+d;pad.append(b);});
+  const comma=key(',','fn kcomma',i=>{if(i.classList.contains('decin')&&!i.value.includes(',')){i.value+=',';fire(i);}},'Komma');
+  const del=key(icon('loeschen'),'fn kdel',i=>{i.value=i.value.slice(0,-1);fire(i);},'Löschen');
+  const mixList=()=>[...host.querySelectorAll('.hnmixed input[type=text]:not([disabled])')].filter(i=>i.offsetParent!==null);
+  const nextB=el('button',{type:'button',class:'key fn next knext','aria-label':'Nächstes Feld'},el('span',{class:'kl'},'nächstes',el('br'),'Feld'),icon('weiter'));
+  nextB.addEventListener('pointerdown',e=>e.preventDefault());
+  nextB.addEventListener('click',()=>{const i=ensure();if(!i)return;const l=list();cur=l[(l.indexOf(i)+1)%l.length];cur.focus({preventScroll:true});});
+  const mixB=el('button',{type:'button',class:'key fn next kmix','aria-label':'Gemischte Zahl eingeben: zum Feld der Ganzen'},el('span',{class:'kmixic','aria-hidden':'true'},el('b',null,'1'),frac(1,2)),el('span',{class:'kl'},'gemischte',el('br'),'Zahl'));
+  mixB.addEventListener('pointerdown',e=>e.preventDefault());
+  mixB.addEventListener('click',()=>{const m=mixList();if(!m.length)return;cur=m[0];cur.focus({preventScroll:true});});
+  pad.append(comma,del,nextB,mixB);
   return {el:pad,refresh(){
     const l=list();
     pad.classList.toggle('hidden',!l.length||!matchMedia('(pointer:coarse)').matches);
-    const dec=!!host.querySelector('.decin');alt.replaceChildren(dec?',':'Weiter ▸');alt.classList.toggle('next',!dec);alt.setAttribute('aria-label',dec?'Komma':'Nächstes Feld');alt.classList.toggle('invis',!(dec||l.length>1));
+    comma.classList.toggle('invis',!host.querySelector('.decin'));
+    nextB.classList.toggle('invis',l.length<2);
+    mixB.classList.toggle('invis',!mixList().length);
     if(l.length)ensure();
   }};
 }
@@ -357,7 +362,7 @@ const openEntry=(id)=>{if(!isGame(id))S.last=id;go({kind:isGame(id)?'game':'prac
 function setLevel(id,l){S.levelByType[id]=l;persist();renderAll();}
 
 /* Symbole und Kennfarbe je Übung (erw = Erweitern/Orange, kue = Kürzen/Petrol) */
-const ICON={WH:'undo',N01:'mal',N02:'geteilt',N03:'mal',N04:'geteilt',N05:'mal',N06:'netz',N07:'lupe',N08:'schnitt',N09:'frage',N10:'kreis',NQ:'haken',NA:'plakette',F01:'bild',F02:'balken',F03:'karten',F04:'teiler',F05:'plus',F06:'netz',F07:'lupe',F08:'frage',FQ:'haken',FA:'plakette',QA:'plakette',ZA:'plakette',RA:'plakette',RQ:'haken',ZQ:'haken',Z01:'lineal',Z02:'lupe',Z03:'lineal',Z04:'aus',Z05:'wechsel',Z06:'netz',Z07:'lineal',Z08:'wechsel',Q00:'haken',G01:'lineal',T01:'teiler',T02:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'wechsel',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor',W01:'balken',W02:'balken',W03:'wechsel',W04:'luecke',W05:'aus',W06:'lineal',W07:'frage',W08:'netz',W09:'lineal',W10:'lupe',WQ:'haken',WA:'plakette',S03:'wechsel',R01:'plus',R02:'plus',R03:'minus',R04:'minus',R05:'plusminus',
+const ICON={WH:'undo',K01:'kreuzraster',K02:'lineal',K03:'mal',K04:'geteilt',K05:'mal',K06:'netz',K07:'frage',K08:'balken',K09:'lupe',K10:'luecke',KQ:'haken',KA:'plakette',N01:'mal',N02:'geteilt',N03:'mal',N04:'geteilt',N05:'mal',N06:'netz',N07:'lupe',N08:'schnitt',N09:'frage',N10:'kreis',NQ:'haken',NA:'plakette',F01:'bild',F02:'balken',F03:'karten',F04:'teiler',F05:'plus',F06:'netz',F07:'lupe',F08:'frage',FQ:'haken',FA:'plakette',QA:'plakette',ZA:'plakette',RA:'plakette',RQ:'haken',ZQ:'haken',Z01:'lineal',Z02:'lupe',Z03:'lineal',Z04:'aus',Z05:'wechsel',Z06:'netz',Z07:'lineal',Z08:'wechsel',Q00:'haken',G01:'lineal',T01:'teiler',T02:'teiler',G02:'aus',G03:'schnitt',G04:'schnitt',G05:'wechsel',B01:'bild',U01:'luecke',U02:'frage',U03:'lupe',O01:'netz',O02:'schnitt',D01:'wechsel',D02:'wechsel',D03:'wechsel',S01:'karten',S02:'tresor',W01:'balken',W02:'balken',W03:'wechsel',W04:'luecke',W05:'aus',W06:'lineal',W07:'frage',W08:'netz',W09:'lineal',W10:'lupe',WQ:'haken',WA:'plakette',S03:'wechsel',R01:'plus',R02:'plus',R03:'minus',R04:'minus',R05:'plusminus',
   HQ:'haken',HA:'plakette',H02:'kreuzraster',H03:'plus',H04:'plus',H06:'minus',H07:'plusminus',H08:'luecke',H09:'karten',H10:'lineal',H11:'netz',H12:'zirkel',H13:'frage',H14:'schmetterling',S04:'schlange'};
 const ACC={G02:'erw',O01:'erw',G03:'kue',G04:'kue',T01:'kue',T02:'kue',O02:'kue',G05:'mix'};
 function backTarget(){

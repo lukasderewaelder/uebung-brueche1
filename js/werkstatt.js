@@ -5,7 +5,7 @@
    ===================================================================== */
 
 /* ---------- P25 Kennfarben je Etappe und Animationen ---------- */
-const ET_COLOR={F:'F',E:'E',Z:'Z',W:'W',R:'R',H:'H',V:'V'};
+const ET_COLOR={F:'F',E:'E',Z:'Z',W:'W',R:'R',H:'H',V:'V',K:'K'};
 const etOf=(mod)=>mod&&mod.letter&&ET_COLOR[mod.letter]?mod.letter:null;
 const animOn=()=>!(S.ui&&S.ui.anim===false)&&!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 function animOptions(){
@@ -22,7 +22,7 @@ function badgesOf(mod){
   BADGE_GROUPS.forEach(g=>{
     const ids=mod.path.filter(p=>p.grp===g&&!/LAB$/.test(p.id)).map(p=>p.id);
     if(!ids.length)return;
-    out.push({mod:mod.id,grp:g,plus:g==='Knobeln',label:(g==='Knobeln'?'Plus-Abzeichen':g)+' '+mod.letter,have:ids.every(stationDone),n:ids.filter(stationDone).length,of:ids.length});
+    out.push({mod:mod.id,grp:g,plus:g==='Knobeln',label:(g==='Knobeln'?'Plus-Abzeichen':g)+' '+codeOf(mod),have:ids.every(stationDone),n:ids.filter(stationDone).length,of:ids.length});
   });
   if(typeof mod.badges==='function')out.push(...mod.badges()); /* Abzeichen für Lernhandlungen (Etappe V) */
   return out;
@@ -67,7 +67,7 @@ function weekCard(){
 
 /* ---------- P2 Lernlandkarte (Reiter „Lernen“) ---------- */
 /* Reihenfolge und Verzweigung: F → E → zwei Stränge (Ordnen: Z → W, Rechnen: R → H) */
-const MAP_LAYOUT={trunk:['verstehen','veraendern'],strands:[{name:'Brüche ordnen',sub:'Zahlenstrahl und Vergleichen',icon:'lineal',et:'Z',ids:['zahlenstrahl','vergleichen']},{name:'Brüche rechnen',sub:'Plus, Minus, mal und durch',icon:'plusminus',et:'R',ids:['addsub','addsub2','vervielfachen']}]}; /* zwei Wege nach Etappe E */
+const MAP_LAYOUT={trunk:['verstehen','veraendern'],strands:[{name:'Brüche ordnen',sub:'Zahlenstrahl und Vergleichen',icon:'lineal',et:'Z',ids:['zahlenstrahl','vergleichen']},{name:'Brüche rechnen',sub:'Plus, Minus, mal und durch',icon:'plusminus',et:'R',ids:['addsub','addsub2','vervielfachen','rechnen']}]}; /* zwei Wege nach Etappe E */
 /* die Etappe, bei der es weitergeht: zuerst der Stamm, dann der Strang mit dem meisten Fortschritt */
 function focusModule(){
   const act=activeModules(),open=(m)=>m&&(lernenZustand(m)==='gate'||pfadInfo(m).go1);
@@ -81,7 +81,7 @@ function etRow(m,focus){
   const label=m.name+': '+doneN+' von '+must.length+' Stationen fertig'+(fertig?', Urkunde geschafft':here?', hier geht es weiter':'');
   const bar=el('span',{class:'etbar','aria-hidden':'true'},el('i',{style:'width:'+(must.length?Math.round(100*doneN/must.length):0)+'%'}));
   return el('button',{type:'button',class:'etrow'+(here?' here':'')+(fertig?' done':''),'data-et':etOf(m)||'','data-mod':m.id,'aria-label':label,onclick:()=>go({kind:'home',tab:'pfad',thema:m.id})},
-    el('span',{class:'etl','aria-hidden':'true'},m.letter||''),
+    el('span',{class:'etl','aria-hidden':'true'},codeOf(m)),
     el('span',{class:'ettx'},el('b',null,m.short||m.name),el('small',null,fertig?'geschafft':doneN+' von '+must.length),bar),
     fertig?icon('haken'):icon('weiter'));
 }
@@ -91,13 +91,14 @@ function lernenTab(home){
   if(focus){
     const z=lernenZustand(focus),go1=pfadInfo(focus).go1;
     home.append(bigBtn('play',()=>{if(z==='gate')go({kind:'home',tab:'pfad',thema:focus.id});else openStation(go1.id);},
-      z==='gate'?'Weiter: '+focus.name:'Weiter: '+stationLabel(go1.id),z==='gate'?'Etappe '+focus.letter+' beginnt mit dem Eingangstest.':focus.name,null,'go mapgo'));
+      z==='gate'?'Weiter: '+focus.name:'Weiter: '+stationLabel(go1.id),z==='gate'?'Etappe '+codeOf(focus)+' beginnt mit dem Eingangstest.':focus.name,null,'go mapgo'));
   }
   /* Lernkarte: Grundlagen untereinander, danach die zwei Wege nebeneinander (Design „Klar“: Liste statt Bild, passt ohne Scrollen) */
   const rowOf=(id)=>{const m=moduleById(id);return m&&m.status==='aktiv'?etRow(m,focus):null;};
   const map=el('div',{class:'lmap','aria-label':'Lernlandkarte',role:'group'},
     el('section',{class:'etgrp'+(MAP_LAYOUT.trunk.length===2?' pair':'')},el('h2',{class:'area'},'Grundlagen'),...MAP_LAYOUT.trunk.map(rowOf).filter(Boolean)),
-    el('div',{class:'etfork'},...MAP_LAYOUT.strands.map(st=>el('section',{class:'etgrp'+(st.ids.length===2?' pair':''),'aria-label':st.name},el('h2',{class:'area'},st.name),...st.ids.map(rowOf).filter(Boolean)))));
+    el('div',{class:'etfork'},...MAP_LAYOUT.strands.map(st=>{const rows=st.ids.map(rowOf).filter(Boolean); /* gerade Zahl von Etappen: zwei Spalten (spart Höhe, nichts scrollt) */
+      return el('section',{class:'etgrp'+(rows.length%2===0?' pair':''),'aria-label':st.name},el('h2',{class:'area'},st.name),...rows);})));
   /* Etappen, die nicht in der Karte stehen (Sicherheit, falls neue dazukommen) */
   const rest=activeModules().filter(m=>!MAP_LAYOUT.trunk.includes(m.id)&&!MAP_LAYOUT.strands.some(s=>s.ids.includes(m.id)));
   if(rest.length)map.append(el('section',{class:'etgrp'},el('h2',{class:'area'},'Weitere'),...rest.map(m=>etRow(m,focus))));

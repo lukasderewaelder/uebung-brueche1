@@ -22,7 +22,7 @@
   --erw:#f4a061;--kue:#5fcfdc;
   --ok:#72d69d;--bad:#ff9189;
   --paper:#262d3c;--ink:#fbf6ec;--ink-dim:#bcc1cc;--mark:#6b5a14;
-  --et-F:#0f8a5f;--et-E:#c44f23;--et-Z:#1a8fa0;--et-W:#9b59c9;--et-R:#3f71d3;--et-H:#c23a4a;--et-V:#b8921d;  /* Kennfarbe je Etappe: nur als Kante */
+  --et-F:#0f8a5f;--et-E:#c44f23;--et-Z:#1a8fa0;--et-W:#9b59c9;--et-R:#3f71d3;--et-H:#c23a4a;--et-V:#b8921d;--et-K:#8a5a3c;  /* Kennfarbe je Etappe: nur als Kante */
   --medal-bronze:#c0773a;--medal-silber:#a9b6c3;--medal-gold:#e0b12b;--medal-platin:#7fc9c4;--medal-diamant:#6fc3ff;--medal-kristall:#b79cff;--medal-palladium:#d6cfc0;--medal-rhodium:#f08fa8;--medal-iridium:#6cc36a;
   --track:#2f3647;--tick:rgba(251,246,236,.3);
   --nl-sec:rgba(251,246,236,.06);--nl-on:rgba(143,176,255,.35);
@@ -1444,7 +1444,7 @@ button.gloss:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 .glalltag{color:var(--chalk-dim)}
 .introsub{margin:-.25rem 0 .375rem;font-size:max(14px,.9rem);color:var(--chalk-dim)}
 /* ---------- Umbau Phase 6: Team, Sprechblase, Medaillen, Abzeichen, Wochenziel, Kennfarben, Lernlandkarte ---------- */
-[data-et="F"]{--et:var(--et-F)}[data-et="E"]{--et:var(--et-E)}[data-et="Z"]{--et:var(--et-Z)}[data-et="W"]{--et:var(--et-W)}[data-et="R"]{--et:var(--et-R)}[data-et="H"]{--et:var(--et-H)}[data-et="V"]{--et:var(--et-V)}
+[data-et="F"]{--et:var(--et-F)}[data-et="E"]{--et:var(--et-E)}[data-et="Z"]{--et:var(--et-Z)}[data-et="W"]{--et:var(--et-W)}[data-et="R"]{--et:var(--et-R)}[data-et="H"]{--et:var(--et-H)}[data-et="V"]{--et:var(--et-V)}[data-et="K"]{--et:var(--et-K)}
 .home[data-et] h1{border-bottom:4px solid var(--et);padding-bottom:.25rem}
 .home[data-et] .pfadline .segn i.on{background:var(--et)}
 .medal{display:inline-grid;place-items:center;width:1.75em;height:1.75em;border-radius:50%;background:var(--medal-bronze);color:#1b1b1b}
@@ -1739,3 +1739,53 @@ input:focus{border-color:var(--line)!important;box-shadow:3px 3px 0 var(--focus)
 .probenote{margin:0 0 0.375rem;font-size:.85rem;color:var(--chalk-dim)}
 .typfehler{margin:0.25rem 0 0.5rem;padding:0.375rem 0.625rem;border:2px solid var(--line);border-left:6px solid var(--bad);border-radius:4px 12px 4px 4px;background:var(--bp-2)}
 .typfehler b{color:var(--bad)}
+/* Zahlenfeld wie am Handy (28.11.2026): Ziffern in drei Spalten (1 2 3 oben, 0 unten), rechts „nächstes Feld“ und „gemischte Zahl“ */
+.keypad{grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.3fr);grid-template-areas:"k1 k2 k3 nx" "k4 k5 k6 nx" "k7 k8 k9 mx" "kc k0 dl mx";max-width:26rem}
+.keypad .kcomma{grid-area:kc}
+.keypad .kdel{grid-area:dl}
+.keypad .knext{grid-area:nx}
+.keypad .kmix{grid-area:mx}
+.key.next{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.125rem;padding:.125rem;font:700 .8rem/1.1 var(--font-body);color:var(--chalk)}
+.key.next .ic{width:1.1rem;height:1.1rem}
+.key .kl{display:block}
+.kmixic{display:inline-flex;align-items:center;gap:.125rem;font:800 1.05rem var(--font-body)}
+.kmixic .frac{font-size:.62rem;line-height:1}
+@media (orientation:landscape) and (max-height:520px){
+  .keypad{grid-template-columns:repeat(11,minmax(0,1fr)) minmax(0,1fr) repeat(2,minmax(0,1.6fr));grid-template-areas:"k1 k2 k3 k4 k5 k6 k7 k8 k9 k0 kc dl nx mx";max-width:none}
+  .key.next{flex-direction:row;gap:.25rem}
+  .key .kl br{display:none}
+  .kmixic{display:none}
+}
+/* Etappe „Bruch mal Bruch, Bruch durch Bruch“: Falt-Rechteck, Messen, Flächenbild (Farbe und Muster, nie Farbe allein) */
+.kbfig .cell.kbout>*{fill:var(--bp-3);stroke-dasharray:3 3}
+.kbfig .cell.kbrest>*{fill:url(#hatch-erw);stroke-dasharray:5 3;stroke-width:2.2}
+.kbfig .vtcap{font-size:max(13px,.8rem)}
+.kbganz{margin:.125rem 0 .25rem;font-size:max(14px,.875rem);color:var(--chalk-dim)}
+.kbpow{display:inline-flex;align-items:center;gap:.05em}
+.kbpow sup{font-size:.6em;align-self:flex-start}
+.kbint{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:.375rem 0}
+.kbint .intin{width:4.5rem}
+.kbway{flex-wrap:wrap}
+.klabpieces{display:flex;flex-wrap:wrap;align-items:center;gap:.375rem}
+/* Wiederholen: „Frei üben“ in zwei Spalten (acht Etappen passen ohne Scrollen, 28.11.2026) */
+.uebenmods{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:.375rem .5rem;margin-top:.5rem}
+.uebenmods>.area{grid-column:1/-1;margin-bottom:0}
+.uebenmods .etrow{min-height:max(48px,3rem)}
+.uebenmods .etrow .ettx b{font-size:max(14px,.9rem);line-height:1.2}
+.uebenmods .etrow>.ic{display:none}
+.uebenmods .etrow .ettx{display:flex;flex-direction:column;min-width:0}
+.uebenmods .etrow .ettx small{font-size:max(13px,.8rem)}
+/* Messen: Knöpfe und Zähler in einer Zeile; die Frage trägt die Rechnung im Satz */
+.kbmrow{align-items:center;margin-top:.25rem}
+.kbmrow .vtcount{margin:0;flex:1 1 auto;white-space:nowrap}
+.kbmrow .btn.small{min-height:44px;padding:0 .625rem}
+.q .kbinl .eq{display:inline-flex;font-size:1em;margin:0;vertical-align:middle}
+.kbmeasure{gap:.25rem}
+.kbfoldq{margin:.125rem 0}
+.kbfoldq .frac{font-size:.85em}
+/* Niedrige Handys im Hochformat (unter 740 px, z. B. 375 × 667): dieselben Tasten in zwei Reihen, damit keine Aufgabe scrollt */
+@media (max-height:739px) and (orientation:portrait){
+  .keypad{grid-template-columns:repeat(7,minmax(0,1fr));grid-template-areas:"k1 k2 k3 k4 k5 dl nx" "k6 k7 k8 k9 k0 kc mx";max-width:32.5rem;gap:.25rem}
+  .key.next .kl{display:none}
+  .key.next{flex-direction:row}
+}

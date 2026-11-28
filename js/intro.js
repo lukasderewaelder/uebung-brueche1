@@ -876,6 +876,7 @@ function renderIntro(id){
       s.trick?el('div',{class:'introstage'},trickRow(s.trick)):null,
       s.strip?introStripNode(s.strip):null,
       s.whole?el('div',{class:'introstage'},hnWholes()):null,
+      s.kb&&typeof kbIntroNode==='function'?kbIntroNode(s.kb):null,
       s.vt&&typeof vtIntroNode==='function'?vtIntroNode(s.vt):null,
       s.nline?introLineNode(s.nline):null,
       s.nltry?introLineTry(s.nltry):null,

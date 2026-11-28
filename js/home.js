@@ -57,7 +57,7 @@ function uebenRow(m,lastMod){
   const n=uebenIds(m).length,here=lastMod&&lastMod.id===m.id;
   return el('button',{type:'button',class:'etrow'+(here?' here':''),'data-et':etOf(m)||'','data-mod':m.id,'aria-label':m.name+': '+n+' Stationen frei üben',
     onclick:()=>go({kind:'home',tab:'ueben',thema:m.id})},
-    el('span',{class:'etl','aria-hidden':'true'},m.letter||''),
+    el('span',{class:'etl','aria-hidden':'true'},codeOf(m)),
     el('span',{class:'ettx'},el('b',null,m.short||m.name),el('small',null,n+' Stationen')),icon('weiter'));
 }
 /* Reiter „Lernen“: eine quadratische Kachel je Thema, zwei nebeneinander. Die Kachel hat immer dieselben Teile: Symbol, Name, Fortschritt und eine Marke

@@ -65,39 +65,49 @@ const MODULES=[
     st:{Verstehen:['W01','W02'],Üben:['W03',{id:'W05',note:'Dafür hilft Erweitern und Kürzen.'}],Anwenden:['W08'],Knobeln:['W04','W06','W07','W09','W10']},
     basisRefs:['G02'],
     texts:{Verstehen:'Gleicher Nenner, gleicher Zähler',Üben:'Beides im Vergleich, auf einen Nenner bringen',Anwenden:'Brüche ordnen',Knobeln:'Fehlt zum Ganzen, Vergleichszahl, über 1, dazwischen',Abschlusscheck:'Eingangstest und Abschlusscheck'}}),
-  etappe({id:'addsub',letter:'R',name:'Plus und Minus mit gleichen Nennern',desc:'Der Nenner bleibt, die Zähler werden addiert oder subtrahiert.',icon:'plusminus',qid:'RQ',finalId:'RA',recommends:['veraendern'],
+  etappe({id:'addsub',letter:'R',name:'Plus und Minus mit gleichen Nennern',short:'Plus, Minus: gleiche Nenner',desc:'Der Nenner bleibt, die Zähler werden addiert oder subtrahiert.',icon:'plusminus',qid:'RQ',finalId:'RA',recommends:['veraendern'],
     finalText:'Du kannst Brüche mit gleichen Nennern addieren und subtrahieren. Stark!',
     st:{Entdecken:[{id:'RLAB',title:'Bruchlabor Plus und Minus',desc:'Addieren und Subtrahieren ausprobieren.'}],Verstehen:['R01','R03'],Üben:['R02','R04'],Anwenden:['R05']},
     basisRefs:['F01'],
     texts:{Entdecken:'Labor: Plus und Minus ausprobieren',Verstehen:'Addieren und subtrahieren am Bild',Üben:'Addieren und subtrahieren mit Rechenweg',Anwenden:'Plus oder minus? Fehler, eigene Aufgaben',Abschlusscheck:'Eingangstest und Abschlusscheck'}}),
-  etappe({id:'addsub2',letter:'H',name:'Plus und Minus mit verschiedenen Nennern',desc:'Erst gleich einteilen, dann die Zähler addieren oder subtrahieren.',icon:'kreuzraster',qid:'HQ',finalId:'HA',recommends:['addsub'],
+  etappe({id:'addsub2',letter:'H',name:'Plus und Minus mit verschiedenen Nennern',short:'Plus, Minus: andere Nenner',desc:'Erst gleich einteilen, dann die Zähler addieren oder subtrahieren.',icon:'kreuzraster',qid:'HQ',finalId:'HA',recommends:['addsub'],
     finalText:'Du kannst Brüche mit verschiedenen Nennern addieren und subtrahieren. Stark!',
     st:{Entdecken:[{id:'HLAB',title:'Bruchlabor Gemeinsame Teilung',desc:'Teilungen übertragen und Brüche zusammenfügen.'}],Verstehen:['H03'],
       Üben:[{id:'H02',note:'Dafür hilft Erweitern und Kürzen.'},'H04','H06'],Anwenden:['H07'],Knobeln:['H08','H09','H10','H11','H12','H13','H14']},
     basisRefs:['G02','R02'],
     texts:{Entdecken:'Labor: gemeinsame Teilung ausprobieren',Verstehen:'Am Bild: zusammenfügen, wegnehmen, ergänzen',Üben:'Hauptnenner finden, plus und minus rechnen',Anwenden:'Erweitern oder nicht? Fehler, das gleiche Ganze',
       Knobeln:'Rätsel, Muster, magisches Quadrat, Schmetterlingstrick',Abschlusscheck:'Eingangstest und Abschlusscheck'}}),
-  etappe({id:'vervielfachen',letter:'V',name:'Brüche vervielfachen und teilen',desc:'Brüche und gemischte Zahlen mal und durch eine natürliche Zahl.',icon:'mal',rank:true,qid:'NQ',finalId:'NA',recommends:['veraendern'],
+  etappe({id:'vervielfachen',letter:'V',name:'Brüche vervielfachen und teilen',short:'Vervielfachen und teilen',desc:'Brüche und gemischte Zahlen mal und durch eine natürliche Zahl.',icon:'mal',rank:true,qid:'NQ',finalId:'NA',recommends:['veraendern'],
     finalText:'Du kannst Brüche vervielfachen und teilen. Stark!',
     st:{Entdecken:[{id:'NLAB',title:'Bruch-Maschine',desc:'Brüche vervielfachen und teilen ausprobieren.'}],Verstehen:['N01','N02'],
       Üben:['N03','N04',{id:'N05',note:'Dafür hilft das Umwandeln gemischter Zahlen.'}],Anwenden:['N06'],Knobeln:['N07','N08','N09','N10']},
     basisRefs:['F05','G02'],
     texts:{Entdecken:'Labor: die Bruch-Maschine',Verstehen:'Am Bild: mehrmals nehmen, gerecht verteilen',Üben:'Vervielfachen und teilen mit der Regel, gemischte Zahlen',Anwenden:'Sachaufgaben: mehr oder weniger?',
       Knobeln:'Fehler, geschickt rechnen, Rätsel, Torten',Abschlusscheck:'Eingangstest und Abschlusscheck'}}),
-  {id:'dezimal',letter:'D',name:'Brüche und Dezimalzahlen',desc:'Brüche als Dezimalzahlen schreiben und umgekehrt.',icon:'wechsel',status:'geplant'},
+  {id:'dezimal',name:'Brüche und Dezimalzahlen',desc:'Brüche als Dezimalzahlen schreiben und umgekehrt.',icon:'wechsel',status:'geplant'},
   {id:'gemischt',name:'Gemischte Zahlen rechnen',desc:'Ganze und Bruchteil getrennt addieren und subtrahieren.',icon:'plus',status:'geplant'},
-  {id:'rechnen',name:'Bruch mal Bruch, Bruch durch Bruch',desc:'Brüche miteinander multiplizieren und dividieren.',icon:'winkel',status:'geplant'}
+  etappe({id:'rechnen',letter:'K',name:'Bruch mal Bruch, Bruch durch Bruch',short:'Mal und durch Bruch',desc:'Anteil vom Anteil, Kehrwert, gemischte Zahlen und Sachaufgaben.',icon:'geteilt',rank:true,qid:'KQ',finalId:'KA',recommends:['vervielfachen'],
+    finalText:'Du kannst Brüche malnehmen und durch Brüche teilen. Stark!',
+    st:{Entdecken:[{id:'KLAB',title:'Falt- und Messlabor',desc:'Anteile falten und messen, wie oft ein Stück passt.'}],Verstehen:['K01','K02'],
+      Üben:['K03','K04',{id:'K05',note:'Dafür hilft das Umwandeln gemischter Zahlen.'}],Anwenden:['K06'],Knobeln:['K07','K08','K09','K10']},
+    basisRefs:['F04','F05','N03','N04'],
+    texts:{Entdecken:'Labor: Anteile falten und messen',Verstehen:'Anteil vom Anteil. Wie oft passt es hinein?',Üben:'Mal und durch mit Brüchen und gemischten Zahlen',Anwenden:'Mal oder durch? Rechnen und deuten',
+      Knobeln:'Null und Eins, größer oder kleiner, Fehler, Rätsel',Abschlusscheck:'Eingangstest und Abschlusscheck'}})
 ];
 
 const activeModules=()=>MODULES.filter(m=>m.status==='aktiv');
+/* Anzeige-Buchstabe (Lehrer, 28.11.2026): A, B, C … in der Reihenfolge der Liste „Lernen“, damit die Buchstaben nicht durcheinander stehen.
+   letter bleibt die interne Kennung (Kennfarbe, Wörterliste); gezeigt wird nur code. */
+activeModules().forEach((m,i)=>{m.code='ABCDEFGHIJKLMNOP'[i];});
+const codeOf=(m)=>(m&&(m.code||m.letter))||'';
 const plannedModules=()=>MODULES.filter(m=>m.status==='geplant');
 const moduleById=(id)=>MODULES.find(m=>m.id===id)||null;
-/* P23 Kürzel: Etappenbuchstabe + Nummer im Pfad (Labore und Abschlusscheck ohne Nummer), z. B. E3, H4 – gleich in Lernpfad, Aufgabe und Rückmeldung */
+/* P23 Kürzel: Anzeige-Buchstabe + Nummer im Pfad (Labore und Abschlusscheck ohne Nummer), z. B. B3, F4 – gleich in Lernpfad, Aufgabe und Rückmeldung */
 function stationCode(id){
   const m=MODULES.find(x=>(x.path||[]).some(p=>p.id===id));
-  if(!m||!m.letter)return '';
+  if(!m||!codeOf(m))return '';
   const list=m.path.filter(p=>!p.final&&!/LAB$/.test(p.id)).map(p=>p.id),i=list.indexOf(id);
-  return i<0?'':m.letter+(i+1);
+  return i<0?'':codeOf(m)+(i+1);
 }
 const flat=(key)=>activeModules().reduce((a,m)=>a.concat(m[key]||[]),[]);
 

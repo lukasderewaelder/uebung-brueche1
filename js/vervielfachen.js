@@ -328,13 +328,13 @@ TASKS.N02=vtStation('N02',{name:'Teilen am Bild',desc:'Einen Anteil gerecht vert
       }
       default:{
         if(!Array.isArray(d.ord)||d.ord.length<4)return invalid('Tippe alle vier Karten an, die kleinste zuerst.');
-        if(d.ord.join()!=='d3,d2,f,m2')return wrong('ordnen','Teilen macht weniger, durch mehr Kinder noch weniger. Vervielfachen macht mehr.',{ord:false});
+        if(d.ord.join()!=='d3,d2,f,m2')return wrong('ordnen','Teilen durch eine natürliche Zahl macht weniger. Durch mehr Kinder noch weniger.',{ord:false});
         return right(`Richtig! Durch 3 ist weniger als durch 2. Mal 2 ist mehr als ${t.a}/${t.b}.`);
       }
     }
   },
   solution(t){
-    if(t.kind==='ordnen'){const f=(n,dd)=>frac(n,dd);return [line('Teilen macht weniger. Vervielfachen macht mehr.'),eq(f(t.a,t.b*3),'<',f(t.a,t.b*2),'<',f(t.a,t.b),'<',f(t.a*2,t.b))];}
+    if(t.kind==='ordnen'){const f=(n,dd)=>frac(n,dd);return [line('Teilen durch eine natürliche Zahl macht weniger. Vervielfachen macht mehr.'),eq(f(t.a,t.b*3),'<',f(t.a,t.b*2),'<',f(t.a,t.b),'<',f(t.a*2,t.b))];}
     if(t.kind==='gruppen')return [vtStrips(t.a,t.b,1),line(`Jedes Kind bekommt ${t.a/t.n} von ${t.a} Teilen.`),eq(frac(t.a,t.b),':',String(t.n),'=',frac(t.a/t.n,t.b))].concat(vtSolLine(t));
     return [vtRect(t.a,t.b,t.n,new Set(Array.from({length:t.a},(_,i)=>i)))].concat(vtSolLine(t));
   },
@@ -799,7 +799,7 @@ TIPS.N01=(t)=>{
 TIPS.N02=(t)=>{
   if(t.kind==='gruppen')return [['Wie viele gefärbte Teile gibt es? An wie viele Kinder?'],[`Es gibt ${t.a} gefärbte Teile für ${t.n} Kinder.`],[`Jedes Kind bekommt ${t.a} : ${t.n} Teile. Der Nenner bleibt ${t.b}.`]];
   if(t.kind==='strahl')return [[`In wie viele kleine Abschnitte ist die Strecke bis ${tf(t.a,t.b)} geteilt?`],[`Bis ${tf(t.a,t.b)} sind es ${t.a*t.n} Abschnitte.`],[`Teile die ${t.a*t.n} Abschnitte in ${t.n} gleiche Stücke.`]];
-  if(t.kind==='ordnen')return [['Was macht Teilen? Was macht Vervielfachen?'],['Teilen macht weniger. Durch 3 gibt kleinere Stücke als durch 2.'],['Vorne steht das Teilen durch 3, hinten das Vervielfachen.']];
+  if(t.kind==='ordnen')return [['Was macht Teilen? Was macht Vervielfachen?'],['Teilen durch eine natürliche Zahl macht weniger. Durch 3 gibt kleinere Stücke.'],['Vorne steht das Teilen durch 3, hinten das Vervielfachen.']];
   return [['Wird es mehr oder weniger als vorher?'],[`Schneide jedes Teil in ${t.n} gleiche Stücke. Wie viele Stücke hat das Ganze dann?`],[`Das Ganze hat jetzt ${t.b*t.n} Stücke. Jedes Kind bekommt ${t.a} davon.`]];
 };
 TIPS.N03=(t)=>{
