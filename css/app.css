@@ -1812,10 +1812,16 @@ input:focus{border-color:var(--line)!important;box-shadow:3px 3px 0 var(--focus)
 @media (max-width:740px) and (orientation:portrait){
   .work>.actionbar{margin-top:auto}
   .work>.actionbar .keypad{width:100%} /* volle Breite (bis max-width), sonst schrumpft das Feld in der Rasterzelle auf schmale Tasten */
+  /* alle Stationen (nicht nur Etappe H): Antwortfelder mit großer Schrift und mindestens 44 px hoch, Brüche mit etwas mehr Luft */
+  .card .frac.inp input,.card input.intin,.card input.decin{font-size:1.3rem}
+  .card .eq{gap:.45em .4em}
+  .q .frac>.num,.q .frac>.den{padding-left:.35em;padding-right:.35em}
 }
 /* ab 680 px Höhe: großes Zahlenfeld in vier Reihen; Tastenhöhe wächst mit der Bildschirmhöhe (46 bis 54 px) */
 @media (max-width:740px) and (orientation:portrait) and (min-height:680px){
   .work>.actionbar{padding-bottom:calc(.75rem + env(safe-area-inset-bottom))}
+  /* Antwortfelder mindestens 44 px hoch (auf kurzen Handys bleibt es flacher); Rechenketten mit vielen Feldern (Hauptnenner) bleiben kompakt */
+  .card :is(.frac.inp input,input.intin,input.decin):not(:is(.hnline,.hnchain,.hnmc,.hnmuster) *){min-height:2.75rem}
   .work>.actionbar .keypad{gap:.4rem;margin-bottom:.5rem}
   .work>.actionbar .key{min-height:clamp(46px,6.6dvh,54px);font-size:1.4rem}
   .work>.actionbar .key.next{font-size:.85rem}
