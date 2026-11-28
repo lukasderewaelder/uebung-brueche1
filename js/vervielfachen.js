@@ -647,7 +647,7 @@ TASKS.N08=vtStation('N08',{name:'Geschickt rechnen',desc:'Vor dem Rechnen kürze
     if(!val)return invalid(MSG_FRAC_INVALID);
     if(!equivalent(val[0],val[1],r[0],r[1])){const c=vtDiagnose(t,val[0],val[1])||'wert';return wrong(c,vtMsgOf(c,t),f?{'r.n':false,'r.d':false}:{'g.w':false,'g.n':false,'g.d':false});}
     const full=f?isFullyReduced(f.n,f.d):isFullyReduced(mx.n,mx.d);
-    if(!full)return soft('nochKuerzen',`Dein Ergebnis stimmt. Kürze noch: ${t.n} und ${t.b} sind durch ${g} teilbar.`,f?{'r.n':false,'r.d':false}:{'g.n':false,'g.d':false});
+    if(!full)return halfOk(r); /* ungekürzt: richtig mit halben Punkten (28.11.2026) */
     return right(`Richtig! Kürze erst ${t.n} und ${t.b} durch ${g}. ${vtProofText(t)}`);
   },
   solution(t){

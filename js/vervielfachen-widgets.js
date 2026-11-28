@@ -190,7 +190,7 @@ function vtResultBlock(view,host,t,o){
 /* Zwischenschritt prüfen: Vervielfachen (Zähler · Zahl)/Nenner, Teilen Zähler/(Nenner · Zahl); Faktoren in beliebiger Reihenfolge */
 function vtMidCheck(t,d){
   const m=[getInt(d,'m1'),getInt(d,'m2'),getInt(d,'m3')];
-  if(m.some(x=>x===null))return invalid('Fülle zuerst den Zwischenschritt aus.');
+  if(m.some(x=>x===null))return null; /* Zwischenschritt ist freiwillig (28.11.2026): nur ganz ausgefüllt wird er geprüft */
   const [A,B]=vtVal(t),both=(p,q,x,y)=>(p===x&&q===y)||(p===y&&q===x);
   if(t.op==='mul'){
     if(m[2]!==B)return wrong(m[2]===B*t.n?'mulKleiner':'zwischen',m[2]===B*t.n?vtMsgOf('mulKleiner',t):'Der Nenner bleibt gleich. Schreibe ihn unten hin.',{m3:false});
@@ -219,22 +219,17 @@ function vtResultCheck(t,d,o){
     }
     return hnMixedCheck(res,mx);
   };
-  if(!kid.r&&mx)return mixCheck();
+  if(!kid.r&&!kid.k&&mx)return mixCheck();
   if(!kid.k&&(d['k.n']!=null&&d['k.n']!==''||d['k.d']!=null&&d['k.d']!==''))return invalid(MSG_FRAC_INVALID);
-  /* Wer beim Teilen den Zähler teilt, hat ein anderes (schon gekürztes) Ergebnis: Kürzen wird an der eigenen Eingabe geprüft */
-  const base=kid.r&&equivalent(kid.r.n,kid.r.d,res[0],res[1])?[kid.r.n,kid.r.d]:res;
-  const code=kuerzenCheck(base,kid),mr={'r.n':false,'r.d':false},mk={'k.n':false,'k.d':false};
+  const code=kuerzenCheck(res,kid),mr={'r.n':false,'r.d':false},mk={'k.n':false,'k.d':false};
   switch(code){
-    case null:break;
-    case 'leer':return invalid(MSG_FRAC_INVALID);
-    case 'kuerzenLeer':return invalid(HN_KMSG_EMPTY);
-    case 'wert':{const c=vtDiagnose(t,kid.r.n,kid.r.d)||'wert';return wrong(c,vtMsgOf(c,t),mr);}
-    case 'keinKuerzen':return soft('keinKuerzen','Dein Ergebnis stimmt. Es lässt sich aber noch kürzen. Suche eine Zahl, durch die Zähler und Nenner teilbar sind.',{kn:false});
+    case null:case 'halb':break;
+    case 'leer':return invalid('Trage das Ergebnis ein: Zähler und Nenner.');
+    case 'wert':{const f=kid.r||kid.k,c=vtDiagnose(t,f.n,f.d)||'wert';return wrong(c,vtMsgOf(c,t),kid.r?mr:mk);}
     case 'kuerzenWert':return soft('kuerzenWert','Dein Ergebnis stimmt. Der gekürzte Bruch hat aber einen anderen Wert. Teile Zähler und Nenner durch dieselbe Zahl.',mk);
-    default:return soft('nochKuerzen','Dein Ergebnis stimmt. Du kannst noch weiter kürzen.',mk);
   }
-  if(mx)return mixCheck();
-  return null;
+  if(mx){const g=mixCheck();if(g)return g;}
+  return code==='halb'?halfOk(res):null;
 }
 /* Nur ein Bruchfeld (Antwort einer Sachaufgabe oder eines Bildes): ungekürzt zählt als richtig (Entscheidung des Lehrers), mit Hinweis */
 function vtFracCheck(t,d,key,res){

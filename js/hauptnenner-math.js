@@ -107,7 +107,7 @@ function hnMixedCheck(res,m){
   const val=[m.w*m.d+m.n,m.d];
   if(!equivalent(val[0],val[1],res[0],res[1]))return wrong('gemischtFalsch','Die gemischte Zahl hat einen anderen Wert. Prüfe die Ganzen.',{'g.w':false,'g.n':false,'g.d':false});
   if(m.n>=m.d||m.n<1)return wrong('gemischtFalsch','Bei der gemischten Zahl ist der Bruchteil kleiner als 1.',{'g.n':false,'g.d':false});
-  if(!isFullyReduced(m.n,m.d))return soft('gemischtKuerzen','Die gemischte Zahl stimmt. Kürze noch den Bruchteil.',{'g.n':false,'g.d':false});
+  if(!isFullyReduced(m.n,m.d))return halfOk(res); /* richtig, Bruchteil ungekürzt: halbe Punkte (28.11.2026) */
   return null;
 }
 function hnResultCheck(t,d,o){
@@ -117,34 +117,37 @@ function hnResultCheck(t,d,o){
   const mid=o.mid!=null?o.mid:!!o.leicht;
   let N=null;
   if(!o.resultOnly){
-    if(o.leicht){
-      N=o.givenN||getInt(d,'N');
+    /* Rechenweg freiwillig (Lehrer, 28.11.2026): kein Feld „Hauptnenner“ mehr; geprüft wird nur, was ausgefüllt ist.
+       Der gemeinsame Nenner kommt aus o.givenN oder aus den eingetragenen Nennern der erweiterten Brüche. */
+    const ds=terms.map((_,i)=>getInt(d,'e'+i+'d')),filled=ds.filter(x=>x!==null);
+    const mk={};terms.forEach((_,i)=>{if(ds[i]!==null)mk['e'+i+'d']=false;});
+    if(o.givenN)N=o.givenN;
+    else if(o.nField){ /* H02 „Hauptnenner finden und erweitern“: dort ist das Feld „Hauptnenner“ die Aufgabe selbst */
+      N=getInt(d,'N');
       if(N===null)return invalid('Trage zuerst den Hauptnenner ein.');
       if(!hnFits(N,terms))return wrong('keinGemeinsamer',`${badDen(N)} passt nicht ohne Rest in ${N}. Nimm ein Vielfaches.`,{N:false});
       if(o.smallest&&N>hn)return wrong('nichtKleinster',`${N} ist ein gemeinsamer Nenner, aber nicht der kleinste.`,{N:false});
-    }else{
-      const ds=terms.map((_,i)=>getInt(d,'e'+i+'d'));
-      if(ds.some(x=>x===null||x===0)||terms.some((_,i)=>getInt(d,'e'+i)===null))return invalid('Erweitere alle Brüche: Trage Zähler und Nenner ein.');
-      const mk={};terms.forEach((_,i)=>{mk['e'+i+'d']=false;});
-      if(new Set(ds).size>1)return wrong('nichtGleichnamig','Die erweiterten Brüche brauchen denselben Nenner.',mk);
-      N=ds[0];
+    }
+    else if(filled.length){
+      if(filled.some(x=>x===0))return invalid(MSG_FRAC_INVALID);
+      if(new Set(filled).size>1)return wrong('nichtGleichnamig','Die erweiterten Brüche brauchen denselben Nenner.',mk);
+      N=filled[0];
       if(!hnFits(N,terms))return wrong('keinGemeinsamer',`${badDen(N)} passt nicht ohne Rest in ${N}. Nimm ein Vielfaches.`,mk);
       if(o.smallest&&N>hn)return wrong('nichtKleinster',`${N} ist ein gemeinsamer Nenner, aber nicht der kleinste.`,mk);
     }
-    /* Stufe 2: erweiterte Zähler */
-    for(let i=0;i<n;i++)if(getInt(d,'e'+i)===null)return invalid('Trage alle erweiterten Zähler ein.');
-    for(let i=0;i<n;i++){
+    if(o.needAll)for(let i=0;i<n;i++)if(getInt(d,'e'+i)===null)return invalid('Trage alle erweiterten Zähler ein.');
+    /* Stufe 2: erweiterte Zähler (nur die eingetragenen, und nur wenn der Nenner bekannt ist) */
+    if(N)for(let i=0;i<n;i++){
       const [a,b]=terms[i],want=a*N/b,x=getInt(d,'e'+i);
-      if(x===want)continue;
+      if(x===null||x===want)continue;
       const m={['e'+i]:false};
       if(x===a&&N!==b)return wrong('erwNurNenner','Beim Erweitern änderst du Zähler und Nenner.',m);
       if(N%b===0)return wrong('erwFalsch',`${a} · ${N/b} = ${want}. Rechne den Zähler mit derselben Zahl.`,m);
       return wrong('erwFalsch',`Kürze ${ft(a,b)} zuerst. Dann erweitere auf ${N}.`,m);
     }
-    /* Stufe 3: Zwischenschritt (Leicht) */
-    if(mid){
+    /* Stufe 3: Zwischenschritt (Leicht), nur wenn ganz ausgefüllt und der Nenner bekannt ist */
+    if(mid&&N&&terms.every((_,i)=>getInt(d,'z'+i)!==null)){
       const zs=terms.map((_,i)=>getInt(d,'z'+i));
-      if(zs.some(z=>z===null))return invalid('Fülle den Zwischenschritt aus: die erweiterten Zähler über dem Hauptnenner.');
       const es=terms.map((x,i)=>x[0]*N/x[1]);
       const allPlus=t.signs.every(s=>s==='+');
       const same=allPlus?zs.slice().sort((p,q)=>p-q).join()===es.slice().sort((p,q)=>p-q).join():zs.join()===es.join();
@@ -154,24 +157,23 @@ function hnResultCheck(t,d,o){
   }
   /* Stufe 4: Ergebnis und Kürzen (wie Block 1, nichts verraten). Wer nur die gemischte Zahl einträgt, bekommt keine Meldung „leer“, wenn sie stimmt. */
   const kid={r:getFrac(d,'r'),k:getFrac(d,'k'),kn:d.kn===true},mx=o.mixed?hnMixedOf(d):null;
-  if(!kid.r&&mx){const g=hnMixedCheck(res,mx);return g||{ok:true,note:hnNote(N,hn)};}
+  if(!kid.r&&!kid.k&&mx){const g=hnMixedCheck(res,mx);return g||{ok:true,note:hnNote(N,hn)};}
   if(!kid.k&&(d['k.n']!=null&&d['k.n']!==''||d['k.d']!=null&&d['k.d']!==''))return invalid(MSG_FRAC_INVALID);
   const code=kuerzenCheck(res,kid),mr={'r.n':false,'r.d':false},mk={'k.n':false,'k.d':false};
   switch(code){
-    case null:break;
-    case 'leer':return invalid(MSG_FRAC_INVALID);
-    case 'kuerzenLeer':return invalid(HN_KMSG_EMPTY);
+    case null:case 'halb':break;
+    case 'leer':return invalid('Trage das Ergebnis ein: Zähler und Nenner.');
     case 'wert':{
+      const f=kid.r||kid.k;
       let msg='Das Ergebnis stimmt noch nicht. Rechne noch einmal.',c='wert';
-      if(n===2){const [a,b]=terms[0],[cc,dd]=terms[1],p=t.signs[0]==='+';c=hnDiagnose(a,b,cc,dd,p,kid.r.n,kid.r.d)||'wert';msg=hnDiagMsg(c,a,b,cc,dd,p,kid.r.n,kid.r.d);}
-      return wrong(c,msg,mr);
+      if(n===2){const [a,b]=terms[0],[cc,dd]=terms[1],p=t.signs[0]==='+';c=hnDiagnose(a,b,cc,dd,p,f.n,f.d)||'wert';msg=hnDiagMsg(c,a,b,cc,dd,p,f.n,f.d);}
+      return wrong(c,msg,kid.r?mr:mk);
     }
-    case 'keinKuerzen':return soft('keinKuerzen','Dein Ergebnis stimmt. Es lässt sich aber noch kürzen. Suche eine Zahl, durch die Zähler und Nenner teilbar sind.',{kn:false});
     case 'kuerzenWert':return soft('kuerzenWert','Dein Ergebnis stimmt. Der gekürzte Bruch hat aber einen anderen Wert. Teile Zähler und Nenner durch dieselbe Zahl.',mk);
-    default:return soft('nochKuerzen','Dein Ergebnis stimmt. Du kannst noch weiter kürzen.',mk);
   }
   /* Stufe 5: gemischte Zahl (nur wenn ausgefüllt) */
   if(mx){const g=hnMixedCheck(res,mx);if(g)return g;}
+  if(code==='halb')return halfOk(res);
   return {ok:true,note:hnNote(N,hn)};
 }
 /* Stufe 6: größerer gemeinsamer Nenner ist richtig, bekommt aber einen Hinweis (Entscheidung 2) */

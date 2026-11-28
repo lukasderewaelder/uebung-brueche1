@@ -478,7 +478,7 @@ const INTRO={
       say:['Die Brüche sind gleichnamig: Sie haben denselben Nenner.','Du addierst nur die Zähler.','Der Nenner bleibt dabei gleich.'],
       add:{d:12,p1:8,p2:3,mode:'plus',chain:true,nofig:true}},
     {h:'So antwortest du',
-      say:['In Leicht schreibst du zuerst den **Zwischenschritt**.','Dann kommt das **Ergebnis**.','Das Feld **gekürzt** gibt es immer. Geht kürzen nicht, tippe **Kürzen geht nicht**.']}
+      say:['Der **Zwischenschritt** hilft dir. Du musst ihn nicht ausfüllen.','Es reicht, das **Ergebnis** einzutragen.','Ganz gekürzt gibt es volle Punkte, ungekürzt halbe.']}
   ]},
   R02:{title:'Addieren und rechnen',steps:[
     {h:'Nur die Zähler addieren',
@@ -493,7 +493,7 @@ const INTRO={
       say:['Manchmal fehlt eine Zahl in der Rechnung.','Dann nimmst du den bekannten Teil weg.','Setze deine Zahl ein und prüfe.'],
       calc:[[[3,9],'+',['?',9],'=',[8,9]]]},
     {h:'So antwortest du',
-      say:['In Leicht schreibst du bei Rechnungen zuerst den **Zwischenschritt**.','Dann füllst du **Ergebnis** und **gekürzt** aus.','Bei Lücken trägst du nur die fehlende Zahl ein.']}
+      say:['Der **Zwischenschritt** ist freiwillig. Es reicht das **Ergebnis**.','Ganz gekürzt gibt es volle Punkte, ungekürzt halbe.','Bei Lücken trägst du nur die fehlende Zahl ein.']}
   ]},
   R03:{title:'Subtrahieren am Bild',steps:[
     {h:'Durchkreuzen',
@@ -503,7 +503,7 @@ const INTRO={
       say:['Die Brüche sind gleichnamig: Sie haben denselben Nenner.','Du subtrahierst nur die Zähler.','Der Nenner bleibt dabei gleich.'],
       add:{d:12,p1:6,p2:3,mode:'minus',chain:true,nofig:true}},
     {h:'So antwortest du',
-      say:['In Leicht schreibst du zuerst den **Zwischenschritt**.','Dann kommt das **Ergebnis**.','Das Feld **gekürzt** gibt es immer. Geht kürzen nicht, tippe **Kürzen geht nicht**.']}
+      say:['Der **Zwischenschritt** hilft dir. Du musst ihn nicht ausfüllen.','Es reicht, das **Ergebnis** einzutragen.','Ganz gekürzt gibt es volle Punkte, ungekürzt halbe.']}
   ]},
   R04:{title:'Subtrahieren und rechnen',steps:[
     {h:'Nur die Zähler subtrahieren',
@@ -518,7 +518,7 @@ const INTRO={
       say:['Manchmal fehlt eine Zahl in der Rechnung.','Dann rechnest du vom Anfang zum Rest oder zurück.','Setze deine Zahl ein und prüfe.'],
       calc:[[[8,9],'−',['?',9],'=',[3,9]]]},
     {h:'So antwortest du',
-      say:['In Leicht schreibst du bei Rechnungen zuerst den **Zwischenschritt**.','Dann füllst du **Ergebnis** und **gekürzt** aus.','Bei Lücken trägst du nur die fehlende Zahl ein.']}
+      say:['Der **Zwischenschritt** ist freiwillig. Es reicht das **Ergebnis**.','Ganz gekürzt gibt es volle Punkte, ungekürzt halbe.','Bei Lücken trägst du nur die fehlende Zahl ein.']}
   ]},
   R05:{title:'Plus oder minus?',steps:[
     {h:'Plus oder minus?',

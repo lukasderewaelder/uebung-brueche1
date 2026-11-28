@@ -1935,14 +1935,14 @@ function runSelfTests(){
         }catch(e){problems.push(tag+' Ansicht: '+e.message);}
         if(hasRes){
           const r=resOf(tk),base=baseOf(tk),chk=(x)=>validateTask(tk,Object.assign({},base,x));
-          const a1=chk(rd(r)),a2=chk(rd([r[0]+1,r[1]]));
-          if(!a1.invalid||!a2.invalid||a1.feedback!==a2.feedback)problems.push(tag+' Kürzen-Feld wird nicht zuerst geprüft');
+          const a1=chk(rd(r)); /* nur das Ergebnis: ganz gekürzt volle Punkte, sonst halbe (28.11.2026) */
+          if(isFullyReduced(r[0],r[1])?!a1.correct:!a1.half)problems.push(tag+' nur Ergebnis');
           if(isFullyReduced(r[0],r[1])){
             const b1=chk(Object.assign(rd(r),{'k.n':String(r[0]+1),'k.d':String(r[1])}));
             if(!chk(Object.assign(rd(r),{kn:true})).correct||!chk(Object.assign(rd(r),{'k.n':String(r[0]),'k.d':String(r[1])})).correct||b1.errorCode!=='kuerzenWert'||!b1.soft)problems.push(tag+' nicht kürzbar');
           }else{
             const b2=chk(Object.assign(rd(r),{kn:true})),b3=chk(Object.assign(rd(r),{'k.n':String(r[0]),'k.d':String(r[1])}));
-            if(b2.errorCode!=='keinKuerzen'||!b2.soft||!b2.marks||b2.marks.kn!==false||b3.errorCode!=='nochKuerzen'||!b3.soft)problems.push(tag+' kürzbar');
+            if(!b2.half||!b3.half)problems.push(tag+' kürzbar (ungekürzt = halbe Punkte)');
           }
           const w=chk(Object.assign(rd([r[0]+1,r[1]]),kd(r)));
           if(w.correct||w.soft||!w.errorCode||!w.marks||w.marks['r.n']!==false)problems.push(tag+' falsches Ergebnis');else codes.add(w.errorCode);
@@ -1959,10 +1959,11 @@ function runSelfTests(){
     t('addDiagnose: Nenner mitgerechnet, andere Rechenart, Zähler und Nenner einzeln, Zählerfehler, sonst „wert“; richtig (auch ungekürzt) gibt null',
       addDiagnose(3,2,8,true,5,16)==='nennerAddiert'&&addDiagnose(3,2,8,true,1,8)==='andereRechnung'&&addDiagnose(5,2,8,false,7,8)==='andereRechnung'&&addDiagnose(3,2,8,true,10,32)==='zaehlerNenner'&&addDiagnose(3,2,8,true,6,8)==='rechenfehler'&&addDiagnose(3,2,8,true,5,9)==='wert'&&addDiagnose(3,2,8,true,5,8)===null&&addDiagnose(3,2,8,true,10,16)===null);
     const kc=kuerzenCheck;
-    t('kuerzenCheck: leer, Kürzen offen (kommt vor der Wertprüfung), Wert, Knopf bei kürzbarem Ergebnis, gekürzt falsch, noch kürzbar, alles richtig (auch nicht kürzbar)',
-      kc([4,6],{r:null})==='leer'&&kc([4,6],{r:{n:4,d:6}})==='kuerzenLeer'&&kc([4,6],{r:{n:5,d:6}})==='kuerzenLeer'&&kc([4,6],{r:{n:5,d:6},k:{n:2,d:3}})==='wert'
-      &&kc([4,6],{r:{n:4,d:6},kn:true})==='keinKuerzen'&&kc([4,6],{r:{n:4,d:6},k:{n:3,d:4}})==='kuerzenWert'&&kc([8,12],{r:{n:8,d:12},k:{n:4,d:6}})==='nochKuerzen'&&kc([4,6],{r:{n:4,d:6},k:{n:4,d:6}})==='nochKuerzen'
-      &&kc([4,6],{r:{n:4,d:6},k:{n:2,d:3}})===null&&kc([4,6],{r:{n:2,d:3},k:{n:2,d:3}})===null&&kc([5,8],{r:{n:5,d:8},kn:true})===null&&kc([5,8],{r:{n:5,d:8},k:{n:5,d:8}})===null);
+    t('kuerzenCheck (28.11.2026): ein Feld reicht; leer, Wert, gekürzt falsch, ungekürzt = halb, ganz gekürzt (auch nur im Ergebnis oder nur in „gekürzt“) = richtig',
+      kc([4,6],{r:null})==='leer'&&kc([4,6],{r:{n:4,d:6}})==='halb'&&kc([4,6],{r:{n:5,d:6}})==='wert'&&kc([4,6],{r:{n:5,d:6},k:{n:2,d:3}})==='wert'
+      &&kc([4,6],{r:{n:4,d:6},kn:true})==='halb'&&kc([4,6],{r:{n:4,d:6},k:{n:3,d:4}})==='kuerzenWert'&&kc([8,12],{r:{n:8,d:12},k:{n:4,d:6}})==='halb'&&kc([4,6],{r:{n:4,d:6},k:{n:4,d:6}})==='halb'
+      &&kc([4,6],{r:{n:4,d:6},k:{n:2,d:3}})===null&&kc([4,6],{r:{n:2,d:3}})===null&&kc([4,6],{r:null,k:{n:2,d:3}})===null&&kc([4,6],{r:null,k:{n:5,d:6}})==='wert'&&kc([5,8],{r:{n:5,d:8},kn:true})===null&&kc([5,8],{r:{n:5,d:8},k:{n:5,d:8}})===null
+      &&halfOk([25,50]).half&&/3\/10|1\/2/.test(halfOk([25,50]).feedback));
     /* Ergebnis-Block bedienen: „Kürzen geht nicht“ leert „gekürzt“, Tippen in „gekürzt“ nimmt den Knopf zurück */
     {
       const tk={type:'R02',level:2,kind:'plus',a:3,c:2,b:8,plus:true,res:[5,8],avoid:[],who:['Lena','Ben'],story:null},st=newState(tk),host=el('div');
@@ -1982,8 +1983,8 @@ function runSelfTests(){
       const p=mk(),m=mk({plus:false,a:9,c:3,res:[6,12]}),mfull=(x)=>Object.assign({'r.n':'6','r.d':'12','k.n':'1','k.d':'2'},x);
       const okP=v(p,full({z1:'8',z2:'3',zn:'12'})),swapP=v(p,full({z1:'3',z2:'8',zn:'12'})),emptyZ=v(p,full()),dbl=v(p,full({z1:'8',z2:'3',zn:'24'})),wrongZ=v(p,full({z1:'8',z2:'4',zn:'12'}));
       const okM=v(m,mfull({z1:'9',z2:'3',zn:'12'})),swapM=v(m,mfull({z1:'3',z2:'9',zn:'12'}));
-      t('Zwischenschritt (8 + 3)/12 in Leicht: richtig, bei plus auch vertauscht, bei minus nicht; leer wird zuerst verlangt; Nenner verdoppelt und falsche Zähler werden nur am Zwischenschritt markiert; Knifflig hat ihn nicht',
-        okP.correct&&swapP.correct&&emptyZ.invalid&&/Zwischenschritt/.test(emptyZ.feedback)&&dbl.errorCode==='nennerAddiert'&&dbl.marks.zn===false&&!('r.n' in dbl.marks)&&wrongZ.errorCode==='zahl'&&wrongZ.marks.z2===false&&okM.correct&&swapM.errorCode==='vertauscht'&&v(mk({level:2}),full()).correct);
+      t('Zwischenschritt (8 + 3)/12 in Leicht: richtig, bei plus auch vertauscht, bei minus nicht; leer ist erlaubt (freiwillig); Nenner verdoppelt und falsche Zähler werden nur am Zwischenschritt markiert; Knifflig hat ihn nicht',
+        okP.correct&&swapP.correct&&emptyZ.correct&&dbl.errorCode==='nennerAddiert'&&dbl.marks.zn===false&&!('r.n' in dbl.marks)&&wrongZ.errorCode==='zahl'&&wrongZ.marks.z2===false&&okM.correct&&swapM.errorCode==='vertauscht'&&v(mk({level:2}),full()).correct);
       const bt=mk({type:'R01',kind:'bild',scatter:false,seed:1}),bm=mk({type:'R03',kind:'bild',scatter:true,seed:5,plus:false,a:9,c:3,res:[6,12]});
       const rdP={'u.n':'8','u.d':'12','v.n':'3','v.d':'12',op:'+',s1:true},bf=(x)=>Object.assign({},rdP,full({z1:'8',z2:'3',zn:'12'}),x);
       const rdM=(x)=>Object.assign({'u.n':'9','u.d':'12','v.n':'3','v.d':'12',op:'−',s1:true},mfull({z1:'9',z2:'3',zn:'12'}),x);
@@ -2185,18 +2186,19 @@ function runSelfTests(){
           &&dg(1,2,1,3,true,4,6)==='teilweiseErweitert'&&dg(2,3,1,4,true,10,12)==='schmetterlingFalsch'&&dg(3,4,1,3,false,13,12)==='andereRechnung'&&dg(1,2,1,3,true,7,6)==='rechenfehler'&&dg(1,2,1,3,true,10,12)===null&&dg(3,4,1,3,false,2,1)==='komponentenweise');
         t('Rückmeldungen der Diagnose: Sätze höchstens 14 Wörter, Bruch im Text',HN_DIAG_CODES.every(c=>hnDiagMsg(c,1,3,1,2,true,2,5).split(/[.!?]\s+/).every(s=>s.split(/\s+/).filter(Boolean).length<=14))&&/2\/5 ist kleiner als 1\/2/.test(hnDiagMsg('komponentenweise',1,3,1,2,true,2,5)));
         const T={terms:[[1,4],[1,6]],signs:['+'],res:[5,12]},L={leicht:true},K={leicht:false};
-        const D=(o)=>Object.assign({N:'12',e0:'3',e1:'2',z0:'3',z1:'2','r.n':'5','r.d':'12',kn:true},o);
-        const ok1=hnResultCheck(T,D({}),L),bf=hnResultCheck(T,D({N:'24',e0:'6',e1:'4',z0:'6',z1:'4','r.n':'10','r.d':'24',kn:false,'k.n':'5','k.d':'12'}),L);
-        t('Rechenweg Leicht (Kap. 7.3): richtig; Schmetterling 24 ist richtig mit Hinweis; kein gemeinsamer Nenner, nur Nenner erweitert, falsch erweitert, Zwischenschritt, einzeln addiert',
-          ok1.ok&&ok1.note===null&&bf.ok&&/Hauptnenner 12/.test(bf.note)&&hnResultCheck(T,D({N:'10'}),L).errorCode==='keinGemeinsamer'&&hnResultCheck(T,D({N:'24'}),{leicht:true,smallest:true}).errorCode==='nichtKleinster'
+        const D=(o)=>Object.assign({e0:'3',e0d:'12',e1:'2',e1d:'12',z0:'3',z1:'2','r.n':'5','r.d':'12'},o),W24={e0d:'24',e1d:'24',e0:'6',e1:'4',z0:'6',z1:'4'};
+        const ok1=hnResultCheck(T,D({}),L),bf=hnResultCheck(T,D(Object.assign({'r.n':'10','r.d':'24','k.n':'5','k.d':'12'},W24)),L);
+        t('Rechenweg Leicht (28.11.2026 ohne Feld „Hauptnenner“, alles freiwillig): richtig; Schmetterling 24 mit Hinweis; kein gemeinsamer Nenner, nicht der kleinste, nur Nenner erweitert, falsch erweitert, Zwischenschritt, einzeln addiert; nur Ergebnis reicht, ungekürzt halb, Lücken im Rechenweg erlaubt, leer abgelehnt',
+          ok1.ok&&ok1.note===null&&bf.ok&&/Hauptnenner 12/.test(bf.note)&&hnResultCheck(T,D({e0d:'10',e1d:'10'}),L).errorCode==='keinGemeinsamer'&&hnResultCheck(T,D(W24),{leicht:true,smallest:true}).errorCode==='nichtKleinster'
           &&hnResultCheck(T,D({e0:'1'}),L).errorCode==='erwNurNenner'&&hnResultCheck(T,D({e0:'4'}),L).errorCode==='erwFalsch'&&hnResultCheck(T,D({z0:'2',z1:'3'}),L).ok&&hnResultCheck(T,D({z0:'4'}),L).errorCode==='zwischen'
-          &&hnResultCheck(T,D({'r.n':'2','r.d':'10'}),L).errorCode==='komponentenweise'&&hnResultCheck(T,D({N:''}),L).invalid&&hnResultCheck(T,D({kn:false}),L).invalid);
+          &&hnResultCheck(T,D({'r.n':'2','r.d':'10'}),L).errorCode==='komponentenweise'&&hnResultCheck(T,{'r.n':'5','r.d':'12'},L).ok&&hnResultCheck(T,{'r.n':'10','r.d':'24'},L).half
+          &&hnResultCheck(T,D({e1:'',e1d:'',z0:'',z1:''}),L).ok&&hnResultCheck(T,{},L).invalid&&(()=>{const tk=TASKS.H06.gen(1,RNG,{kind:'minus'}),h=el('div');mountTask(h,newState(tk),{save(){},done(){}});return !h.querySelector('input[aria-label="Hauptnenner"]')&&!!h.querySelector('input[aria-label="Nenner 1"]');})());
         const KD=(o)=>Object.assign({e0:'3',e0d:'12',e1:'2',e1d:'12','r.n':'5','r.d':'12',kn:true},o);
         t('Rechenweg Knifflig: erweiterte Brüche mit gleichem Nenner, verschiedene Nenner werden benannt',hnResultCheck(T,KD({}),K).ok&&hnResultCheck(T,KD({e1d:'24',e1:'4'}),K).errorCode==='nichtGleichnamig'&&hnResultCheck(T,KD({e0d:'10',e1d:'10'}),K).errorCode==='keinGemeinsamer');
         const T2={terms:[[3,4],[2,3]],signs:['+'],res:[17,12]},MK={leicht:false,mixed:true},M0={e0:'9',e0d:'12',e1:'8',e1d:'12'};
         t('Gemischte Zahl (Entscheidung 8): allein reicht sie, falscher Wert und ungekürzter Bruchteil werden benannt; leer bleibt ohne Folgen',
           hnResultCheck(T2,Object.assign({'g.w':'1','g.n':'5','g.d':'12'},M0),MK).ok&&hnResultCheck(T2,Object.assign({'g.w':'1','g.n':'6','g.d':'12'},M0),MK).errorCode==='gemischtFalsch'
-          &&hnResultCheck(T2,Object.assign({'g.w':'1','g.n':'10','g.d':'24'},M0),MK).errorCode==='gemischtKuerzen'&&hnResultCheck(T2,Object.assign({'r.n':'17','r.d':'12',kn:true},M0),MK).ok
+          &&hnResultCheck(T2,Object.assign({'g.w':'1','g.n':'10','g.d':'24'},M0),MK).half&&hnResultCheck(T2,Object.assign({'r.n':'17','r.d':'12',kn:true},M0),MK).ok
           &&hnResultCheck({terms:[[6,8],[1,3]],signs:['+'],res:[13,12]},{e0:'9',e0d:'12',e1:'4',e1d:'12','r.n':'13','r.d':'12',kn:true},K).ok);
         /* Aufgaben: alle Arten beider Niveaus, richtige Antwort angenommen, falsche erkannt, Tipps und Ansichten */
         const fr=(x)=>({n:String(x[0]),d:String(x[1])});

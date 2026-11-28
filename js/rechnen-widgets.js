@@ -143,7 +143,7 @@ function addMid(view,sign){
 const ADD_MID_EMPTY='Fülle zuerst den Zwischenschritt aus: die beiden Zähler über dem Bruchstrich und darunter den Nenner.';
 /* m = {a,c,b,plus} der Aufgabe a/b ± c/b. Rückgabe null (richtig) oder die Antwort (invalid oder wrong, Markierung nur am Zwischenschritt) */
 function addMidCheck(m,d){
-  if(['z1','z2','zn'].some(k=>d[k]==null||d[k]===''))return invalid(ADD_MID_EMPTY);
+  if(['z1','z2','zn'].some(k=>d[k]==null||d[k]===''))return null; /* Zwischenschritt ist freiwillig (28.11.2026): nur ganz ausgefüllt wird er geprüft */
   const z1=getInt(d,'z1'),z2=getInt(d,'z2'),zn=getInt(d,'zn');
   if(z1===null||z2===null||zn===null)return invalid(ADD_MID_EMPTY);
   const pairOk=(z1===m.a&&z2===m.c)||(m.plus&&z1===m.c&&z2===m.a),nOk=zn===m.b;
@@ -197,12 +197,10 @@ function addResultCheck(res,d,diag,mid){
   const mr={'r.n':false,'r.d':false},mk={'k.n':false,'k.d':false};
   switch(code){
     case null:return null;
-    case 'leer':return invalid(MSG_FRAC_INVALID);
-    case 'kuerzenLeer':return invalid(ADD_KMSG_EMPTY);
-    case 'wert':{const g=diag?diag(kid.r.n,kid.r.d):null;return wrong(g?g.code:'wert',g?g.msg:'Das Ergebnis stimmt noch nicht. Rechne noch einmal.',mr);}
-    case 'keinKuerzen':return soft('keinKuerzen','Dein Ergebnis stimmt. Es lässt sich aber noch kürzen. Suche eine Zahl, durch die Zähler und Nenner teilbar sind.',{kn:false});
+    case 'leer':return invalid('Trage das Ergebnis ein: Zähler und Nenner.');
+    case 'wert':{const f=kid.r||kid.k,g=diag?diag(f.n,f.d):null;return wrong(g?g.code:'wert',g?g.msg:'Das Ergebnis stimmt noch nicht. Rechne noch einmal.',kid.r?mr:mk);}
     case 'kuerzenWert':return soft('kuerzenWert','Dein Ergebnis stimmt. Der gekürzte Bruch hat aber einen anderen Wert. Teile Zähler und Nenner durch dieselbe Zahl.',mk);
-    default:return soft('nochKuerzen','Dein Ergebnis stimmt. Du kannst noch weiter kürzen.',mk);
+    default:return halfOk(res);
   }
 }
 

@@ -157,28 +157,28 @@ function addResultH(view,host,t,o){
   const left=[];terms.forEach((x,i)=>{if(i)left.push(sg(i));left.push(frac(x[0],x[1]));});
   const nums=[];
   let getN=()=>null;
-  if(o.leicht){
-    getN=()=>{const N=o.givenN||getInt(d,'N');return hnFits(N,terms)?N:null;};
-    if(!o.givenN){
-      line.append(grp(el('span',{class:'hnlab'},'Hauptnenner'),intInput(view,'N','Hauptnenner')));
-      view.inputs.N.addEventListener('input',()=>nums.forEach(f=>f.refreshDen()));
-    }
+  /* Lehrer 28.11.2026: kein Feld „Hauptnenner“ mehr. Ohne vorgegebenen Nenner trägt das Kind die erweiterten Brüche ganz ein
+     (Zähler und Nenner); der Nenner im Zwischenschritt folgt dem ersten passenden Nenner. Alle Felder des Rechenwegs sind freiwillig. */
+  if(o.leicht&&o.givenN){
+    getN=()=>hnFits(o.givenN,terms)?o.givenN:null;
     const exp=terms.map((_,i)=>hnNumOver(view,'e'+i,getN,'erweiterter Zähler '+(i+1)));
     nums.push(...exp);
     const right=[];exp.forEach((f,i)=>{if(i)right.push(sg(i));right.push(f);});
     line.append(grp(...left),grp(op('='),...right));
-    if(mid){
-      const den=el('span',{class:'den hnN'},'');
-      const z=[];terms.forEach((_,i)=>{if(i)z.push(el('span',{class:'zop','aria-hidden':'true'},signs[i-1]));z.push(intInput(view,'z'+i,'Zähler '+(i+1)+' im Zwischenschritt'));});
-      const midF=el('span',{class:'frac inp mid',role:'group','aria-label':'Zwischenschritt: erweiterte Zähler über dem gemeinsamen Nenner'},el('span',{class:'num'},...z),den);
-      midF.refreshDen=()=>{const N=getN();den.textContent=N?String(N):'▢';den.classList.toggle('empty',!N);};
-      midF.refreshDen();nums.push(midF);
-      line.append(grp(op('='),midF));
-    }
   }else{
     const right=[];terms.forEach((_,i)=>{if(i)right.push(sg(i));right.push(el('span',{class:'frac inp',role:'group','aria-label':'erweiterter Bruch '+(i+1)},
       el('span',{class:'num'},intInput(view,'e'+i,'Zähler '+(i+1))),el('span',{class:'den'},intInput(view,'e'+i+'d','Nenner '+(i+1)))));});
     line.append(grp(...left),grp(op('='),...right));
+    getN=()=>{const ds=terms.map((_,i)=>getInt(d,'e'+i+'d')).filter(x=>x!==null);return ds.length&&hnFits(ds[0],terms)?ds[0]:null;};
+    terms.forEach((_,i)=>view.inputs['e'+i+'d'].addEventListener('input',()=>nums.forEach(f=>f.refreshDen())));
+  }
+  if(o.leicht&&mid){
+    const den=el('span',{class:'den hnN'},'');
+    const z=[];terms.forEach((_,i)=>{if(i)z.push(el('span',{class:'zop','aria-hidden':'true'},signs[i-1]));z.push(intInput(view,'z'+i,'Zähler '+(i+1)+' im Zwischenschritt'));});
+    const midF=el('span',{class:'frac inp mid',role:'group','aria-label':'Zwischenschritt: erweiterte Zähler über dem gemeinsamen Nenner'},el('span',{class:'num'},...z),den);
+    midF.refreshDen=()=>{const N=getN();den.textContent=N?String(N):'▢';den.classList.toggle('empty',!N);};
+    midF.refreshDen();nums.push(midF);
+    line.append(grp(op('='),midF));
   }
   /* Ergebnis und gekürzt in derselben Zeile; „Kürzen geht nicht“ darunter (verrät nichts, steht immer da) */
   const kn=el('button',{type:'button',class:'btn small kn','aria-pressed':String(d.kn===true)},'Kürzen geht nicht');

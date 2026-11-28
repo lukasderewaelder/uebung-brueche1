@@ -89,14 +89,20 @@ function addDiagnose(a,c,b,plus,x,y){
    res = [n, b] das richtige Ergebnis (ungekürzt). kid: {r:{n,d}|null, k:{n,d}|null, kn:bool (Knopf „Kürzen geht nicht“)}.
    Rückgabe: 'leer' (Ergebnis fehlt) · 'kuerzenLeer' (zum Kürzen ist nichts angegeben; das kommt vor jeder Wertprüfung, damit die Rückmeldung nichts über das Ergebnis oder über das Kürzen verrät) ·
    'wert' (Ergebnis hat einen anderen Wert) · 'keinKuerzen' (Knopf gewählt, es geht aber) · 'kuerzenWert' (gekürzter Bruch hat einen anderen Wert) · 'nochKuerzen' (noch nicht ganz gekürzt) · null (alles stimmt). */
+/* Neu (Lehrer, 28.11.2026): Ein Feld reicht. Gilt „gekürzt“, sonst „Ergebnis“. Richtig und ganz gekürzt ⇒ null (volle Punkte),
+   richtig, aber nicht ganz gekürzt ⇒ 'halb' (zählt als richtig mit halben Punkten, siehe halfOk). 'wert' meint das Feld kid.r, sonst kid.k. */
 function kuerzenCheck(res,kid){
-  if(!kid.r)return 'leer';
-  if(!kid.kn&&!kid.k)return 'kuerzenLeer';
-  if(!equivalent(kid.r.n,kid.r.d,res[0],res[1]))return 'wert';
-  const exp=simplify(res[0],res[1]),reducible=!isFullyReduced(res[0],res[1]);
-  if(kid.kn)return reducible?'keinKuerzen':null;
-  if(!equivalent(kid.k.n,kid.k.d,exp[0],exp[1]))return 'kuerzenWert';
-  return (kid.k.n===exp[0]&&kid.k.d===exp[1])?null:'nochKuerzen';
+  if(!kid.r&&!kid.k)return 'leer';
+  if(kid.r&&!equivalent(kid.r.n,kid.r.d,res[0],res[1]))return 'wert';
+  const exp=simplify(res[0],res[1]),f=kid.k||kid.r;
+  if(!equivalent(f.n,f.d,exp[0],exp[1]))return kid.r?'kuerzenWert':'wert';
+  return (f.n===exp[0]&&f.d===exp[1])?null:'halb';
+}
+/* Antwort „richtig, aber ungekürzt“: halbe Punkte (exercise.js wertet half wie eine Aufgabe mit Tipp) */
+function halfOk(res){
+  const g=simplify(res[0],res[1]);
+  return {correct:false,soft:true,half:true,errorCode:'ungekuerzt',marks:{},
+    feedback:'Stimmt, aber noch nicht ganz gekürzt. Gekürzt: '+(g[1]===1?String(g[0]):g[0]+'/'+g[1])+'. Dafür gibt es halbe Punkte.'};
 }
 
 /* ---------- Zahlenstrahl ----------

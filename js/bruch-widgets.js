@@ -151,7 +151,7 @@ function kbAnsCheck(t,d,res,o){
   }
   if(a.mx&&(a.mx.n>=a.mx.d))return wrong('gemischtFalsch','Bei der gemischten Zahl ist der Bruchteil kleiner als 1.',{'g.n':false,'g.d':false});
   const reduced=a.frac?isFullyReduced(a.frac.n,a.frac.d):a.mx?isFullyReduced(a.mx.n,a.mx.d):true;
-  if(o.full&&!reduced)return soft('nochKuerzen','Dein Ergebnis stimmt. Kürze noch so weit wie möglich.',a.marks);
+  if(o.full&&!reduced)return halfOk(res); /* ungekürzt: richtig mit halben Punkten (28.11.2026) */
   const g=simplify(res[0],res[1]),notes=[];
   if(!reduced)notes.push('Du kannst noch kürzen.');
   if(a.frac&&g[0]>g[1]&&g[1]>1)notes.push('Als gemischte Zahl: '+kbShow(g)+'.');
@@ -209,7 +209,7 @@ function kbWayCheck(t,d,o){
   const res=kbRes(t),f=getFrac(d,'r');
   if(!f)return invalid(getInt(d,'r.n')!==null||getInt(d,'r.d')!==null?MSG_FRAC_INVALID:'Trage das Ergebnis als Bruch ein.');
   if(!equivalent(f.n,f.d,res[0],res[1])){const c=kbDiagnose(t,f.n,f.d)||'wert';return wrong(c,kbMsgOf(c,t),{'r.n':false,'r.d':false});}
-  if(o.full&&!isFullyReduced(f.n,f.d))return soft('nochKuerzen','Dein Ergebnis stimmt. Kürze noch so weit wie möglich.',{'r.n':false,'r.d':false});
+  if(o.full&&!isFullyReduced(f.n,f.d))return halfOk(res); /* ungekürzt: richtig mit halben Punkten (28.11.2026) */
   if(o.mixed){const mx=hnMixedOf(d);if(mx){const m=hnMixedCheck(res,mx);if(m)return m;}}
   const g=simplify(res[0],res[1]),notes=[];
   if(!o.full&&!isFullyReduced(f.n,f.d))notes.push('Du kannst noch kürzen.');

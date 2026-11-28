@@ -310,13 +310,19 @@ function mountTask(host,st,cb){
       if(res.invalid){showFb('info',res.feedback);return 'invalid';}
       const quick=!!T.quick;
       if(cb.silent){ /* P15 Eingangstest: keine Rückmeldung je Frage, keine Punkte, kein Tipp – die Auswertung kommt am Ende */
-        const kind=res.unsure?'unsure':res.correct?'correct':'shown';
+        const kind=res.unsure?'unsure':(res.correct||res.half)?'correct':'shown';
         st.status=kind==='unsure'||kind==='shown'?'shown':'correct';recordSkill(st.task.skill,!!res.correct);cb.done(kind);return kind==='shown'?'wrong':kind;
       }
       if(res.unsure){ /* „Weiß ich nicht“: nichts falsch, Antwort und Begründung zeigen, keine Serie verlieren */
         st.status='shown';showFb('info',res.feedback);
         recordSkill(st.task.skill,false);
         cb.done('unsure');return 'unsure';
+      }
+      if(res.half){ /* richtig, aber nicht ganz gekürzt (Lehrer, 28.11.2026): zählt als richtig mit halben Punkten, wie eine Aufgabe mit Tipp */
+        st.status='correct';st.half=true;
+        showFb('ok',res.feedback);
+        if(!cb.probe){awardCorrect(false,quick);if(quick)recordSkill(st.task.skill,true);if(T.onRight)T.onRight(st.task,st.draft,st.attempts);}
+        cb.done('correct');return 'correct';
       }
       if(res.correct){
         st.status='correct';
@@ -503,8 +509,8 @@ function renderPractice(id){
     changed:()=>{pad.refresh();bar.reserve(!quick);fitPage();},
     afterCheck:()=>refresh(),
     done(kind){
-      if(typeof revRecord==='function')revRecord(st.task.type,kind==='correct'&&st.attempts===0&&st.hint===0); /* P14: Fehler und Datum je Station */
-      if(kind==='correct'){const first=st.attempts===0&&st.hint===0;round.results.push(first?'f':'l');P[first?'first':'later']++;
+      if(typeof revRecord==='function')revRecord(st.task.type,kind==='correct'&&st.attempts===0&&st.hint===0&&!st.half); /* P14: Fehler und Datum je Station */
+      if(kind==='correct'){const first=st.attempts===0&&st.hint===0&&!st.half; /* ungekürzt: halbe Punkte */round.results.push(first?'f':'l');P[first?'first':'later']++;
         if(isPathStation(id)&&accAdd(id,lvl,first))round.newPass=true;} /* P11: richtige Aufgaben sammeln sich über Runden */
       else if(kind==='unsure')round.results.push('u'); /* „Weiß ich nicht“: weder richtig noch falsch */
       else{round.results.push('x');P.shown++;}

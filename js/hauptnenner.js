@@ -352,7 +352,7 @@ TASKS.H02=hnStation('H02',{name:'Hauptnenner finden',desc:'Trick 17 und Erweiter
       return wrong('keinGemeinsamer',`${dens.find(q=>x%q!==0)} passt nicht ohne Rest in ${x}. Nimm ein Vielfaches.`,{x:false});
     }
     if(t.kind==='erweitern'||t.kind==='hnErw'){
-      const r=hnResultCheck(Object.assign({},t,{res:[1,1]}),Object.assign({},d,{'r.n':'1','r.d':'1',kn:true}),{leicht:true,givenN:t.kind==='erweitern'?t.N:null,smallest:true,mid:false});
+      const r=hnResultCheck(Object.assign({},t,{res:[1,1]}),Object.assign({},d,{'r.n':'1','r.d':'1',kn:true}),{leicht:true,givenN:t.kind==='erweitern'?t.N:null,nField:t.kind==='hnErw',needAll:true,smallest:true,mid:false});
       if(!r.ok)return r;
       return right(`Richtig! ${t.terms.map(x=>ft(x[0],x[1])+' = '+ft(x[0]*hn/x[1],hn)).join(' und ')}.`);
     }
