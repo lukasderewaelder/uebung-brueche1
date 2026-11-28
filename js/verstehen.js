@@ -32,7 +32,6 @@ const fPlanCtx=(plans)=>(round,level)=>{
   return {kind:round.fk[i],step:i};
 };
 const fStation=(id,meta,plans,impl)=>(Object.defineProperty(plans,'__id',{value:id,enumerable:false}),Object.assign({area:'Verstehen',size:5,planKey:'fk',ctx:fPlanCtx(plans),layoutKinds:(l)=>Array.from(new Set(plans[l]||plans[1]))},meta,impl));
-const fq=(R,list)=>R.pick(list);
 const fRedPair=(R,qs,proper)=>{let p,q;do{q=R.pick(qs);p=proper===false?R.int(q+1,3*q-1):R.int(1,q-1);}while(gcd(p,q)!==1);return [p,q];};
 
 /* ---------- F01 Anteile erkennen ---------- */

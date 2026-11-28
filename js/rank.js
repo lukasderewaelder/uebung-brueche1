@@ -50,7 +50,6 @@ function rankState(xp,perfect){
   const pct=nxt?Math.max(0,Math.min(1,(xp-cur[0])/(nxt[0]-cur[0]))):1;
   return {i,cur,nxt,pct,xp,topLocked};
 }
-const rankInfo=(xp)=>rankState(xp);
 function rankHint(st){
   if(!st.nxt)return 'Höchster Rang erreicht';
   if(st.topLocked)return 'Kristall: erst, wenn alles perfekt ist';

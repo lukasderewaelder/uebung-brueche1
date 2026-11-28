@@ -16,7 +16,7 @@ Status: **vorhanden** / **teilweise** / **fehlt** / **n. z.** (nicht zutreffend)
 | AP09 Gewichtete Wiederholung | teilweise | `whPlan` (js/wiederholen.js): Fehler × 3 + Tage | **Fehlerzähler `err` sinkt nie**; alte Fehler dominieren dauerhaft. Hilfebedarf nicht getrennt. |
 | AP10 Belohnungen bündeln | teilweise | Lernkarte, Ränge, Abzeichen, Urkunden, Sammelkarten | **Rang- und Abzeichen-Fenster öffnen zeitversetzt** (900 ms / 1200 ms, js/rank.js:63, js/werkstatt.js:65) und können eine neue Aufgabe überdecken. |
 | AP11 Transfer nach Lösungsanzeige | fehlt | – | Keine Folgeaufgabe nach aufgedeckter Lösung. |
-| AP12 Werkstattfiguren | teilweise | Vier Figuren, Sprechblasen „Name sagt:“ in Erklärkarten (js/werkstatt.js `speechBubble`) | Keine feste Denkrolle je Figur in den Aufgaben. |
+| AP12 Werkstattfiguren | entfällt | Figuren am 27.11.2026 entfernt (Entscheidung des Lehrers); der typische Fehler steht als Satz auf der Erklärkarte | – |
 | AP13 Plusaufgaben | teilweise | Fehlerdetektiv, Zahlenrätsel, „finde“-Aufgaben in mehreren Etappen | Nicht in jeder Etappe Strategievergleich oder „alle finden“. |
 | AP14 Sprache | weitgehend vorhanden | Satzregel ≤ 14 Wörter, `runWordScan`, Lehrbuchbegriffe | Textinventar fehlt; Operatoren nicht überall gleich. |
 | AP15 Touch und Tastatur | teilweise | Tippflächen `--tap` ≥ 44 px, Enter = Prüfen, Ziehen auch per Antippen | Fokus nach Dialogen, Fokusreihenfolge und Live-Region nicht durchgehend geprüft. |

@@ -52,7 +52,6 @@ function zqPoints(R,n,steps,m,must){
   const extra=R.shuffle(pool).slice(0,n-must.length);
   return extra.length===n-must.length?R.shuffle(must.concat(extra)):null;
 }
-const zqPick=(R,level,a,b)=>R.pick(level===1?a:b);
 
 /* --- Einteilung erkennen --- */
 function zqCount(level,R){

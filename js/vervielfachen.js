@@ -112,7 +112,6 @@ function vtFracChoices(R,t,cands){
 }
 const vtMulCands=(t)=>{const [A,B]=vtVal(t),n=t.n;return [[A*n,B*n],[A,B*n],[A+n,B],[A*n,B+n],[A*n+1,B]];};
 const vtDivCands=(t)=>{const [A,B]=vtVal(t),n=t.n;return [[A*n,B],[A*n,B*n],[A,B+n],[A,B*n*n],[A+1,B*n]];};
-const vtCands=(t)=>t.op==='mul'?vtMulCands(t):vtDivCands(t);
 const vtChoiceCheck=(t,d,key)=>{
   if(!d[key])return invalid('Tippe eine Antwort an.');
   if(d[key]===t.answer)return null;

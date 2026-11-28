@@ -2,7 +2,6 @@
 /* =====================================================================
    7 Aufgaben-Oberfläche (mountTask), Runden, Fortschritt
    ===================================================================== */
-const AREAS=['Grundlagen','Umkehraufgaben','Offene Aufgaben','Darstellungen umwandeln','Spiele'];
 const GAMES={
   S01:{area:'Spiele',name:'Bruch-Memory',desc:'Finde Kartenpaare, die denselben Anteil zeigen.',notes:['M1','M2','M3']},
   S02:{area:'Spiele',name:'Bruch-Tresor',desc:'Der Code ist ein Bruch: Öffne die Schlösser, sammle die Ziffern und kürze den Code-Bruch.',notes:['M2','M3']},
@@ -10,8 +9,6 @@ const GAMES={
   S04:{area:'Spiele',name:'Rechenschlange',desc:'Rechne Schritt für Schritt mit ungleichnamigen Brüchen, bis die Schlange ihr Ziel frisst.',notes:['M19','M20']}
 };
 const GAME_IDS=['S01','S02','S03','S04'];
-const ALL_IDS=PRACTICE_ORDER.concat(GAME_IDS);
-const infoOf=(id)=>TASKS[id]||GAMES[id];
 const isGame=(id)=>!!GAMES[id];
 
 const app=document.getElementById('app');
@@ -390,11 +387,6 @@ function bottomNav(){
   return el('nav',{class:'bottomnav','aria-label':'Hauptmenü'},b('pfad','pfad','Lernen'),b('ueben','heft','Wiederholen'),b('spiele','karten','Spiele'),b('rang','plakette','Ich'));
 }
 const LEVEL_LABEL={1:'Leicht',2:'Knifflig'};
-function levelControl(id){
-  const l=levelOf(id);
-  const mk=(n,long,short)=>el('button',{type:'button','aria-pressed':String(l===n),onclick:()=>setLevel(id,n)},el('span',{class:'long'},long),el('span',{class:'short'},short));
-  return el('div',{class:'seg',role:'group','aria-label':'Niveau wählen'},mk(1,'Leicht','Leicht'),mk(2,'Knifflig','Knifflig'));
-}
 /* Hilfespalte: rechts auf dem Desktop, Schublade (Tablet), Bottom-Sheet (Smartphone) */
 function helpPanel(introId){
   const body=el('div',{class:'helpbody'}),stats=el('div');

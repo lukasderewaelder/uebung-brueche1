@@ -14,7 +14,7 @@ Dieser Abschnitt gilt vor den Einzelheiten weiter unten; wo unten noch „Thema�
 - **Bedienung**: unten immer Tipp | Überspringen | Hauptknopf, Merkzettel oben; ausgewählte Antworten blau, „Weiß ich nicht“ grau; Hinweise in normaler Schrift ab 14 px; Kürzel wie E3 oder H4 überall; Reiter **Lernen · Wiederholen · Spiele · Ich**.
 - **Erklärungen**: höchstens 2 Karten („So geht’s“, „Darauf achten“), dazwischen die Probe; die ausführliche Fassung steht im Merkzettel unter „Ausführlich nachlesen“ (`INTRO_LONG`). Antipp-Lexikon für Fachwörter, Wörterliste je Etappe (höchstens 3).
 - **Wiederholen**: „Deine Wiederholung heute“ mit 5 Aufgaben aus geschafften Stationen (`js/wiederholen.js`).
-- **Motivation** (`js/werkstatt.js`): Werkstatt-Team (Malik, Juna, Ida, Paul) mit Sprechblasen, Stufen Bronze bis Kristall, Abzeichen je Gruppe und Plus-Abzeichen, Wochenziel „3 von 5 Schultagen“, Kennfarbe je Etappe, abschaltbare Animationen, Lernlandkarte als Startseite.
+- **Motivation** (`js/werkstatt.js`): Stufen Bronze bis Kristall, Abzeichen je Gruppe und Plus-Abzeichen, Wochenziel „3 von 5 Schultagen“, Kennfarbe je Etappe, abschaltbare Animationen, Lernlandkarte als Startseite.
 - Prüfen: `runSelfTests()`, `await runFracScan(1)`, `await runWordScan(1)` (verbotene Oberflächenwörter), `await runLayoutTests(w,h)`.
 
 Interaktive Übungsumgebung ohne Build: `index.html` im Browser öffnen (kein Server, keine Bibliotheken, kein Internet nötig; auch per GitHub Pages). Gedacht für Schülerinnen und Schüler ab Klasse 6, vor allem am Handy.
@@ -122,7 +122,6 @@ Regeln für jeden neuen Baustein (Aufgabe, Karte, Liste, Fenster). Anlass: Eine 
 - Browser: Konsole, `runSelfTests()`
 - Antworten: `await runChoiceScan(10)` (keine zwei gleich aussehenden Antworten; nach Neuladen kein „[object Object]“) und `await runAnswerScan(5)` (jede Antipp-Aufgabe lösbar, alle Antwortkombinationen samt Folgeschritt). Beide laufen einige Minuten; im Hintergrund starten (`setTimeout(async()=>{window.r=await runAnswerScan(5)})`) und danach `window.r` lesen.
 - Aufgabendaten dürfen keine fertigen Bildschirm-Elemente enthalten (sie werden gespeichert): Antwortkarten als Daten (`f` Bruch, `x` Rechnung), gezeichnet wird in `render`.
-- Node: `node tests/run.mjs` ist nur eine Attrappe ohne echtes DOM (SVG, Klicks); die Tests mit DOM laufen dort nicht. Maßgeblich ist der Browser-Test
 
 ## Veröffentlichen
 

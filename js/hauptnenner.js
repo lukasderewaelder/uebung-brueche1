@@ -20,7 +20,6 @@ const hnStep=(ctx)=>ctx&&ctx.step!=null?ctx.step:0; /* ohne Plan (Probeaufgabe):
 const hnPicOk=(b,d)=>gcd(b,d)===1&&b*d<=36;
 const hnEqOf=(terms,signs,end)=>{const p=[];terms.forEach((x,i)=>{if(i)p.push(signs[i-1]);p.push(frac(x[0],x[1]));});if(end!==undefined)p.push('=',end);return eq(...p);};
 const hnFt=(x)=>ft(x[0],x[1]);
-const hnRed=(n,d)=>{const s=simplify(n,d);return s;};
 const hnAvoid=(terms)=>terms.map(x=>redKey(x[0],x[1]));
 
 /* ---------- Zahlen ---------- */

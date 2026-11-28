@@ -1107,5 +1107,4 @@ TASKS.U02.variety=(t)=>['n'+simplify(t.from[0],t.from[1])[1]];
 function generateTask(typeId,level,rng,ctx){return TASKS[typeId].gen(level,rng||RNG,ctx);}
 function validateTask(task,answer){return TASKS[task.type].validate(task,answer);}
 function buildWorkedSolution(task){return TASKS[task.type].solution(task);}
-function hintFor(task,stage){const h=TASKS[task.type].hints(task);return h[Math.min(stage,h.length-1)];}
 

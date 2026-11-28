@@ -156,8 +156,6 @@ input:disabled{opacity:.8}
 .gseg i.on{background:var(--amber)}
 .gxp{font:700 .9rem var(--font-mono);color:var(--amber)}
 .gstreak{font:700 .78rem var(--font-mono);color:var(--erw)}
-.gbar{display:block;height:0.625rem;background:var(--track)}
-.gbar i{display:block;height:100%;background:var(--amber)}
 
 /* Werkzeugleiste unten */
 .bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;padding-left:max(0rem,calc((100% - 45rem)/2));padding-right:max(0rem,calc((100% - 45rem)/2));background:var(--bp-2);border-top:2px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
@@ -355,7 +353,7 @@ input:disabled{opacity:.8}
 .rule{margin:0.625rem 0;padding:0.5rem 0.75rem;background:var(--mark);color:var(--ink);border-left:6px solid var(--ink);font-size:.97rem}
 .stats{font-size:.95rem}
 .stats td{padding:0.125rem 0.75rem 0.125rem 0}
-.statsbox summary,.settings summary{cursor:pointer;padding:0.625rem 0;font:700 .8rem var(--font-mono)}
+.statsbox summary{cursor:pointer;padding:0.625rem 0;font:700 .8rem var(--font-mono)}
 
 /* ---------- 7 Bruchbilder ---------- */
 svg.fracsvg{display:block;width:100%;height:auto;overflow:visible}
@@ -421,12 +419,9 @@ svg.interactive{touch-action:none}
 .tile.is-right,.btn.yn.is-right:disabled{opacity:1;border-style:solid;border-color:var(--ink);background:var(--ok);color:var(--ink);box-shadow:inset 0 0 0 3px var(--ink)}
 .tile.is-wrong,.btn.yn.is-wrong:disabled{opacity:1;border-style:solid;border-color:var(--ink);background:var(--bad) repeating-linear-gradient(-45deg,rgba(11,42,74,.2) 0 2px,transparent 2px 9px);color:var(--ink);box-shadow:inset 0 0 0 3px var(--ink)}
 .blank{display:inline-block;min-width:1.3em;padding:0 .2em;border:2px dashed var(--amber);color:var(--amber);text-align:center;line-height:1.15;animation:blink 1.2s steps(2,jump-none) infinite}
-.qsum{border-collapse:collapse;margin:0.625rem 0}
-.qsum td{padding:0.3125rem 0.75rem 0.3125rem 0;vertical-align:middle}
 .qm{display:inline-flex;margin-right:0.25rem}
 .qm .ic{width:1.35rem;height:1.35rem}
 .qm.ok{color:var(--ok)}.qm.bad{color:var(--bad)}
-.qsum .sits{color:var(--ok)}.qsum .ueben{color:var(--amber)}
 
 /* Kürzen-Maschine */
 .machine{text-align:center}
@@ -631,15 +626,6 @@ svg.interactive{touch-action:none}
 .optmodal{align-items:flex-start;overflow-y:auto}
 .optmodal .modalcard{max-width:27.5rem;margin:auto;text-align:left}
 .optmodal h2{text-align:left}
-.optrank{display:flex;align-items:center;gap:0.875rem;margin:0.375rem 0 0.625rem;padding:0.625rem 0.75rem;border:2px solid var(--ink);background:var(--bp-2)}
-.optrank .ic.big{width:2.6rem;height:2.6rem;flex:none;color:var(--ink)}
-.optrank .orx{display:flex;flex-direction:column;gap:0.25rem;min-width:0}
-.optrank b{font:700 min(1.05rem,4.4vw) var(--font-mono);overflow-wrap:anywhere}
-.optrank{container-type:inline-size}
-@container (max-width:17rem){.optrank .ic.big{display:none}}
-.optrank small{color:var(--ink-dim)}
-.optrank .gseg i{background:rgba(11,42,74,.18)}
-.optrank .gseg i.on{background:var(--ink)}
 .optlist{display:grid;gap:0.5rem;margin:0.5rem 0}
 .optbtn{display:flex;align-items:center;gap:0.75rem;width:100%;min-height:max(56px,3.5rem);padding:0.5rem 0.75rem;background:var(--paper);color:var(--ink);border:2px solid var(--ink);box-shadow:0 3px 0 rgba(0,0,0,.25);text-align:left;cursor:pointer}
 .optbtn:active{transform:scale(.98);box-shadow:none}
@@ -702,7 +688,6 @@ svg.interactive{touch-action:none}
 .rankcard .rk{flex:1;min-width:0;display:flex;flex-direction:column;gap:0.3125rem}
 .rankcard b{font:700 1.1rem var(--font-mono)}
 .rankcard small{color:var(--chalk-dim)}
-.settings{margin-top:1.25rem}
 .summary table{border-collapse:collapse;margin:0.625rem 0}
 .summary td{padding:0.25rem 0.875rem 0.25rem 0}
 .bigstars{display:flex;gap:0.375rem;margin:.2em 0;color:var(--amber)}
@@ -747,7 +732,6 @@ svg.interactive{touch-action:none}
 .lock.locked{border-style:dashed;opacity:.55;cursor:default;box-shadow:none}
 .lock.locked::before{display:none}
 .lock[aria-current="true"]{border-color:var(--amber);box-shadow:inset 0 0 0 2px var(--amber)}
-.lootlist{font-size:.9rem;color:var(--ink-dim)}
 .lvlbadge{margin-left:auto;padding:0.125rem 0.5rem;border:2px solid var(--line);font:700 .7rem var(--font-mono);color:var(--chalk-dim)}
 .progress{display:flex;align-items:center;gap:0.625rem;margin:0.125rem 0 0.625rem}
 
@@ -791,12 +775,6 @@ svg.interactive{touch-action:none}
   .techmodal .modalcard{padding:1rem 0.875rem}
   .tbody{padding:0.5rem 0.625rem 0.75rem}
   .ttip{padding:0.5rem 0.625rem}
-}
-@media (min-width:600px){
-  .split.has-visual{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
-}
-@media (min-width:600px) and (max-width:899px) and (orientation:portrait){
-  .split.has-visual{grid-template-columns:minmax(0,1fr)}
 }
 @media (max-width:899px){
   .memgrid.n20{grid-template-columns:repeat(4,minmax(0,1fr))}
@@ -963,9 +941,6 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 
 /* Paket 7: Probeaufgabe in der Erklärung, Zahlenkarten */
 .introprobe{margin:.5rem 0}
-.probefb{margin:.5rem 0}
-.probefb:empty{display:none}
-.probebtns{justify-content:center}
 .introprobe .keypad{margin-top:.75rem}
 .numpick{font:700 1.5rem var(--font-mono);min-height:4rem}
 
@@ -1098,7 +1073,7 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 .hint .hl{display:inline-flex;align-items:center;gap:.25rem;font:700 .8rem var(--font-mono);color:var(--ink-dim)}
 .hint .hl .ic{width:1rem;height:1rem}
 @media (max-height:820px){
-  .eq .frac input,.fracin input{min-height:max(40px,2.5rem)}
+  .eq .frac input{min-height:max(40px,2.5rem)}
 }
 /* Erklärung: Knöpfe an festen Plätzen (links Zurück als Pfeil, Mitte Kenne ich schon, rechts Hauptknopf); Probeaufgabe mit Bedienpult */
 .introrow{grid-template-columns:3.25rem minmax(0,1fr) minmax(0,1fr);grid-auto-flow:row}
@@ -1328,17 +1303,6 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 .trres{margin:.25rem 0}
 .note .trick,.solbox .trick{color:var(--ink)}
 /* Rechenweg-Block: Hauptnenner, Erweitern, Zwischenschritt; der Nenner der erweiterten Brüche erscheint, sobald der Hauptnenner passt */
-.hnrows{display:flex;flex-direction:column;gap:.125rem;margin:.125rem 0}
-.hnrows .arow{flex-direction:row;flex-wrap:wrap;align-items:center;column-gap:.5rem} /* Beschriftung links neben den Feldern, rückt nur bei Platzmangel darüber */
-.hnrows input.intin,.hnrows .addrow input.intin{width:3.5rem;height:44px}
-.hnrows .addrow .frac.inp input{width:2.5rem;height:44px}
-.hnrows .addrow{gap:.25rem .2rem}
-.hnrows .hngo{margin-left:.5rem}
-.hnrows.hn3 .addrow .frac.inp input{width:2.25rem}
-.hnrows.hn3 .addrow{gap:.25rem .125rem}
-.hnrows .addrow .frac{font-size:1.15rem}
-.hnrows .addrow .frac.inp>.num{padding-bottom:.125rem}
-.hnrows .addrow .frac.inp>.den{padding-top:.125rem}
 .den.hnN{min-width:2.4rem;text-align:center}
 .den.hnN.empty{color:var(--chalk-dim)}
 .hnmixed{display:inline-flex;align-items:center;gap:.25rem}
@@ -1447,7 +1411,6 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 .hnlab{font-size:14px;color:var(--chalk-dim);margin-right:.25rem}
 .hnk{display:inline-flex;flex-direction:column;align-items:center;gap:0}
 .hnk .hnlab{margin:0;line-height:1.1}
-.hnknrow{margin:.125rem 0 .25rem}
 /* Gelb nur für den Hauptknopf; ausgewählte Antworten blau; „Weiß ich nicht“ ausgewählt grau */
 .btn.yn[aria-pressed="true"],.btn.none[aria-pressed="true"],.btn.kn[aria-pressed="true"]{background:var(--sel-bg);color:var(--sel-ink);border-color:var(--sel-line)}
 .tile[aria-pressed="true"]{background:var(--sel-tile);box-shadow:inset 0 0 0 3px var(--sel-bg)}
@@ -1455,7 +1418,7 @@ svg.nline[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:
 .topbar .notebtn{margin-left:auto;margin-right:.5rem;gap:.375rem}
 @media (max-width:420px){.topbar .notebtn .nbt{display:none}.topbar .notebtn{padding:0 .625rem}}
 /* ---------- Umbau P21: Hinweise in normaler Schrift, mindestens 14 px, Groß- und Kleinschreibung; feste Zeichenbreite nur für Zahlen ---------- */
-.lblm,.titleblock,.stepper .lab,.prompt::before,.hint b.lab,.solbox h4,.modalcard h2,.helphead h2,.note h3,.statsbox summary,.settings summary,.cap,.dimcap,.machhead,.labcap,.labchips .lbl,.bomrow .labstat,.introstep,.introcalc .ict,.rail>li.pgrp,.mtag,.area,.bomhead,.fold>summary,.nlbox .nlcap,.introtry .nlcap,.soon li em,.mchk,.grp,.etsum .etc,.hint .hl,.ordcaps,.cmpword,.alab,.rlabrow .lbl,.hnhead small,.s4head small,.memstats,.lvlbadge,.lock .lk-n,.tt-tag{
+.lblm,.titleblock,.stepper .lab,.prompt::before,.hint b.lab,.solbox h4,.modalcard h2,.helphead h2,.note h3,.statsbox summary,.cap,.dimcap,.machhead,.labcap,.labchips .lbl,.bomrow .labstat,.introstep,.introcalc .ict,.rail>li.pgrp,.mtag,.area,.bomhead,.fold>summary,.nlbox .nlcap,.introtry .nlcap,.soon li em,.mchk,.grp,.etsum .etc,.hint .hl,.ordcaps,.cmpword,.alab,.rlabrow .lbl,.hnhead small,.s4head small,.memstats,.lvlbadge,.lock .lk-n,.tt-tag{
   font-family:var(--font-body);text-transform:none;font-size:max(14px,.875rem)}
 .home h1{font-family:var(--font-body);text-transform:none;font-size:1.3rem}
 .modalcard h2,.helphead h2{font-size:max(16px,1rem)}
@@ -1484,11 +1447,6 @@ button.gloss:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 [data-et="F"]{--et:var(--et-F)}[data-et="E"]{--et:var(--et-E)}[data-et="Z"]{--et:var(--et-Z)}[data-et="W"]{--et:var(--et-W)}[data-et="R"]{--et:var(--et-R)}[data-et="H"]{--et:var(--et-H)}[data-et="V"]{--et:var(--et-V)}
 .home[data-et] h1{border-bottom:4px solid var(--et);padding-bottom:.25rem}
 .home[data-et] .pfadline .segn i.on{background:var(--et)}
-.avatar{color:var(--ink);flex:none;display:block;object-fit:contain;height:auto}
-.bubble{display:flex;align-items:flex-start;gap:.5rem;margin:.375rem 0;padding:.5rem .625rem;background:var(--paper);color:var(--ink);border:2px solid var(--ink);border-radius:14px;position:relative}
-.bubble .bav{flex:none}
-.bubble .btx{margin:0;font-size:max(14px,.95rem);flex:1}
-.bubble .bclose{all:unset;cursor:pointer;font-size:1.25rem;line-height:1;padding:.125rem .375rem;min-width:28px;text-align:center}
 .medal{display:inline-grid;place-items:center;width:1.75em;height:1.75em;border-radius:50%;background:var(--medal-bronze);color:#1b1b1b}
 .medal.big{width:3.5rem;height:3.5rem}
 .medal.tier-silber{background:var(--medal-silber)}.medal.tier-gold{background:var(--medal-gold)}.medal.tier-platin{background:var(--medal-platin)}.medal.tier-diamant{background:var(--medal-diamant)}.medal.tier-kristall{background:var(--medal-kristall)}.medal.tier-palladium{background:var(--medal-palladium)}.medal.tier-rhodium{background:var(--medal-rhodium)}.medal.tier-iridium{background:var(--medal-iridium)}
@@ -1506,37 +1464,8 @@ button.gloss:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 .wdots i.on{background:var(--ok);border-color:var(--ok)}
 /* Lernlandkarte */
 .lmap{display:flex!important;flex-direction:column;gap:.25rem;position:relative}
-.mapstep,.mapfork{position:relative}
-.mapstep::after{content:"";display:block;width:4px;height:1rem;margin:0 auto;background:repeating-linear-gradient(var(--chalk-dim) 0 6px,transparent 6px 10px)}
-.mapfork{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;padding-top:1.25rem}
-/* Gabelung: Strich vom Stamm, waagerecht über beide Wege, zwei Stummel nach unten */
-.forkline{position:absolute;left:25%;right:25%;top:0;height:1.25rem;border:4px dotted var(--chalk-dim);border-bottom:0;border-radius:14px 14px 0 0;pointer-events:none}
-.forkline::before{content:"";position:absolute;left:50%;top:-1rem;height:1rem;margin-left:-2px;border-left:4px dotted var(--chalk-dim)}
-.strand{display:flex;flex-direction:column;gap:.75rem;padding:.375rem;border:2px solid color-mix(in srgb,var(--et) 55%,transparent);border-radius:14px;background:color-mix(in srgb,var(--et) 9%,transparent)}
-.strandhead{display:flex;align-items:center;gap:.5rem;padding:.375rem .25rem .125rem}
-.strandico{flex:none;display:grid;place-items:center;width:2.25rem;height:2.25rem;border-radius:50%;background:var(--et);color:#fff}
-.strandico .ic{width:1.35rem;height:1.35rem}
-.strandtx{display:flex;flex-direction:column;min-width:0;line-height:1.2}
-.strandtx b{font-size:max(15px,1rem);color:var(--chalk)}
-.strandtx small{font-size:14px;color:var(--chalk-dim)}
-.strand .etwrap+.etwrap{position:relative}
-.strand .etwrap+.etwrap::before{content:"";position:absolute;left:50%;top:-.75rem;height:.75rem;margin-left:-2px;border-left:4px dotted var(--chalk-dim)}
-.etwrap{position:relative}
-.etnode{width:100%;border-left:8px solid var(--et,var(--chalk))!important;aspect-ratio:auto!important}
-.etnode .etl{position:absolute;top:.375rem;right:.5rem;font:700 1rem var(--font-mono);color:var(--et)}
-.sdots{display:flex;flex-wrap:wrap;gap:4px;margin-top:.25rem}
-.sdots i{width:.7rem;height:.7rem;border-radius:50%;border:2px solid var(--et,var(--chalk-dim))}
-.sdots i.p{width:.5rem;height:.5rem;opacity:.75}
-.sdots i.on{background:var(--et,var(--ok))}
-.sdots i.cur{box-shadow:0 0 0 3px var(--amber)}
-.sdots i.fin{border-radius:var(--r-s)}
-.badgerow{display:flex;gap:4px;flex-wrap:wrap}
-.standort{position:absolute;left:-.25rem;top:-1.25rem;display:flex;align-items:center;gap:.25rem;pointer-events:none}
-.standort small{font-size:12px;background:var(--amber-fill);color:var(--on-amber);padding:0 .375rem;border-radius:8px}
-.etwrap.here{margin-top:1.25rem}
 .mapgo{margin-bottom:.75rem}
 @media (min-width:1000px){.lmap{max-width:56rem;margin:0 auto}}
-.etnode .segn{display:none}
 /* P22 Rechenweg verdichtet: flachere Felder, „Kürzen geht nicht“ in der Zeile */
 .hnline{gap:.25rem .375rem;margin:.25rem 0}
 .hnline .frac.inp input,.hnline input.intin{height:2.125rem}
@@ -1569,7 +1498,6 @@ button.gloss:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 .vtord{display:flex;flex-wrap:wrap;gap:.375rem;margin:.25rem 0 .5rem}
 .vtslot{min-width:4.25rem;min-height:3rem;display:flex;align-items:center;justify-content:center;border:2px dashed var(--chalk-dim);border-radius:4px;padding:.125rem .375rem;color:var(--chalk-dim)}
 .vtslot.set{border-style:solid;border-color:var(--chalk);color:var(--chalk)}
-.vlabqs{display:flex;flex-direction:column;gap:.25rem;margin:.5rem 0}
 .vlabq summary{cursor:pointer;min-height:2.75rem;display:flex;align-items:center;font-weight:700}
 .vlabq p{margin:.25rem 0 .5rem}
 .vlabkeys{--n:2}
@@ -1674,7 +1602,6 @@ input:focus{border-color:var(--line)!important;box-shadow:3px 3px 0 var(--focus)
 .help{border:3px solid var(--line);border-radius:6px 24px 6px 6px;box-shadow:8px 8px 0 var(--shade)}
 .fold{border:2px solid var(--line);border-radius:6px 16px 6px 6px;box-shadow:3px 3px 0 var(--shade)}
 .fold>summary{font:800 .95rem var(--font-body)}
-.bubble{border:2px solid var(--line);border-radius:6px 16px 6px 6px;box-shadow:3px 3px 0 var(--shade)}
 /* Startseite */
 .home{padding-top:0.5rem;padding-bottom:calc(max(62px,3.875rem) + 0.75rem + env(safe-area-inset-bottom))}
 .home h1{font:800 1.5rem var(--font-body);margin:0.25rem 0 0.75rem}

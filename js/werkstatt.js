@@ -1,32 +1,8 @@
 'use strict';
 /* =====================================================================
-   Phase 6 des Umbaus: Werkstatt-Team (P18), Sprechblasen (P21), Abzeichen und Wochen-Serie (P19),
-   Kennfarben je Etappe und kleine Animationen (P25), Lernlandkarte als Startseite (P2).
+   Abzeichen und Wochen-Serie (P19), Kennfarben je Etappe und kleine Animationen (P25),
+   Lernlandkarte als Startseite (P2). Die Werkstatt-Figuren gibt es seit 27.11.2026 nicht mehr.
    ===================================================================== */
-
-/* ---------- P18 Werkstatt-Team: vier Figuren aus js/names.js ---------- */
-const TEAM={
-  Malik:{role:'rechnet schnell und macht typische Fehler',shirt:'var(--erw)',hair:'short'},
-  Juna:{role:'findet Regeln und Abkürzungen',shirt:'var(--kue)',hair:'long'},
-  Ida:{role:'denkt in Bildern und schätzt',shirt:'var(--ok)',hair:'bun'},
-  Paul:{role:'prüft und kontrolliert',shirt:'var(--amber-fill)',hair:'curl'}
-};
-/* Figur als Bild (img/team/<name>-<pose>.webp, freigestellt). Posen: wave, think, cheer. size = Breite des Rahmens, die Figur ist höher als breit. */
-/* Posen „point“ (erklären), „oops“ (Fehler), „share“ (teilen): bis die Bilder da sind, stehen die drei vorhandenen dafür */
-const POSE_SUB={point:'wave',oops:'think',share:'cheer'};
-function teamAvatar(name,size,pose){
-  const T=TEAM[name]?name:'Ida',s=size||44,q=POSE_SUB[pose]||pose,p=['wave','think','cheer'].includes(q)?q:'wave';
-  return el('img',{class:'avatar',src:'img/team/'+T.toLowerCase()+'-'+p+'.webp',alt:'',width:Math.round(s*1.3),height:Math.round(s*1.3*184/139),loading:'lazy',decoding:'async','data-name':name});
-}
-
-/* P21 Sprechblase einer Figur: höchstens eine gleichzeitig, wegklickbar */
-function speechBubble(name,text,pose,says){
-  document.querySelectorAll('.bubble').forEach(b=>b.remove());
-  const b=el('div',{class:'bubble',role:'note'},el('span',{class:'bav','aria-hidden':'true'},teamAvatar(name,30,pose)),
-    el('p',{class:'btx'},el('b',null,name+(says?' sagt: ':': ')),text),
-    el('button',{type:'button',class:'bclose','aria-label':'Sprechblase schließen',onclick:()=>b.remove()},'×'));
-  return b;
-}
 
 /* ---------- P25 Kennfarben je Etappe und Animationen ---------- */
 const ET_COLOR={F:'F',E:'E',Z:'Z',W:'W',R:'R',H:'H',V:'V'};

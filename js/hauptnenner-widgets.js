@@ -201,11 +201,6 @@ function addResultH(view,host,t,o){
   return host;
 }
 const hnMixRow=(view)=>el('div',{class:'arow hnmixrow'},el('span',{class:'alab'},'gemischte Zahl (freiwillig)'),hnMixedInput(view));
-/* Zeile der zugeklappten ersten Etappe: die erweiterten Brüche */
-function hnStageSummary(t,d,o){
-  const N=o.leicht?(o.givenN||d.N):d.e0d;
-  return t.terms.map((_,i)=>(i?t.signs[i-1]+' ':'')+(d['e'+i]||'?')+'/'+(o.leicht?N:(d['e'+i+'d']||'?'))).join(' ');
-}
 
 /* ---------- Etappen ----------
    list: [{isDone(), summary()}]; die letzte Etappe hat kein isDone. Eine fertige Etappe klappt zu einer Zeile zusammen (Tipp darauf öffnet sie wieder).
@@ -243,8 +238,6 @@ function hnChoice(view,host,key,items,label,onPick){
   host.append(opts);
   return opts;
 }
-/* Text mit Brüchen: Teile sind Text oder [n,d] */
-const hnTxt=(...parts)=>parts.map(x=>Array.isArray(x)?frac(x[0],x[1]):x);
 
 /* ---------- Schmetterling (H14, M22, Erklärung): a/b ± c/d mit zwei Flügeln ----------
    Oben links a · d, oben rechts c · b, unten b · d. o: {a,b,c,d,sign,l,r,n} – l, r, n sind Zahlen, Text oder Eingabefelder (leer: nichts). */

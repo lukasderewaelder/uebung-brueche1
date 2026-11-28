@@ -106,8 +106,6 @@ const PRACTICE_ORDER=flat('practice');
 const PATH=flat('path');
 /* Etappe, zu der eine Übung oder Station gehört */
 const moduleOf=(id)=>activeModules().find(m=>(m.practice||[]).includes(id)||(m.path||[]).some(x=>x.id===id))||null;
-/* Ebene einer Station in ihrer Etappe ('kern' | 'plus' | 'basis' | null) */
-const levelTier=(id)=>{const m=moduleOf(id),p=m&&m.path.find(x=>x.id===id);return p?p.lvl:null;};
 /* Aufgaben, die für „alles perfekt“ zählen */
 const rankPractice=()=>activeModules().filter(m=>m.rank).reduce((a,m)=>a.concat(m.practice||[]),[]);
 const rankPath=()=>activeModules().filter(m=>m.rank).reduce((a,m)=>a.concat(m.path||[]),[]);

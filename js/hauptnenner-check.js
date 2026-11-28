@@ -27,7 +27,6 @@ const hqNums=(R,level,plus,o)=>hnNums(R,level,plus,Object.assign({step:level===1
 const hqRes=(t)=>simplify(t.res[0],t.res[1]);
 /* vier verschiedene Brüche: die richtige Antwort (gekürzt) und Fallen, die nicht gleichwertig sind */
 function hqFracOpts(R,right,cands){return rqFracOpts(R,right,cands.filter(c=>c[0]>=1&&c[1]>=2));}
-const hqEq=(t)=>hnEqOf(t.terms,t.signs);
 
 /* --- Größe schätzen --- */
 function hqStimmtYN(level,R){

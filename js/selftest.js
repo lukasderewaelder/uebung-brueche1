@@ -1354,8 +1354,7 @@ function runSelfTests(){
     t('Kleinstes gemeinsames Vielfaches: nur als Randnotiz (Z06-Erklärung nennt zuerst „die kleinste Zahl, in die alle Nenner passen“)',INTRO_LONG.Z06.steps.some(s=>s.say[1]&&s.say[1].includes('kleinste Zahl, in die alle Nenner passen')&&s.say.some(x=>x.includes('Fachwort'))));
     t('Z08-Erklärung: gemischte Zahl mit Rechnung 7/4 = 1 + 3/4 = 1 ¾, Überschrift „Brüche, die natürliche Zahlen sind“',INTRO_LONG.Z08.steps.some(s=>(s.calc||[]).some(l=>l.some(x=>x&&x.m&&x.m.join()==='1,3,4')))&&INTRO_LONG.Z08.steps.some(s=>s.h==='Brüche, die natürliche Zahlen sind'&&s.say[0].includes('1, 2 oder 3')));
     t('Memory: Regel je Niveau, verschieden und nicht leer',MEMORY_RULE[1]&&MEMORY_RULE[2]&&MEMORY_RULE[1]!==MEMORY_RULE[2]);
-    const lc=levelControl('G02').textContent;
-    t('Niveau heißt überall „Leicht“ und „Knifflig“ (Niveau-Schalter), nie „Niveau 1“',lc.includes('Leicht')&&lc.includes('Knifflig')&&!lc.includes('Niveau'));
+    t('Niveau heißt überall „Leicht“ und „Knifflig“, nie „Niveau 1“',LEVEL_LABEL[1]==='Leicht'&&LEVEL_LABEL[2]==='Knifflig');
     t('Thema heißt „Erweitern und Kürzen“, Seitentitel „Bruchwerkstatt“',moduleById('veraendern').name==='Erweitern und Kürzen'&&document.title==='Bruchwerkstatt');
   }
   /* Hotfix: Kürzen-Maschine (O02) immer lösbar, gleicher Weg wird sofort abgewiesen, nie sind alle Bedienelemente ausgegraut */

@@ -15,7 +15,6 @@ const CMP_NAMES=NAME_LIST; /* P18 */
 const cmpAvoid=(a,b,c,d)=>[redKey(a,b),redKey(c,d)];
 const cmpDelta=(a,b,c,d)=>Math.abs(a/b-c/d);
 const cmpSwap=(R,a,b,c,d)=>R.chance(0.5)?[a,b,c,d]:[c,d,a,b];
-const cmpTxt=(a,b,c,d,s)=>ft(a,b)+' '+s+' '+ft(c,d);
 
 /* ---------- Zahlenpaare ---------- */
 /* gleicher Nenner, verschiedene Zähler (etwa jedes achte Paar in Leicht, jedes vierte in Knifflig unecht: mindestens ein Zähler größer als der Nenner) */
@@ -315,7 +314,6 @@ TASKS.W03={area:'Vergleichen',name:'Nenner oder Zähler?',desc:'Erst erkennen, w
 /* Satzbausteine: „Bei beiden fehlt 1 Stück“ (Hauptsatz) und „weil bei beiden 1 Stück fehlt“ (Nebensatz) */
 const cmpMissMain=(m)=>m===1?'fehlt 1 Stück':'fehlen '+m+' Stücke';
 const cmpMissSub=(m)=>m===1?'1 Stück fehlt':m+' Stücke fehlen';
-const cmpMissN=(m)=>m===1?'1 Stück':m+' Stücke';
 /* Behauptung zu W04: gleich viele fehlen („=“ oder richtiges Zeichen) oder Konflikt (die Faustregel „weniger fehlt = größer“ liegt falsch) */
 function cmpFehltClaim(R,t,conflict){
   const f=[t.a,t.b,t.c,t.d],real=cmpSignOf(compareFrac(f[0],f[1],f[2],f[3])),mA=t.b-t.a,mC=t.d-t.c,why=conflict?CMP_WHY.W04konflikt:CMP_WHY.W04;
