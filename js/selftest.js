@@ -1355,7 +1355,7 @@ function runSelfTests(){
     t('Z08-Erklärung: gemischte Zahl mit Rechnung 7/4 = 1 + 3/4 = 1 ¾, Überschrift „Brüche, die natürliche Zahlen sind“',INTRO_LONG.Z08.steps.some(s=>(s.calc||[]).some(l=>l.some(x=>x&&x.m&&x.m.join()==='1,3,4')))&&INTRO_LONG.Z08.steps.some(s=>s.h==='Brüche, die natürliche Zahlen sind'&&s.say[0].includes('1, 2 oder 3')));
     t('Memory: Regel je Niveau, verschieden und nicht leer',MEMORY_RULE[1]&&MEMORY_RULE[2]&&MEMORY_RULE[1]!==MEMORY_RULE[2]);
     t('Niveau heißt überall „Leicht“ und „Knifflig“, nie „Niveau 1“',LEVEL_LABEL[1]==='Leicht'&&LEVEL_LABEL[2]==='Knifflig');
-    t('Thema heißt „Erweitern und Kürzen“, Seitentitel „Bruchwerkstatt“',moduleById('veraendern').name==='Erweitern und Kürzen'&&document.title==='Bruchwerkstatt');
+    t('Thema heißt „Erweitern und Kürzen“, Seitentitel „BruchHack“',moduleById('veraendern').name==='Erweitern und Kürzen'&&document.title==='BruchHack');
   }
   /* Hotfix: Kürzen-Maschine (O02) immer lösbar, gleicher Weg wird sofort abgewiesen, nie sind alle Bedienelemente ausgegraut */
   {

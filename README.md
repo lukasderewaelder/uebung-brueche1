@@ -1,4 +1,4 @@
-# Bruchwerkstatt
+# BruchHack
 
 ## Umbau November 2026 (Umbaukonzept P1–P26)
 

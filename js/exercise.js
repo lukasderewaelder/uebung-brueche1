@@ -380,7 +380,7 @@ function backTarget(){
 function topbar(title,extra,head){
   const bt=backTarget();
   return el('header',{class:'topbar'},
-    bt?el('button',{type:'button',class:'btn small backbtn',onclick:()=>go(bt)},icon('zurueck'),'Zurück'):head?el('h1',{class:'brand tabhead'},head):el('span',{class:'brand'},el('span',{class:'bt'},'Bruchwerkstatt')), /* nur die Wortmarke: ein Zahnrad sähe wie der Knopf „Einstellungen“ aus */
+    bt?el('button',{type:'button',class:'btn small backbtn',onclick:()=>go(bt)},icon('zurueck'),'Zurück'):head?el('h1',{class:'brand tabhead'},head):el('span',{class:'brand'},el('span',{class:'bt'},'BruchHack')), /* nur die Wortmarke: ein Zahnrad sähe wie der Knopf „Einstellungen“ aus */
     el('span',{class:'title'},title||''),
     extra||null,
     chipNode());

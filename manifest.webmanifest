@@ -1,6 +1,6 @@
 {
-  "name": "Bruchwerkstatt",
-  "short_name": "Bruchwerkstatt",
+  "name": "BruchHack",
+  "short_name": "BruchHack",
   "description": "Brüche üben: erweitern und kürzen, Zahlenstrahl, vergleichen, addieren und subtrahieren.",
   "lang": "de",
   "start_url": "./",

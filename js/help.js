@@ -24,7 +24,7 @@ const PROBLEMS=[
     tip:'Das ist ärgerlich. Aber du kannst sofort wieder Punkte sammeln.'},
   {id:'geschlossen',q:'Ich habe die Seite aus Versehen geschlossen',
     steps:['Öffne die Seite einfach wieder.','Du machst dort weiter, wo du aufgehört hast. Deine Punkte und deine Runde sind gespeichert.'],
-    tip:'Die Zurück-Taste vom Handy geht in der Bruchwerkstatt Schritt für Schritt zurück. Ganz am Anfang verlässt du die Seite.'},
+    tip:'Die Zurück-Taste vom Handy geht in BruchHack Schritt für Schritt zurück. Ganz am Anfang verlässt du die Seite.'},
   {id:'aufgabe',q:'Ich komme bei einer Aufgabe nicht weiter',
     steps:['Tippe auf **Tipp**. Tippst du nochmal, kommt der nächste Tipp.','Tippe auf **Merkzettel**. Dort stehen die Regeln mit Beispielen.','Hast du es versucht oder einen Tipp gelesen? Dann erscheint **Lösung ansehen**. Dort siehst du den Rechenweg.'],
     tip:'Mit **Überspringen** kommt die nächste Aufgabe.'},
